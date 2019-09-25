@@ -156,7 +156,7 @@ $libdef M-LIB-PENNIES-Pennies
   NEEDSM3
   "i" checkargs
 
-  dup 0 <= "Non-positive value (1)." abort
+  dup 0 < if "Negative value (1)." abort
 
   "me" match "WIZARD" flag? if (* Wizards have a sideways 8 in their pockets. *)
     pop 1 exit
@@ -174,7 +174,7 @@ $libdef M-LIB-PENNIES-ChkPayFor
   NEEDSM3
   "i" checkargs
 
-  dup 0 <= "Non-positive value (1)." abort
+  dup 0 < if "Negative value (1)." abort
 
   "me" match "WIZARD" flag? if (* Wizards have a sideways 8 in their pockets. *)
     pop exit
