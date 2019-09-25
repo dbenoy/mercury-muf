@@ -48,5 +48,5 @@ $pragma comment_recurse
 $VERSION <version in floating point format>
 $AUTHOR  <your name>
 $NOTE    <short description>
-$DOCCMD  @list $<registration>=2,<number of header lines>
+$DOCCMD  @list $<registration>=2,<last header line>
 

@@ -44,7 +44,7 @@ $pragma comment_recurse
 (* with this program; if not, write to the Free Software Foundation, Inc.,   *)
 (* 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA                     *)
 (*****************************************************************************)
-$VERSION 1.1
+$VERSION 1.001
 $AUTHOR  Daniel Benoy
 $NOTE    Make rooms and exits at the same time.
 $DOCCMD  @list $m/cmd/at_excavate=2-43

@@ -46,7 +46,7 @@ $pragma comment_recurse
 (* with this program; if not, write to the Free Software Foundation, Inc.,   *)
 (* 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA                     *)
 (*****************************************************************************)
-$VERSION 1.1
+$VERSION 1.001
 $AUTHOR  Daniel Benoy
 $NOTE    @unlink command with more features.
 $DOCCMD  @list $m/cmd/at_unlink=2-45
@@ -165,5 +165,4 @@ q
 @set $m/cmd/at_unlink=L
 @set $m/cmd/at_unlink=M3
 @set $m/cmd/at_unlink=W
-
 
