@@ -522,6 +522,7 @@ $pubdef ansi_value ansi-value
 c
 q
 @register m-lib-ansi.muf=m/lib/ansi
+@register m-lib-ansi.muf=lib/ansi
 @set $m/lib/ansi=M2
 @set $m/lib/ansi=L
 
