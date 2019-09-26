@@ -69,9 +69,6 @@ $pubdef :
 : M-CMD-AT_LSEDIT-ListEdit[ ref:object str:propname -- bool:modified? ]
   NEEDSM4
 
-  object @ intostr .tell
-  propname @ .tell
-
   object @ dbref? not if "Non-dbref argument (1)." abort then
   propname @ string? not if "Non-string argument (2)." abort then
 
