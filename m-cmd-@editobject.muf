@@ -65,7 +65,9 @@ $def .chars-per-row 79
 (* End global variables *)
  
 $include $m/lib/ansi
+$include $m/lib/match
 $include $m/cmd/at_action
+$include $m/cmd/at_attach
 $include $m/cmd/at_link
 $include $m/cmd/at_unlink
 $include $m/cmd/at_recycle
@@ -101,23 +103,6 @@ $enddef
   then
  
   0 exit
-;
- 
-: MatchAll ( s -- d )
-  dup "#" 1 strncmp not if
-    1 strcut swap pop
-    dup number? not if
-      pop #-1 exit
-    then
-    stod exit
-  then
- 
-  dup "*" 1 strncmp not if
-    1 strcut swap pop
-    pmatch exit
-  then
- 
-  match
 ;
  
 : doCopyProps[ ref:from str:fromprop ref:to str:toprop -- ]
@@ -622,37 +607,9 @@ $enddef
  
 : setSource[  --  ]
   "(Enter a #dbref, *player_name, present object's name, 'me', 'here', or 'home')" .tell
-  read MatchAll
- 
-  dup #-1 = if
-    pop "I can't find that." .tell exit
-  then
- 
-  dup #-2 = if
-    pop "I don't know which one you mean!" .tell exit
-  then
- 
-  dup exit? if
-    "You can't attach an action to an action." .tell exit
-  then
- 
-  dup program? if
-    "You can't attach an action to a program." .tell exit
-  then
- 
-  me @ over controls not if
-    pop "Permission denied." .tell exit
-  then
- 
-  dup ourObject @ swap moveto
-  "Action re-attached." .tell
- 
-  dup mlevel if
-    dup "!M" set
-    "Action priority Level reset to zero." .tell
-  then
- 
-  pop
+  read 
+
+  { "#" ourObject @ intostr }join swap M-CMD-AT_ATTACH-Attach
 ;
  
 : getObjLink[ str:valueUnlinked -- str:value ]
@@ -672,28 +629,12 @@ $enddef
 : setObjLink[  --  ]
   "(Enter a #dbref, *player_name, present object's name, 'me', 'here', or 'home' or '.' to unlink)" .tell
   read
- 
-  dup "." strcmp not if
-    pop
-    ourObject @ M-CMD-AT_UNLINK-Unlink pop
-    exit
+
+  dup "." = if
+    { "#" ourObject @ intostr }join M-CMD-AT_UNLINK-Unlink pop
+  else
+    { "#" ourObject @ intostr }join swap M-CMD-AT_LINK-Relink pop
   then
- 
-  MatchAll
- 
-  dup #-1 = if
-    pop "I can't find that." exit
-  then
- 
-  dup #-2 = if
-    pop "I don't know which one you mean!" exit
-  then
- 
-  ourObject @ getlink ourObject @ exit? and if
-    ourObject @ M-CMD-AT_UNLINK-Unlink not if exit then
-  then
- 
-  ourObject @ swap 1 array_make M-CMD-AT_UNLINK-Unlink pop
 ;
  
 (***** create/switch to/delete exits *****)
@@ -2994,7 +2935,7 @@ $enddef
   getPlayerTable        ourPlayerTable     !
   getRoomFlagsTable     ourRoomFlagsTable  !
   getRoomTable          ourRoomTable       !
-  getThingPrefTable     ourThingPrefTable !
+  getThingPrefTable     ourThingPrefTable  !
   getThingFlagsTable    ourThingFlagsTable !
   getThingTable         ourThingTable      !
   getExitTable          ourExitTable       !
@@ -3029,13 +2970,8 @@ $enddef
       pop exit
     then
  
-    strip MatchAll
-    dup #-2 = if
-      "I don't know which one you mean." .tell
-      pop exit
-    then
-    dup ok? not if
-      "I don't see that here." .tell
+    strip 1 1 1 1 M-LIB-MATCH-Match
+    dup not if
       pop exit
     then
  

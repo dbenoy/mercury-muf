@@ -258,7 +258,7 @@ $def RESET_CODE "\[[0;37;40m"
 ;
  
 (*****************************************************************************)
-(* ansify-string *)
+(*                               ansify_string                               *)
 (*****************************************************************************)
 : ansify-string
   var data
@@ -302,7 +302,7 @@ $libdef ansify-string
 $pubdef ansify_string ansify-string
  
 (*****************************************************************************)
-(* ansi? *)
+(*                                   ansi?                                   *)
 (*****************************************************************************)
 : ansi? ( d -- i )
   owner "C" flag?
@@ -311,7 +311,7 @@ PUBLIC ansi?
 $libdef ansi?
 
 (*****************************************************************************)
-(* ansi-strip *)
+(*                                ansi-strip                                 *)
 (*****************************************************************************)
 : ansi-strip ( s -- s' )
   var data
@@ -341,7 +341,7 @@ $libdef ansi-strip
 $pubdef ansi_strip ansi-strip
  
 (*****************************************************************************)
-(* ansi-strcut *)
+(*                                ansi-strcut                                *)
 (*****************************************************************************)
 : ansi-strcut ( s i -- s1 s2 ; like strcut, but ignores ANSI codes. )
   var numtocut
@@ -402,7 +402,7 @@ $libdef ansi-strcut
 $pubdef ansi_strcut ansi-strcut
  
 (*****************************************************************************)
-(* ansi-codecheck *)
+(*                               ansi-codecheck                              *)
 (*****************************************************************************)
 : ansi-codecheck
   "{r|R|[-0-9][-0-9][-0-9]}" smatch
@@ -412,7 +412,7 @@ $libdef ansi-codecheck
 $pubdef ansi_codecheck ansi-codecheck
 
 (*****************************************************************************)
-(* ansi-notify *)
+(*                                ansi-notify                                *)
 (*****************************************************************************)
 : ansi-notify
   ansify-string \notify
@@ -422,7 +422,7 @@ $libdef ansi-notify
 $pubdef ansi_notify ansi-notify
 
 (*****************************************************************************)
-(* ansi-notify-except *)
+(*                            ansi-notify-except                             *)
 (*****************************************************************************)
 : ansi-notify-except
   ansify-string 1 swap \notify_exclude
@@ -432,7 +432,7 @@ $libdef ansi-notify-except
 $pubdef ansi_notify-except ansi-notify-except
 
 (*****************************************************************************)
-(* ansi-notify-exclude *)
+(*                            ansi-notify-exclude                            *)
 (*****************************************************************************)
 : ansi-notify-exclude
   ansify-string \notify_exclude
@@ -442,7 +442,7 @@ $libdef ansi-notify-exclude
 $pubdef ansi_notify-exclude ansi-notify-exclude
 
 (*****************************************************************************)
-(* ansi-tell *)
+(*                                 ansi-tell                                 *)
 (*****************************************************************************)
 : ansi-tell
   ansify-string .tell
@@ -452,7 +452,7 @@ $libdef ansi-tell
 $pubdef ansi_tell ansi-tell
 
 (*****************************************************************************)
-(* ansi-otell *)
+(*                                ansi-otell                                 *)
 (*****************************************************************************)
 : ansi-otell
   ansify-string .otell
@@ -462,7 +462,7 @@ $libdef ansi-otell
 $pubdef ansi_otell ansi-otell
 
 (*****************************************************************************)
-(* ansi-strlen *)
+(*                                ansi-strlen                                *)
 (*****************************************************************************)
 : ansi-strlen
   ansi-strip \strlen
@@ -472,7 +472,7 @@ $libdef ansi-strlen
 $pubdef ansi_strlen ansi-strlen
 
 (*****************************************************************************)
-(* ansi-connotify *)
+(*                              ansi-connotify                               *)
 (*****************************************************************************)
 : ansi-connotify
   ansify-string \connotify
@@ -482,13 +482,13 @@ $libdef ansi-connotify
 $pubdef ansi_connotify ansi-connotify
 
 (*****************************************************************************)
-(* ansi-version *)
+(*                               ansi-version                                *)
 (*****************************************************************************)
 $pubdef ansi-version 200 (* Emulate lib-ansi-free with extra feeps! *)
 $pubdef ansi_version ansi-version
 
 (*****************************************************************************)
-(* ansi-value *)
+(*                                ansi-value                                 *)
 (*****************************************************************************)
 : ansi-value ( s -- s )
   case
@@ -525,6 +525,6 @@ q
 @register m-lib-ansi.muf=lib/ansi
 @set $m/lib/ansi=M2
 @set $m/lib/ansi=L
-@set $lib/strings=S
-@set $lib/strings=H
+@set $m/lib/ansi=S
+@set $m/lib/ansi=H
 

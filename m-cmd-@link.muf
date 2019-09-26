@@ -20,6 +20,10 @@ $pragma comment_recurse
 (*     command, including all the same message output, permission checks,    *)
 (*     penny manipulation, etc. M3 required.                                 *)
 (*                                                                           *)
+(*   M-CMD-AT_LINK-Relink[ str:thing str:links -- bool:success? ]            *)
+(*     Same as M-CMD-AT_LINK-Link, except it will skip checking if the exit  *)
+(*     is already linked.                                                    *)
+(*                                                                           *)
 (*****************************************************************************)
 (* Revision History:                                                         *)
 (*   Version 1.1 -- Daniel Benoy -- September, 2019                          *)
@@ -49,7 +53,7 @@ $pragma comment_recurse
 $VERSION 1.001
 $AUTHOR  Daniel Benoy
 $NOTE    @link command with more features.
-$DOCCMD  @list $m/cmd/at_link=2-45
+$DOCCMD  @list $m/cmd/at_link=2-49
 
 (* Begin configurable options *)
 
@@ -131,12 +135,7 @@ $def TESTLOCKPROP getprop dup lock? if testlock else pop pop 1 then
   0 exit
 ;
 
-(*****************************************************************************)
-(*                            M-CMD-AT_LINK-Link                             *)
-(*****************************************************************************)
-: M-CMD-AT_LINK-Link[ str:thing str:links -- bool:success? ]
-  NEEDSM3
-
+: doLink[ str:thing str:links bool:relink -- bool:success? ]
   "link_cost" sysparm atoi var! tp_link_cost
   "exit_cost" sysparm atoi var! tp_exit_cost
   
@@ -145,6 +144,8 @@ $def TESTLOCKPROP getprop dup lock? if testlock else pop pop 1 then
   thing @ not if
     0 exit
   then
+
+  thing @ getlink not not var! alreadyLinked
 
   links @ ";" explode_array links !
 
@@ -159,30 +160,31 @@ $def TESTLOCKPROP getprop dup lock? if testlock else pop pop 1 then
     exit? when (*** Exits ***)
       (* Fail on an existing link, unless you own it and it's NIL. *)
       (* No existing link means anyone can link it, which is a little silly, but that's how it works in the built-in commands *)
-      thing @ getlink if
-        "me" match thing @ controls if
-          thing @ getlink #-4 = not if
-            "That exit is already linked." .tell
-            0 exit
-          then
-        else
+      alreadyLinked @ if
+        "me" match thing @ controls not if
           "Permission denied. (you don't control the exit to relink)" .tell
+          0 exit
+        then
+        relink @ not thing @ getlink #-4 = not and if
+          "That exit is already linked." .tell
           0 exit
         then
       then
       (* Check for sufficient pennies *)
       thing @ owner "me" match owner = if
-        tp_link_cost @ tp_exit_cost @ + M-LIB-PENNIES-ChkPayFor not if
-          { "It costs " tp_link_cost @ tp_exit_cost @ + " " "pennies" sysparm " to link this exit."  }join .tell
-          0 exit
+        alreadyLinked not if
+          tp_link_cost @ M-LIB-PENNIES-ChkPayFor not if
+            { "It costs " tp_link_cost @ " " "pennies" sysparm " to link this exit."  }join .tell
+            0 exit
+          then
         then
       else
         "me" match "BUILDER" flag? "me" match "WIZARD" flag? or not if
           "Only authorized builders may seize exits." .tell
            0 exit
         then
-        tp_link_cost @ M-LIB-PENNIES-ChkPayFor not if
-          { "It costs " tp_link_cost @ " " "pennies" sysparm " to link this exit."  }join .tell
+        tp_link_cost @ tp_exit_cost @ + M-LIB-PENNIES-ChkPayFor not if
+          { "It costs " tp_link_cost @ tp_exit_cost @ + " " "pennies" sysparm " to link this exit."  }join .tell
           0 exit
         then
       then
@@ -242,7 +244,9 @@ $def TESTLOCKPROP getprop dup lock? if testlock else pop pop 1 then
       repeat
       (* Charge pennies and change ownership if appropriate *)
       thing @ owner "me" match owner = if
-        "me" match tp_link_cost @ M-LIB-PENNIES-DoPayFor
+        alreadyLinked @ not if
+          "me" match tp_link_cost @ M-LIB-PENNIES-DoPayFor
+        then
       else
         "me" match tp_link_cost @ tp_exit_cost @ + M-LIB-PENNIES-DoPayFor
         thing @ owner tp_exit_cost @ addpennies
@@ -287,8 +291,28 @@ $def TESTLOCKPROP getprop dup lock? if testlock else pop pop 1 then
 
   1
 ;
+
+(*****************************************************************************)
+(*                            M-CMD-AT_LINK-Link                             *)
+(*****************************************************************************)
+: M-CMD-AT_LINK-Link[ str:thing str:links -- bool:success? ]
+  NEEDSM3
+
+  thing @ links @ 0 doLink
+;
 PUBLIC M-CMD-AT_LINK-Link
 $libdef M-CMD-AT_LINK-Link
+
+(*****************************************************************************)
+(*                           M-CMD-AT_LINK-Relink                            *)
+(*****************************************************************************)
+: M-CMD-AT_LINK-Relink[ str:thing str:links -- bool:success? ]
+  NEEDSM3
+
+  thing @ links @ 1 doLink
+;
+PUBLIC M-CMD-AT_LINK-Relink
+$libdef M-CMD-AT_LINK-Relink
 
 (*****************************************************************************)
 (*                                 cmdLink                                   *)

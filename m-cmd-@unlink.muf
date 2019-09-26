@@ -109,7 +109,7 @@ $pubdef :
       thing @ #-1 setlink
       "Unlinked." .tell
       doRefund @ if
-        "me" match tp_link_cost @ addpennies
+        thing @ owner tp_link_cost @ addpennies
       then
       thing @ mlevel if
         thing @ "!mucker" set

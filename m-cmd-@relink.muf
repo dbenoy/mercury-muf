@@ -74,9 +74,7 @@ $include $m/cmd/at_unlink
   strip var! exitname
 
   (* Unlink it, if it's an exit *)
-  exitname @ match exit? if
-    exitname @ M-CMD-AT_UNLINK-Unlink not if exit then
-  then
+  exitname @ M-CMD-AT_UNLINK-Unlink not if exit then
 
   (* Perform link *)
   exitname @ destination @ M-CMD-AT_LINK-Link pop
