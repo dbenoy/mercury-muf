@@ -2495,7 +2495,7 @@ $enddef
         ""
         "Enter the visual description of this object:"
       }list "\r" array_join
-      'setMPIList { "_/de" "senses/desc" }list
+      'setMPIList { "_/de" "_senses/desc" }list
     }list
  
     { "D2"
@@ -2507,7 +2507,7 @@ $enddef
         ""
         "Enter this object's scent:"
       }list "\r" array_join
-      'setMPIList { "_/scent" "senses/scent" }list
+      'setMPIList { "_/scent" "_senses/scent" }list
     }list
  
     { "D3"
@@ -2519,7 +2519,7 @@ $enddef
         ""
         "Enter this object's texture:"
       }list "\r" array_join
-      'setMPIList { "_/texture" "senses/texture" }list
+      'setMPIList { "_/texture" "_senses/texture" }list
     }list
  
     { "D4"
@@ -2531,7 +2531,7 @@ $enddef
         ""
         "Enter this object's flavor:"
       }list "\r" array_join
-      'setMPIList { "_/flavor" "senses/flavor" }list
+      'setMPIList { "_/flavor" "_senses/flavor" }list
     }list
  
     { "D5"
@@ -2543,7 +2543,7 @@ $enddef
         ""
         "Enter this object's aura:"
       }list "\r" array_join
-      'setMPIList { "_/aura" "senses/aura" }list
+      'setMPIList { "_/aura" "_senses/aura" }list
     }list
  
     { "D6"
@@ -2555,7 +2555,7 @@ $enddef
         ""
         "Enter this object's sound:"
       }list "\r" array_join
-      'setMPIList { "_/sound" "senses/sound" }list
+      'setMPIList { "_/sound" "_senses/sound" }list
     }list
  
     { "D7"
@@ -2567,7 +2567,7 @@ $enddef
         ""
         "Enter this object's writing:"
       }list "\r" array_join
-      'setMPIList { "_/writing" "senses/writing" }list
+      'setMPIList { "_/writing" "_senses/writing" }list
     }list
  
     "" "Messages" 2
