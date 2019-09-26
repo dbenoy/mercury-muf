@@ -525,4 +525,6 @@ q
 @register m-lib-ansi.muf=lib/ansi
 @set $m/lib/ansi=M2
 @set $m/lib/ansi=L
+@set $lib/strings=S
+@set $lib/strings=H
 
