@@ -59,7 +59,7 @@ $include $m/lib/match
 
 $def NEEDSM2 trig caller = not caller mlevel 2 < and if "Requires MUCKER level 2 or above." abort then
 $def NEEDSM3 trig caller = not caller mlevel 3 < and if "Requires MUCKER level 3 or above." abort then
-$def NEEDSM4 trig caller = not caller mlevel 4 < and if "Requires MUCKER level 4 or above." abort then
+$def NEEDSM4 trig caller = not caller "WIZARD" flag? not and if "Requires MUCKER level 4 or above." abort then
 
 $pubdef :
 
