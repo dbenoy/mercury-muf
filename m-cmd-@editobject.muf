@@ -3,9 +3,22 @@
 i
 $pragma comment_recurse
 (*****************************************************************************)
-(* m-cmd-@editobj.muf - $m/cmd/at_editobj                                    *)
-(*    A command for editing objects of any type, including players, things,  *)
-(*    and exits.                                                             *)
+(* m-cmd-@editobject.muf - $m/cmd/at_editobject                              *)
+(*    A command for editing objects of any type, including players, rooms,   *)
+(*    things, and exits.                                                     *)
+(*                                                                           *)
+(* PUBLIC ROUTINES:                                                          *)
+(*   M-CMD-AT_EDITOBJECT-EditObject[ str:objname -- bool:editopened? ]       *)
+(*     Starts the interactive object editor as if the player ran the         *)
+(*     @editobject command, including the same permissions checks and object *)
+(*     name matching. If for some reason the editor fails to open for this   *)
+(*     object, false will be returned. M2 required.                          *)
+(*                                                                           *)
+(* TECHNICAL NOTES:                                                          *)
+(*   This program is how morph information used by m-cmd-morph.muf is added  *)
+(*   to player properties. The morph command itself doesn't have any options *)
+(*   for managing morph data.                                                *)
+(*                                                                           *)
 (*****************************************************************************)
 (* Revision History:                                                         *)
 (*   Version 1.1 -- Daniel Benoy -- September, 2019                          *)
@@ -35,7 +48,7 @@ $pragma comment_recurse
 $VERSION 1.001
 $AUTHOR  Daniel Benoy
 $NOTE    An interface for editing objects.
-$DOCCMD  @list $m/cmd/at_editobject=2-31
+$DOCCMD  @list $m/cmd/at_editobject=2-39
  
 (* Begin configurable options *)
  
@@ -64,6 +77,12 @@ $def .chars-per-row 79
  
 (* End global variables *)
  
+$def NEEDSM2 trig caller = not caller mlevel 2 < and if "Requires MUCKER level 2 or above." abort then
+$def NEEDSM3 trig caller = not caller mlevel 3 < and if "Requires MUCKER level 3 or above." abort then
+$def NEEDSM4 trig caller = not caller "WIZARD" flag? not and if "Requires MUCKER level 4 or above." abort then
+
+$pubdef :
+
 $include $m/lib/ansi
 $include $m/lib/match
 $include $m/cmd/at_action
@@ -77,7 +96,7 @@ $def .author prog "_author" getpropstr
 $def .version prog "_version" getpropstr begin dup ".0" instr while "." ".0" subst repeat
  
 $define .header
-  prog name .version strcat " -- by " strcat .author strcat 49 "%-*s" fmtstring
+  prog name " " strcat .version strcat " -- by " strcat .author strcat 49 "%-*s" fmtstring
   "(Queries to:" prog owner name strcat ")" strcat 30 "%*s" fmtstring strcat .tell
   "-------------------------------------------------------------------------------" .tell
 $enddef
@@ -93,12 +112,12 @@ $enddef
 (*****************************************************************************)
 : chkPerms ( d -- b )
   (* You can always edit yourself *)
-  me @ over dbcmp if
+  "me" match over dbcmp if
     1 exit
   then
  
   (* Builders can edit anything they control *)
-  me @ swap controls me @ "BUILDER" flag? me @ "WIZARD" flag? or and if
+  "me" match swap controls "me" match "BUILDER" flag? "me" match "WIZARD" flag? or and if
     1 exit
   then
  
@@ -595,7 +614,7 @@ $enddef
   ourObject @ exit? if
     ourObject @ location
  
-    dup me @ swap controls if
+    dup "me" match swap controls if
       unparseobj
     else
       name
@@ -619,7 +638,7 @@ $enddef
     pop valueUnlinked @ exit
   then
  
-  dup me @ swap controls if
+  dup "me" match swap controls if
     unparseobj
   else
     name
@@ -2692,38 +2711,15 @@ $enddef
 ;
  
 (*****************************************************************************)
-(                                 cmdHelp                                     )
-(*****************************************************************************)
-: cmdHelp ( s --  )
-  pop
- 
-  .header
-  {
-    "Usage:"
-    command @ "editroom" stringcmp command @ "editplayer" stringcmp and command @ "morph" stringcmp and if
-      "$cmd <object> ........Edit an object."        command @ "$cmd" subst
-    then
-    "@editroom .............Edit the current room."
-    "@editplayer ...........Edit yourself."
-    "morph <morph name>....Change into a morph defined by editing yourself."
-  }tell
-  prog "VIEWABLE" flag? if
-    "Type '" prog "_docs" getpropstr not if "@list #" else "@view #" then
-    strcat prog intostr strcat "' for more information." strcat .tell
-  then
-  .footer
-;
- 
-(*****************************************************************************)
 (                                 cmdMorph                                    )
 (*****************************************************************************)
 : cmdMorph ( s --  )
-  me @ ourObject !
+  "me" match ourObject !
  
   dup if
     0 swap doMorph if
-      me @ "_morph/mesg" getpropstr .tell
-      me @ "_morph/omesg" getpropstr dup if me @ name " " strcat swap strcat then .otell
+      "me" match "_morph/mesg" getpropstr .tell
+      "me" match "_morph/omesg" getpropstr dup if "me" match name " " strcat swap strcat then .otell
     then
   else
     setListMorph
@@ -2871,29 +2867,37 @@ $enddef
   array_vals ++ rotate execute
 ;
  
-: cmdEdit (  --  )
-  var nomatch
- 
-  doMenu
-  "Please make a selection, or enter 'Q' to quit." .tell
+: doEdit (  --  )
+  0 var! nomatch
  
   begin
+    doMenu
+    nomatch @ if
+      "'" swap strcat "' is invalid.  Try again, or enter 'Q' to quit." strcat .tell
+    else
+      "Please make a selection, or enter 'Q' to quit." .tell
+    then
+
     read
  
+    (* Let users speak from inside the editor *)
     dup "\"" 1 strncmp not if
-      me @ swap force
+      "me" match swap force
       continue
     then
  
+    (* Let users pose from inside the editor *)
     dup ":" 1 strncmp not if
-      me @ swap force
+      "me" match swap force
       continue
     then
  
+    (* Q always quits *)
     dup "{Q|QUIT}" smatch if
       pop break
     then
  
+    (* Match selections *)
     1 nomatch !
     ourTable @ foreach
       swap pop
@@ -2902,29 +2906,17 @@ $enddef
         over over 0 [] smatch if
           doSet
           0 nomatch !
-          break
+          pop break
         then
       then
  
       pop
     repeat
- 
-    doMenu
- 
-    nomatch @ if
-      "'" swap strcat "' is invalid.  Try again, or enter 'Q' to quit." strcat .tell
-    else
-      pop "Please make a selection, or enter 'Q' to quit." .tell
-    then
- 
   repeat
  
   ">> Editor exited." .tell
 ;
  
-(*****************************************************************************)
-(                                   main                                      )
-(*****************************************************************************)
 : initTables (  --  )
  
   (* Not very elegant I know.. *)
@@ -2944,48 +2936,58 @@ $enddef
   setDefaultMenu
 ;
  
+(*****************************************************************************)
+(*                      M-CMD-AT_EDITOBJECT-EditObject                       *)
+(*****************************************************************************)
+: M-CMD-AT_EDITOBJECT-EditObject[ str:objname -- bool:editopened? ]
+  NEEDSM2
+
+  objname @ 1 1 1 1 M-LIB-MATCH-Match
+  dup not if
+    pop 0 exit
+  then
+ 
+  dup chkPerms not if
+    pop "Permission denied." .tell 0 exit
+  then
+ 
+  ourObject !
+ 
+  (* Initialize globals *)
+  initTables
+ 
+  doEdit
+  1
+;
+PUBLIC M-CMD-AT_EDITOBJECT-EditObject
+$libdef M-CMD-AT_EDITOBJECT-EditObject
+
+( --------------------------------------------------------------------------- )
+
+: help ( --  )
+  .header
+  {
+    { "Use '" command @ " <object name>' to bring up an object editing dialog." }join
+    "You can edit players, rooms, things, exits, etc."
+    " "
+    "Try editing 'me' or 'here'."
+  }tell
+  prog "VIEWABLE" flag? if
+    "Type '" prog "_docs" getpropstr not if "@list #" else "@view #" then
+    strcat prog intostr strcat "' for more information." strcat .tell
+  then
+  .footer 
+;
+ 
 : main
-  (* In case this program gets set LINK_OK *)
-  "me" match me !
-  me @ location loc !
-  trig trigger !
- 
-  dup "#help"  stringpfx if cmdHelp  exit then
- 
-  (* Special edit commands *)
-  command @ "editplayer" stringcmp not command @ "@editplayer" stringcmp not or if
-    pop "me"
+  dup not if
+    { "Use '" command @ " <object>' to edit objects." }join .tell
+    pop exit
   then
- 
-  command @ "editroom" stringcmp not command @ "@editroom" stringcmp not or if
-    pop "here"
-  then
- 
-  command @ "morph" stringcmp not command @ "@morph" stringcmp not or if
-    cmdMorph
-  else
-    (* Parse parameters *)
-    dup not if
-      "Use '" command @ strcat " <object>' to edit objects." strcat .tell
-      pop exit
-    then
- 
-    strip 1 1 1 1 M-LIB-MATCH-Match
-    dup not if
-      pop exit
-    then
- 
-    dup chkPerms not if
-      pop "Permission denied." .tell exit
-    then
- 
-    ourObject !
- 
-    (* Initialize globals *)
-    initTables
- 
-    cmdEdit
-  then
+
+  "#help" over stringpfx if pop help exit then
+
+  M-CMD-AT_EDITOBJECT-EditObject pop
 ;
 .
 c
@@ -2994,4 +2996,5 @@ q
 @set $m/cmd/at_editobject=L
 @set $m/cmd/at_editobject=M3
 @set $m/cmd/at_editobject=W
+@set $m/cmd/at_editobject=V
 
