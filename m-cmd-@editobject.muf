@@ -14,6 +14,16 @@ $pragma comment_recurse
 (*     name matching. If for some reason the editor fails to open for this   *)
 (*     object, false will be returned. M2 required.                          *)
 (*                                                                           *)
+(*   M-CMD-AT_EDITOBJECT-SaveMorph[ str:morph_name bool:quiet                *)
+(*                                  -- bool:success? ]                       *)
+(*   M-CMD-AT_EDITOBJECT-LoadMorph[ str:morph_name bool:quiet                *)
+(*                                  -- bool:success? ]                       *)
+(*     Save or load a specified morph. If quiet is true, then only error     *)
+(*     messages will be displayed.                                           *)
+(*                                                                           *)
+(*   M-CMD-AT_EDITOBJECT-ListMorphs[  --  ]                                  *)
+(*     Outputs a list of available morphs to the player.                     *)
+(*                                                                           *)
 (* TECHNICAL NOTES:                                                          *)
 (*   This program is how morph information used by m-cmd-morph.muf is added  *)
 (*   to player properties. The morph command itself doesn't have any options *)
@@ -48,7 +58,7 @@ $pragma comment_recurse
 $VERSION 1.001
 $AUTHOR  Daniel Benoy
 $NOTE    An interface for editing objects.
-$DOCCMD  @list $m/cmd/at_editobject=2-39
+$DOCCMD  @list $m/cmd/at_editobject=2-54
  
 (* Begin configurable options *)
  
@@ -451,161 +461,129 @@ $enddef
   then
 ;
  
-: doMorph[ int:create str:new_morph -- bool:success? ]
-  ourObject @ "/_morph" getpropstr 1 strcut tolower swap toupper swap strcat var! old_morph
-  new_morph @ 1 strcut tolower swap toupper swap strcat new_morph !
- 
-  new_morph @ "{mesg|omesg}" smatch if
-    "That's a silly name for a morph!" .tell 0 exit
+lvar ourMorphPropTable
+: doMorph[ str:morph_name bool:save bool:quiet -- bool:success? ]
+  ourMorphPropTable @ not if
+    {
+      "Appearance" "_/de"
+      "Scent" "_/scent"
+      "Texture" "_/texture"
+      "Flavor" "_/flavor"
+      "Aura" "_/aura"
+      "Sound" "_/sound"
+      "Writing" "_/writing"
+      "Image URL" "_/image"
+      "Description 'list data'" "_/dl"
+      "Pronoun (Name)" "%n"
+      "Pronoun (Absolute Posessive)" "%a"
+      "Pronoun (Subjective)" "%s"
+      "Pronoun (Objective)" "%o"
+      "Pronoun (Posessive)" "%p"
+      "Pronoun (Reflexive)" "%r"
+      "Species" "_/species"
+      "Sex" "gender_prop" sysparm
+      "Character attribute information" "_attr"
+      "Say/pose configuration" "_config/say"
+      "Morph 'Message'" "_config/morph_mesg"
+      "Morph 'OMessage'" "_config/morph_omesg"
+    }dict ourMorphPropTable !
   then
- 
-  old_morph @ not if
-    "Default" old_morph !
-  then
- 
-  new_morph @ old_morph @ stringcmp not if
-    create @ if
-      { "Morph '" new_morph @ "' already exists." }join "bold,red" textattr .tell 0 exit
+
+  "_morph/" morph_name @ strcat var! morph_dir
+
+  save @ if
+    ourObject @ morph_dir @ propdir? if
+      quiet @ not if "Clearing existing morph..." .tell then
+      ourObject @ morph_dir @ remove_prop
+      quiet @ not if "Saving morph..." .tell then
     else
-      { "Morph '" new_morph @ "' is already selected." }join "bold,red" textattr .tell 0 exit
-    then
-  then
- 
-  ourObject @ "/_morph/" new_morph @ strcat propdir? if
-    create @ if
-      { "Morph '" new_morph @ "' already exists." }join "bold,red" textattr .tell 0 exit
+      quiet @ not if "Creating new morph..." .tell then
     then
   else
-    create @ not if
-      { "Morph '" new_morph @ "' not found." }join "bold,red" textattr .tell 0 exit
+    ourObject @ morph_dir @ propdir? if
+      quiet @ not if "Loading morph..." .tell then
+    else
+      { "Morph '" morph_name @ "' not found." }join "bold,red" textattr .tell
+      0 exit
     then
   then
- 
-  (* Save current morph *)
-  old_morph @ "{mesg|omesg}" smatch not if
-    ourObject @ "/_morph" new_morph @ setprop
- 
-    ourObject @ "/_morph/" old_morph @ strcat remove_prop
- 
-    ourObject @ "/_senses" ourObject @ "/_morph/" old_morph @ strcat "/_senses" strcat doCopyProps
-    ourObject @ "/_attr" ourObject @ "/_morph/" old_morph @ strcat "/_attr" strcat doCopyProps
-    ourObject @ "/_say" ourObject @ "/_morph/" old_morph @ strcat "/_say" strcat doCopyProps
- 
-    ourObject @ "/_/de" getpropstr
-    ourObject @ "/_morph/" old_morph @ strcat "/_/de" strcat rot setprop
- 
-    ourObject @ "/_/sc" getpropstr
-    ourObject @ "/_morph/" old_morph @ strcat "/_/sc" strcat rot setprop
- 
-    ourObject @ "/_/osc" getpropstr
-    ourObject @ "/_morph/" old_morph @ strcat "/_/osc" strcat rot setprop
- 
-    ourObject @ "/_/image" getpropstr
-    ourObject @ "/_morph/" old_morph @ strcat "/_/image" strcat rot setprop
- 
-    (* Sex/Species *)
-    ourObject @ "/species" getpropstr
-    ourObject @ "/_morph/" old_morph @ strcat "/species" strcat rot setprop
- 
-    ourObject @ "/sex" getpropstr
-    ourObject @ "/_morph/" old_morph @ strcat "/sex" strcat rot setprop
- 
-    (* Morph messages *)
-    ourObject @ "/_morph/mesg" getpropstr
-    ourObject @ "/_morph/" old_morph @ strcat "/_morph/mesg" strcat rot setprop
- 
-    ourObject @ "/_morph/omesg" getpropstr
-    ourObject @ "/_morph/" old_morph @ strcat "/_morph/omesg" strcat rot setprop
- 
-    ({ "'" old_morph @ "' morph saved." }join "bold,blue" textattr .tell)
-  then
- 
-  (* Load new morph *)
-  ourObject @ "/_morph/" new_morph @ strcat propdir? if
-    ourObject @ "/_senses" remove_prop (* HACK: This might be a bad idea.. people may not be expecting this *)
-    ourObject @ "/_morph/" new_morph @ strcat "/_senses" strcat ourObject @ "/_senses" doCopyProps
- 
-    ourObject @ "/_morph/" new_morph @ strcat "/_attr" strcat ourObject @ "/_attr" doCopyProps
-    ourObject @ "/_morph/" new_morph @ strcat "/_say" strcat ourObject @ "_say" doCopyProps
- 
-    ourObject @ "/_morph/" new_morph @ strcat "/_/de" strcat getpropstr
-    ourObject @ "/_/de" rot setprop
- 
-    ourObject @ "/_morph/" new_morph @ strcat "/_/sc" strcat getpropstr
-    ourObject @ "/_/sc" rot setprop
- 
-    ourObject @ "/_morph/" new_morph @ strcat "/_/osc" strcat getpropstr
-    ourObject @ "/_/osc" rot setprop
- 
-    ourObject @ "/_morph/" new_morph @ strcat "/_/image" strcat getpropstr
-    ourObject @ "/_/image" rot setprop
- 
-    ourObject @ "/_morph/" new_morph @ strcat "/species" strcat getpropstr
-    ourObject @ "/species" rot setprop
- 
-    ourObject @ "/_morph/" new_morph @ strcat "/sex" strcat getpropstr
-    ourObject @ "/sex" rot setprop
- 
-    ourObject @ "/_morph/" new_morph @ strcat "/_morph/mesg" strcat getpropstr
-    ourObject @ "/_morph/mesg" rot setprop
- 
-    ourObject @ "/_morph/" new_morph @ strcat "/_morph/omesg" strcat getpropstr
-    ourObject @ "/_morph/omesg" rot setprop
- 
-    { "'" new_morph @ "' morph loaded." }join "bold,blue" textattr .tell
-  else
-    { "'" new_morph @ "' morph created." }join "bold,blue" textattr .tell
-  then
- 
+
+  ourMorphPropTable @ foreach
+    var! property
+    var! name
+
+    save @ if
+      ourObject @ property @ propdir? ourObject @ property @ getpropstr or if
+        quiet @ not if { "  Saving '" name @ "'..." }join .tell then
+        ourObject @ property @ ourObject @ { morph_dir @ "/" property @ }join doCopyProps
+      then
+    else
+      ourObject @ { morph_dir @ "/" property @ }join propdir? ourObject @ { morph_dir @ "/" property @ }join getpropstr or if
+        quiet @ not if { "  Loading '" name @ "'..." }join .tell then
+        ourObject @ { morph_dir @ "/" property @ }join ourObject @ property @ doCopyProps
+      then
+    then
+  repeat
+
+  ourObject @ "/_morph" morph_name @ setprop
   1
 ;
  
-: setMorph[ int:create --  ]
-  create @ read doMorph pop
+: initialCaps ( s -- s )
+  strip
+  ""
+  swap " " explode_array foreach
+    swap pop
+    1 strcut tolower swap toupper swap strcat
+    " " swap strcat
+    strcat
+  repeat
+  strip
+;
+
+: setMorph[ int:save --  ]
+  read
+
+  initialCaps
+  "_" " " subst
+
+  save @ 0 doMorph pop
 ;
  
 : setDeleteMorph[  --  ]
-  read var! del_morph
- 
-  ourObject @ "/_morph" getpropstr del_morph @ stringcmp not if
-    "Can't delete the currently loaded morph." "bold,red" textattr .tell exit
-  then
- 
-  ourObject @ "/_morph/" del_morph @ strcat propdir? if
-    ourObject @ "/_morph/" del_morph @ strcat remove_prop
+  read
+
+  initialCaps
+  "_" " " subst
+
+  var! morph_name
+
+  "_morph/" morph_name @ strcat var! morph_dir
+
+  ourObject @ morph_dir @ propdir? if
+    ourObject @ morph_dir @ remove_prop
+    { "Morph '" morph_name @ "' deleted." }join .tell
   else
-    pop { "Morph '" del_morph @ "' not found." }join "bold,red" textattr .tell
+    { "Morph '" morph_name @ "' not found." }join "bold,red" textattr .tell
   then
 ;
  
 : setListMorph[  --  ]
-  getMorph var! current_morph
- 
-  "Current morph: " "dim,cyan" textattr current_morph @ "bold,blue" textattr strcat .tell
- 
   ourObject @ "/_morph/" propdir? if
-    "Other morphs:" "dim,cyan" textattr .tell
+    "  Saved morphs:" "dim,cyan" textattr .tell
     ourObject @ "/_morph/" nextprop
     begin
       dup while
  
       ourObject @ over propdir? if
-        dup "/" rsplit
- 
-        dup current_morph @ stringcmp if
-          "bold,blue" textattr .tell
-        else
-          pop
-        then
- 
-        pop
+        dup "/" rsplit swap pop "    - " "dim,cyan" textattr swap "bold,blue" textattr strcat .tell
       then
  
       ourObject @ swap nextprop
     repeat
     pop
   else
-    "No other morphs!" .tell
+    "  No saved morphs." .tell
   then
 ;
  
@@ -964,103 +942,11 @@ $enddef
   {
     "" (* Blank line after header *)
  
-    "Morphs" 4
- 
-    { "L"
-      "~&060[~&160L~&060]ist Morphs"
-      'getNull { }list
- 
-      {
-      }list "\r" array_join
-      'setListMorph { }list
-    }list
- 
-    { "S"
-      "  ~&060[~&160S~&060]et Morph"
-      'getNull { }list
- 
-      {
-        "Changing a morph will store this character's descriptions, @success message, @osuccess message, gender, species, and attributes for later access."
-        ""
-        "Please enter the name of the morph you wish to load."
-      }list "\r" array_join
-      'setMorph { 0 }list
-    }list
- 
-    { "C"
-      "   ~&060[~&160C~&060]reate Morph"
-      'getNull { }list
- 
-      {
-        "Changing a morph will store this character's descriptions, @success message, @osuccess message, gender, species, and attributes for later access."
-        ""
-        "Please enter the name of the morph you wish to create."
-      }list "\r" array_join
-      'setMorph { 1 }list
-    }list
- 
-    { "D"
-      "    ~&060[~&160D~&060]elete Morph"
-      'getNull { }list
- 
-      {
-        "Enter the name of the morph you wish to delete."
-      }list "\r" array_join
-      'setDeleteMorph { }list
-    }list
- 
-    "" "Current Morph" 1
- 
-    { ""
-      "~&060Morph: ~&140%s"
-      'getMorph { }list
- 
-      {
-      }list "\r" array_join
-      'setNull { }list
-    }list
- 
-    { "1"
-      "~&060[~&1601~&060] Morph Message:  ~&140%s"
-      'getStr     { "_morph/mesg" "~&040[Unset]~&R" }list
- 
-      {
-        "This message is displayed to you when you change to this morph.  (with the 'morph' command only)"
-        "  eg.: You shift into super dragon mode!"
-        ""
-        "Please enter your morph message:"
-      }list "\r" array_join
-      'setStr     { "_morph/mesg" }list
-    }list
- 
-    { "2"
-      "~&060[~&1602~&060] Morph OMessage: ~&140%s"
-      'getStr     { "_morph/omesg" "~&040[Unset]~&R" }list
- 
-      {
-        "This message is displayed to everyone else in your location when you change to this morph.  (with the 'morph' command only)"
-        "Your name is prepended to the message automatically when shown."
-        "  eg.: shifts into super dragon mode!"
-        ""
-        "Please enter your morph omessage:"
-      }list "\r" array_join
-      'setStr     { "_morph/omesg" }list
-    }list
- 
-    "" 2
+    1
  
     { ""
       "~&060Species: ~&140%s"
-      'getStr     { "species" "~&110[Unset]~&R" }list
- 
-      {
-      }list "\r" array_join
-      'setNull { }list
-    }list
- 
-    { ""
-      "~&060@success Message:  ~&140%s"
-      'getMPI { "_/sc" "~&110[Unset]~&R" }list
+      'getStr     { "_/species" "~&110[Unset]~&R" }list
  
       {
       }list "\r" array_join
@@ -1070,15 +956,6 @@ $enddef
     { ""
       "~&060Gender:  ~&140%s"
       'getStr     { "sex" "~&110[Unset]~&R" }list
- 
-      {
-      }list "\r" array_join
-      'setNull { }list
-    }list
- 
-    { ""
-      "~&060@osuccess Message: ~&140%s"
-      'getMPI { "_/osc" "~&110[Unset]~&R" }list
  
       {
       }list "\r" array_join
@@ -1151,6 +1028,80 @@ $enddef
     }list
  
     ""
+
+    "Morphs" 4
+ 
+    { "M"
+      "~&060[~&160M~&060]orph List"
+      'getNull { }list
+ 
+      {
+      }list "\r" array_join
+      'setListMorph { }list
+    }list
+ 
+    { "S"
+      "  ~&060[~&160S~&060]ave Morph"
+      'getNull { }list
+ 
+      {
+        "The currently displayed descriptions and messages will be saved. If the morph does not exist, it will be created."
+        ""
+        "Please enter the name of the morph you wish to save."
+      }list "\r" array_join
+      'setMorph { 1 }list
+    }list
+ 
+    { "L"
+      "   ~&060[~&160L~&060]oad Morph"
+      'getNull { }list
+ 
+      {
+        "Please enter the name of the morph you wish to load."
+      }list "\r" array_join
+      'setMorph { 0 }list
+    }list
+ 
+    { "D"
+      "    ~&060[~&160D~&060]elete Morph"
+      'getNull { }list
+ 
+      {
+        "Enter the name of the morph you wish to delete."
+      }list "\r" array_join
+      'setDeleteMorph { }list
+    }list
+ 
+    "" "Morph Messages" 1
+ 
+    { "1"
+      "~&060[~&1601~&060] Morph Message:  ~&140%s"
+      'getStr     { "_config/morph_mesg" "~&040[Unset]~&R" }list
+ 
+      {
+        "This message is displayed to you when you change to this morph.  (with the 'morph' command only)"
+        "  eg.: You shift into super dragon mode!"
+        ""
+        "Please enter your morph message:"
+      }list "\r" array_join
+      'setStr     { "_config/morph_mesg" }list
+    }list
+ 
+    { "2"
+      "~&060[~&1602~&060] Morph OMessage: ~&140%s"
+      'getStr     { "_config/morph_omesg" "~&040[Unset]~&R" }list
+ 
+      {
+        "This message is displayed to everyone else in your location when you change to this morph.  (with the 'morph' command only)"
+        "Your name is prepended to the message automatically when shown."
+        "  eg.: shifts into super dragon mode!"
+        ""
+        "Please enter your morph omessage:"
+      }list "\r" array_join
+      'setStr     { "_config/morph_omesg" }list
+    }list
+
+    ""
     { "{P|B}"
       "~&060[~&160B~&060]ack to Player Edit"
       'getNull { }list
@@ -1159,6 +1110,7 @@ $enddef
       }list "\r" array_join
       'setDefaultMenu { }list
     }list
+
   }list
 ;
  
@@ -1234,97 +1186,6 @@ $enddef
       'setExternal { #163 "saysetup" }list
     }list
  
-    "" "Messages" 1
- 
-    { "M1"
-      "~&060[~&160M1~&060] @success Message:        ~&140%s"
-      'getMPI { "_/sc" "~&110[Unset]~&R" }list
- 
-      {
-        "On Latitude, a player can pick up another player if the latter player's @lock permits them to.  They are shown the latter's @success message when they pick em up, just as though the player picked up were an object."
-        "This message is shown only to the taker."
-        ""
-        "Example: You pick up {name:this}."
-        ""
-        "Enter this player's @success message:"
-      }list "\r" array_join
-      'setStr { "_/sc" }list
-    }list
- 
-    { "M2"
-      "~&060[~&160M2~&060] @osuccess Message:       ~&140%s"
-      'getMPI { "_/osc" "~&110[Unset]~&R" }list
- 
-      {
-        "On Latitude, a player can pick up another player if the latter player's @lock permits them to.  The @osuccess message on a player is shown to the rest of the room when someone picks em up."
-        "This message is shown to everyone in the room except the taker, and is prepended with the taker's name."
-        ""
-        "Example: picks up {name:this}."
-        ""
-        "Enter this player's @osuccess message:"
-      }list "\r" array_join
-      'setStr { "_/osc" }list
-    }list
- 
-    { "M3"
-      "~&060[~&160M3~&060] @fail Message:           ~&140%s"
-      'getMPI { "_/fl" "~&040[Unset]~&R" }list
- 
-      {
-        "A @fail message is shown when there's an attempt to use an object, and the user is unsuccessful.  In the case of a player, being 'used' is done by the 'rob' command.  Type rob <player> to steal a penny from the player.  If the player used the @lock command on themselves to prevent robbery, then you will see execute their @fail and @ofail messages."
-        "This message is shown only to the attempted thief."
-        ""
-        "Example: You can't rob {name:this}!"
-        ""
-        "Enter this player's @fail message:"
-      }list "\r" array_join
-      'setStr { "_/fl" }list
-    }list
- 
-    { "M4"
-      "~&060[~&160M4~&060] @ofail Message:          ~&140%s"
-      'getMPI { "_/ofl" "~&040[Unset]~&R" }list
- 
-      {
-        "A @fail message is shown when there's an attempt to use an object, and the user is unsuccessful.  In the case of a player, being 'used' is done by the 'rob' command.  Type rob <player> to steal a penny from the player.  If the player used the @lock command on themselves to prevent robbery, then you will see execute their @fail and @ofail messages."
-        "This message is shown to everyone in the room except the robber, and the robber's name is automatically prepended to the output.  For example, if FuzzyKing attempts to rob you, and your @ofail message is \"tries to do bad things.\", everyone in the room except FuzzyKing will see \"FuzzyKing tries to do bad things.\""
-        ""
-        "Example: attempts to rob {name:this}!  How rude of %o!"
-        ""
-        "Enter this player's @ofail message:"
-      }list "\r" array_join
-      'setStr { "_/ofl" }list
-    }list
- 
-    { "M5"
-      "~&060[~&160M5~&060] @drop Message:           ~&140%s"
-      'getMPI { "_/dr" "~&040[Unset]~&R" }list
- 
-      {
-        "A @drop message is shown to your murderer if the 'kill' command is successfully used on you."
-        ""
-        "Example: You butcher an innosent {if:{eq:{prop:sex,this},male},man,person}."
-        ""
-        "Enter this player's @drop message:"
-      }list "\r" array_join
-      'setStr { "_/dr" }list
-    }list
- 
-    { "M6"
-      "~&060[~&160M6~&060] @odrop Message:          ~&140%s"
-      'getMPI { "_/odr" "~&040[Unset]~&R" }list
- 
-      {
-        "An @odrop message is shown to everyone in the room when the 'kill' command is used on you, except your murderer."
-        "The murderer's name is automatically prepended to the output.  For example, if FuzzyJester kills you, and your @odrop message is \"commits treason.\", everyone in the room except FuzzyJester will see \"FuzzyJester commits treason.\""
-        ""
-        "Example: has butchered an innosent {if:{eq:{prop:sex,this},male},man,person}."
-        ""
-        "Enter this player's @odrop message:"
-      }list "\r" array_join
-      'setStr { "_/odr" }list
-    }list
- 
     "" "Sweep messages" 1
  
     { "S1"
@@ -1384,7 +1245,7 @@ $enddef
  
     { "1"
       "~&060[~&1601~&060] Species: ~&140%s"
-      'getStr     { "species" "~&110[Unset]~&R" }list
+      'getStr     { "_/species" "~&110[Unset]~&R" }list
  
       {
         "Your species is the type of being your character is."
@@ -1392,7 +1253,7 @@ $enddef
         ""
         "Enter the species of this character:"
       }list "\r" array_join
-      'setStr     { "species" }list
+      'setStr     { "_/species" }list
     }list
  
     2
@@ -1410,7 +1271,7 @@ $enddef
     }list
  
     { "3"
-      "~&060[~&1603~&060] Pronoun Substitutions"
+      "~&060[~&1603~&060] Pronoun Substitution"
       'getNull { }list
  
       {
@@ -1434,7 +1295,7 @@ $enddef
         ""
         "Enter the visual description of this character:"
       }list "\r" array_join
-      'setMPIList { "_/de" "_senses/desc" }list
+      'setMPIList { "_/de" "_/dl/desc" }list
     }list
  
     { "D2"
@@ -1447,7 +1308,7 @@ $enddef
         ""
         "Enter this character's scent:"
       }list "\r" array_join
-      'setMPIList { "_/scent" "_senses/scent" }list
+      'setMPIList { "_/scent" "_/dl/scent" }list
     }list
  
     { "D3"
@@ -1460,7 +1321,7 @@ $enddef
         ""
         "Enter this character's texture:"
       }list "\r" array_join
-      'setMPIList { "_/texture" "_senses/texture" }list
+      'setMPIList { "_/texture" "_/dl/texture" }list
     }list
  
     { "D4"
@@ -1473,7 +1334,7 @@ $enddef
         ""
         "Enter this character's flavor:"
       }list "\r" array_join
-      'setMPIList { "_/flavor" "_senses/flavor" }list
+      'setMPIList { "_/flavor" "_/dl/flavor" }list
     }list
  
     { "D5"
@@ -1486,7 +1347,7 @@ $enddef
         ""
         "Enter this character's aura:"
       }list "\r" array_join
-      'setMPIList { "_/aura" "_senses/aura" }list
+      'setMPIList { "_/aura" "_/dl/aura" }list
     }list
  
     { "D6"
@@ -1499,7 +1360,7 @@ $enddef
         ""
         "Enter this character's sound:"
       }list "\r" array_join
-      'setMPIList { "_/sound" "_senses/sound" }list
+      'setMPIList { "_/sound" "_/dl/sound" }list
     }list
  
     { "D7"
@@ -1512,32 +1373,19 @@ $enddef
         ""
         "Enter this character's writing:"
       }list "\r" array_join
-      'setMPIList { "_/writing" "_senses/writing" }list
+      'setMPIList { "_/writing" "_/dl/writing" }list
     }list
  
     "" "Flags" 3
  
     { "C"
       "~&060[~&160C~&060]olor: ~&140%s"
-      'getFlag    { "COLOR" "        Yes" "BLACK & WHITE" }list
+      'getFlag    { "COLOR" "          Yes" "BLACK & WHITE" }list
  
       {
         "Does your client support color? (y/n)"
       }list "\r" array_join
       'setFlag    { "COLOR" }list
-    }list
- 
-    { "K"
-      "~&060[~&160K~&060]ill_OK:        ~&140%s"
-      'getFlag    { "KILL_OK" "Yes" "No" }list
- 
-      {
-        "On systems where the KILL_OK flag is used, you cannot kill someone unless both you and they are set Kill_OK."
-        "Getting killed is no big deal. If you are killed, you just get kicked into the street, and all things you carry return to their homes. You also collect 50 pennies in insurance money (unless you have >= 10000 pennies)."
-        ""
-        "Set the KILL_OK flag on this character? (y/n)"
-      }list "\r" array_join
-      'setFlag    { "KILL_OK" }list
     }list
  
     { "S"
@@ -1565,7 +1413,7 @@ $enddef
       'setFlag    { "HAVEN" }list
     }list
  
-    { "L"
+    ({ "L"
       "~&060[~&160L~&060]ink_OK:        ~&140%s"
       'getFlag    { "LINK_OK" "~&110YES~&R" "No" }list
  
@@ -1575,6 +1423,19 @@ $enddef
         "Set the LINK_OK flag on this character? (y/n)"
       }list "\r" array_join
       'setFlag    { "LINK_OK" }list
+    }list
+ 
+    { "K"
+      "~&060[~&160K~&060]ill_OK:        ~&140%s"
+      'getFlag    { "KILL_OK" "Yes" "No" }list
+ 
+      {
+        "On systems where the KILL_OK flag is used, you cannot kill someone unless both you and they are set Kill_OK."
+        "Getting killed is no big deal. If you are killed, you just get kicked into the street, and all things you carry return to their homes. You also collect 50 pennies in insurance money (unless you have >= 10000 pennies)."
+        ""
+        "Set the KILL_OK flag on this character? (y/n)"
+      }list "\r" array_join
+      'setFlag    { "KILL_OK" }list
     }list
  
     { "X"
@@ -1590,7 +1451,7 @@ $enddef
       'setNull    { }list
     }list
  
-    ({ "J"
+    { "J"
       "~&060[~&160J~&060]ump_OK:        ~&140%s"
       'getFlag    { "JUMP_OK" "Yes" "No" }list
  
@@ -1615,8 +1476,8 @@ $enddef
     }list
  
     { "S3"
-      "~&060[~&160S3~&060] Morph: ~&140%s"
-      'getMorph { }list
+      "~&060[~&160S3~&060] Morphs"
+      'getNull { }list
  
       {
       }list "\r" array_join
@@ -1806,7 +1667,7 @@ $enddef
         ""
         "Enter the visual description of the room:"
       }list "\r" array_join
-      'setMPIList { "_/de" "_senses/desc" }list
+      'setMPIList { "_/de" "_/dl/desc" }list
     }list
  
     { "D2"
@@ -1819,7 +1680,7 @@ $enddef
         ""
         "Enter this character's scent:"
       }list "\r" array_join
-      'setMPIList { "_/scent" "_senses/scent" }list
+      'setMPIList { "_/scent" "_/dl/scent" }list
     }list
  
     { "D3"
@@ -1832,7 +1693,7 @@ $enddef
         ""
         "Enter this character's texture:"
       }list "\r" array_join
-      'setMPIList { "_/texture" "_senses/texture" }list
+      'setMPIList { "_/texture" "_/dl/texture" }list
     }list
  
     { "D4"
@@ -1845,7 +1706,7 @@ $enddef
         ""
         "Enter this character's flavor:"
       }list "\r" array_join
-      'setMPIList { "_/flavor" "_senses/flavor" }list
+      'setMPIList { "_/flavor" "_/dl/flavor" }list
     }list
  
     { "D5"
@@ -1858,7 +1719,7 @@ $enddef
         ""
         "Enter this character's aura:"
       }list "\r" array_join
-      'setMPIList { "_/aura" "_senses/aura" }list
+      'setMPIList { "_/aura" "_/dl/aura" }list
     }list
  
     { "D6"
@@ -1871,7 +1732,7 @@ $enddef
         ""
         "Enter this character's sound:"
       }list "\r" array_join
-      'setMPIList { "_/sound" "_senses/sound" }list
+      'setMPIList { "_/sound" "_/dl/sound" }list
     }list
  
     { "D7"
@@ -1884,7 +1745,7 @@ $enddef
         ""
         "Enter this character's writing:"
       }list "\r" array_join
-      'setMPIList { "_/writing" "_senses/writing" }list
+      'setMPIList { "_/writing" "_/dl/writing" }list
     }list
  
     "" "Messages" 2
@@ -2137,7 +1998,7 @@ $enddef
         ""
         "Enter the visual description of this exit:"
       }list "\r" array_join
-      'setMPIList { "_/de" "_senses/desc" }list
+      'setMPIList { "_/de" "_/dl/desc" }list
     }list
  
     { "D2"
@@ -2149,7 +2010,7 @@ $enddef
         ""
         "Enter this exit's scent:"
       }list "\r" array_join
-      'setMPIList { "_/scent" "_senses/scent" }list
+      'setMPIList { "_/scent" "_/dl/scent" }list
     }list
  
     { "D3"
@@ -2161,7 +2022,7 @@ $enddef
         ""
         "Enter this exit's texture:"
       }list "\r" array_join
-      'setMPIList { "_/texture" "_senses/texture" }list
+      'setMPIList { "_/texture" "_/dl/texture" }list
     }list
  
     { "D4"
@@ -2173,7 +2034,7 @@ $enddef
         ""
         "Enter this exit's flavor:"
       }list "\r" array_join
-      'setMPIList { "_/flavor" "_senses/flavor" }list
+      'setMPIList { "_/flavor" "_/dl/flavor" }list
     }list
  
     { "D5"
@@ -2185,7 +2046,7 @@ $enddef
         ""
         "Enter this exit's aura:"
       }list "\r" array_join
-      'setMPIList { "_/aura" "_senses/aura" }list
+      'setMPIList { "_/aura" "_/dl/aura" }list
     }list
  
     { "D6"
@@ -2197,7 +2058,7 @@ $enddef
         ""
         "Enter this exit's sound:"
       }list "\r" array_join
-      'setMPIList { "_/sound" "_senses/sound" }list
+      'setMPIList { "_/sound" "_/dl/sound" }list
     }list
  
     { "D7"
@@ -2209,7 +2070,7 @@ $enddef
         ""
         "Enter this exit's writing:"
       }list "\r" array_join
-      'setMPIList { "_/writing" "_senses/writing" }list
+      'setMPIList { "_/writing" "_/dl/writing" }list
     }list
  
     "" "Messages" 2
@@ -2479,7 +2340,7 @@ $enddef
  
     { "1"
       "~&060[~&1601~&060] Species: ~&140%s"
-      'getStr     { "species" "~&040[Unset]~&R" }list
+      'getStr     { "_/species" "~&040[Unset]~&R" }list
  
       {
         "Your species is the type of being your puppet/object is.  This has little meaning unless this object has the ZOMBIE flag turned on."
@@ -2487,7 +2348,7 @@ $enddef
         ""
         "Enter the species of this puppet/object:"
       }list "\r" array_join
-      'setStr     { "species" }list
+      'setStr     { "_/species" }list
     }list
  
     { "2"
@@ -2514,7 +2375,7 @@ $enddef
         ""
         "Enter the visual description of this object:"
       }list "\r" array_join
-      'setMPIList { "_/de" "_senses/desc" }list
+      'setMPIList { "_/de" "_/dl/desc" }list
     }list
  
     { "D2"
@@ -2526,7 +2387,7 @@ $enddef
         ""
         "Enter this object's scent:"
       }list "\r" array_join
-      'setMPIList { "_/scent" "_senses/scent" }list
+      'setMPIList { "_/scent" "_/dl/scent" }list
     }list
  
     { "D3"
@@ -2538,7 +2399,7 @@ $enddef
         ""
         "Enter this object's texture:"
       }list "\r" array_join
-      'setMPIList { "_/texture" "_senses/texture" }list
+      'setMPIList { "_/texture" "_/dl/texture" }list
     }list
  
     { "D4"
@@ -2550,7 +2411,7 @@ $enddef
         ""
         "Enter this object's flavor:"
       }list "\r" array_join
-      'setMPIList { "_/flavor" "_senses/flavor" }list
+      'setMPIList { "_/flavor" "_/dl/flavor" }list
     }list
  
     { "D5"
@@ -2562,7 +2423,7 @@ $enddef
         ""
         "Enter this object's aura:"
       }list "\r" array_join
-      'setMPIList { "_/aura" "_senses/aura" }list
+      'setMPIList { "_/aura" "_/dl/aura" }list
     }list
  
     { "D6"
@@ -2574,7 +2435,7 @@ $enddef
         ""
         "Enter this object's sound:"
       }list "\r" array_join
-      'setMPIList { "_/sound" "_senses/sound" }list
+      'setMPIList { "_/sound" "_/dl/sound" }list
     }list
  
     { "D7"
@@ -2586,7 +2447,7 @@ $enddef
         ""
         "Enter this object's writing:"
       }list "\r" array_join
-      'setMPIList { "_/writing" "_senses/writing" }list
+      'setMPIList { "_/writing" "_/dl/writing" }list
     }list
  
     "" "Messages" 2
@@ -2709,26 +2570,9 @@ $enddef
   {
   }list
 ;
+
+(* ------------------------------------------------------------------------- *)
  
-(*****************************************************************************)
-(                                 cmdMorph                                    )
-(*****************************************************************************)
-: cmdMorph ( s --  )
-  "me" match ourObject !
- 
-  dup if
-    0 swap doMorph if
-      "me" match "_morph/mesg" getpropstr .tell
-      "me" match "_morph/omesg" getpropstr dup if "me" match name " " strcat swap strcat then .otell
-    then
-  else
-    setListMorph
-  then
-;
- 
-(*****************************************************************************)
-(                                 cmdEdit                                     )
-(*****************************************************************************)
 : doMenuHeader (  --  )
  
   "~&170----~&040[ ~&130Object Editor~&040 ]~&170" dup ansi_strlen .chars-per-row swap - "-" * strcat
@@ -2936,6 +2780,42 @@ $enddef
   setDefaultMenu
 ;
  
+(*****************************************************************************)
+(*                       M-CMD-AT_EDITOBJECT-SaveMorph                       *)
+(*****************************************************************************)
+: M-CMD-AT_EDITOBJECT-SaveMorph[ str:morph_name bool:quiet -- bool:success? ]
+  NEEDSM3
+
+  "me" match ourObject !
+  morph_name @ 1 quiet @ doMorph
+;
+PUBLIC M-CMD-AT_EDITOBJECT-SaveMorph
+$libdef M-CMD-AT_EDITOBJECT-SaveMorph
+
+(*****************************************************************************)
+(*                       M-CMD-AT_EDITOBJECT-LoadMorph                       *)
+(*****************************************************************************)
+: M-CMD-AT_EDITOBJECT-LoadMorph[ str:morph_name bool:quiet -- bool:success? ]
+  NEEDSM3
+
+  "me" match ourObject !
+  morph_name @ 0 quiet @ doMorph
+;
+PUBLIC M-CMD-AT_EDITOBJECT-LoadMorph
+$libdef M-CMD-AT_EDITOBJECT-LoadMorph
+
+(*****************************************************************************)
+(*                      M-CMD-AT_EDITOBJECT-ListMorphs                       *)
+(*****************************************************************************)
+: M-CMD-AT_EDITOBJECT-ListMorphs[  --  ]
+  NEEDSM2
+
+  "me" match ourObject !
+  setListMorph
+;
+PUBLIC M-CMD-AT_EDITOBJECT-ListMorphs
+$libdef M-CMD-AT_EDITOBJECT-ListMorphs
+
 (*****************************************************************************)
 (*                      M-CMD-AT_EDITOBJECT-EditObject                       *)
 (*****************************************************************************)
