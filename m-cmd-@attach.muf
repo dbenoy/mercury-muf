@@ -1,7 +1,7 @@
 @program m-cmd-@attach.muf
 1 99999 d
 i
-$pragma comment_recurse
+$PRAGMA comment_recurse
 (*****************************************************************************)
 (* m_cmd-@attach.muf - $m/cmd/at_attach                                      *)
 (*   A replacement for the built-in @attach command which tries to mimic     *)
@@ -46,19 +46,19 @@ $pragma comment_recurse
 $VERSION 1.001
 $AUTHOR  Daniel Benoy
 $NOTE    @attach command with more features.
-$DOCCMD  @list $m/cmd/at_attach=2-42
+$DOCCMD  @list __PROG__=2-42
 
 (* Begin configurable options *)
 
 (* End configurable options *)
 
-$include $m/lib/match
+$INCLUDE $m/lib/match
 
-$def NEEDSM2 trig caller = not caller mlevel 2 < and if "Requires MUCKER level 2 or above." abort then
-$def NEEDSM3 trig caller = not caller mlevel 3 < and if "Requires MUCKER level 3 or above." abort then
-$def NEEDSM4 trig caller = not caller "WIZARD" flag? not and if "Requires MUCKER level 4 or above." abort then
+$DEF NEEDSM2 trig caller = not caller mlevel 2 < and if "Requires MUCKER level 2 or above." abort then
+$DEF NEEDSM3 trig caller = not caller mlevel 3 < and if "Requires MUCKER level 3 or above." abort then
+$DEF NEEDSM4 trig caller = not caller "WIZARD" flag? not and if "Requires MUCKER level 4 or above." abort then
 
-$pubdef :
+$PUBDEF :
 
 : doReattach ( d d -- s )
   2 try
@@ -126,7 +126,7 @@ $pubdef :
   1
 ;
 PUBLIC M-CMD-AT_ATTACH-Attach
-$libdef M-CMD-AT_ATTACH-Attach
+$LIBDEF M-CMD-AT_ATTACH-Attach
 
 ( --------------------------------------------------------------------------- )
 

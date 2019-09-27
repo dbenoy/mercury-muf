@@ -1,7 +1,7 @@
 @program m-cmd-@excavate.muf
 1 99999 d
 i
-$pragma comment_recurse
+$PRAGMA comment_recurse
 (*****************************************************************************)
 (* m-cmd-@excavate.muf - $m/cmd/at_excavate                                  *)
 (*   Dig rooms, create, and link exits with one command.                     *)
@@ -47,16 +47,16 @@ $pragma comment_recurse
 $VERSION 1.001
 $AUTHOR  Daniel Benoy
 $NOTE    Make rooms and exits at the same time.
-$DOCCMD  @list $m/cmd/at_excavate=2-43
+$DOCCMD  @list __PROG__=2-43
 
 (* Begin configurable options *)
 
 (* End configurable options *)
 
-$include $m/lib/pennies
-$include $m/cmd/at_action
-$include $m/cmd/at_dig
-$include $m/cmd/at_link
+$INCLUDE $m/lib/pennies
+$INCLUDE $m/cmd/at_action
+$INCLUDE $m/cmd/at_dig
+$INCLUDE $m/cmd/at_link
 
 (*****************************************************************************)
 (*                               cmdExcavate                                 *)

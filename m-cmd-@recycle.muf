@@ -1,7 +1,7 @@
 @program m-cmd-@recycle.muf
 1 99999 d
 i
-$pragma comment_recurse
+$PRAGMA comment_recurse
 (*****************************************************************************)
 (* m-cmd-@recycle.muf - $m/cmd/at_recycle                                    *)
 (*   A replacement for the built-in @recycle command which tries to mimic    *)
@@ -49,7 +49,7 @@ $pragma comment_recurse
 $VERSION 1.001
 $AUTHOR  Daniel Benoy
 $NOTE    @recycle command with more features.
-$DOCCMD  @list $m/cmd/at_recycle=2-45
+$DOCCMD  @list __PROG__=2-45
 
 : doRecycle ( d -- s )
   1 try
@@ -63,13 +63,13 @@ $DOCCMD  @list $m/cmd/at_recycle=2-45
 
 (* End configurable options *)
 
-$include $m/lib/match
+$INCLUDE $m/lib/match
 
-$def NEEDSM2 trig caller = not caller mlevel 2 < and if "Requires MUCKER level 2 or above." abort then
-$def NEEDSM3 trig caller = not caller mlevel 3 < and if "Requires MUCKER level 3 or above." abort then
-$def NEEDSM4 trig caller = not caller "WIZARD" flag? not and if "Requires MUCKER level 4 or above." abort then
+$DEF NEEDSM2 trig caller = not caller mlevel 2 < and if "Requires MUCKER level 2 or above." abort then
+$DEF NEEDSM3 trig caller = not caller mlevel 3 < and if "Requires MUCKER level 3 or above." abort then
+$DEF NEEDSM4 trig caller = not caller "WIZARD" flag? not and if "Requires MUCKER level 4 or above." abort then
 
-$pubdef :
+$PUBDEF :
 
 (*****************************************************************************)
 (*                        M-CMD-AT_RECYCLE-Recycle                           *)
@@ -153,7 +153,7 @@ $pubdef :
   then
 ;
 PUBLIC M-CMD-AT_RECYCLE-Recycle
-$libdef M-CMD-AT_RECYCLE-Recycle
+$LIBDEF M-CMD-AT_RECYCLE-Recycle
 
 (*****************************************************************************)
 (*                               cmdRecycle                                  *)

@@ -1,7 +1,7 @@
 @program m-cmd-morph.muf
 1 99999 d
 i
-$pragma comment_recurse
+$PRAGMA comment_recurse
 (*****************************************************************************)
 (* m-cmd-morph.muf - $m/cmd/morph                                            *)
 (*   Load saved alternative description presets made inside @editobject.     *)
@@ -34,9 +34,9 @@ $pragma comment_recurse
 $VERSION 1.000
 $AUTHOR  Daniel Benoy
 $NOTE    Morph loader.
-$DOCCMD  @list $m/cmd/morph=2,30
+$DOCCMD  @list __PROG__=2-30
 
-$include $m/cmd/at_editobject
+$INCLUDE $m/cmd/at_editobject
 
 : help ( -- )
   "MORPH <morph name>" .tell

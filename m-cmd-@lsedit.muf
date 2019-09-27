@@ -1,7 +1,7 @@
 @program m-cmd-@lsedit.muf
 1 99999 d
 i
-$pragma comment_recurse
+$PRAGMA comment_recurse
 (*****************************************************************************)
 (* m-cmd-@lsedit.muf - $m/cmd/at_lsedit                                      *)
 (*    A simple editor for 'list' properties.                                 *)
@@ -42,26 +42,26 @@ $pragma comment_recurse
 $VERSION 1.0
 $AUTHOR  Daniel Benoy
 $NOTE    Editor for 'list' properties.
-$DOCCMD  @list $m/cmd/at_lsedit=2-38
+$DOCCMD  @list __PROG__=2-38
  
 (* Begin configurable options *)
  
-$def .chars-per-row 79
+$DEF .chars-per-row 79
  
 (* End configurable options *)
 
-$include $lib/editor
-$include $lib/lmgr
-$include $m/lib/match
+$INCLUDE $lib/editor
+$INCLUDE $lib/lmgr
+$INCLUDE $m/lib/match
 
-$def .author prog "_author" getpropstr
-$def .version prog "_version" getpropstr begin dup strlen 1 - over ".0" rinstr = not while dup ".0" instr while "." ".0" subst repeat
+$DEF .author prog "_author" getpropstr
+$DEF .version prog "_version" getpropstr begin dup strlen 1 - over ".0" rinstr = not while dup ".0" instr while "." ".0" subst repeat
 
-$def NEEDSM2 trig caller = not caller mlevel 2 < and if "Requires MUCKER level 2 or above." abort then
-$def NEEDSM3 trig caller = not caller mlevel 3 < and if "Requires MUCKER level 3 or above." abort then
-$def NEEDSM4 trig caller = not caller "WIZARD" flag? not and if "Requires MUCKER level 4 or above." abort then
+$DEF NEEDSM2 trig caller = not caller mlevel 2 < and if "Requires MUCKER level 2 or above." abort then
+$DEF NEEDSM3 trig caller = not caller mlevel 3 < and if "Requires MUCKER level 3 or above." abort then
+$DEF NEEDSM4 trig caller = not caller "WIZARD" flag? not and if "Requires MUCKER level 4 or above." abort then
 
-$pubdef :
+$PUBDEF :
 
 (*****************************************************************************)
 (*                         M-CMD-AT_LSEDIT-ListEdit                          *)
@@ -106,7 +106,7 @@ $pubdef :
   modified @
 ;
 PUBLIC M-CMD-AT_LSEDIT-ListEdit
-$libdef M-CMD-AT_LSEDIT-ListEdit
+$LIBDEF M-CMD-AT_LSEDIT-ListEdit
 
 (*****************************************************************************)
 (*                          M-CMD-AT_LSEDIT-LSEdit                           *)
@@ -139,7 +139,7 @@ $libdef M-CMD-AT_LSEDIT-ListEdit
   object @ propname @ M-CMD-AT_LSEDIT-ListEdit
 ;
 PUBLIC M-CMD-AT_LSEDIT-LSEdit
-$libdef M-CMD-AT_LSEDIT-LSEdit
+$LIBDEF M-CMD-AT_LSEDIT-LSEdit
 
 (* ------------------------------------------------------------------------- *)
 

@@ -1,7 +1,7 @@
 @program m-cmd-@editplayer.muf
 1 99999 d
 i
-$pragma comment_recurse
+$PRAGMA comment_recurse
 (*****************************************************************************)
 (* m-cmd-@editplayer.muf - $m/cmd/at_editplayer                              *)
 (*   A simple command to call $m/cmd/at_editobject on the player.            *)
@@ -34,9 +34,9 @@ $pragma comment_recurse
 $VERSION 1.000
 $AUTHOR  Daniel Benoy
 $NOTE    Player editor.
-$DOCCMD  @list $m/cmd/at_editplayer=2,30
+$DOCCMD  @list __PROG__=2-30
 
-$include $m/cmd/at_editobject
+$INCLUDE $m/cmd/at_editobject
 
 : help ( -- )
   "@EDITPLAYER" .tell

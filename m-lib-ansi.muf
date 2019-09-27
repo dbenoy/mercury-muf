@@ -1,7 +1,7 @@
 @program m-lib-ansi.muf
 1 99999 d
 i
-$pragma comment_recurse
+$PRAGMA comment_recurse
 (*****************************************************************************)
 (* m-lib-ansi.muf - $m/lib/ansi                                              *)
 (*   Fuzzball 7 library for old 'tilde' style ANSI color codes.              *)
@@ -155,13 +155,13 @@ $pragma comment_recurse
 $VERSION 3.00
 $AUTHOR  Daniel Benoy
 $NOTE    Legacy ANSI code parsing
-$DOCCMD  @list $<registration>=2,<last header line>
+$DOCCMD  @list __PROG__=2-151
 
 (* Begin configurable options *)
 
 (* End configurable options *)
 
-$pubdef :
+$PUBDEF :
 
 (For the benefit of those reading this code who aren't aware of this, 
   in FB6 \[ represents the escape charactor in strings. 
@@ -184,27 +184,27 @@ Base      Number  Base      Number  Base      Number
 )
 
 (Protect strings should be 2 chars long since ~& is for ansi_strcut.)
-$def PROTECT_STR "\[\["
+$DEF PROTECT_STR "\[\["
  
 ( s   -- s'  )
-$define _protect
+$DEFINE _protect
   PROTECT_STR "\\~&" subst
   PROTECT_STR "~&~&" subst
-$enddef
+$ENDDEF
  
 ( s'  -- s'' )
-$define _end_protect
+$DEFINE _end_protect
   "~&" PROTECT_STR subst
-$enddef
+$ENDDEF
  
 ( s' -- s  ) ( * almost; \~& will be replaced with ~&~&. )
-$define _cut_end_protect
+$DEFINE _cut_end_protect
   "~&~&" PROTECT_STR subst
-$enddef
+$ENDDEF
  
 ( This can be changed if you don't want black on white to be the default
   color. )
-$def RESET_CODE "\[[0;37;40m"
+$DEF RESET_CODE "\[[0;37;40m"
 
 : tCodeData ( s -- s )
   (Generate like:
@@ -298,8 +298,8 @@ $def RESET_CODE "\[[0;37;40m"
   _end_protect
 ;
 PUBLIC ansify-string
-$libdef ansify-string
-$pubdef ansify_string ansify-string
+$LIBDEF ansify-string
+$PUBDEF ansify_string ansify-string
  
 (*****************************************************************************)
 (*                                   ansi?                                   *)
@@ -308,7 +308,7 @@ $pubdef ansify_string ansify-string
   owner "C" flag?
 ;
 PUBLIC ansi?
-$libdef ansi?
+$LIBDEF ansi?
 
 (*****************************************************************************)
 (*                                ansi-strip                                 *)
@@ -337,8 +337,8 @@ $libdef ansi?
   data @ _end_protect
 ;
 PUBLIC ansi-strip
-$libdef ansi-strip
-$pubdef ansi_strip ansi-strip
+$LIBDEF ansi-strip
+$PUBDEF ansi_strip ansi-strip
  
 (*****************************************************************************)
 (*                                ansi-strcut                                *)
@@ -398,8 +398,8 @@ $pubdef ansi_strip ansi-strip
   strcut_s1 @ strcut_s2 @
 ;
 PUBLIC ansi-strcut
-$libdef ansi-strcut
-$pubdef ansi_strcut ansi-strcut
+$LIBDEF ansi-strcut
+$PUBDEF ansi_strcut ansi-strcut
  
 (*****************************************************************************)
 (*                               ansi-codecheck                              *)
@@ -408,8 +408,8 @@ $pubdef ansi_strcut ansi-strcut
   "{r|R|[-0-9][-0-9][-0-9]}" smatch
 ;
 PUBLIC ansi-codecheck
-$libdef ansi-codecheck
-$pubdef ansi_codecheck ansi-codecheck
+$LIBDEF ansi-codecheck
+$PUBDEF ansi_codecheck ansi-codecheck
 
 (*****************************************************************************)
 (*                                ansi-notify                                *)
@@ -418,8 +418,8 @@ $pubdef ansi_codecheck ansi-codecheck
   ansify-string \notify
 ;
 PUBLIC ansi-notify
-$libdef ansi-notify
-$pubdef ansi_notify ansi-notify
+$LIBDEF ansi-notify
+$PUBDEF ansi_notify ansi-notify
 
 (*****************************************************************************)
 (*                            ansi-notify-except                             *)
@@ -428,8 +428,8 @@ $pubdef ansi_notify ansi-notify
   ansify-string 1 swap \notify_exclude
 ;
 PUBLIC ansi-notify-except
-$libdef ansi-notify-except
-$pubdef ansi_notify-except ansi-notify-except
+$LIBDEF ansi-notify-except
+$PUBDEF ansi_notify-except ansi-notify-except
 
 (*****************************************************************************)
 (*                            ansi-notify-exclude                            *)
@@ -438,8 +438,8 @@ $pubdef ansi_notify-except ansi-notify-except
   ansify-string \notify_exclude
 ;
 PUBLIC ansi-notify-exclude
-$libdef ansi-notify-exclude
-$pubdef ansi_notify-exclude ansi-notify-exclude
+$LIBDEF ansi-notify-exclude
+$PUBDEF ansi_notify-exclude ansi-notify-exclude
 
 (*****************************************************************************)
 (*                                 ansi-tell                                 *)
@@ -448,8 +448,8 @@ $pubdef ansi_notify-exclude ansi-notify-exclude
   ansify-string .tell
 ;
 PUBLIC ansi-tell
-$libdef ansi-tell
-$pubdef ansi_tell ansi-tell
+$LIBDEF ansi-tell
+$PUBDEF ansi_tell ansi-tell
 
 (*****************************************************************************)
 (*                                ansi-otell                                 *)
@@ -458,8 +458,8 @@ $pubdef ansi_tell ansi-tell
   ansify-string .otell
 ;
 PUBLIC ansi-otell
-$libdef ansi-otell
-$pubdef ansi_otell ansi-otell
+$LIBDEF ansi-otell
+$PUBDEF ansi_otell ansi-otell
 
 (*****************************************************************************)
 (*                                ansi-strlen                                *)
@@ -468,8 +468,8 @@ $pubdef ansi_otell ansi-otell
   ansi-strip \strlen
 ;
 PUBLIC ansi-strlen
-$libdef ansi-strlen
-$pubdef ansi_strlen ansi-strlen
+$LIBDEF ansi-strlen
+$PUBDEF ansi_strlen ansi-strlen
 
 (*****************************************************************************)
 (*                              ansi-connotify                               *)
@@ -478,14 +478,14 @@ $pubdef ansi_strlen ansi-strlen
   ansify-string \connotify
 ;
 PUBLIC ansi-connotify
-$libdef ansi-connotify
-$pubdef ansi_connotify ansi-connotify
+$LIBDEF ansi-connotify
+$PUBDEF ansi_connotify ansi-connotify
 
 (*****************************************************************************)
 (*                               ansi-version                                *)
 (*****************************************************************************)
-$pubdef ansi-version 200 (* Emulate lib-ansi-free with extra feeps! *)
-$pubdef ansi_version ansi-version
+$PUBDEF ansi-version 200 (* Emulate lib-ansi-free with extra feeps! *)
+$PUBDEF ansi_version ansi-version
 
 (*****************************************************************************)
 (*                                ansi-value                                 *)
@@ -512,8 +512,8 @@ $pubdef ansi_version ansi-version
   endcase
 ;
 PUBLIC ansi-value
-$libdef ansi-value
-$pubdef ansi_value ansi-value
+$LIBDEF ansi-value
+$PUBDEF ansi_value ansi-value
 
 : main
 "Library called as command." abort

@@ -1,7 +1,7 @@
 @program m-cmd-@relink.muf
 1 99999 d
 i
-$pragma comment_recurse
+$PRAGMA comment_recurse
 (*****************************************************************************)
 (* m-cmd-@relink.muf - $m/cmd/at_relink                                      *)
 (*   A replacement for the built-in @relink command which tries to mimic     *)
@@ -47,14 +47,14 @@ $pragma comment_recurse
 $VERSION 1.001
 $AUTHOR  Daniel Benoy
 $NOTE    @relink command with more features.
-$DOCCMD  @list $m/cmd/at_relink=2-43
+$DOCCMD  @list __PROG__=2-43
 
 (* Begin configurable options *)
 
 (* End configurable options *)
 
-$include $m/cmd/at_link
-$include $m/cmd/at_unlink
+$INCLUDE $m/cmd/at_link
+$INCLUDE $m/cmd/at_unlink
 
 (*****************************************************************************)
 (*                                cmdRelink                                  *)

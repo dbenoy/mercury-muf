@@ -1,7 +1,7 @@
 @program m-cmd-@open.muf
 1 99999 d
 i
-$pragma comment_recurse
+$PRAGMA comment_recurse
 (*****************************************************************************)
 (* m-cmd-@open.muf - $m/cmd/at_open                                          *)
 (*   A replacement for the built-in @open command which tries to mimic stock *)
@@ -48,16 +48,16 @@ $pragma comment_recurse
 $VERSION 1.001
 $AUTHOR  Daniel Benoy
 $NOTE    @open command with more features.
-$DOCCMD  @list $m/cmd/at_open=2-44
+$DOCCMD  @list __PROG__=2-44
 
 (* Begin configurable options *)
 
 (* End configurable options *)
 
-$include $m/lib/match
-$include $m/lib/pennies
-$include $m/cmd/at_action
-$include $m/cmd/at_link
+$INCLUDE $m/lib/match
+$INCLUDE $m/lib/pennies
+$INCLUDE $m/cmd/at_action
+$INCLUDE $m/cmd/at_link
 
 (*****************************************************************************)
 (*                                 cmdOpen                                   *)

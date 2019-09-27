@@ -1,7 +1,7 @@
 @program m-lib-match.muf
 1 99999 d
 i
-$pragma comment_recurse
+$PRAGMA comment_recurse
 (*****************************************************************************)
 (* m-lib-match.muf - $m/lib/match                                            *)
 (*   A library for enhanced 'match' functionality. Used to find object dbref *)
@@ -55,17 +55,17 @@ $pragma comment_recurse
 $VERSION 1.001
 $AUTHOR  Daniel Benoy
 $NOTE    Find object dbrefs based on names.
-$DOCCMD  @list $m/lib/match=2-51
+$DOCCMD  @list __PROG__=2-51
 
 (* Begin configurable options *)
 
 (* End configurable options *)
 
-$def NEEDSM2 caller mlevel 2 < if "Requires MUCKER level 2 or above." abort then
-$def NEEDSM3 caller mlevel 3 < if "Requires MUCKER level 3 or above." abort then
-$def NEEDSM4 caller mlevel 3 < if "Requires MUCKER level 4 or above." abort then
+$DEF NEEDSM2 caller mlevel 2 < if "Requires MUCKER level 2 or above." abort then
+$DEF NEEDSM3 caller mlevel 3 < if "Requires MUCKER level 3 or above." abort then
+$DEF NEEDSM4 caller mlevel 3 < if "Requires MUCKER level 4 or above." abort then
 
-$pubdef :
+$PUBDEF :
 
 (*****************************************************************************)
 (*                             M-LIB-MATCH-Match                             *)
@@ -113,7 +113,7 @@ $pubdef :
   matchResult @
 ;
 PUBLIC M-LIB-MATCH-Match
-$libdef M-LIB-MATCH-Match
+$LIBDEF M-LIB-MATCH-Match
 
 (*****************************************************************************)
 (*                        M-LIB-MATCH-RegisterObject                         *)
@@ -133,7 +133,7 @@ $libdef M-LIB-MATCH-Match
   "Registered as $" regname @ strcat .tell
 ;
 PUBLIC M-LIB-MATCH-RegisterObject
-$libdef M-LIB-MATCH-RegisterObject
+$LIBDEF M-LIB-MATCH-RegisterObject
 
 : main
   "Library called as command." abort

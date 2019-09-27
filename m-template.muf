@@ -1,6 +1,9 @@
-$pragma comment_recurse
+@program m-<--FILENAME-->
+1 99999 d
+i
+$PRAGMA comment_recurse
 (*****************************************************************************)
-(* <filename> - $<registration>                                              *)
+(* m-<--FILENAME--> - $m/<--REGISTRATION-->                                  *)
 (*   <description>                                                           *)
 (*                                                                           *)
 (*   GitHub: https://github.com/dbenoy/mercury-muf (See for install info)    *)
@@ -48,5 +51,18 @@ $pragma comment_recurse
 $VERSION <version in floating point format>
 $AUTHOR  <your name>
 $NOTE    <short description>
-$DOCCMD  @list $<registration>=2,<last header line>
+$DOCCMD  @list __PROG__=2-<last header line>
 
+: help ( -- )
+  "<--HELP TEXT-->" .tell
+;
+
+: main ( s --  )
+  "#help" over stringpfx if pop help exit then
+;
+.
+c
+q
+@register m-<--FILENAME-->=m/<--REGISTRATION-->
+@set $m/<--REGISTRATION-->=<--FLAG-->
+...

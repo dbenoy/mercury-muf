@@ -1,7 +1,7 @@
 @program m-cmd-@editobject.muf
 1 99999 d
 i
-$pragma comment_recurse
+$PRAGMA comment_recurse
 (*****************************************************************************)
 (* m-cmd-@editobject.muf - $m/cmd/at_editobject                              *)
 (*    A command for editing objects of any type, including players, rooms,   *)
@@ -58,11 +58,11 @@ $pragma comment_recurse
 $VERSION 1.001
 $AUTHOR  Daniel Benoy
 $NOTE    An interface for editing objects.
-$DOCCMD  @list $m/cmd/at_editobject=2-54
+$DOCCMD  @list __PROG__=2-54
  
 (* Begin configurable options *)
  
-$def .chars-per-row 79
+$DEF .chars-per-row 79
  
 (* End configurable options *)
  
@@ -87,35 +87,35 @@ $def .chars-per-row 79
  
 (* End global variables *)
  
-$def NEEDSM2 trig caller = not caller mlevel 2 < and if "Requires MUCKER level 2 or above." abort then
-$def NEEDSM3 trig caller = not caller mlevel 3 < and if "Requires MUCKER level 3 or above." abort then
-$def NEEDSM4 trig caller = not caller "WIZARD" flag? not and if "Requires MUCKER level 4 or above." abort then
+$DEF NEEDSM2 trig caller = not caller mlevel 2 < and if "Requires MUCKER level 2 or above." abort then
+$DEF NEEDSM3 trig caller = not caller mlevel 3 < and if "Requires MUCKER level 3 or above." abort then
+$DEF NEEDSM4 trig caller = not caller "WIZARD" flag? not and if "Requires MUCKER level 4 or above." abort then
 
-$pubdef :
+$PUBDEF :
 
-$include $m/lib/ansi
-$include $m/lib/match
-$include $m/cmd/at_action
-$include $m/cmd/at_attach
-$include $m/cmd/at_link
-$include $m/cmd/at_unlink
-$include $m/cmd/at_recycle
-$include $m/cmd/at_lsedit
+$INCLUDE $m/lib/ansi
+$INCLUDE $m/lib/match
+$INCLUDE $m/cmd/at_action
+$INCLUDE $m/cmd/at_attach
+$INCLUDE $m/cmd/at_link
+$INCLUDE $m/cmd/at_unlink
+$INCLUDE $m/cmd/at_recycle
+$INCLUDE $m/cmd/at_lsedit
  
-$def .author prog "_author" getpropstr
-$def .version prog "_version" getpropstr begin dup ".0" instr while "." ".0" subst repeat
+$DEF .author prog "_author" getpropstr
+$DEF .version prog "_version" getpropstr begin dup ".0" instr while "." ".0" subst repeat
  
-$define .header
+$DEFINE .header
   prog name " " strcat .version strcat " -- by " strcat .author strcat 49 "%-*s" fmtstring
   "(Queries to:" prog owner name strcat ")" strcat 30 "%*s" fmtstring strcat .tell
   "-------------------------------------------------------------------------------" .tell
-$enddef
+$ENDDEF
  
-$define .footer
+$DEFINE .footer
   "-------------------------------------------------------------------------------" .tell
   "*Done*" 69 "%-*s" fmtstring
   prog "L" flag? prog "V" flag? or if "(#" prog intostr strcat ")" strcat 10 "%*s" fmtstring strcat then .tell
-$enddef
+$ENDDEF
  
 (*****************************************************************************)
 (                             support functions                               )
@@ -2792,7 +2792,7 @@ lvar ourMorphPropTable
   morph_name @ 1 quiet @ doMorph
 ;
 PUBLIC M-CMD-AT_EDITOBJECT-SaveMorph
-$libdef M-CMD-AT_EDITOBJECT-SaveMorph
+$LIBDEF M-CMD-AT_EDITOBJECT-SaveMorph
 
 (*****************************************************************************)
 (*                       M-CMD-AT_EDITOBJECT-LoadMorph                       *)
@@ -2806,7 +2806,7 @@ $libdef M-CMD-AT_EDITOBJECT-SaveMorph
   morph_name @ 0 quiet @ doMorph
 ;
 PUBLIC M-CMD-AT_EDITOBJECT-LoadMorph
-$libdef M-CMD-AT_EDITOBJECT-LoadMorph
+$LIBDEF M-CMD-AT_EDITOBJECT-LoadMorph
 
 (*****************************************************************************)
 (*                      M-CMD-AT_EDITOBJECT-ListMorphs                       *)
@@ -2818,7 +2818,7 @@ $libdef M-CMD-AT_EDITOBJECT-LoadMorph
   setListMorph
 ;
 PUBLIC M-CMD-AT_EDITOBJECT-ListMorphs
-$libdef M-CMD-AT_EDITOBJECT-ListMorphs
+$LIBDEF M-CMD-AT_EDITOBJECT-ListMorphs
 
 (*****************************************************************************)
 (*                      M-CMD-AT_EDITOBJECT-EditObject                       *)
@@ -2844,7 +2844,7 @@ $libdef M-CMD-AT_EDITOBJECT-ListMorphs
   1
 ;
 PUBLIC M-CMD-AT_EDITOBJECT-EditObject
-$libdef M-CMD-AT_EDITOBJECT-EditObject
+$LIBDEF M-CMD-AT_EDITOBJECT-EditObject
 
 ( --------------------------------------------------------------------------- )
 

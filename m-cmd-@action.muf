@@ -1,7 +1,7 @@
 @program m-cmd-@action.muf
 1 99999 d
 i
-$pragma comment_recurse
+$PRAGMA comment_recurse
 (*****************************************************************************)
 (* m_cmd-@action.muf - $m/cmd/at_action                                      *)
 (*   A replacement for the built-in @action command which tries to mimic     *)
@@ -56,22 +56,22 @@ $pragma comment_recurse
 $VERSION 1.001
 $AUTHOR  Daniel Benoy
 $NOTE    @action command with more features.
-$DOCCMD  @list $m/cmd/at_action=2-52
+$DOCCMD  @list __PROG__=2-52
 
 (* Begin configurable options *)
 
 (* End configurable options *)
 
-$include $m/lib/quota
-$include $m/lib/match
-$include $m/lib/pennies
-$include $m/cmd/at_link
+$INCLUDE $m/lib/quota
+$INCLUDE $m/lib/match
+$INCLUDE $m/lib/pennies
+$INCLUDE $m/cmd/at_link
 
-$def NEEDSM2 trig caller = not caller mlevel 2 < and if "Requires MUCKER level 2 or above." abort then
-$def NEEDSM3 trig caller = not caller mlevel 3 < and if "Requires MUCKER level 3 or above." abort then
-$def NEEDSM4 trig caller = not caller "WIZARD" flag? not and if "Requires MUCKER level 4 or above." abort then
+$DEF NEEDSM2 trig caller = not caller mlevel 2 < and if "Requires MUCKER level 2 or above." abort then
+$DEF NEEDSM3 trig caller = not caller mlevel 3 < and if "Requires MUCKER level 3 or above." abort then
+$DEF NEEDSM4 trig caller = not caller "WIZARD" flag? not and if "Requires MUCKER level 4 or above." abort then
 
-$pubdef :
+$PUBDEF :
 
 : doNewExit ( d s -- d s )
   2 try
@@ -140,7 +140,7 @@ $pubdef :
   "Action " over name strcat " (#" strcat over intostr strcat ") created." strcat .tell
 ;
 PUBLIC M-CMD-AT_ACTION-Action
-$libdef M-CMD-AT_ACTION-Action
+$LIBDEF M-CMD-AT_ACTION-Action
 
 (*****************************************************************************)
 (*                                cmdAction                                  *)

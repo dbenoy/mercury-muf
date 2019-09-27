@@ -1,7 +1,7 @@
 @program m-cmd-@editroom.muf
 1 99999 d
 i
-$pragma comment_recurse
+$PRAGMA comment_recurse
 (*****************************************************************************)
 (* m-cmd-@editroom.muf - $m/cmd/at_editroom                                  *)
 (*   A simple command to call $m/cmd/at_editobject on the current room.      *)
@@ -34,9 +34,9 @@ $pragma comment_recurse
 $VERSION 1.000
 $AUTHOR  Daniel Benoy
 $NOTE    Room editor.
-$DOCCMD  @list $m/cmd/at_editroom=2,30
+$DOCCMD  @list __PROG__=2-30
 
-$include $m/cmd/at_editobject
+$INCLUDE $m/cmd/at_editobject
 
 : help ( -- )
   "@EDITROOM" .tell

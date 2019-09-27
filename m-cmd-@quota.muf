@@ -1,7 +1,7 @@
 @program m-cmd-@quota.muf
 1 99999 d
 i
-$pragma comment_recurse
+$PRAGMA comment_recurse
 (*****************************************************************************)
 (* m-cmd-@quota.muf - $m/cmd/at_quota                                        *)
 (*   For use with other $m/lib/quota programs, displays object quota and     *)
@@ -38,13 +38,13 @@ $pragma comment_recurse
 $VERSION 1.001
 $AUTHOR  Daniel Benoy
 $NOTE    Displays player object quotas.
-$DOCCMD  @list $m/cmd/at_quota=2-34
+$DOCCMD  @list __PROG__=2-34
 
 (* Begin configurable options *)
 
 (* End configurable options *)
 
-$include $m/lib/quota
+$INCLUDE $m/lib/quota
 
 (*****************************************************************************)
 (*                                  cmdQuota                                 *)
@@ -55,7 +55,7 @@ $include $m/lib/quota
   "Displays quota information and ownership totals." .tell
 ;
 
-$def QUOTA_STRING dup -1 = if pop "---" else intostr then
+$DEF QUOTA_STRING dup -1 = if pop "---" else intostr then
 
 : main ( s --  )
   dup "#help" over stringpfx and if pop help exit then

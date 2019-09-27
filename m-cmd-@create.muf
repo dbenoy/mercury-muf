@@ -1,7 +1,7 @@
 @program m-cmd-@create.muf
 1 99999 d
 i
-$pragma comment_recurse
+$PRAGMA comment_recurse
 (*****************************************************************************)
 (* m-cmd-@create.muf - $m/cmd/at_create                                      *)
 (*   A replacement for the built-in @create command which tries to mimic     *)
@@ -49,21 +49,21 @@ $pragma comment_recurse
 $VERSION 1.001
 $AUTHOR  Daniel Benoy
 $NOTE    @create command with more features.
-$DOCCMD  @list $m/cmd/at_create=2-45
+$DOCCMD  @list __PROG__=2-45
 
 (* Begin configurable options *)
 
 (* End configurable options *)
 
-$include $m/lib/quota
-$include $m/lib/match
-$include $m/lib/pennies
+$INCLUDE $m/lib/quota
+$INCLUDE $m/lib/match
+$INCLUDE $m/lib/pennies
 
-$def NEEDSM2 trig caller = not caller mlevel 2 < and if "Requires MUCKER level 2 or above." abort then
-$def NEEDSM3 trig caller = not caller mlevel 3 < and if "Requires MUCKER level 3 or above." abort then
-$def NEEDSM4 trig caller = not caller "WIZARD" flag? not and if "Requires MUCKER level 4 or above." abort then
+$DEF NEEDSM2 trig caller = not caller mlevel 2 < and if "Requires MUCKER level 2 or above." abort then
+$DEF NEEDSM3 trig caller = not caller mlevel 3 < and if "Requires MUCKER level 3 or above." abort then
+$DEF NEEDSM4 trig caller = not caller "WIZARD" flag? not and if "Requires MUCKER level 4 or above." abort then
 
-$pubdef :
+$PUBDEF :
 
 : doNewObject ( d s -- d s )
   2 try
@@ -123,7 +123,7 @@ $pubdef :
   dup thingValue @ addpennies
 ;
 PUBLIC M-CMD-AT_CREATE-Create
-$libdef M-CMD-AT_CREATE-Create
+$LIBDEF M-CMD-AT_CREATE-Create
  
 (*****************************************************************************)
 (*                                cmdCreate                                  *)

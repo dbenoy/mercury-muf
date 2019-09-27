@@ -1,7 +1,7 @@
 @program m-cmd-@link.muf
 1 99999 d
 i
-$pragma comment_recurse
+$PRAGMA comment_recurse
 (*****************************************************************************)
 (* m-cmd-@link.muf - $m/cmd/at_link                                          *)
 (*   A replacement for the built-in @link command which tries to mimic stock *)
@@ -53,20 +53,20 @@ $pragma comment_recurse
 $VERSION 1.001
 $AUTHOR  Daniel Benoy
 $NOTE    @link command with more features.
-$DOCCMD  @list $m/cmd/at_link=2-49
+$DOCCMD  @list __PROG__=2-49
 
 (* Begin configurable options *)
 
 (* End configurable options *)
 
-$include $m/lib/match
-$include $m/lib/pennies
+$INCLUDE $m/lib/match
+$INCLUDE $m/lib/pennies
 
-$def NEEDSM2 trig caller = not caller mlevel 2 < and if "Requires MUCKER level 2 or above." abort then
-$def NEEDSM3 trig caller = not caller mlevel 3 < and if "Requires MUCKER level 3 or above." abort then
-$def NEEDSM4 trig caller = not caller "WIZARD" flag? not and if "Requires MUCKER level 4 or above." abort then
+$DEF NEEDSM2 trig caller = not caller mlevel 2 < and if "Requires MUCKER level 2 or above." abort then
+$DEF NEEDSM3 trig caller = not caller mlevel 3 < and if "Requires MUCKER level 3 or above." abort then
+$DEF NEEDSM4 trig caller = not caller "WIZARD" flag? not and if "Requires MUCKER level 4 or above." abort then
 
-$pubdef :
+$PUBDEF :
 
 : doSetLinksArray ( d1 a -- s )
   2 try
@@ -76,8 +76,8 @@ $pubdef :
   endcatch
 ;
 
-$def LINKABLE dup room? over thing? or dup 3 pick "ABODE" flag? and swap not 3 pick "LINK_OK" flag? and or over #-3 = or swap pop
-$def TESTLOCKPROP getprop dup lock? if testlock else pop pop 1 then
+$DEF LINKABLE dup room? over thing? or dup 3 pick "ABODE" flag? and swap not 3 pick "LINK_OK" flag? and or over #-3 = or swap pop
+$DEF TESTLOCKPROP getprop dup lock? if testlock else pop pop 1 then
 
 : canLinkTo[ ref:who ref:what ref:where -- bool:success? ]
   (* Can always link to HOME *)
@@ -301,7 +301,7 @@ $def TESTLOCKPROP getprop dup lock? if testlock else pop pop 1 then
   thing @ links @ 0 doLink
 ;
 PUBLIC M-CMD-AT_LINK-Link
-$libdef M-CMD-AT_LINK-Link
+$LIBDEF M-CMD-AT_LINK-Link
 
 (*****************************************************************************)
 (*                           M-CMD-AT_LINK-Relink                            *)
@@ -312,7 +312,7 @@ $libdef M-CMD-AT_LINK-Link
   thing @ links @ 1 doLink
 ;
 PUBLIC M-CMD-AT_LINK-Relink
-$libdef M-CMD-AT_LINK-Relink
+$LIBDEF M-CMD-AT_LINK-Relink
 
 (*****************************************************************************)
 (*                                 cmdLink                                   *)

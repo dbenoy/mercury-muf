@@ -1,7 +1,7 @@
 @program m-lib-pennies.muf
 1 99999 d
 i
-$pragma comment_recurse
+$PRAGMA comment_recurse
 (*****************************************************************************)
 (* m-lib-pennies.muf - $m/lib/pennies                                        *)
 (*   A library for managing penny values.                                    *)
@@ -81,21 +81,21 @@ $pragma comment_recurse
 $VERSION 1.001
 $AUTHOR  Daniel Benoy
 $NOTE    Manage pennies.
-$DOCCMD  @list $m/lib/pennies=2-77
+$DOCCMD  @list __PROG__=2-77
 
 (* Begin configurable options *)
 
 (* End configurable options *)
 
-$def ENDOWMENT_FORMULA        5 / --               (* Equation for pennies spent into object value *)
-$def ENDOWMENT_FORMULA_STRING "((<cost> / 5) - 1)" (* The above equation in human readable form *)
-$def COST_FORMULA             ++ 5 *               (* Inverse of ENDOWMENT_FORMULA. Desired object value into pennies required *)
+$DEF ENDOWMENT_FORMULA        5 / --               (* Equation for pennies spent into object value *)
+$DEF ENDOWMENT_FORMULA_STRING "((<cost> / 5) - 1)" (* The above equation in human readable form *)
+$DEF COST_FORMULA             ++ 5 *               (* Inverse of ENDOWMENT_FORMULA. Desired object value into pennies required *)
 
-$def NEEDSM2 caller mlevel 2 < if "Requires MUCKER level 2 or above." abort then
-$def NEEDSM3 caller mlevel 3 < if "Requires MUCKER level 3 or above." abort then
-$def NEEDSM4 caller mlevel 3 < if "Requires MUCKER level 4 or above." abort then
+$DEF NEEDSM2 caller mlevel 2 < if "Requires MUCKER level 2 or above." abort then
+$DEF NEEDSM3 caller mlevel 3 < if "Requires MUCKER level 3 or above." abort then
+$DEF NEEDSM4 caller mlevel 3 < if "Requires MUCKER level 4 or above." abort then
 
-$pubdef :
+$PUBDEF :
 
 (*****************************************************************************)
 (*                         M-LIB-PENNIES-GetEndowStr                         *)
@@ -106,7 +106,7 @@ $pubdef :
   ENDOWMENT_FORMULA_STRING
 ;
 PUBLIC M-LIB-PENNIES-GetEndowStr
-$libdef M-LIB-PENNIES-GetEndowStr
+$LIBDEF M-LIB-PENNIES-GetEndowStr
 
 (*****************************************************************************)
 (*                          M-LIB-PENNIES-GetEndow                           *)
@@ -117,7 +117,7 @@ $libdef M-LIB-PENNIES-GetEndowStr
   ENDOWMENT_FORMULA
 ;
 PUBLIC M-LIB-PENNIES-GetEndow
-$libdef M-LIB-PENNIES-GetEndow
+$LIBDEF M-LIB-PENNIES-GetEndow
 
 (*****************************************************************************)
 (*                           M-LIB-PENNIES-GetCost                           *)
@@ -128,7 +128,7 @@ $libdef M-LIB-PENNIES-GetEndow
   COST_FORMULA
 ;
 PUBLIC M-LIB-PENNIES-GetCost
-$libdef M-LIB-PENNIES-GetCost
+$LIBDEF M-LIB-PENNIES-GetCost
 
 (*****************************************************************************)
 (*                           M-LIB-PENNIES-Pennies                           *)
@@ -147,7 +147,7 @@ $libdef M-LIB-PENNIES-GetCost
   dup intostr " " strcat swap dup 1 = swap -1 = or if "penny" sysparm else "pennies" sysparm then strcat
 ;
 PUBLIC M-LIB-PENNIES-Pennies
-$libdef M-LIB-PENNIES-Pennies
+$LIBDEF M-LIB-PENNIES-Pennies
 
 (*****************************************************************************)
 (*                          M-LIB-PENNIES-ChkPayFor                          *)
@@ -156,7 +156,7 @@ $libdef M-LIB-PENNIES-Pennies
   NEEDSM3
   "i" checkargs
 
-  dup 0 < if "Negative value (1)." abort
+  dup 0 < if "Negative value (1)." abort then
 
   "me" match "WIZARD" flag? if (* Wizards have a sideways 8 in their pockets. *)
     pop 1 exit
@@ -165,7 +165,7 @@ $libdef M-LIB-PENNIES-Pennies
   "me" match pennies <=
 ;
 PUBLIC M-LIB-PENNIES-ChkPayFor
-$libdef M-LIB-PENNIES-ChkPayFor
+$LIBDEF M-LIB-PENNIES-ChkPayFor
 
 (*****************************************************************************)
 (*                          M-LIB-PENNIES-DoPayFor                           *)
@@ -174,7 +174,7 @@ $libdef M-LIB-PENNIES-ChkPayFor
   NEEDSM3
   "i" checkargs
 
-  dup 0 < if "Negative value (1)." abort
+  dup 0 < if "Negative value (1)." abort then
 
   "me" match "WIZARD" flag? if (* Wizards have a sideways 8 in their pockets. *)
     pop exit
@@ -187,7 +187,7 @@ $libdef M-LIB-PENNIES-ChkPayFor
   "me" match owner swap -1 * addpennies
 ;
 PUBLIC M-LIB-PENNIES-DoPayFor
-$libdef M-LIB-PENNIES-DoPayFor
+$LIBDEF M-LIB-PENNIES-DoPayFor
 
 : main
   "Library called as command." abort

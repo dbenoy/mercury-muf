@@ -1,7 +1,7 @@
 @program m-cmd-@unlink.muf
 1 99999 d
 i
-$pragma comment_recurse
+$PRAGMA comment_recurse
 (*****************************************************************************)
 (* m-cmd-@unlink.muf - $m/cmd/at_unlink                                      *)
 (*   A replacement for the built-in @unlink command which tries to mimic     *)
@@ -49,19 +49,19 @@ $pragma comment_recurse
 $VERSION 1.001
 $AUTHOR  Daniel Benoy
 $NOTE    @unlink command with more features.
-$DOCCMD  @list $m/cmd/at_unlink=2-45
+$DOCCMD  @list __PROG__=2-45
 
 (* Begin configurable options *)
 
 (* End configurable options *)
 
-$include $m/lib/match
+$INCLUDE $m/lib/match
 
-$def NEEDSM2 trig caller = not caller mlevel 2 < and if "Requires MUCKER level 2 or above." abort then
-$def NEEDSM3 trig caller = not caller mlevel 3 < and if "Requires MUCKER level 3 or above." abort then
-$def NEEDSM4 trig caller = not caller "WIZARD" flag? not and if "Requires MUCKER level 4 or above." abort then
+$DEF NEEDSM2 trig caller = not caller mlevel 2 < and if "Requires MUCKER level 2 or above." abort then
+$DEF NEEDSM3 trig caller = not caller mlevel 3 < and if "Requires MUCKER level 3 or above." abort then
+$DEF NEEDSM4 trig caller = not caller "WIZARD" flag? not and if "Requires MUCKER level 4 or above." abort then
 
-$pubdef :
+$PUBDEF :
 
 : controlsLink[ ref:who ref:thing -- bool:success? ]
   thing @ ok? not if
@@ -135,7 +135,7 @@ $pubdef :
   1
 ;
 PUBLIC M-CMD-AT_UNLINK-Unlink
-$libdef M-CMD-AT_UNLINK-Unlink
+$LIBDEF M-CMD-AT_UNLINK-Unlink
 
 (*****************************************************************************)
 (*                                cmdUnlink                                  *)

@@ -1,7 +1,7 @@
 @program m-lib-quota.muf
 1 99999 d
 i
-$pragma comment_recurse
+$PRAGMA comment_recurse
 (*****************************************************************************)
 (* m-lib-quota.muf - $m/lib/quota                                            *)
 (*   A library for retreiving information on object quotas for builders.     *)
@@ -64,26 +64,26 @@ $pragma comment_recurse
 $VERSION 1.001
 $AUTHOR  Daniel Benoy
 $NOTE    Object quotas for building commands.
-$DOCCMD  @list $m/lib/quota=2-60
+$DOCCMD  @list __PROG__=2-60
 
 (* Begin configurable options *)
  
-$define DEFAULT_QUOTA
+$DEFINE DEFAULT_QUOTA
 {
   "thing" -1
   "room" -1
   "exit" -1
   "program" -1
 }dict
-$enddef
+$ENDDEF
 
 (* End configurable options *)
 
-$def NEEDSM2 caller mlevel 2 < if "Requires MUCKER level 2 or above." abort then
-$def NEEDSM3 caller mlevel 3 < if "Requires MUCKER level 3 or above." abort then
-$def NEEDSM4 caller mlevel 3 < if "Requires MUCKER level 4 or above." abort then
+$DEF NEEDSM2 caller mlevel 2 < if "Requires MUCKER level 2 or above." abort then
+$DEF NEEDSM3 caller mlevel 3 < if "Requires MUCKER level 3 or above." abort then
+$DEF NEEDSM4 caller mlevel 3 < if "Requires MUCKER level 4 or above." abort then
 
-$pubdef :
+$PUBDEF :
 
 (*****************************************************************************)
 (*                           M-LIB-QUOTA-GetQuota                            *)
@@ -111,7 +111,7 @@ $pubdef :
   DEFAULT_QUOTA type @ []
 ;
 PUBLIC M-LIB-QUOTA-GetQuota
-$libdef M-LIB-QUOTA-GetQuota
+$LIBDEF M-LIB-QUOTA-GetQuota
 
 (*****************************************************************************)
 (*                           M-LIB-QUOTA-GetUsage                            *)
@@ -144,7 +144,7 @@ $libdef M-LIB-QUOTA-GetQuota
   { player @ stats }array statsPos @ []
 ;
 PUBLIC M-LIB-QUOTA-GetUsage
-$libdef M-LIB-QUOTA-GetUsage
+$LIBDEF M-LIB-QUOTA-GetUsage
 
 (*****************************************************************************)
 (*                          M-LIB-QUOTA-QuotaCheck                           *)
@@ -170,7 +170,7 @@ $libdef M-LIB-QUOTA-GetUsage
   1
 ;
 PUBLIC M-LIB-QUOTA-QuotaCheck
-$libdef M-LIB-QUOTA-QuotaCheck
+$LIBDEF M-LIB-QUOTA-QuotaCheck
 
 : main
   "Library called as command." abort
