@@ -2846,7 +2846,7 @@ $LIBDEF M-CMD-AT_EDITOBJECT-ListMorphs
 PUBLIC M-CMD-AT_EDITOBJECT-EditObject
 $LIBDEF M-CMD-AT_EDITOBJECT-EditObject
 
-( --------------------------------------------------------------------------- )
+(* ------------------------------------------------------------------------- *)
 
 : help ( --  )
   .header
