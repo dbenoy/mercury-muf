@@ -58,7 +58,7 @@ $include $m/cmd/at_editobject
   var! morph_name
 
   morph_name @ 1 M-CMD-AT_EDITOBJECT-LoadMorph if
-    "me" match "_config/morph_mesg" getpropstr dup if .tell else { "You morph into a " morph_name @ "." }join .tell pop then
+    "me" match "_config/morph_mesg" getpropstr dup if .tell else { "You morph into a " me @ "_morph" getpropstr "." }join .tell pop then
     "me" match "_config/morph_omesg" getpropstr dup if "me" match name " " strcat swap strcat then .otell
   then
 ;

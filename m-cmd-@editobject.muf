@@ -955,7 +955,7 @@ lvar ourMorphPropTable
  
     { ""
       "~&060Gender:  ~&140%s"
-      'getStr     { "sex" "~&110[Unset]~&R" }list
+      'getStr     { "gender_prop" sysparm "~&110[Unset]~&R" }list
  
       {
       }list "\r" array_join
@@ -1260,14 +1260,14 @@ lvar ourMorphPropTable
  
     { "2"
       "~&060[~&1602~&060] Gender:  ~&140%s"
-      'getStr     { "sex" "~&110[Unset]~&R" }list
+      'getStr     { "gender_prop" sysparm "~&110[Unset]~&R" }list
  
       {
         "The system recognizes the values 'Male', 'Female', 'Herm', 'Hermaphrodite', and 'Neuter'.  However, you're free to enter whatever you want."
         ""
         "Enter the gender of this character:"
       }list "\r" array_join
-      'setStr     { "sex" }list
+      'setStr     { "gender_prop" sysparm }list
     }list
  
     { "3"
@@ -2353,7 +2353,7 @@ lvar ourMorphPropTable
  
     { "2"
       "~&060[~&1602~&060] Gender: ~&140%s"
-      'getStr     { "sex" "~&040[Unset]~&R" }list
+      'getStr     { "gender_prop" sysparm "~&040[Unset]~&R" }list
  
       {
         "The sex flag is used for objects with the ZOMBIE flag, as well as for any other reason an object would need pronoun substitution.  For example, you may want to set this to 'Neuter' if you want its pronouns to come up as 'it/its/etc' when you use the smell command on it."
@@ -2361,7 +2361,7 @@ lvar ourMorphPropTable
         ""
         "Enter the gender of this puppet/object:"
       }list "\r" array_join
-      'setStr     { "sex" }list
+      'setStr     { "gender_prop" sysparm }list
     }list
  
     "" "Descriptions" 1
@@ -2786,6 +2786,8 @@ lvar ourMorphPropTable
 : M-CMD-AT_EDITOBJECT-SaveMorph[ str:morph_name bool:quiet -- bool:success? ]
   NEEDSM3
 
+  morph_name @ initialCaps "_" " " subst morph_name !
+
   "me" match ourObject !
   morph_name @ 1 quiet @ doMorph
 ;
@@ -2797,6 +2799,8 @@ $libdef M-CMD-AT_EDITOBJECT-SaveMorph
 (*****************************************************************************)
 : M-CMD-AT_EDITOBJECT-LoadMorph[ str:morph_name bool:quiet -- bool:success? ]
   NEEDSM3
+
+  morph_name @ initialCaps "_" " " subst morph_name !
 
   "me" match ourObject !
   morph_name @ 0 quiet @ doMorph
