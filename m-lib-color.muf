@@ -17,6 +17,14 @@ $PRAGMA comment_recurse
 (*     produced for a given type, it will be approximated by trying to pick  *)
 (*     the closest available color. See ENCODING TYPES for more details.     *)
 (*                                                                           *)
+(*   M-LIB-COLOR-strcut[ str:source_string int:split_point str:type          *)
+(*                      -- str:string1 str:string2 ]                         *)
+(*     Works like the STRCUT primitive, but it ignores color codes when      *)
+(*     finding its cut position. It also ensures the foreground and          *)
+(*     background color are set at the beginning of the second string to     *)
+(*     match what it was at the end of the first string. Currently only the  *)
+(*     MCC encoding type is supported.                                       *)
+(*                                                                           *)
 (* ENCODING TYPES:                                                           *)
 (*   MCC                                                                     *)
 (*     Any sequence matching the patern #MCC-L-HHHHHH, where L is a capital  *)
@@ -168,7 +176,7 @@ $PRAGMA comment_recurse
 $VERSION 1.0
 $AUTHOR  Daniel Benoy
 $NOTE    Text color library.
-$DOCCMD  @list __PROG__=2-164
+$DOCCMD  @list __PROG__=2-172
 
 (* Begin configurable options *)
  
@@ -177,146 +185,21 @@ $DOCCMD  @list __PROG__=2-164
 (* TODO: A check to see if colors can be exactly represented on a given ANSI type? *)
 (* TODO: Produce test string output for users to look at to see if they support a given ANSI type *)
 (* TODO: More 'color code' encodings for compatibility with other MUCK software *)
+(* TODO: A player property for which encoding they use *)
+(* TODO: Convenience calls like .mcc_transcode .mcc_tell .mcc_otell .mcc_notify .mcc_connotify .mcc_escape .mcc_strip .mcc_strlen *)
 
 $PUBDEF :
 
 $DEF .version prog "_version" getpropstr begin dup strlen 1 - over ".0" rinstr = not while dup ".0" instr while "." ".0" subst repeat
 
-: list_max ( a -- f )
-  dup 0 array_getitem
-  swap foreach
-    nip
-    over over > if
-      pop
-    else
-      nip
-    then
-  repeat
-;
+(* ------------------------------------------------------------------------ *)
 
-: list_min ( a -- f )
-  dup 0 array_getitem
-  swap foreach
-    nip
-    over over < if
-      pop
-    else
-      nip
-    then
-  repeat
-;
+$def SUPPORTED_TYPES { "MCC" "NOCOLOR" "ANSI-3BIT-VGA" "ANSI-3BIT-XTERM" "ANSI-4BIT-VGA" "ANSI-4BIT-XTERM" "ANSI-8BIT" "ANSI-24BIT" }list
 
-: rgb2hsl ( a -- a )
-  array_vals
-  pop
-  255.0 / var! b
-  255.0 / var! g
-  255.0 / var! r
-  { r @ g @ b @ }list list_max var! max
-  { r @ g @ b @ }list list_min var! min
-  max @ min @ + 2.0 / var! l
-  var h
-  var s
-  max @ min @ = if (* Achromatic *)
-    0.0 h !
-    0.0 s !
-  else
-    max @ min @ - var! d
-    l @ 0.5 > if
-      d @ 2.0 max @ - min @ - /
-    else
-      d @ max @ min @ + /
-    then
-    s !
-    max @ case
-      r @ = when
-        g @ b @ - d @ / g @ b @ < if 6.0 else 0.0 then + h !
-      end
-      g @ = when
-        b @ r @ - d @ / 2.0 + h !
-      end
-      b @ = when
-        r @ g @ - d @ / 4.0 + h !
-      end
-    endcase
-    h @ 6.0 / h !
-  then
-
-  { h @ s @ l @ }list
-;
-
-: rgb2hcl ( a -- a )
-  dup array_vals
-  pop
-  255.0 / var! b
-  255.0 / var! g
-  255.0 / var! r
-  rgb2hsl array_vals
-  pop
-  var! l
-  var! s
-  var! h
-  { r @ g @ b @ }list list_max var! max
-  { r @ g @ b @ }list list_min var! min
-  max @ min @ - var! c
-  { h @ c @ l @ }list  
-;
-
-: rgb2bicone ( a -- a )
-  (* https://stackoverflow.com/questions/4057475/rounding-colour-values-to-the-nearest-of-a-small-set-of-colours *)
-  rgb2hcl
-  array_vals
-  pop
-  var! l
-  var! c
-  var! h
-  h @ 2.0 * h !
-  l @ 0.5 - 2.0 * l !
-  h @ pi * cos c @ * var! x
-  h @ pi * sin c @ * var! y
-  l @ var! z
-  { x @ y @ z @ }list
-;
-
-: distance3[ arr:first arr:second -- float:distance ]
-  first @
-  array_vals
-  pop
-  var! z1
-  var! y1
-  var! x1
-  second @
-  array_vals
-  pop
-  var! z2
-  var! y2
-  var! x2
-
-  x1 @ x2 @ - dup *
-  y1 @ y2 @ - dup *
-  z1 @ z2 @ - dup *
-  + +
-  sqrt
-;
-
-: closest_color[ list:target_rgb dict:color_table -- int:closest_key ]
-  target_rgb @ rgb2bicone var! target_bicone
-  inf var! closest_dist
-  var closest_key
-  color_table @ foreach
-    rgb2bicone target_bicone @ distance3 var! current_dist
-    var! current_key
-    current_dist @ closest_dist @ < if
-      current_key @ closest_key !
-      current_dist @ closest_dist !
-    then
-  repeat   
-  closest_key @
-;
-
-lvar ansi_table_8bit_rgb
-: ansi8_nearest[ str:ansi_type list:target_rgb -- int:color8 ]
-  ansi_table_8bit_rgb @ not if
+(* 8-BIT ANSI PALLATTE TABLE - RGB *)
+lvar g_ansi_table_8bit_rgb
+: ansi_table_8bit_rgb ( -- a )
+  g_ansi_table_8bit_rgb @ not if
     {
       16 { 0 0 0 }list
       17 { 0 0 95 }list
@@ -558,14 +441,15 @@ lvar ansi_table_8bit_rgb
       253 { 218 218 218 }list
       254 { 228 228 228 }list
       255 { 238 238 238 }list
-    }dict ansi_table_8bit_rgb !
+    }dict g_ansi_table_8bit_rgb !
   then
-  target_rgb @ ansi_table_8bit_rgb @ closest_color
+  g_ansi_table_8bit_rgb @
 ;
 
-lvar ansi_table_4bit_vga_rgb
-: ansi4_nearest_vga[ str:ansi_type list:target_rgb -- int:color4 ]
-  ansi_table_4bit_vga_rgb @ not if
+(* 4-BIT VGA ANSI PALLATTE TABLE - RGB *)
+lvar g_ansi_table_4bit_vga_rgb
+: ansi_table_4bit_vga_rgb ( -- a )
+  g_ansi_table_4bit_vga_rgb @ not if
     {
       30 { 0 0 0 }list
       31 { 170 0 0 }list
@@ -583,20 +467,20 @@ lvar ansi_table_4bit_vga_rgb
       95 { 255 85 255 }list
       96 { 85 255 255 }list
       97 { 255 255 255 }list
-    }dict ansi_table_4bit_vga_rgb !
+    }dict g_ansi_table_4bit_vga_rgb !
   then
-  target_rgb @ { 128 128 128 }list array_compare 0 = if { 127 127 127 }list target_rgb ! then (* So that XTerm 'dark gray' will be recognized VGA 'dark gray' and not VGA 'gray' *)
-  target_rgb @ ansi_table_4bit_vga_rgb @ closest_color
+  g_ansi_table_4bit_vga_rgb @
 ;
 
-lvar ansi_table_4bit_xterm_rgb
-: ansi4_nearest_xterm[ str:ansi_type list:target_rgb -- int:color4 ]
-  ansi_table_4bit_xterm_rgb @ not if
+(* 4-BIT XTERM ANSI PALLATTE TABLE - RGB *)
+lvar g_ansi_table_4bit_xterm_rgb
+: ansi_table_4bit_xterm_rgb ( -- a )
+  g_ansi_table_4bit_xterm_rgb @ not if
     {
       30 { 0 0 0 }list
       31 { 128 0 0 }list
       32 { 0 128 0 }list
-      33 { 128 127 0 }list (* 127 so that VGA 'brown' will be recognized as yellow and not red *)
+      33 { 128 128 0 }list
       34 { 0 0 128 }list
       35 { 128 0 128 }list
       36 { 0 128 128 }list
@@ -609,9 +493,167 @@ lvar ansi_table_4bit_xterm_rgb
       95 { 255 0 255 }list
       96 { 0 255 255 }list
       97 { 255 255 255 }list
-    }dict ansi_table_4bit_xterm_rgb !
+    }dict g_ansi_table_4bit_xterm_rgb !
   then
-  target_rgb @ ansi_table_4bit_xterm_rgb @ closest_color
+  g_ansi_table_4bit_xterm_rgb @
+;
+
+(* ------------------------------------------------------------------------ *)
+
+(* Get the highest float in an array of floats *)
+: list_max ( a -- f )
+  dup 0 array_getitem
+  swap foreach
+    nip
+    over over > if
+      pop
+    else
+      nip
+    then
+  repeat
+;
+
+(* Get the lowest float in an array of floats *)
+: list_min ( a -- f )
+  dup 0 array_getitem
+  swap foreach
+    nip
+    over over < if
+      pop
+    else
+      nip
+    then
+  repeat
+;
+
+(* Convert RGB color space to HSL color space *)
+: rgb2hsl ( a -- a )
+  (* http://axonflux.com/handy-rgb-to-hsl-and-rgb-to-hsv-color-model-c *)
+  array_vals
+  pop
+  255.0 / var! b
+  255.0 / var! g
+  255.0 / var! r
+  { r @ g @ b @ }list list_max var! max
+  { r @ g @ b @ }list list_min var! min
+  max @ min @ + 2.0 / var! l
+  var h
+  var s
+  max @ min @ = if (* Achromatic *)
+    0.0 h !
+    0.0 s !
+  else
+    max @ min @ - var! d
+    l @ 0.5 > if
+      d @ 2.0 max @ - min @ - /
+    else
+      d @ max @ min @ + /
+    then
+    s !
+    max @ case
+      r @ = when
+        g @ b @ - d @ / g @ b @ < if 6.0 else 0.0 then + h !
+      end
+      g @ = when
+        b @ r @ - d @ / 2.0 + h !
+      end
+      b @ = when
+        r @ g @ - d @ / 4.0 + h !
+      end
+    endcase
+    h @ 6.0 / h !
+  then
+
+  { h @ s @ l @ }list
+;
+
+(* Convert RGB color space to HCL color space *)
+: rgb2hcl ( a -- a )
+  dup array_vals
+  pop
+  255.0 / var! b
+  255.0 / var! g
+  255.0 / var! r
+  rgb2hsl array_vals
+  pop
+  var! l
+  var! s
+  var! h
+  { r @ g @ b @ }list list_max var! max
+  { r @ g @ b @ }list list_min var! min
+  max @ min @ - var! c
+  { h @ c @ l @ }list  
+;
+
+(* Plot a color position in a biconal color space *)
+: rgb2bicone ( a -- a )
+  (* https://stackoverflow.com/questions/4057475/rounding-colour-values-to-the-nearest-of-a-small-set-of-colours *)
+  rgb2hcl
+  array_vals
+  pop
+  var! l
+  var! c
+  var! h
+  h @ 2.0 * h !
+  l @ 0.5 - 2.0 * l !
+  h @ pi * cos c @ * var! x
+  h @ pi * sin c @ * var! y
+  l @ var! z
+  { x @ y @ z @ }list
+;
+
+(* Determine the distance between two points in 3-space *)
+: distance3[ arr:first arr:second -- float:distance ]
+  first @
+  array_vals
+  pop
+  var! z1
+  var! y1
+  var! x1
+  second @
+  array_vals
+  pop
+  var! z2
+  var! y2
+  var! x2
+
+  x1 @ x2 @ - dup *
+  y1 @ y2 @ - dup *
+  z1 @ z2 @ - dup *
+  + +
+  sqrt
+;
+
+(* Given a target color, find the closest approximate color in a color palette table *)
+: closest_color[ list:target_rgb dict:color_table_rgb -- int:closest_key ]
+  target_rgb @ rgb2bicone var! target_bicone
+  inf var! closest_dist
+  var closest_key
+  color_table_rgb @ foreach
+    rgb2bicone target_bicone @ distance3 var! current_dist
+    var! current_key
+    current_dist @ closest_dist @ < if
+      current_key @ closest_key !
+      current_dist @ closest_dist !
+    then
+  repeat   
+  closest_key @
+;
+
+: ansi8_nearest[ str:ansi_type list:target_rgb -- int:color8 ]
+  target_rgb @ ansi_table_8bit_rgb closest_color
+;
+
+: ansi4_nearest_vga[ str:ansi_type list:target_rgb -- int:color4 ]
+  ansi_table_4bit_vga_rgb var! color_table_rgb
+  { 172 172 172 }list color_table_rgb @ 37 array_setitem color_table_rgb ! (* 170->172 so that XTerm 'dark gray' will be recognized VGA 'dark gray' and not VGA 'gray' *)
+  target_rgb @ color_table_rgb @ closest_color
+;
+
+: ansi4_nearest_xterm[ str:ansi_type list:target_rgb -- int:color4 ]
+  ansi_table_4bit_xterm_rgb var! color_table_rgb
+  { 128 127 0 }list color_table_rgb @ 33 array_setitem color_table_rgb ! (* 128->127 so that VGA 'brown' will be recognized as yellow and not red *)
+  target_rgb @ color_table_rgb @ closest_color
 ;
 
 lvar ansi_table_3bit_vga_rgb
@@ -771,6 +813,74 @@ lvar ansi_table_3bit_xterm_rgb
   { color_reset @ retval @ color_reset @ }join
 ;
 
+(* Take a tag at the start of a string and parse it. *)
+: mcc_tagparse[ str:check_string -- str:code_type str:code_value ]
+  check_string @
+  5 strcut swap var! code_mcc
+  1 strcut swap var! code_type
+  1 strcut swap var! code_dash
+  6 strcut swap var! code_value
+  pop
+  code_mcc @ "#MCC-" = code_type @ ctoi "A" ctoi >= and code_type @ ctoi "Z" ctoi <= and code_dash @ "-" = and code_value @ strlen 6 = and code_value @ hex? and if
+    code_type @ code_value @ exit
+  else
+    "" "" exit
+  then
+;
+
+: mcc_strcut[ str:source_string str:split_point -- str:result_string ]
+  source_string @ "#MCC-" instr not if
+    source_string @ split_point @ strcut exit
+  then
+
+  "" var! foreground_code
+  "" var! background_code
+  0 var! place_in_string
+  0 var! place_in_string_without_codes
+  begin
+    source_string @ place_in_string @ strcut nip var! remaining_string
+    remaining_string @ mcc_tagparse dup if
+      (* We're currently at the start of a code. Take note of the code and advance our position to the end of the code. *)
+      pop dup "F" = over "B" = or if
+        remaining_string @ 13 strcut pop swap
+        "F" = if
+          foreground_code !
+        else
+          background_code !
+        then
+      else
+        pop pop
+      then
+      place_in_string @ 13 + place_in_string !
+    else
+      (* We're not currently in a code. Check how long this span will be until the next code, and see if we're ready to cut. *)
+      pop pop
+      remaining_string @ "#MCC-" instr
+      dup if
+        --
+      else
+        pop remaining_string @ strlen
+      then
+      place_in_string @ over + place_in_string !
+      place_in_string_without_codes @ swap + place_in_string_without_codes !
+      place_in_string_without_codes @ split_point @ >= if
+        (* We've passed the split point. Roll the counters back to the place where the split happens. *)
+        place_in_string_without_codes @ split_point @ -
+        place_in_string @ over - place_in_string !
+        place_in_string_without_codes @ swap - place_in_string_without_codes !
+        break
+      then
+    then
+    place_in_string @ source_string @ strlen >=
+  until
+  (* We've worked out the spot in the string where the split will happen, perform the split, and duplicate the color state at the point of the split. *)
+  source_string @ place_in_string @ strcut
+  foreground_code @ swap strcat
+  background_code @ swap strcat
+;
+PUBLIC mcc_strcut
+$LIBDEF mcc_strcut
+
 : array_hasval ( ? a -- b )
   foreach
     nip
@@ -784,17 +894,16 @@ lvar ansi_table_3bit_xterm_rgb
 (*****************************************************************************)
 (*                           M-LIB-COLOR-Transcode                           *)
 (*****************************************************************************)
-: M-LIB-COLOR-Transcode[ str:from_type str:to_type str:source_string -- str:result_string ]
+: M-LIB-COLOR-transcode[ str:source_string str:from_type str:to_type -- str:result_string ]
   (* M1 OK *)
 
   from_type @ string? not if "Non-string argument (1)." abort then
   to_type @ string? not if "Non-string argument (2)." abort then
   source_string @ string? not if "Non-string argument (3)." abort then
 
-  { "MCC" "NOCOLOR" "ANSI-3BIT-VGA" "ANSI-3BIT-XTERM" "ANSI-4BIT-VGA" "ANSI-4BIT-XTERM" "ANSI-8BIT" "ANSI-24BIT" }list var! supported_types
-
-  from_type @ supported_types @ array_hasval not if "from_type not recognized (1)." abort then
-  to_type @ supported_types @ array_hasval not if "to_type not recognized (2)." abort then
+  SUPPORTED_TYPES
+  from_type @ over array_hasval not if "from_type not recognized (2)." abort then
+  to_type @ swap array_hasval not if "to_type not recognized (3)." abort then
 
   from_type @ to_type @ = if
     source_string @ exit
@@ -818,8 +927,40 @@ lvar ansi_table_3bit_xterm_rgb
 
   { "Transcoding from " from_type @ " to " to_type @ " is not yet supported." }join abort
 ;
-PUBLIC M-LIB-COLOR-Transcode
-$LIBDEF M-LIB-COLOR-Transcode
+PUBLIC M-LIB-COLOR-transcode
+$LIBDEF M-LIB-COLOR-transcode
+
+(*****************************************************************************)
+(*                            M-LIB-COLOR-strcut                             *)
+(*****************************************************************************)
+: M-LIB-COLOR-strcut[ str:source_string int:split_point str:type -- str:string1 str:string2 ]
+  (* M1 OK *)
+
+  source_string @ string? not if "Non-string argument (1)." abort then
+  split_point @ int? not if "Non-integer argument (2)." abort then
+  split_point @ 0 < if "Argument must be a positive integer (2)." abort then
+  type @ string? not if "Non-string argument (3)." abort then
+
+  type @ SUPPORTED_TYPES array_hasval not if "type not recognized (3)." abort then
+
+  type @ "NOCOLOR" = if
+    source_string @ split_point @ strcut exit
+  then
+
+  type @ "MCC" = if
+    source_string @ split_point @ mcc_strcut exit
+  then
+
+  type @ "ANSI-" instr 1 = if
+    "Splitting ANSI strings is not yet supported." abort
+  then
+
+  { "String splitting type " type @ " is not yet supported." }join abort
+;
+PUBLIC M-LIB-COLOR-strcut
+$LIBDEF M-LIB-COLOR-strcut
+
+(* ------------------------------------------------------------------------ *)
 
 : main ( s --  )
   "Library called as command." abort
