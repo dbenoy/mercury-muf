@@ -21,6 +21,9 @@ $PRAGMA comment_recurse
 (*     produced for a given type, it will be approximated by trying to pick  *)
 (*     the closest available color. See ENCODING TYPES for more details.     *)
 (*                                                                           *)
+(*     Use 'AUTO' for to_type to use the value from M-LIB-COLOR-encoding_get *)
+(*     on the current player.                                                *)
+(*                                                                           *)
 (*   M-LIB-COLOR-strcut[ str:source_string int:split_point str:type          *)
 (*                      -- str:string1 str:string2 ]                         *)
 (*     Works like the STRCUT primitive, but it ignores color codes when      *)
@@ -34,14 +37,17 @@ $PRAGMA comment_recurse
 (*     type that demonstrate the ANSI mode. This is useful to help players   *)
 (*     determine which ANSI mode they should be using to match their client. *)
 (*                                                                           *)
-(*   M-LIB-COLOR-get_encoding[ ref:object -- str:type ]                      *)
-(*     Get a player's currently set ANSI encoding type. This value is used   *)
-(*     by some convenience '.color-' convenience calls, and represents the   *)
-(*     player's preferred encoding. If a player has no COLOR flag, then this *)
-(*     will return 'NOCOLOR'. At present, this will only allow you to use    *)
-(*     ANSI encodings.                                                       *)
+(*   M-LIB-COLOR-encoding_default[ -- str:type ]                             *)
+(*     Returns the default encoding.                                         *)
 (*                                                                           *)
-(*   M-LIB-COLOR-set_encoding[ ref:object str:type -- ]                      *)
+(*   M-LIB-COLOR-encoding_get[ ref:object -- str:type ]                      *)
+(*     Get a player's currently set ANSI encoding type. This value is used   *)
+(*     for the 'AUTO' encoding type, and represents the player's preferred   *)
+(*     encoding. If a player has no COLOR flag, then this will return        *)
+(*     'NOCOLOR'. At present, this will only allow you to use ANSI           *)
+(*     encodings. If no encoding is set, the default encoding is returned.   *)
+(*                                                                           *)
+(*   M-LIB-COLOR-encoding_set[ ref:object str:type -- ]                      *)
 (*     Alter a player's currently set ANSI encoding type. This value is used *)
 (*     by some convenience '.color-' convenience calls, and represents the   *)
 (*     player's preferred encoding. If a player has no COLOR flag, then this *)
@@ -457,7 +463,7 @@ $def ENCODING_PROP "_config/color/type"
 (* End configurable options *)
 
 (* TODO: A check to see if colors can be exactly represented on a given ANSI type? *)
-(* TODO: More 'color code' encodings for compatibility with other MUCK software *)
+(* TODO: More 'color code' encodings for compatibility with other MUCK software. *)
 
 $PUBDEF :
 
@@ -1210,9 +1216,18 @@ lvar ansi_table_3bit_xterm_rgb
 ;
 
 (*****************************************************************************)
-(*                          M-LIB-COLOR-get_encoding                         *)
+(*                        M-LIB-COLOR-encoding_default                       *)
 (*****************************************************************************)
-: M-LIB-COLOR-get_encoding[ ref:object -- str:type ]
+: M-LIB-COLOR-encoding_default[ -- str:type ]
+  ENCODING_DEFAULT
+;
+PUBLIC M-LIB-COLOR-encoding_default
+$LIBDEF M-LIB-COLOR-encoding_default
+
+(*****************************************************************************)
+(*                          M-LIB-COLOR-encoding_get                         *)
+(*****************************************************************************)
+: M-LIB-COLOR-encoding_get[ ref:object -- str:type ]
   object @ "me" match != if
     NEEDSM3
   then
@@ -1220,7 +1235,7 @@ lvar ansi_table_3bit_xterm_rgb
   object @ dbref? not if "Non-dbref argument (1)." abort then
 
   object @ player? not if
-    object @ owner M-LIB-COLOR-get_encoding exit
+    object @ owner M-LIB-COLOR-encoding_get exit
   then
 
   object @ "COLOR" flag? not if
@@ -1230,7 +1245,7 @@ lvar ansi_table_3bit_xterm_rgb
   object @ ENCODING_PROP getpropstr
 
   dup not if
-    pop ENCODING_DEFAULT exit
+    pop M-LIB-COLOR-encoding_default exit
   then
 
   dup SUPPORTED_TYPES array_hasval not if
@@ -1241,13 +1256,13 @@ lvar ansi_table_3bit_xterm_rgb
     pop "NOCOLOR" exit
   then
 ;
-PUBLIC M-LIB-COLOR-get_encoding
-$LIBDEF M-LIB-COLOR-get_encoding
+PUBLIC M-LIB-COLOR-encoding_get
+$LIBDEF M-LIB-COLOR-encoding_get
 
 (*****************************************************************************)
-(*                          M-LIB-COLOR-set_encoding                         *)
+(*                          M-LIB-COLOR-encoding_set                         *)
 (*****************************************************************************)
-: M-LIB-COLOR-set_encoding[ ref:object str:type -- ]
+: M-LIB-COLOR-encoding_set[ ref:object str:type -- ]
   object @ "me" match != if
     NEEDSM3
   then
@@ -1260,8 +1275,8 @@ $LIBDEF M-LIB-COLOR-get_encoding
 
   object @ ENCODING_PROP type @ setprop
 ;
-PUBLIC M-LIB-COLOR-set_encoding
-$LIBDEF M-LIB-COLOR-set_encoding
+PUBLIC M-LIB-COLOR-encoding_set
+$LIBDEF M-LIB-COLOR-encoding_set
 
 (*****************************************************************************)
 (*                            M-LIB-COLOR-strcut                             *)
@@ -1540,10 +1555,12 @@ $LIBDEF M-LIB-COLOR-testpattern
   from_type @ string? not if "Non-string argument (1)." abort then
   to_type @ string? not if "Non-string argument (2)." abort then
   source_string @ string? not if "Non-string argument (3)." abort then
+  from_type @ SUPPORTED_TYPES array_hasval not if "from_type not recognized (2)." abort then
+  to_type @ SUPPORTED_TYPES array_hasval not to_type @ "AUTO" = not and if "to_type not recognized (3)." abort then
 
-  SUPPORTED_TYPES
-  from_type @ over array_hasval not if "from_type not recognized (2)." abort then
-  to_type @ swap array_hasval not if "to_type not recognized (3)." abort then
+  to_type @ "AUTO" = if
+    "me" match M-LIB-COLOR-encoding_get to_type !
+  then
 
   from_type @ to_type @ = if
     source_string @ exit
@@ -1570,7 +1587,18 @@ $LIBDEF M-LIB-COLOR-testpattern
 PUBLIC M-LIB-COLOR-transcode
 $LIBDEF M-LIB-COLOR-transcode
 
-(* TODO: Convenience calls like .mcc_transcode .mcc_tell .mcc_otell .mcc_notify .mcc_connotify .mcc_escape .mcc_strip .mcc_strlen *)
+(*****************************************************************************)
+(*                           Convenience Routines                            *)
+(*****************************************************************************)
+$PUBDEF .color_tell "MCC" "AUTO" M-LIB-COLOR-transcode .tell
+$PUBDEF .color_otell "MCC" "AUTO" M-LIB-COLOR-transcode .otell
+$PUBDEF .color_notify "MCC" "AUTO" M-LIB-COLOR-transcode notify
+$PUBDEF .color_connotify "MCC" "AUTO" M-LIB-COLOR-transcode connotify
+$PUBDEF .color_transcode "MCC" "AUTO" M-LIB-COLOR-transcode
+$PUBDEF .color_escape "NOCOLOR" "MCC" M-LIB-COLOR-transcode
+$PUBDEF .color_strip "MCC" "NOCOLOR" M-LIB-COLOR-transcode
+$PUBDEF .color_strlen "MCC" "NOCOLOR" M-LIB-COLOR-transcode strlen
+$PUBDEF .color_strcut "MCC" M-LIB-COLOR-strcut
 
 (* ------------------------------------------------------------------------ *)
 
