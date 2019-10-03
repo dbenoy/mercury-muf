@@ -14,7 +14,7 @@ $PRAGMA comment_recurse
 (*   GitHub: https://github.com/dbenoy/mercury-muf (See for install info)    *)
 (*                                                                           *)
 (* PUBLIC ROUTINES:                                                          *)
-(*   M-LIB-COLOR-Transcode[ str:source_string str:from_type str:to_type      *)
+(*   M-LIB-COLOR-transcode[ str:source_string str:from_type str:to_type      *)
 (*                          -- str:result_string ]                           *)
 (*     Converts from one encoding type to another. At present, you can only  *)
 (*     convert from MCC to ANSI or NOCOLOR. If a color can't be precicely    *)
@@ -53,6 +53,10 @@ $PRAGMA comment_recurse
 (*     player's preferred encoding. If a player has no COLOR flag, then this *)
 (*     will return 'NOCOLOR'. At present, this will only allow you to use    *)
 (*     ANSI encodings.                                                       *)
+(*                                                                           *)
+(*   M-LIB-COLOR-encoding_player_valid[ -- list:options ]                    *)
+(*     Returns a list of valid encodings for with M-LIB-COLOR-encoding_set   *)
+(*     in order of quality from best to worst.                               *)
 (*                                                                           *)
 (* ENCODING TYPES:                                                           *)
 (*   MCC                                                                     *)
@@ -476,7 +480,9 @@ $DEF .author prog "_author" getpropstr
 
 (* ------------------------------------------------------------------------ *)
 
-$def SUPPORTED_TYPES { "MCC" "NOCOLOR" "ANSI-3BIT-VGA" "ANSI-3BIT-XTERM" "ANSI-4BIT-VGA" "ANSI-4BIT-XTERM" "ANSI-8BIT" "ANSI-24BIT" }list
+$def SUPPORTED_TYPES_ANSI { "ANSI-24BIT" "ANSI-8BIT" "ANSI-4BIT-VGA" "ANSI-4BIT-XTERM" "ANSI-3BIT-VGA" "ANSI-3BIT-XTERM" }list
+$def SUPPORTED_TYPES_CODE { "MCC" "NOCOLOR" }list
+$def SUPPORTED_TYPES SUPPORTED_TYPES_ANSI SUPPORTED_TYPES_CODE array_union
 
 (* 8-BIT ANSI PALLATTE TABLE - RGB *)
 lvar g_ansi_table_8bit_rgb
@@ -1101,11 +1107,17 @@ lvar ansi_table_3bit_xterm_rgb
       to_type @ "NOCOLOR" = if
         "" exit
       then
-      to_type @ "ANSI-" instr 1 = if
-        "\[[0;37;40m" exit
+      to_type @ "ANSI-3BIT-VGA" = to_type @ "ANSI-3BIT-XTERM" = or to_type @ "ANSI-4BIT-VGA" = or to_type @ "ANSI-4BIT-XTERM" = or if
+        "\[[37m\[[40m\[[0m" exit
+      then
+      to_type @ "ANSI-8BIT" = if
+        "\[[38;5;7m\[[48;5;0m\[[0m" exit
+      then
+      to_type @ "ANSI-24BIT" = if
+        "\[[38;2;170;170;170m\[[38;2;0;0;0m\[[0m" exit
       then
       "Invalid ANSI type" abort
-    then
+      then
     code_value @ "FFFFFF" = if
       "#" exit
     then
@@ -1275,6 +1287,15 @@ PUBLIC M-LIB-COLOR-encoding_set
 $LIBDEF M-LIB-COLOR-encoding_set
 
 (*****************************************************************************)
+(*                     M-LIB-COLOR-encoding_player_valid                     *)
+(*****************************************************************************)
+: M-LIB-COLOR-encoding_player_valid[ -- list:options ]
+  SUPPORTED_TYPES_ANSI
+;
+PUBLIC M-LIB-COLOR-encoding_player_valid
+$LIBDEF M-LIB-COLOR-encoding_player_valid
+
+(*****************************************************************************)
 (*                            M-LIB-COLOR-strcut                             *)
 (*****************************************************************************)
 : M-LIB-COLOR-strcut[ str:source_string int:split_point str:type -- str:string1 str:string2 ]
@@ -1309,173 +1330,49 @@ $LIBDEF M-LIB-COLOR-strcut
 (*                          M-LIB-COLOR-testpattern                          *)
 (*****************************************************************************)
 : M-LIB-COLOR-testpattern[ str:ansi_type -- arr:strings ]
-  ansi_type @ "ANSI-3BIT-VGA" = if
+  ansi_type @ "ANSI-24BIT" = if
     {
-      "/- ANSI-3BIT-VGA -\\  This is the oldest and most compatible color   "
-      "|  #MCC-B-AAAAAA#MCC-F-000000Black#MCC-X-000000          | encoding standard, in the legacy 8 color mode.  " ansi_type @ mcc_convert
-      "|   #MCC-B-000000#MCC-F-AA0000Red#MCC-X-000000           |                                                 " ansi_type @ mcc_convert
-      "|    #MCC-B-000000#MCC-F-00AA00Green#MCC-X-000000        |   The ANSI standard does not specify palette    " ansi_type @ mcc_convert
-      "|     #MCC-B-000000#MCC-F-AA5500Brown#MCC-X-000000       |   information, only color names, and on most    " ansi_type @ mcc_convert
-      "|      #MCC-B-000000#MCC-F-0000AABlue#MCC-X-000000       | clients you are free to set whatever palette you" ansi_type @ mcc_convert
-      "|       #MCC-B-000000#MCC-F-AA00AAMagenta#MCC-X-000000   |  want for these colors, so for the purposes of  " ansi_type @ mcc_convert
-      "|        #MCC-B-000000#MCC-F-00AAAACyan#MCC-X-000000     | color conversion on this MUCK, you should select" ansi_type @ mcc_convert
-      "|         #MCC-B-000000#MCC-F-AAAAAAWhite#MCC-X-000000   |  the ANSI palette that matches the one used in  " ansi_type @ mcc_convert
-      "\\-----------------/                 your MUD client.                "
+      "                                  ANSI-24BIT                                  "
       "                                                                              "
-      "The VGA palette represents the standard colors popularized on early IBM       "
-      "computers and are the most iconic ANSI colors. It is still considered the     "
-      "standard by ANSI artists to this day.                                         "
+      "This is True-Color ANSI mode, and represents the full gamut of colors         "
+      "available on modern displays. Sadly, this encoding is not well supported by   "
+      "MUD clients, but it's the ultimate color accuracy option and is recommended   "
+      "if available.                                                                 "
       "                                                                              "
-      "In the box above, you will see 8 colors. Their color should be vibrantly      "
-      "saturated but dimly lit. Ensure that all 8 colors are visible and match this  "
-      "description. On the VGA palette, the normally 'yellow' color appears brown.   "
-      "Ensure that all 8 colors are visible and match this description.              "
+      "The box below contains three bands of color, representing a small fraction of "
+      "the colors available in this mode, which appear as a smooth gradient with dark"
+      "on the left, and bright on the right. It should not contain any 'banding' of  "
+      "colors where there are sharp changes in hue or intensity. If it does, or your "
+      "client doesn't display it correctly at all, then you are not using true 24-bit"
+      "color mode, and you should select a different encoding.                       "
       "                                                                              "
-      "This mode is available for compatibility but should generally be avoided, as  "
-      "almost all clients support ANSI-4BIT color codes.                             "
-      "                               _______________________________________________"
-      "                               | ID |     Color      |   Hex   |  R   G   B  |"
-      "                               | 0  | Black          | #000000 |   0   0   0 |"
-      "  If your client supports it,  | 1  | Red            | #AA0000 | 170   0   0 |"
-      " you can use the values on the | 2  | Green          | #00AA00 |   0 170   0 |"
-      " right to change your palette  | 3  | Yellow         | #AA5500 | 170  85   0 |"
-      "  to match the ANSI VGA color  | 4  | Blue           | #0000AA |   0   0 170 |"
-      "           palette.            | 5  | Magenta        | #AA00AA | 170   0 170 |"
-      "                               | 6  | Cyan           | #00AAAA |   0 170 170 |"
-      "                               | 7  | White          | #AAAAAA | 170 170 170 |"
-      "                               -----------------------------------------------"
-    }list exit
-  then
-  ansi_type @ "ANSI-3BIT-XTERM" = if
-    {
-      "/- ANSI-3BIT-XTERM -\\  This is the oldest and most compatible color   "
-      "|   #MCC-B-C0C0C0#MCC-F-000000Black#MCC-X-000000           | encoding standard, in the legacy 8 color mode.  " ansi_type @ mcc_convert
-      "|    #MCC-B-000000#MCC-F-800000Red#MCC-X-000000            |                                                 " ansi_type @ mcc_convert
-      "|     #MCC-B-000000#MCC-F-008000Green#MCC-X-000000         |   The ANSI standard does not specify palette    " ansi_type @ mcc_convert
-      "|      #MCC-B-000000#MCC-F-800000Brown#MCC-X-000000        |   information, only color names, and on most    " ansi_type @ mcc_convert
-      "|       #MCC-B-000000#MCC-F-000080Blue#MCC-X-000000        | clients you are free to set whatever palette you" ansi_type @ mcc_convert
-      "|        #MCC-B-000000#MCC-F-800080Magenta#MCC-X-000000    |  want for these colors, so for the purposes of  " ansi_type @ mcc_convert
-      "|         #MCC-B-000000#MCC-F-008080Cyan#MCC-X-000000      | color conversion on this MUCK, you should select" ansi_type @ mcc_convert
-      "|          #MCC-B-000000#MCC-F-C0C0C0White#MCC-X-000000    |  the ANSI palette that matches the one used in  " ansi_type @ mcc_convert
-      "\\-------------------/                 your MUD client.                "
-      "                                                                              "
-      "The XTerm color palette is arguably the most common color palette for MUD     "
-      "clients. It was popularized with the advent of Linux GUIs and it has more     "
-      "vibrant colors than the standard VGA palette.                                 "
-      "                                                                              "
-      "In the box above, you will see 8 colors. Their color should be vibrantly      "
-      "saturated but dimly lit. Ensure that all 8 colors are visible and match this  "
-      "description.                                                                  "
-      "                                                                              "
-      "This mode is available for compatibility but should generally be avoided, as  "
-      "almost all clients support ANSI-4BIT color codes.                             "
-      "                               _______________________________________________"
-      "                               | ID |     Color      |   Hex   |  R   G   B  |"
-      "                               | 0  | Black          | #000000 |   0   0   0 |"
-      "  If your client supports it,  | 1  | Red            | #800000 | 128   0   0 |"
-      " you can use the values on the | 2  | Green          | #008000 |   0 128   0 |"
-      " right to change your palette  | 3  | Yellow         | #800000 | 128   0   0 |"
-      "  to match the ANSI VGA color  | 4  | Blue           | #000080 |   0   0 128 |"
-      "           palette.            | 5  | Magenta        | #800080 | 128   0 128 |"
-      "                               | 6  | Cyan           | #008080 |   0 128 128 |"
-      "                               | 7  | White          | #C0C0C0 | 192 192 192 |"
-      "                               -----------------------------------------------"
-    }list exit
-  then
-  ansi_type @ "ANSI-4BIT-VGA" = if
-    {
-      "/------ ANSI-4BIT-VGA ------\\  This is the oldest and most compatible color   "
-      "| #MCC-B-AAAAAA#MCC-F-000000Black#MCC-X-000000        #MCC-B-000000#MCC-F-555555Dark Grey#MCC-X-000000    |   encoding standard, with a 16 color palette.   " ansi_type @ mcc_convert
-      "| #MCC-B-000000#MCC-F-AA0000Dim Red#MCC-X-000000      #MCC-B-000000#MCC-F-FF5555Pale Red#MCC-X-000000     |                                                 " ansi_type @ mcc_convert
-      "| #MCC-B-000000#MCC-F-00AA00Dim Green#MCC-X-000000    #MCC-B-000000#MCC-F-55FF55Pale Green#MCC-X-000000   |   The ANSI standard does not specify palette    " ansi_type @ mcc_convert
-      "| #MCC-B-000000#MCC-F-AA5500Dim Brown#MCC-X-000000    #MCC-B-000000#MCC-F-FFFF55Pale Yellow#MCC-X-000000  |   information, only color names, and on most    " ansi_type @ mcc_convert
-      "| #MCC-B-000000#MCC-F-0000AADim Blue#MCC-X-000000     #MCC-B-000000#MCC-F-5555FFPale Blue#MCC-X-000000    | clients you are free to set whatever palette you" ansi_type @ mcc_convert
-      "| #MCC-B-000000#MCC-F-AA00AADim Magenta#MCC-X-000000  #MCC-B-000000#MCC-F-FF55FFPale Magenta#MCC-X-000000 |  want for these colors, so for the purposes of  " ansi_type @ mcc_convert
-      "| #MCC-B-000000#MCC-F-00AAAADim Cyan#MCC-X-000000     #MCC-B-000000#MCC-F-55FFFFPale Cyan#MCC-X-000000    | color conversion on this MUCK, you should select" ansi_type @ mcc_convert
-      "| #MCC-B-000000#MCC-F-AAAAAAWhite#MCC-X-000000        #MCC-B-000000#MCC-F-FFFFFFWhite#MCC-X-000000        |  the ANSI palette that matches the one used in  " ansi_type @ mcc_convert
-      "\\---------------------------/                 your MUD client.                "
-      "                                                                              "
-      "The VGA palette represents the standard colors popularized on early IBM       "
-      "computers and are the most iconic ANSI colors. It is still considered the     "
-      "standard by ANSI artists to this day.                                         "
-      "                                                                              "
-      "In the box above, you will see 2 columns of 8 colors. On the left are the     "
-      "'normal' versions, and on the right are the 'bright' versions.                "
-      "                                                                              "
-      "In the VGA palette, the 'normal' versions of colors are dim but vivid. They   "
-      "are saturated and clear in their color, but they are not very brightly lit.   "
-      "The 'bright' versions of colors appear less saturated and more pale. 'normal' "
-      "yellow is unusual in particular, as it appears brown on the VGA palette.      "
-      "Ensure that you can see all 16 colors, and that they match this description.  "
-      "                               _______________________________________________"
-      "                               | ID |     Color      |   Hex   |  R   G   B  |"
-      "                               | 0  | Black          | #000000 |   0   0   0 |"
-      "   Both the 'nomal' and the    | 1  | Red            | #AA0000 | 170   0   0 |"
-      "  'bright' colors should have  | 2  | Green          | #00AA00 |   0 170   0 |"
-      "  the same font weight. Some   | 3  | Yellow         | #AA5500 | 170  85   0 |"
-      "   clients will display the    | 4  | Blue           | #0000AA |   0   0 170 |"
-      " brighter colors as bold text  | 5  | Magenta        | #AA00AA | 170   0 170 |"
-      "  This should be disabled in   | 6  | Cyan           | #00AAAA |   0 170 170 |"
-      "         your client.          | 7  | White          | #AAAAAA | 170 170 170 |"
-      "                               | 8  | Bright Black   | #555555 |  85  85  85 |"
-      "  If your client supports it,  | 9  | Bright Red     | #FF5555 | 255  85  85 |"
-      " you can use the values on the | 10 | Bright Green   | #55FF55 |  85 255  85 |"
-      " right to change your palette  | 11 | Bright Yellow  | #FFFF55 | 255 255  85 |"
-      "  to match the ANSI VGA color  | 12 | Bright Blue    | #5555FF |  85  85 255 |"
-      "           palette.            | 13 | Bright Magenta | #FF55FF | 255  85 255 |"
-      "                               | 14 | Bright Cyan    | #55FFFF |  85 255 255 |"
-      "                               | 15 | Bright White   | #FFFFFF | 255 255 255 |"
-      "                               -----------------------------------------------"
-    }list exit
-  then
-  ansi_type @ "ANSI-4BIT-XTERM" = if
-    {
-      "/----- ANSI-4BIT-XTERM -----\\  This is the oldest and most compatible color   "
-      "|  #MCC-B-C0C0C0#MCC-F-000000Black#MCC-X-000000    #MCC-B-000000#MCC-F-808080Dark Grey#MCC-X-000000       |   encoding standard, with a 16 color palette.   " ansi_type @ mcc_convert
-      "|  #MCC-B-000000#MCC-F-800000Red#MCC-X-000000      #MCC-B-000000#MCC-F-FF0000Pale Red#MCC-X-000000        |                                                 " ansi_type @ mcc_convert
-      "|  #MCC-B-000000#MCC-F-008000Green#MCC-X-000000    #MCC-B-000000#MCC-F-00FF00Pale Green#MCC-X-000000      |   The ANSI standard does not specify palette    " ansi_type @ mcc_convert
-      "|  #MCC-B-000000#MCC-F-800000Yellow#MCC-X-000000   #MCC-B-000000#MCC-F-FFFF00Pale Yellow#MCC-X-000000     |   information, only color names, and on most    " ansi_type @ mcc_convert
-      "|  #MCC-B-000000#MCC-F-000080Blue#MCC-X-000000     #MCC-B-000000#MCC-F-0000FFPale Blue#MCC-X-000000       | clients you are free to set whatever palette you" ansi_type @ mcc_convert
-      "|  #MCC-B-000000#MCC-F-800080Magenta#MCC-X-000000  #MCC-B-000000#MCC-F-FF00FFBright Magenta#MCC-X-000000  |  want for these colors, so for the purposes of  " ansi_type @ mcc_convert
-      "|  #MCC-B-000000#MCC-F-008080Cyan#MCC-X-000000     #MCC-B-000000#MCC-F-00FFFFPale Cyan#MCC-X-000000       | color conversion on this MUCK, you should select" ansi_type @ mcc_convert
-      "|  #MCC-B-000000#MCC-F-C0C0C0White#MCC-X-000000    #MCC-B-000000#MCC-F-FFFFFFWhite#MCC-X-000000           |  the ANSI palette that matches the one used in  " ansi_type @ mcc_convert
-      "\\---------------------------/                 your MUD client.                "
-      "                                                                              "
-      "The XTerm color palette is arguably the most common color palette for MUD     "
-      "clients. It was popularized with the advent of Linux GUIs and it has more     "
-      "vibrant colors than the standard VGA palette.                                 "
-      "                                                                              "
-      "In the box above, you will see 2 columns of 8 colors. On the left are the     "
-      "'normal' versions, and on the right are the 'bright' versions.                "
-      "                                                                              "
-      "In the XTerm palette, the 'normal' versions of colors are medium brightness,  "
-      "and vivid. They are saturated and clear in their color. Yellow appears as     "
-      "yellow, rather than brown. The 'bright' versions are the same intense         "
-      "saturation as the 'dim' versions, but are much more brightly lit. Ensure that "
-      "you can sell all 16 colors, and that they match this description.             "
-      "                               _______________________________________________"
-      "                               | ID |     Color      |   Hex   |  R   G   B  |"
-      "                               | 0  | Black          | #000000 |   0   0   0 |"
-      "   Both the 'nomal' and the    | 1  | Red            | #800000 | 128   0   0 |"
-      "  'bright' colors should have  | 2  | Green          | #008000 |   0 128   0 |"
-      "  the same font weight. Some   | 3  | Yellow         | #808000 | 128   0   0 |"
-      "   clients will display the    | 4  | Blue           | #000080 |   0   0 128 |"
-      " brighter colors as bold text  | 5  | Magenta        | #800080 | 128   0 128 |"
-      "  This should be disabled in   | 6  | Cyan           | #008080 |   0 128 128 |"
-      "         your client.          | 7  | White          | #C0C0C0 | 192 192 192 |"
-      "                               | 8  | Bright Black   | #808080 | 128 128 128 |"
-      "  If your client supports it,  | 9  | Bright Red     | #FF0000 | 255   0   0 |"
-      " you can use the values on the | 10 | Bright Green   | #00FF00 |   0 255   0 |"
-      " right to change your palette  | 11 | Bright Yellow  | #FFFF00 | 255 255   0 |"
-      "    to match the XTerm ANSI    | 12 | Bright Blue    | #0000FF |   0   0 255 |"
-      "         color palette.        | 13 | Bright Magenta | #FF00FF | 255   0 255 |"
-      "                               | 14 | Bright Cyan    | #00FFFF |   0 255 255 |"
-      "                               | 15 | Bright White   | #FFFFFF | 255 255 255 |"
-      "                               -----------------------------------------------"
+      "     +--------------------------- ANSI-24BIT ---------------------------+     "
+      "     | #MCC-B-000000 #MCC-B-040000 #MCC-B-080000 #MCC-B-0C0000 #MCC-B-100000 #MCC-B-140000 #MCC-B-180000 #MCC-B-1C0000 #MCC-B-200000 #MCC-B-240000 #MCC-B-280000 #MCC-B-2C0000 #MCC-B-300000 #MCC-B-340000 #MCC-B-380000 #MCC-B-3C0000 #MCC-B-400000 #MCC-B-440000 #MCC-B-480000 #MCC-B-4C0000 #MCC-B-500000 #MCC-B-540000 #MCC-B-580000 #MCC-B-5C0000 #MCC-B-600000 #MCC-B-640000 #MCC-B-680000 #MCC-B-6C0000 #MCC-B-700000 #MCC-B-740000 #MCC-B-780000 #MCC-B-7C0000 #MCC-B-800000 #MCC-B-840000 #MCC-B-880000 #MCC-B-8C0000 #MCC-B-900000 #MCC-B-940000 #MCC-B-980000 #MCC-B-9C0000 #MCC-B-A00000 #MCC-B-A40000 #MCC-B-A80000 #MCC-B-AC0000 #MCC-B-B00000 #MCC-B-B40000 #MCC-B-B80000 #MCC-B-BC0000 #MCC-B-C00000 #MCC-B-C40000 #MCC-B-C80000 #MCC-B-CC0000 #MCC-B-D00000 #MCC-B-D40000 #MCC-B-D80000 #MCC-B-DC0000 #MCC-B-E00000 #MCC-B-E40000 #MCC-B-E80000 #MCC-B-EC0000 #MCC-B-F00000 #MCC-B-F40000 #MCC-B-F80000 #MCC-B-FC0000 #MCC-X-000000 |     " ansi_type @ mcc_convert
+      "     | #MCC-B-010000 #MCC-B-050000 #MCC-B-090000 #MCC-B-0D0000 #MCC-B-110000 #MCC-B-150000 #MCC-B-190000 #MCC-B-1D0000 #MCC-B-210000 #MCC-B-250000 #MCC-B-290000 #MCC-B-2D0000 #MCC-B-310000 #MCC-B-350000 #MCC-B-390000 #MCC-B-3D0000 #MCC-B-410000 #MCC-B-450000 #MCC-B-490000 #MCC-B-4D0000 #MCC-B-510000 #MCC-B-550000 #MCC-B-590000 #MCC-B-5D0000 #MCC-B-610000 #MCC-B-650000 #MCC-B-690000 #MCC-B-6D0000 #MCC-B-710000 #MCC-B-750000 #MCC-B-790000 #MCC-B-7D0000 #MCC-B-810000 #MCC-B-850000 #MCC-B-890000 #MCC-B-8D0000 #MCC-B-910000 #MCC-B-950000 #MCC-B-990000 #MCC-B-9D0000 #MCC-B-A10000 #MCC-B-A50000 #MCC-B-A90000 #MCC-B-AD0000 #MCC-B-B10000 #MCC-B-B50000 #MCC-B-B90000 #MCC-B-BD0000 #MCC-B-C10000 #MCC-B-C50000 #MCC-B-C90000 #MCC-B-CD0000 #MCC-B-D10000 #MCC-B-D50000 #MCC-B-D90000 #MCC-B-DD0000 #MCC-B-E10000 #MCC-B-E50000 #MCC-B-E90000 #MCC-B-ED0000 #MCC-B-F10000 #MCC-B-F50000 #MCC-B-F90000 #MCC-B-FD0000 #MCC-X-000000 |     " ansi_type @ mcc_convert
+      "     | #MCC-B-020000 #MCC-B-060000 #MCC-B-0A0000 #MCC-B-0E0000 #MCC-B-120000 #MCC-B-160000 #MCC-B-1A0000 #MCC-B-1E0000 #MCC-B-220000 #MCC-B-260000 #MCC-B-2A0000 #MCC-B-2E0000 #MCC-B-320000 #MCC-B-360000 #MCC-B-3A0000 #MCC-B-3E0000 #MCC-B-420000 #MCC-B-460000 #MCC-B-4A0000 #MCC-B-4E0000 #MCC-B-520000 #MCC-B-560000 #MCC-B-5A0000 #MCC-B-5E0000 #MCC-B-620000 #MCC-B-660000 #MCC-B-6A0000 #MCC-B-6E0000 #MCC-B-720000 #MCC-B-760000 #MCC-B-7A0000 #MCC-B-7E0000 #MCC-B-820000 #MCC-B-860000 #MCC-B-8A0000 #MCC-B-8E0000 #MCC-B-920000 #MCC-B-960000 #MCC-B-9A0000 #MCC-B-9E0000 #MCC-B-A20000 #MCC-B-A60000 #MCC-B-AA0000 #MCC-B-AE0000 #MCC-B-B20000 #MCC-B-B60000 #MCC-B-BA0000 #MCC-B-BE0000 #MCC-B-C20000 #MCC-B-C60000 #MCC-B-CA0000 #MCC-B-CE0000 #MCC-B-D20000 #MCC-B-D60000 #MCC-B-DA0000 #MCC-B-DE0000 #MCC-B-E20000 #MCC-B-E60000 #MCC-B-EA0000 #MCC-B-EE0000 #MCC-B-F20000 #MCC-B-F60000 #MCC-B-FA0000 #MCC-B-FE0000 #MCC-X-000000 |     " ansi_type @ mcc_convert
+      "     | #MCC-B-030000 #MCC-B-070000 #MCC-B-0B0000 #MCC-B-0F0000 #MCC-B-130000 #MCC-B-170000 #MCC-B-1B0000 #MCC-B-1F0000 #MCC-B-230000 #MCC-B-270000 #MCC-B-2B0000 #MCC-B-2F0000 #MCC-B-330000 #MCC-B-370000 #MCC-B-3B0000 #MCC-B-3F0000 #MCC-B-430000 #MCC-B-470000 #MCC-B-4B0000 #MCC-B-4F0000 #MCC-B-530000 #MCC-B-570000 #MCC-B-5B0000 #MCC-B-5F0000 #MCC-B-630000 #MCC-B-670000 #MCC-B-6B0000 #MCC-B-6F0000 #MCC-B-730000 #MCC-B-770000 #MCC-B-7B0000 #MCC-B-7F0000 #MCC-B-830000 #MCC-B-870000 #MCC-B-8B0000 #MCC-B-8F0000 #MCC-B-930000 #MCC-B-970000 #MCC-B-9B0000 #MCC-B-9F0000 #MCC-B-A30000 #MCC-B-A70000 #MCC-B-AB0000 #MCC-B-AF0000 #MCC-B-B30000 #MCC-B-B70000 #MCC-B-BB0000 #MCC-B-BF0000 #MCC-B-C30000 #MCC-B-C70000 #MCC-B-CB0000 #MCC-B-CF0000 #MCC-B-D30000 #MCC-B-D70000 #MCC-B-DB0000 #MCC-B-DF0000 #MCC-B-E30000 #MCC-B-E70000 #MCC-B-EB0000 #MCC-B-EF0000 #MCC-B-F30000 #MCC-B-F70000 #MCC-B-FB0000 #MCC-B-FF0000 #MCC-X-000000 |     " ansi_type @ mcc_convert
+      "     | #MCC-B-000000 #MCC-B-000400 #MCC-B-000800 #MCC-B-000C00 #MCC-B-001000 #MCC-B-001400 #MCC-B-001800 #MCC-B-001C00 #MCC-B-002000 #MCC-B-002400 #MCC-B-002800 #MCC-B-002C00 #MCC-B-003000 #MCC-B-003400 #MCC-B-003800 #MCC-B-003C00 #MCC-B-004000 #MCC-B-004400 #MCC-B-004800 #MCC-B-004C00 #MCC-B-005000 #MCC-B-005400 #MCC-B-005800 #MCC-B-005C00 #MCC-B-006000 #MCC-B-006400 #MCC-B-006800 #MCC-B-006C00 #MCC-B-007000 #MCC-B-007400 #MCC-B-007800 #MCC-B-007C00 #MCC-B-008000 #MCC-B-008400 #MCC-B-008800 #MCC-B-008C00 #MCC-B-009000 #MCC-B-009400 #MCC-B-009800 #MCC-B-009C00 #MCC-B-00A000 #MCC-B-00A400 #MCC-B-00A800 #MCC-B-00AC00 #MCC-B-00B000 #MCC-B-00B400 #MCC-B-00B800 #MCC-B-00BC00 #MCC-B-00C000 #MCC-B-00C400 #MCC-B-00C800 #MCC-B-00CC00 #MCC-B-00D000 #MCC-B-00D400 #MCC-B-00D800 #MCC-B-00DC00 #MCC-B-00E000 #MCC-B-00E400 #MCC-B-00E800 #MCC-B-00EC00 #MCC-B-00F000 #MCC-B-00F400 #MCC-B-00F800 #MCC-B-00FC00 #MCC-X-000000 |     " ansi_type @ mcc_convert
+      "     | #MCC-B-000100 #MCC-B-000500 #MCC-B-000900 #MCC-B-000D00 #MCC-B-001100 #MCC-B-001500 #MCC-B-001900 #MCC-B-001D00 #MCC-B-002100 #MCC-B-002500 #MCC-B-002900 #MCC-B-002D00 #MCC-B-003100 #MCC-B-003500 #MCC-B-003900 #MCC-B-003D00 #MCC-B-004100 #MCC-B-004500 #MCC-B-004900 #MCC-B-004D00 #MCC-B-005100 #MCC-B-005500 #MCC-B-005900 #MCC-B-005D00 #MCC-B-006100 #MCC-B-006500 #MCC-B-006900 #MCC-B-006D00 #MCC-B-007100 #MCC-B-007500 #MCC-B-007900 #MCC-B-007D00 #MCC-B-008100 #MCC-B-008500 #MCC-B-008900 #MCC-B-008D00 #MCC-B-009100 #MCC-B-009500 #MCC-B-009900 #MCC-B-009D00 #MCC-B-00A100 #MCC-B-00A500 #MCC-B-00A900 #MCC-B-00AD00 #MCC-B-00B100 #MCC-B-00B500 #MCC-B-00B900 #MCC-B-00BD00 #MCC-B-00C100 #MCC-B-00C500 #MCC-B-00C900 #MCC-B-00CD00 #MCC-B-00D100 #MCC-B-00D500 #MCC-B-00D900 #MCC-B-00DD00 #MCC-B-00E100 #MCC-B-00E500 #MCC-B-00E900 #MCC-B-00ED00 #MCC-B-00F100 #MCC-B-00F500 #MCC-B-00F900 #MCC-B-00FD00 #MCC-X-000000 |     " ansi_type @ mcc_convert
+      "     | #MCC-B-000200 #MCC-B-000600 #MCC-B-000A00 #MCC-B-000E00 #MCC-B-001200 #MCC-B-001600 #MCC-B-001A00 #MCC-B-001E00 #MCC-B-002200 #MCC-B-002600 #MCC-B-002A00 #MCC-B-002E00 #MCC-B-003200 #MCC-B-003600 #MCC-B-003A00 #MCC-B-003E00 #MCC-B-004200 #MCC-B-004600 #MCC-B-004A00 #MCC-B-004E00 #MCC-B-005200 #MCC-B-005600 #MCC-B-005A00 #MCC-B-005E00 #MCC-B-006200 #MCC-B-006600 #MCC-B-006A00 #MCC-B-006E00 #MCC-B-007200 #MCC-B-007600 #MCC-B-007A00 #MCC-B-007E00 #MCC-B-008200 #MCC-B-008600 #MCC-B-008A00 #MCC-B-008E00 #MCC-B-009200 #MCC-B-009600 #MCC-B-009A00 #MCC-B-009E00 #MCC-B-00A200 #MCC-B-00A600 #MCC-B-00AA00 #MCC-B-00AE00 #MCC-B-00B200 #MCC-B-00B600 #MCC-B-00BA00 #MCC-B-00BE00 #MCC-B-00C200 #MCC-B-00C600 #MCC-B-00CA00 #MCC-B-00CE00 #MCC-B-00D200 #MCC-B-00D600 #MCC-B-00DA00 #MCC-B-00DE00 #MCC-B-00E200 #MCC-B-00E600 #MCC-B-00EA00 #MCC-B-00EE00 #MCC-B-00F200 #MCC-B-00F600 #MCC-B-00FA00 #MCC-B-00FE00 #MCC-X-000000 |     " ansi_type @ mcc_convert
+      "     | #MCC-B-000300 #MCC-B-000700 #MCC-B-000B00 #MCC-B-000F00 #MCC-B-001300 #MCC-B-001700 #MCC-B-001B00 #MCC-B-001F00 #MCC-B-002300 #MCC-B-002700 #MCC-B-002B00 #MCC-B-002F00 #MCC-B-003300 #MCC-B-003700 #MCC-B-003B00 #MCC-B-003F00 #MCC-B-004300 #MCC-B-004700 #MCC-B-004B00 #MCC-B-004F00 #MCC-B-005300 #MCC-B-005700 #MCC-B-005B00 #MCC-B-005F00 #MCC-B-006300 #MCC-B-006700 #MCC-B-006B00 #MCC-B-006F00 #MCC-B-007300 #MCC-B-007700 #MCC-B-007B00 #MCC-B-007F00 #MCC-B-008300 #MCC-B-008700 #MCC-B-008B00 #MCC-B-008F00 #MCC-B-009300 #MCC-B-009700 #MCC-B-009B00 #MCC-B-009F00 #MCC-B-00A300 #MCC-B-00A700 #MCC-B-00AB00 #MCC-B-00AF00 #MCC-B-00B300 #MCC-B-00B700 #MCC-B-00BB00 #MCC-B-00BF00 #MCC-B-00C300 #MCC-B-00C700 #MCC-B-00CB00 #MCC-B-00CF00 #MCC-B-00D300 #MCC-B-00D700 #MCC-B-00DB00 #MCC-B-00DF00 #MCC-B-00E300 #MCC-B-00E700 #MCC-B-00EB00 #MCC-B-00EF00 #MCC-B-00F300 #MCC-B-00F700 #MCC-B-00FB00 #MCC-B-00FF00 #MCC-X-000000 |     " ansi_type @ mcc_convert
+      "     | #MCC-B-000000 #MCC-B-000004 #MCC-B-000008 #MCC-B-00000C #MCC-B-000010 #MCC-B-000014 #MCC-B-000018 #MCC-B-00001C #MCC-B-000020 #MCC-B-000024 #MCC-B-000028 #MCC-B-00002C #MCC-B-000030 #MCC-B-000034 #MCC-B-000038 #MCC-B-00003C #MCC-B-000040 #MCC-B-000044 #MCC-B-000048 #MCC-B-00004C #MCC-B-000050 #MCC-B-000054 #MCC-B-000058 #MCC-B-00005C #MCC-B-000060 #MCC-B-000064 #MCC-B-000068 #MCC-B-00006C #MCC-B-000070 #MCC-B-000074 #MCC-B-000078 #MCC-B-00007C #MCC-B-000080 #MCC-B-000084 #MCC-B-000088 #MCC-B-00008C #MCC-B-000090 #MCC-B-000094 #MCC-B-000098 #MCC-B-00009C #MCC-B-0000A0 #MCC-B-0000A4 #MCC-B-0000A8 #MCC-B-0000AC #MCC-B-0000B0 #MCC-B-0000B4 #MCC-B-0000B8 #MCC-B-0000BC #MCC-B-0000C0 #MCC-B-0000C4 #MCC-B-0000C8 #MCC-B-0000CC #MCC-B-0000D0 #MCC-B-0000D4 #MCC-B-0000D8 #MCC-B-0000DC #MCC-B-0000E0 #MCC-B-0000E4 #MCC-B-0000E8 #MCC-B-0000EC #MCC-B-0000F0 #MCC-B-0000F4 #MCC-B-0000F8 #MCC-B-0000FC #MCC-X-000000 |     " ansi_type @ mcc_convert
+      "     | #MCC-B-000001 #MCC-B-000005 #MCC-B-000009 #MCC-B-00000D #MCC-B-000011 #MCC-B-000015 #MCC-B-000019 #MCC-B-00001D #MCC-B-000021 #MCC-B-000025 #MCC-B-000029 #MCC-B-00002D #MCC-B-000031 #MCC-B-000035 #MCC-B-000039 #MCC-B-00003D #MCC-B-000041 #MCC-B-000045 #MCC-B-000049 #MCC-B-00004D #MCC-B-000051 #MCC-B-000055 #MCC-B-000059 #MCC-B-00005D #MCC-B-000061 #MCC-B-000065 #MCC-B-000069 #MCC-B-00006D #MCC-B-000071 #MCC-B-000075 #MCC-B-000079 #MCC-B-00007D #MCC-B-000081 #MCC-B-000085 #MCC-B-000089 #MCC-B-00008D #MCC-B-000091 #MCC-B-000095 #MCC-B-000099 #MCC-B-00009D #MCC-B-0000A1 #MCC-B-0000A5 #MCC-B-0000A9 #MCC-B-0000AD #MCC-B-0000B1 #MCC-B-0000B5 #MCC-B-0000B9 #MCC-B-0000BD #MCC-B-0000C1 #MCC-B-0000C5 #MCC-B-0000C9 #MCC-B-0000CD #MCC-B-0000D1 #MCC-B-0000D5 #MCC-B-0000D9 #MCC-B-0000DD #MCC-B-0000E1 #MCC-B-0000E5 #MCC-B-0000E9 #MCC-B-0000ED #MCC-B-0000F1 #MCC-B-0000F5 #MCC-B-0000F9 #MCC-B-0000FD #MCC-X-000000 |     " ansi_type @ mcc_convert
+      "     | #MCC-B-000002 #MCC-B-000006 #MCC-B-00000A #MCC-B-00000E #MCC-B-000012 #MCC-B-000016 #MCC-B-00001A #MCC-B-00001E #MCC-B-000022 #MCC-B-000026 #MCC-B-00002A #MCC-B-00002E #MCC-B-000032 #MCC-B-000036 #MCC-B-00003A #MCC-B-00003E #MCC-B-000042 #MCC-B-000046 #MCC-B-00004A #MCC-B-00004E #MCC-B-000052 #MCC-B-000056 #MCC-B-00005A #MCC-B-00005E #MCC-B-000062 #MCC-B-000066 #MCC-B-00006A #MCC-B-00006E #MCC-B-000072 #MCC-B-000076 #MCC-B-00007A #MCC-B-00007E #MCC-B-000082 #MCC-B-000086 #MCC-B-00008A #MCC-B-00008E #MCC-B-000092 #MCC-B-000096 #MCC-B-00009A #MCC-B-00009E #MCC-B-0000A2 #MCC-B-0000A6 #MCC-B-0000AA #MCC-B-0000AE #MCC-B-0000B2 #MCC-B-0000B6 #MCC-B-0000BA #MCC-B-0000BE #MCC-B-0000C2 #MCC-B-0000C6 #MCC-B-0000CA #MCC-B-0000CE #MCC-B-0000D2 #MCC-B-0000D6 #MCC-B-0000DA #MCC-B-0000DE #MCC-B-0000E2 #MCC-B-0000E6 #MCC-B-0000EA #MCC-B-0000EE #MCC-B-0000F2 #MCC-B-0000F6 #MCC-B-0000FA #MCC-B-0000FE #MCC-X-000000 |     " ansi_type @ mcc_convert
+      "     | #MCC-B-000003 #MCC-B-000007 #MCC-B-00000B #MCC-B-00000F #MCC-B-000013 #MCC-B-000017 #MCC-B-00001B #MCC-B-00001F #MCC-B-000023 #MCC-B-000027 #MCC-B-00002B #MCC-B-00002F #MCC-B-000033 #MCC-B-000037 #MCC-B-00003B #MCC-B-00003F #MCC-B-000043 #MCC-B-000047 #MCC-B-00004B #MCC-B-00004F #MCC-B-000053 #MCC-B-000057 #MCC-B-00005B #MCC-B-00005F #MCC-B-000063 #MCC-B-000067 #MCC-B-00006B #MCC-B-00006F #MCC-B-000073 #MCC-B-000077 #MCC-B-00007B #MCC-B-00007F #MCC-B-000083 #MCC-B-000087 #MCC-B-00008B #MCC-B-00008F #MCC-B-000093 #MCC-B-000097 #MCC-B-00009B #MCC-B-00009F #MCC-B-0000A3 #MCC-B-0000A7 #MCC-B-0000AB #MCC-B-0000AF #MCC-B-0000B3 #MCC-B-0000B7 #MCC-B-0000BB #MCC-B-0000BF #MCC-B-0000C3 #MCC-B-0000C7 #MCC-B-0000CB #MCC-B-0000CF #MCC-B-0000D3 #MCC-B-0000D7 #MCC-B-0000DB #MCC-B-0000DF #MCC-B-0000E3 #MCC-B-0000E7 #MCC-B-0000EB #MCC-B-0000EF #MCC-B-0000F3 #MCC-B-0000F7 #MCC-B-0000FB #MCC-B-0000FF #MCC-X-000000 |     " ansi_type @ mcc_convert
+      "     +------------------------------------------------------------------+     "
     }list exit
   then
   ansi_type @ "ANSI-8BIT" = if
     {
+      "                                 ANSI-8BIT                                    "
+      "                                                                              "
+      "This is the ANSI 256 color mode, and it's largely well supported by MUD       "
+      "clients. For color accuracy reasons, the first 16 colors are not used, so     "
+      "there are 240 possible colors.                                                "
+      "                                                                              "
+      "The box below contains every available color. You should see that each one of "
+      "them is a different color, distinct from any of the others.                   "
+      "                                                                              "
       "       +------------------------ ANSI-8BIT ---------------------------+       "
       "       | #MCC-B-000000 16  #MCC-B-00005F 17  #MCC-B-000087 18  #MCC-B-0000AF 19  #MCC-B-0000D7 20  #MCC-B-0000FF 21  #MCC-B-005F00 22  #MCC-B-005F5F 23  #MCC-B-005F87 24  #MCC-B-005FAF 25  #MCC-B-005FD7 26  #MCC-B-005FFF 27  #MCC-X-000000 |       " ansi_type @ mcc_convert
       "       | #MCC-B-008700 28  #MCC-B-00875F 29  #MCC-B-008787 30  #MCC-B-0087AF 31  #MCC-B-0087D7 32  #MCC-B-0087FF 33  #MCC-B-00AF00 34  #MCC-B-00AF5F 35  #MCC-B-00AF87 36  #MCC-B-00AFAF 37  #MCC-B-00AFD7 38  #MCC-B-00AFFF 39  #MCC-X-000000 |       " ansi_type @ mcc_convert
@@ -1498,43 +1395,185 @@ $LIBDEF M-LIB-COLOR-strcut
       "       | #MCC-B-080808 232 #MCC-B-121212 233 #MCC-B-1C1C1C 234 #MCC-B-262626 235 #MCC-B-303030 236 #MCC-B-3A3A3A 237 #MCC-B-444444 238 #MCC-B-4E4E4E 239 #MCC-B-585858 240 #MCC-B-626262 241 #MCC-B-6C6C6C 242 #MCC-B-767676 243 #MCC-X-000000 |       " ansi_type @ mcc_convert
       "       | #MCC-B-808080 244 #MCC-B-8A8A8A 245 #MCC-B-949494 246 #MCC-B-9E9E9E 247 #MCC-B-A8A8A8 248 #MCC-B-B2B2B2 249 #MCC-B-BCBCBC 250 #MCC-B-C6C6C6 251 #MCC-B-D0D0D0 252 #MCC-B-DADADA 253 #MCC-B-E4E4E4 254 #MCC-B-EEEEEE 255 #MCC-X-000000 |       " ansi_type @ mcc_convert
       "       +--------------------------------------------------------------+       "
-      "                                                                              "
-      "This is the ANSI 256 color mode, and it's largely well supported by MUD       "
-      "clients. For color accuracy reasons, the first 16 colors are not used, so     "
-      "there are 240 possible colors.                                                "
-      "                                                                              "
-      "The box above contains every available color. You should see that each one of "
-      "them is a different color, distinct from any of the others.                   "
     }list exit
   then
-  ansi_type @ "ANSI-24BIT" = if
+  ansi_type @ "ANSI-4BIT-VGA" = if
     {
-      "     +--------------------------- ANSI-24BIT ---------------------------+     "
-      "     | #MCC-B-000000 #MCC-B-040000 #MCC-B-080000 #MCC-B-0C0000 #MCC-B-100000 #MCC-B-140000 #MCC-B-180000 #MCC-B-1C0000 #MCC-B-200000 #MCC-B-240000 #MCC-B-280000 #MCC-B-2C0000 #MCC-B-300000 #MCC-B-340000 #MCC-B-380000 #MCC-B-3C0000 #MCC-B-400000 #MCC-B-440000 #MCC-B-480000 #MCC-B-4C0000 #MCC-B-500000 #MCC-B-540000 #MCC-B-580000 #MCC-B-5C0000 #MCC-B-600000 #MCC-B-640000 #MCC-B-680000 #MCC-B-6C0000 #MCC-B-700000 #MCC-B-740000 #MCC-B-780000 #MCC-B-7C0000 #MCC-B-800000 #MCC-B-840000 #MCC-B-880000 #MCC-B-8C0000 #MCC-B-900000 #MCC-B-940000 #MCC-B-980000 #MCC-B-9C0000 #MCC-B-A00000 #MCC-B-A40000 #MCC-B-A80000 #MCC-B-AC0000 #MCC-B-B00000 #MCC-B-B40000 #MCC-B-B80000 #MCC-B-BC0000 #MCC-B-C00000 #MCC-B-C40000 #MCC-B-C80000 #MCC-B-CC0000 #MCC-B-D00000 #MCC-B-D40000 #MCC-B-D80000 #MCC-B-DC0000 #MCC-B-E00000 #MCC-B-E40000 #MCC-B-E80000 #MCC-B-EC0000 #MCC-B-F00000 #MCC-B-F40000 #MCC-B-F80000 #MCC-B-FC0000 #MCC-X-000000 |     " ansi_type @ mcc_convert
-      "     | #MCC-B-010000 #MCC-B-050000 #MCC-B-090000 #MCC-B-0D0000 #MCC-B-110000 #MCC-B-150000 #MCC-B-190000 #MCC-B-1D0000 #MCC-B-210000 #MCC-B-250000 #MCC-B-290000 #MCC-B-2D0000 #MCC-B-310000 #MCC-B-350000 #MCC-B-390000 #MCC-B-3D0000 #MCC-B-410000 #MCC-B-450000 #MCC-B-490000 #MCC-B-4D0000 #MCC-B-510000 #MCC-B-550000 #MCC-B-590000 #MCC-B-5D0000 #MCC-B-610000 #MCC-B-650000 #MCC-B-690000 #MCC-B-6D0000 #MCC-B-710000 #MCC-B-750000 #MCC-B-790000 #MCC-B-7D0000 #MCC-B-810000 #MCC-B-850000 #MCC-B-890000 #MCC-B-8D0000 #MCC-B-910000 #MCC-B-950000 #MCC-B-990000 #MCC-B-9D0000 #MCC-B-A10000 #MCC-B-A50000 #MCC-B-A90000 #MCC-B-AD0000 #MCC-B-B10000 #MCC-B-B50000 #MCC-B-B90000 #MCC-B-BD0000 #MCC-B-C10000 #MCC-B-C50000 #MCC-B-C90000 #MCC-B-CD0000 #MCC-B-D10000 #MCC-B-D50000 #MCC-B-D90000 #MCC-B-DD0000 #MCC-B-E10000 #MCC-B-E50000 #MCC-B-E90000 #MCC-B-ED0000 #MCC-B-F10000 #MCC-B-F50000 #MCC-B-F90000 #MCC-B-FD0000 #MCC-X-000000 |     " ansi_type @ mcc_convert
-      "     | #MCC-B-020000 #MCC-B-060000 #MCC-B-0A0000 #MCC-B-0E0000 #MCC-B-120000 #MCC-B-160000 #MCC-B-1A0000 #MCC-B-1E0000 #MCC-B-220000 #MCC-B-260000 #MCC-B-2A0000 #MCC-B-2E0000 #MCC-B-320000 #MCC-B-360000 #MCC-B-3A0000 #MCC-B-3E0000 #MCC-B-420000 #MCC-B-460000 #MCC-B-4A0000 #MCC-B-4E0000 #MCC-B-520000 #MCC-B-560000 #MCC-B-5A0000 #MCC-B-5E0000 #MCC-B-620000 #MCC-B-660000 #MCC-B-6A0000 #MCC-B-6E0000 #MCC-B-720000 #MCC-B-760000 #MCC-B-7A0000 #MCC-B-7E0000 #MCC-B-820000 #MCC-B-860000 #MCC-B-8A0000 #MCC-B-8E0000 #MCC-B-920000 #MCC-B-960000 #MCC-B-9A0000 #MCC-B-9E0000 #MCC-B-A20000 #MCC-B-A60000 #MCC-B-AA0000 #MCC-B-AE0000 #MCC-B-B20000 #MCC-B-B60000 #MCC-B-BA0000 #MCC-B-BE0000 #MCC-B-C20000 #MCC-B-C60000 #MCC-B-CA0000 #MCC-B-CE0000 #MCC-B-D20000 #MCC-B-D60000 #MCC-B-DA0000 #MCC-B-DE0000 #MCC-B-E20000 #MCC-B-E60000 #MCC-B-EA0000 #MCC-B-EE0000 #MCC-B-F20000 #MCC-B-F60000 #MCC-B-FA0000 #MCC-B-FE0000 #MCC-X-000000 |     " ansi_type @ mcc_convert
-      "     | #MCC-B-030000 #MCC-B-070000 #MCC-B-0B0000 #MCC-B-0F0000 #MCC-B-130000 #MCC-B-170000 #MCC-B-1B0000 #MCC-B-1F0000 #MCC-B-230000 #MCC-B-270000 #MCC-B-2B0000 #MCC-B-2F0000 #MCC-B-330000 #MCC-B-370000 #MCC-B-3B0000 #MCC-B-3F0000 #MCC-B-430000 #MCC-B-470000 #MCC-B-4B0000 #MCC-B-4F0000 #MCC-B-530000 #MCC-B-570000 #MCC-B-5B0000 #MCC-B-5F0000 #MCC-B-630000 #MCC-B-670000 #MCC-B-6B0000 #MCC-B-6F0000 #MCC-B-730000 #MCC-B-770000 #MCC-B-7B0000 #MCC-B-7F0000 #MCC-B-830000 #MCC-B-870000 #MCC-B-8B0000 #MCC-B-8F0000 #MCC-B-930000 #MCC-B-970000 #MCC-B-9B0000 #MCC-B-9F0000 #MCC-B-A30000 #MCC-B-A70000 #MCC-B-AB0000 #MCC-B-AF0000 #MCC-B-B30000 #MCC-B-B70000 #MCC-B-BB0000 #MCC-B-BF0000 #MCC-B-C30000 #MCC-B-C70000 #MCC-B-CB0000 #MCC-B-CF0000 #MCC-B-D30000 #MCC-B-D70000 #MCC-B-DB0000 #MCC-B-DF0000 #MCC-B-E30000 #MCC-B-E70000 #MCC-B-EB0000 #MCC-B-EF0000 #MCC-B-F30000 #MCC-B-F70000 #MCC-B-FB0000 #MCC-B-FF0000 #MCC-X-000000 |     " ansi_type @ mcc_convert
-      "     | #MCC-B-000000 #MCC-B-000400 #MCC-B-000800 #MCC-B-000C00 #MCC-B-001000 #MCC-B-001400 #MCC-B-001800 #MCC-B-001C00 #MCC-B-002000 #MCC-B-002400 #MCC-B-002800 #MCC-B-002C00 #MCC-B-003000 #MCC-B-003400 #MCC-B-003800 #MCC-B-003C00 #MCC-B-004000 #MCC-B-004400 #MCC-B-004800 #MCC-B-004C00 #MCC-B-005000 #MCC-B-005400 #MCC-B-005800 #MCC-B-005C00 #MCC-B-006000 #MCC-B-006400 #MCC-B-006800 #MCC-B-006C00 #MCC-B-007000 #MCC-B-007400 #MCC-B-007800 #MCC-B-007C00 #MCC-B-008000 #MCC-B-008400 #MCC-B-008800 #MCC-B-008C00 #MCC-B-009000 #MCC-B-009400 #MCC-B-009800 #MCC-B-009C00 #MCC-B-00A000 #MCC-B-00A400 #MCC-B-00A800 #MCC-B-00AC00 #MCC-B-00B000 #MCC-B-00B400 #MCC-B-00B800 #MCC-B-00BC00 #MCC-B-00C000 #MCC-B-00C400 #MCC-B-00C800 #MCC-B-00CC00 #MCC-B-00D000 #MCC-B-00D400 #MCC-B-00D800 #MCC-B-00DC00 #MCC-B-00E000 #MCC-B-00E400 #MCC-B-00E800 #MCC-B-00EC00 #MCC-B-00F000 #MCC-B-00F400 #MCC-B-00F800 #MCC-B-00FC00 #MCC-X-000000 |     " ansi_type @ mcc_convert
-      "     | #MCC-B-000100 #MCC-B-000500 #MCC-B-000900 #MCC-B-000D00 #MCC-B-001100 #MCC-B-001500 #MCC-B-001900 #MCC-B-001D00 #MCC-B-002100 #MCC-B-002500 #MCC-B-002900 #MCC-B-002D00 #MCC-B-003100 #MCC-B-003500 #MCC-B-003900 #MCC-B-003D00 #MCC-B-004100 #MCC-B-004500 #MCC-B-004900 #MCC-B-004D00 #MCC-B-005100 #MCC-B-005500 #MCC-B-005900 #MCC-B-005D00 #MCC-B-006100 #MCC-B-006500 #MCC-B-006900 #MCC-B-006D00 #MCC-B-007100 #MCC-B-007500 #MCC-B-007900 #MCC-B-007D00 #MCC-B-008100 #MCC-B-008500 #MCC-B-008900 #MCC-B-008D00 #MCC-B-009100 #MCC-B-009500 #MCC-B-009900 #MCC-B-009D00 #MCC-B-00A100 #MCC-B-00A500 #MCC-B-00A900 #MCC-B-00AD00 #MCC-B-00B100 #MCC-B-00B500 #MCC-B-00B900 #MCC-B-00BD00 #MCC-B-00C100 #MCC-B-00C500 #MCC-B-00C900 #MCC-B-00CD00 #MCC-B-00D100 #MCC-B-00D500 #MCC-B-00D900 #MCC-B-00DD00 #MCC-B-00E100 #MCC-B-00E500 #MCC-B-00E900 #MCC-B-00ED00 #MCC-B-00F100 #MCC-B-00F500 #MCC-B-00F900 #MCC-B-00FD00 #MCC-X-000000 |     " ansi_type @ mcc_convert
-      "     | #MCC-B-000200 #MCC-B-000600 #MCC-B-000A00 #MCC-B-000E00 #MCC-B-001200 #MCC-B-001600 #MCC-B-001A00 #MCC-B-001E00 #MCC-B-002200 #MCC-B-002600 #MCC-B-002A00 #MCC-B-002E00 #MCC-B-003200 #MCC-B-003600 #MCC-B-003A00 #MCC-B-003E00 #MCC-B-004200 #MCC-B-004600 #MCC-B-004A00 #MCC-B-004E00 #MCC-B-005200 #MCC-B-005600 #MCC-B-005A00 #MCC-B-005E00 #MCC-B-006200 #MCC-B-006600 #MCC-B-006A00 #MCC-B-006E00 #MCC-B-007200 #MCC-B-007600 #MCC-B-007A00 #MCC-B-007E00 #MCC-B-008200 #MCC-B-008600 #MCC-B-008A00 #MCC-B-008E00 #MCC-B-009200 #MCC-B-009600 #MCC-B-009A00 #MCC-B-009E00 #MCC-B-00A200 #MCC-B-00A600 #MCC-B-00AA00 #MCC-B-00AE00 #MCC-B-00B200 #MCC-B-00B600 #MCC-B-00BA00 #MCC-B-00BE00 #MCC-B-00C200 #MCC-B-00C600 #MCC-B-00CA00 #MCC-B-00CE00 #MCC-B-00D200 #MCC-B-00D600 #MCC-B-00DA00 #MCC-B-00DE00 #MCC-B-00E200 #MCC-B-00E600 #MCC-B-00EA00 #MCC-B-00EE00 #MCC-B-00F200 #MCC-B-00F600 #MCC-B-00FA00 #MCC-B-00FE00 #MCC-X-000000 |     " ansi_type @ mcc_convert
-      "     | #MCC-B-000300 #MCC-B-000700 #MCC-B-000B00 #MCC-B-000F00 #MCC-B-001300 #MCC-B-001700 #MCC-B-001B00 #MCC-B-001F00 #MCC-B-002300 #MCC-B-002700 #MCC-B-002B00 #MCC-B-002F00 #MCC-B-003300 #MCC-B-003700 #MCC-B-003B00 #MCC-B-003F00 #MCC-B-004300 #MCC-B-004700 #MCC-B-004B00 #MCC-B-004F00 #MCC-B-005300 #MCC-B-005700 #MCC-B-005B00 #MCC-B-005F00 #MCC-B-006300 #MCC-B-006700 #MCC-B-006B00 #MCC-B-006F00 #MCC-B-007300 #MCC-B-007700 #MCC-B-007B00 #MCC-B-007F00 #MCC-B-008300 #MCC-B-008700 #MCC-B-008B00 #MCC-B-008F00 #MCC-B-009300 #MCC-B-009700 #MCC-B-009B00 #MCC-B-009F00 #MCC-B-00A300 #MCC-B-00A700 #MCC-B-00AB00 #MCC-B-00AF00 #MCC-B-00B300 #MCC-B-00B700 #MCC-B-00BB00 #MCC-B-00BF00 #MCC-B-00C300 #MCC-B-00C700 #MCC-B-00CB00 #MCC-B-00CF00 #MCC-B-00D300 #MCC-B-00D700 #MCC-B-00DB00 #MCC-B-00DF00 #MCC-B-00E300 #MCC-B-00E700 #MCC-B-00EB00 #MCC-B-00EF00 #MCC-B-00F300 #MCC-B-00F700 #MCC-B-00FB00 #MCC-B-00FF00 #MCC-X-000000 |     " ansi_type @ mcc_convert
-      "     | #MCC-B-000000 #MCC-B-000004 #MCC-B-000008 #MCC-B-00000C #MCC-B-000010 #MCC-B-000014 #MCC-B-000018 #MCC-B-00001C #MCC-B-000020 #MCC-B-000024 #MCC-B-000028 #MCC-B-00002C #MCC-B-000030 #MCC-B-000034 #MCC-B-000038 #MCC-B-00003C #MCC-B-000040 #MCC-B-000044 #MCC-B-000048 #MCC-B-00004C #MCC-B-000050 #MCC-B-000054 #MCC-B-000058 #MCC-B-00005C #MCC-B-000060 #MCC-B-000064 #MCC-B-000068 #MCC-B-00006C #MCC-B-000070 #MCC-B-000074 #MCC-B-000078 #MCC-B-00007C #MCC-B-000080 #MCC-B-000084 #MCC-B-000088 #MCC-B-00008C #MCC-B-000090 #MCC-B-000094 #MCC-B-000098 #MCC-B-00009C #MCC-B-0000A0 #MCC-B-0000A4 #MCC-B-0000A8 #MCC-B-0000AC #MCC-B-0000B0 #MCC-B-0000B4 #MCC-B-0000B8 #MCC-B-0000BC #MCC-B-0000C0 #MCC-B-0000C4 #MCC-B-0000C8 #MCC-B-0000CC #MCC-B-0000D0 #MCC-B-0000D4 #MCC-B-0000D8 #MCC-B-0000DC #MCC-B-0000E0 #MCC-B-0000E4 #MCC-B-0000E8 #MCC-B-0000EC #MCC-B-0000F0 #MCC-B-0000F4 #MCC-B-0000F8 #MCC-B-0000FC #MCC-X-000000 |     " ansi_type @ mcc_convert
-      "     | #MCC-B-000001 #MCC-B-000005 #MCC-B-000009 #MCC-B-00000D #MCC-B-000011 #MCC-B-000015 #MCC-B-000019 #MCC-B-00001D #MCC-B-000021 #MCC-B-000025 #MCC-B-000029 #MCC-B-00002D #MCC-B-000031 #MCC-B-000035 #MCC-B-000039 #MCC-B-00003D #MCC-B-000041 #MCC-B-000045 #MCC-B-000049 #MCC-B-00004D #MCC-B-000051 #MCC-B-000055 #MCC-B-000059 #MCC-B-00005D #MCC-B-000061 #MCC-B-000065 #MCC-B-000069 #MCC-B-00006D #MCC-B-000071 #MCC-B-000075 #MCC-B-000079 #MCC-B-00007D #MCC-B-000081 #MCC-B-000085 #MCC-B-000089 #MCC-B-00008D #MCC-B-000091 #MCC-B-000095 #MCC-B-000099 #MCC-B-00009D #MCC-B-0000A1 #MCC-B-0000A5 #MCC-B-0000A9 #MCC-B-0000AD #MCC-B-0000B1 #MCC-B-0000B5 #MCC-B-0000B9 #MCC-B-0000BD #MCC-B-0000C1 #MCC-B-0000C5 #MCC-B-0000C9 #MCC-B-0000CD #MCC-B-0000D1 #MCC-B-0000D5 #MCC-B-0000D9 #MCC-B-0000DD #MCC-B-0000E1 #MCC-B-0000E5 #MCC-B-0000E9 #MCC-B-0000ED #MCC-B-0000F1 #MCC-B-0000F5 #MCC-B-0000F9 #MCC-B-0000FD #MCC-X-000000 |     " ansi_type @ mcc_convert
-      "     | #MCC-B-000002 #MCC-B-000006 #MCC-B-00000A #MCC-B-00000E #MCC-B-000012 #MCC-B-000016 #MCC-B-00001A #MCC-B-00001E #MCC-B-000022 #MCC-B-000026 #MCC-B-00002A #MCC-B-00002E #MCC-B-000032 #MCC-B-000036 #MCC-B-00003A #MCC-B-00003E #MCC-B-000042 #MCC-B-000046 #MCC-B-00004A #MCC-B-00004E #MCC-B-000052 #MCC-B-000056 #MCC-B-00005A #MCC-B-00005E #MCC-B-000062 #MCC-B-000066 #MCC-B-00006A #MCC-B-00006E #MCC-B-000072 #MCC-B-000076 #MCC-B-00007A #MCC-B-00007E #MCC-B-000082 #MCC-B-000086 #MCC-B-00008A #MCC-B-00008E #MCC-B-000092 #MCC-B-000096 #MCC-B-00009A #MCC-B-00009E #MCC-B-0000A2 #MCC-B-0000A6 #MCC-B-0000AA #MCC-B-0000AE #MCC-B-0000B2 #MCC-B-0000B6 #MCC-B-0000BA #MCC-B-0000BE #MCC-B-0000C2 #MCC-B-0000C6 #MCC-B-0000CA #MCC-B-0000CE #MCC-B-0000D2 #MCC-B-0000D6 #MCC-B-0000DA #MCC-B-0000DE #MCC-B-0000E2 #MCC-B-0000E6 #MCC-B-0000EA #MCC-B-0000EE #MCC-B-0000F2 #MCC-B-0000F6 #MCC-B-0000FA #MCC-B-0000FE #MCC-X-000000 |     " ansi_type @ mcc_convert
-      "     | #MCC-B-000003 #MCC-B-000007 #MCC-B-00000B #MCC-B-00000F #MCC-B-000013 #MCC-B-000017 #MCC-B-00001B #MCC-B-00001F #MCC-B-000023 #MCC-B-000027 #MCC-B-00002B #MCC-B-00002F #MCC-B-000033 #MCC-B-000037 #MCC-B-00003B #MCC-B-00003F #MCC-B-000043 #MCC-B-000047 #MCC-B-00004B #MCC-B-00004F #MCC-B-000053 #MCC-B-000057 #MCC-B-00005B #MCC-B-00005F #MCC-B-000063 #MCC-B-000067 #MCC-B-00006B #MCC-B-00006F #MCC-B-000073 #MCC-B-000077 #MCC-B-00007B #MCC-B-00007F #MCC-B-000083 #MCC-B-000087 #MCC-B-00008B #MCC-B-00008F #MCC-B-000093 #MCC-B-000097 #MCC-B-00009B #MCC-B-00009F #MCC-B-0000A3 #MCC-B-0000A7 #MCC-B-0000AB #MCC-B-0000AF #MCC-B-0000B3 #MCC-B-0000B7 #MCC-B-0000BB #MCC-B-0000BF #MCC-B-0000C3 #MCC-B-0000C7 #MCC-B-0000CB #MCC-B-0000CF #MCC-B-0000D3 #MCC-B-0000D7 #MCC-B-0000DB #MCC-B-0000DF #MCC-B-0000E3 #MCC-B-0000E7 #MCC-B-0000EB #MCC-B-0000EF #MCC-B-0000F3 #MCC-B-0000F7 #MCC-B-0000FB #MCC-B-0000FF #MCC-X-000000 |     " ansi_type @ mcc_convert
-      "     +------------------------------------------------------------------+     "
+      "                                ANSI-4BIT-VGA                                 "
       "                                                                              "
-      "This is True-Color ANSI mode, and represents the full gamut of colors         "
-      "available on modern displays. Sadly, this encoding is not well supported by   "
-      "MUD clients, but it's the ultimate color accuracy option and is recommended   "
-      "if available.                                                                 "
+      "This is the oldest and most compatible color encoding standard, 16 available  "
+      "colors. The ANSI standard does not specify palette information, only color    "
+      "names, and on most clients you are free to set whatever palette you want for  "
+      "these colors, so for the purposes of color conversion on this server, you     "
+      "should select the ANSI palette that matches the one used in your MUD client.  "
       "                                                                              "
-      "The box above contains three bands of color, representing a small fraction of "
-      "the colors available in this mode, which appear as a smooth gradient with dark"
-      "on the left, and bright on the right. It should not contain any 'banding' of  "
-      "colors where there are sharp changes in hue or intensity. If it does, or your "
-      "client doesn't display it correctly at all, then you are not using true 24-bit"
-      "color mode, and you should select a different encoding.                       "
+      "This palette matches VGA graphics adapters popularized by early IBM PCs. They "
+      "are the most iconic ANSI colors, and are still considered the standard by ANSI"
+      "artists to this day.                                                          "
+      "                                                                              "
+      "In the box below, you will see 2 columns of 8 colors. On the left are the     "
+      "'normal' versions, and on the right are the 'bright' versions. Both the       "
+      "'nomal' and the 'bright' colors should have the same font weight. Some clients"
+      "will display the brighter colors as bold text. This behavior should be        "
+      "disabled in your client settings.                                             "
+      "                                                                              "
+      "If you are using the VGA palette, the 'normal' versions of colors will appear "
+      "dim but vivid. They will be saturated and clear in their color, but they will "
+      "not be very brightly lit.                                                     "
+      "                                                                              "
+      "The 'bright' versions of colors appear less saturated and more pale. 'normal' "
+      "yellow is unusual in particular, as it appears brown on the VGA palette.      "
+      "                                                                              "
+      "Ensure that you can see all 16 colors, and that they match this description.  "
+      "                                                                              "
+      "If your client supports it, you can use the values on the color table below to"
+      "change your output to match the ANSI VGA color palette.                       "
+      "                               _______________________________________________"
+      "                               | ID |     Color      |   Hex   |  R   G   B  |"
+      "                               | 0  | Black          | #000000 |   0   0   0 |"
+      "                               | 1  | Red            | #AA0000 | 170   0   0 |"
+      "/------ ANSI-4BIT-VGA ------\\  | 2  | Green          | #00AA00 |   0 170   0 |"
+      "| #MCC-B-AAAAAA#MCC-F-000000Black#MCC-X-000000        #MCC-B-000000#MCC-F-555555Dark Grey#MCC-X-000000    |  | 3  | Yellow         | #AA5500 | 170  85   0 |" ansi_type @ mcc_convert
+      "| #MCC-B-000000#MCC-F-AA0000Dim Red#MCC-X-000000      #MCC-B-000000#MCC-F-FF5555Pale Red#MCC-X-000000     |  | 4  | Blue           | #0000AA |   0   0 170 |" ansi_type @ mcc_convert
+      "| #MCC-B-000000#MCC-F-00AA00Dim Green#MCC-X-000000    #MCC-B-000000#MCC-F-55FF55Pale Green#MCC-X-000000   |  | 5  | Magenta        | #AA00AA | 170   0 170 |" ansi_type @ mcc_convert
+      "| #MCC-B-000000#MCC-F-AA5500Dim Brown#MCC-X-000000    #MCC-B-000000#MCC-F-FFFF55Pale Yellow#MCC-X-000000  |  | 6  | Cyan           | #00AAAA |   0 170 170 |" ansi_type @ mcc_convert
+      "| #MCC-B-000000#MCC-F-0000AADim Blue#MCC-X-000000     #MCC-B-000000#MCC-F-5555FFPale Blue#MCC-X-000000    |  | 7  | White          | #AAAAAA | 170 170 170 |" ansi_type @ mcc_convert
+      "| #MCC-B-000000#MCC-F-AA00AADim Magenta#MCC-X-000000  #MCC-B-000000#MCC-F-FF55FFPale Magenta#MCC-X-000000 |  | 8  | Bright Black   | #555555 |  85  85  85 |" ansi_type @ mcc_convert
+      "| #MCC-B-000000#MCC-F-00AAAADim Cyan#MCC-X-000000     #MCC-B-000000#MCC-F-55FFFFPale Cyan#MCC-X-000000    |  | 9  | Bright Red     | #FF5555 | 255  85  85 |" ansi_type @ mcc_convert
+      "| #MCC-B-000000#MCC-F-AAAAAAWhite#MCC-X-000000        #MCC-B-000000#MCC-F-FFFFFFWhite#MCC-X-000000        |  | 10 | Bright Green   | #55FF55 |  85 255  85 |" ansi_type @ mcc_convert
+      "\\---------------------------/  | 11 | Bright Yellow  | #FFFF55 | 255 255  85 |"
+      "                               | 12 | Bright Blue    | #5555FF |  85  85 255 |"
+      "                               | 13 | Bright Magenta | #FF55FF | 255  85 255 |"
+      "                               | 14 | Bright Cyan    | #55FFFF |  85 255 255 |"
+      "                               | 15 | Bright White   | #FFFFFF | 255 255 255 |"
+      "                               -----------------------------------------------"
+    }list exit
+  then
+  ansi_type @ "ANSI-4BIT-XTERM" = if
+    {
+      "                               ANSI-4BIT-XTERM                                "
+      "                                                                              "
+      "This is the oldest and most compatible color encoding standard, 16 available  "
+      "colors. The ANSI standard does not specify palette information, only color    "
+      "names, and on most clients you are free to set whatever palette you want for  "
+      "these colors, so for the purposes of color conversion on this server, you     "
+      "should select the ANSI palette that matches the one used in your MUD client.  "
+      "                                                                              "
+      "This palette matches the XTerm colors, and is arguably the most common color  "
+      "palette for MUD clients. It was popularized with the advent of X11 GUIs, and  "
+      "has more vibrant colors than the standard VGA color palette.                  "
+      "                                                                              "
+      "In the box below, you will see 2 columns of 8 colors. On the left are the     "
+      "'normal' versions, and on the right are the 'bright' versions. Both the       "
+      "'nomal' and the 'bright' colors should have the same font weight. Some clients"
+      "will display the brighter colors as bold text. This behavior should be        "
+      "disabled in your client settings.                                             "
+      "                                                                              "
+      "If you are using the XTerm palette in your client, the 'normal' versions of   "
+      "colors will have medium brightness, and be vivid. They are saturated and clear"
+      "in their color. Yellow will appear yellow, rather than brown. The 'bright'    "
+      "versions will be the same intense saturation as the 'dim' versions, but will  "
+      "be much more brightly lit.                                                    "
+      "                                                                              "
+      "Ensure that you can see all 16 colors, and that they match this description.  "
+      "                                                                              "
+      "If your client supports it, you can use the values on the color table below to"
+      "change your output to match the ANSI XTerm color palette.                     "
+      "                               _______________________________________________"
+      "                               | ID |     Color      |   Hex   |  R   G   B  |"
+      "                               | 0  | Black          | #000000 |   0   0   0 |"
+      "                               | 1  | Red            | #800000 | 128   0   0 |"
+      "/----- ANSI-4BIT-XTERM -----\\  | 2  | Green          | #008000 |   0 128   0 |"
+      "|  #MCC-B-AAAAAA#MCC-F-000000Black#MCC-X-000000    #MCC-B-000000#MCC-F-808080Dark Grey#MCC-X-000000       |  | 3  | Yellow         | #808000 | 128 128   0 |" ansi_type @ mcc_convert
+      "|  #MCC-B-000000#MCC-F-800000Red#MCC-X-000000      #MCC-B-000000#MCC-F-FF0000Bright Red#MCC-X-000000      |  | 4  | Blue           | #000080 |   0   0 128 |" ansi_type @ mcc_convert
+      "|  #MCC-B-000000#MCC-F-008000Green#MCC-X-000000    #MCC-B-000000#MCC-F-00FF00Bright Green#MCC-X-000000    |  | 5  | Magenta        | #800080 | 128   0 128 |" ansi_type @ mcc_convert
+      "|  #MCC-B-000000#MCC-F-808000Yellow#MCC-X-000000   #MCC-B-000000#MCC-F-FFFF00Bright Yellow#MCC-X-000000   |  | 6  | Cyan           | #008080 |   0 128 128 |" ansi_type @ mcc_convert
+      "|  #MCC-B-000000#MCC-F-000080Blue#MCC-X-000000     #MCC-B-000000#MCC-F-0000FFBright Blue#MCC-X-000000     |  | 7  | White          | #C0C0C0 | 192 192 192 |" ansi_type @ mcc_convert
+      "|  #MCC-B-000000#MCC-F-800080Magenta#MCC-X-000000  #MCC-B-000000#MCC-F-FF00FFBright Magenta#MCC-X-000000  |  | 8  | Bright Black   | #808080 | 128 128 128 |" ansi_type @ mcc_convert
+      "|  #MCC-B-000000#MCC-F-008080Cyan#MCC-X-000000     #MCC-B-000000#MCC-F-00FFFFBright Cyan#MCC-X-000000     |  | 9  | Bright Red     | #FF0000 | 255   0   0 |" ansi_type @ mcc_convert
+      "|  #MCC-B-000000#MCC-F-C0C0C0White#MCC-X-000000    #MCC-B-000000#MCC-F-FFFFFFWhite#MCC-X-000000           |  | 10 | Bright Green   | #00FF00 |   0 255   0 |" ansi_type @ mcc_convert
+      "\\---------------------------/  | 11 | Bright Yellow  | #FFFF55 | 255 255   0 |"
+      "                               | 12 | Bright Blue    | #0000FF |   0   0 255 |"
+      "                               | 13 | Bright Magenta | #FF00FF | 255   0 255 |"
+      "                               | 14 | Bright Cyan    | #00FFFF |   0 255 255 |"
+      "                               | 15 | Bright White   | #FFFFFF | 255 255 255 |"
+      "                               -----------------------------------------------"
+    }list exit
+  then
+  ansi_type @ "ANSI-3BIT-VGA" = if
+    {
+      "                                ANSI-3BIT-VGA                                 "
+      "                                                                              "
+      "This is the oldest and most compatible color encoding standard, 16 available  "
+      "colors. The ANSI standard does not specify palette information, only color    "
+      "names, and on most clients you are free to set whatever palette you want for  "
+      "these colors, so for the purposes of color conversion on this server, you     "
+      "should select the ANSI palette that matches the one used in your MUD client.  "
+      "                                                                              "
+      "This palette matches VGA graphics adapters popularized by early IBM PCs. They "
+      "are the most iconic ANSI colors, and are still considered the standard by ANSI"
+      "artists to this day.                                                          "
+      "                                                                              "
+      "In the box below, there are see 8 colors. Their color should be vibrantly     "
+      "saturated but dimly lit. If your client is using the VGA palette, the         "
+      "normally 'yellow' color will appear to be brown.                              "
+      "                                                                              "
+      "Ensure that all 8 colors are visible and match this description.              "
+      "                                                                              "
+      "This mode is available for compatibility but should generally be avoided, as  "
+      "almost all clients support ANSI-4BIT color codes.                             "
+      "                                                                              "
+      "If your client supports it, you can use the values on the color table below to"
+      "change your output to match the ANSI VGA color palette.                       "
+      "                               _______________________________________________"
+      "    /-- ANSI-3BIT-VGA --\\      | ID |     Color      |   Hex   |  R   G   B  |"
+      "    |       #MCC-B-AAAAAA#MCC-F-000000Black#MCC-X-000000       |      | 0  | Black          | #000000 |   0   0   0 |" ansi_type @ mcc_convert
+      "    |       #MCC-B-000000#MCC-F-AA0000Red#MCC-X-000000         |      | 1  | Red            | #AA0000 | 170   0   0 |" ansi_type @ mcc_convert
+      "    |       #MCC-B-000000#MCC-F-00AA00Green#MCC-X-000000       |      | 2  | Green          | #00AA00 |   0 170   0 |" ansi_type @ mcc_convert
+      "    |       #MCC-B-000000#MCC-F-AA5500Brown#MCC-X-000000       |      | 3  | Yellow         | #AA5500 | 170  85   0 |" ansi_type @ mcc_convert
+      "    |       #MCC-B-000000#MCC-F-0000AABlue#MCC-X-000000        |      | 4  | Blue           | #0000AA |   0   0 170 |" ansi_type @ mcc_convert
+      "    |       #MCC-B-000000#MCC-F-AA00AAMagenta#MCC-X-000000     |      | 5  | Magenta        | #AA00AA | 170   0 170 |" ansi_type @ mcc_convert
+      "    |       #MCC-B-000000#MCC-F-00AAAACyan#MCC-X-000000        |      | 6  | Cyan           | #00AAAA |   0 170 170 |" ansi_type @ mcc_convert
+      "    |       #MCC-B-000000#MCC-F-AAAAAAWhite#MCC-X-000000       |      | 7  | White          | #AAAAAA | 170 170 170 |" ansi_type @ mcc_convert
+      "    \\-------------------/      -----------------------------------------------"
+    }list exit
+  then
+  ansi_type @ "ANSI-3BIT-XTERM" = if
+    {
+      "                                ANSI-3BIT-VGA                                 "
+      "                                                                              "
+      "This is the oldest and most compatible color encoding standard, 16 available  "
+      "colors. The ANSI standard does not specify palette information, only color    "
+      "names, and on most clients you are free to set whatever palette you want for  "
+      "these colors, so for the purposes of color conversion on this server, you     "
+      "should select the ANSI palette that matches the one used in your MUD client.  "
+      "                                                                              "
+      "This palette matches the XTerm colors, and is arguably the most common color  "
+      "palette for MUD clients. It was popularized with the advent of X11 GUIs, and  "
+      "has more vibrant colors than the standard VGA color palette.                  "
+      "                                                                              "
+      "In the box below, you will see 8 colors. Their color should be vibrantly      "
+      "saturated but dimly lit. If your client is using the XTerm color palette,     "
+      "yellow will not appear to be brown.                                           "
+      "                                                                              "
+      "Ensure that all 8 colors are visible and match this description.              "
+      "                                                                              "
+      "This mode is available for compatibility but should generally be avoided, as  "
+      "almost all clients support ANSI-4BIT color codes.                             "
+      "                                                                              "
+      "If your client supports it, you can use the values on the color table below to"
+      "change your output to match the ANSI VGA color palette.                       "
+      "                               _______________________________________________"
+      "    /-- ANSI-3BIT-VGA --\\      | ID |     Color      |   Hex   |  R   G   B  |"
+      "    |       #MCC-B-C0C0C0#MCC-F-000000Black#MCC-X-000000       |      | 0  | Black          | #000000 |   0   0   0 |" ansi_type @ mcc_convert
+      "    |       #MCC-B-000000#MCC-F-800000Red#MCC-X-000000         |      | 1  | Red            | #800000 | 128   0   0 |" ansi_type @ mcc_convert
+      "    |       #MCC-B-000000#MCC-F-008000Green#MCC-X-000000       |      | 2  | Green          | #008000 |   0 128   0 |" ansi_type @ mcc_convert
+      "    |       #MCC-B-000000#MCC-F-808000Brown#MCC-X-000000       |      | 3  | Yellow         | #808000 | 128 128   0 |" ansi_type @ mcc_convert
+      "    |       #MCC-B-000000#MCC-F-000080Blue#MCC-X-000000        |      | 4  | Blue           | #000080 |   0   0 128 |" ansi_type @ mcc_convert
+      "    |       #MCC-B-000000#MCC-F-800080Magenta#MCC-X-000000     |      | 5  | Magenta        | #800080 | 128   0 128 |" ansi_type @ mcc_convert
+      "    |       #MCC-B-000000#MCC-F-008080Cyan#MCC-X-000000        |      | 6  | Cyan           | #008080 |   0 128 128 |" ansi_type @ mcc_convert
+      "    |       #MCC-B-000000#MCC-F-C0C0C0White#MCC-X-000000       |      | 7  | White          | #C0C0C0 | 192 192 192 |" ansi_type @ mcc_convert
+      "    \\-------------------/      -----------------------------------------------"
     }list exit
   then
   "Invalid ANSI type." abort
