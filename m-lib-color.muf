@@ -1228,9 +1228,7 @@ $LIBDEF M-LIB-COLOR-encoding_default
 (*                          M-LIB-COLOR-encoding_get                         *)
 (*****************************************************************************)
 : M-LIB-COLOR-encoding_get[ ref:object -- str:type ]
-  object @ "me" match != if
-    NEEDSM3
-  then
+  (* M1 OK *)
 
   object @ dbref? not if "Non-dbref argument (1)." abort then
 
@@ -1263,9 +1261,7 @@ $LIBDEF M-LIB-COLOR-encoding_get
 (*                          M-LIB-COLOR-encoding_set                         *)
 (*****************************************************************************)
 : M-LIB-COLOR-encoding_set[ ref:object str:type -- ]
-  object @ "me" match != if
-    NEEDSM3
-  then
+  NEEDSM3
 
   object @ dbref? not if "Non-dbref argument (1)." abort then
   object @ player? not if "Object must be a player (1)." abort then
@@ -1590,10 +1586,9 @@ $LIBDEF M-LIB-COLOR-transcode
 (*****************************************************************************)
 (*                           Convenience Routines                            *)
 (*****************************************************************************)
-$PUBDEF .color_tell "MCC" "AUTO" M-LIB-COLOR-transcode .tell
-$PUBDEF .color_otell "MCC" "AUTO" M-LIB-COLOR-transcode .otell
-$PUBDEF .color_notify "MCC" "AUTO" M-LIB-COLOR-transcode notify
-$PUBDEF .color_connotify "MCC" "AUTO" M-LIB-COLOR-transcode connotify
+$PUBDEF .color_tell me @ swap "MCC" "AUTO" M-LIB-COLOR-transcode notify
+$PUBDEF .color_otell loc @ contents begin over over swap "MCC" 3 pick M-LIB-COLOR-encoding_get M-LIB-COLOR-transcode notify next dup not until pop pop
+$PUBDEF .color_notify "MCC" 3 pick M-LIB-COLOR-encoding_get M-LIB-COLOR-transcode notify
 $PUBDEF .color_transcode "MCC" "AUTO" M-LIB-COLOR-transcode
 $PUBDEF .color_escape "NOCOLOR" "MCC" M-LIB-COLOR-transcode
 $PUBDEF .color_strip "MCC" "NOCOLOR" M-LIB-COLOR-transcode
