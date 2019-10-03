@@ -1,4 +1,4 @@
-@program m-cmd-@editobject.muf
+!@program m-cmd-@editobject.muf
 1 99999 d
 i
 $PRAGMA comment_recurse
@@ -93,7 +93,7 @@ $DEF NEEDSM4 trig caller = not caller "WIZARD" flag? not and if "Requires MUCKER
 
 $PUBDEF :
 
-$INCLUDE $m/lib/ansi
+$INCLUDE $m/lib/color
 $INCLUDE $m/lib/match
 $INCLUDE $m/cmd/at_action
 $INCLUDE $m/cmd/at_attach
@@ -247,7 +247,7 @@ $ENDDEF
  
   dup "\r" instr if
     "\r" split pop
-    "~&R..." strcat
+    "#MCC-X-000000..." strcat
   then
 ;
  
@@ -380,7 +380,7 @@ $ENDDEF
  
   dup "\r" instr if
     "\r" split pop
-    "~&R..." strcat
+    "#MCC-X-000000..." strcat
   then
 ;
  
@@ -780,7 +780,7 @@ lvar ourMorphPropTable
     "Attributes" 3
  
     { "A1"
-      "~&060[~&160A1~&060] Flight:      ~&140%s"
+      "#MCC-F-00AAAA[#MCC-F-55FFFFA1#MCC-F-00AAAA] Flight:      #MCC-F-5555FF%s"
       'getStrBool { "_attr/flight?" "Yes" "No" }list
  
       {
@@ -791,7 +791,7 @@ lvar ourMorphPropTable
     }list
  
     { "A2"
-      "~&060[~&160A2~&060] Swim:        ~&140%s"
+      "#MCC-F-00AAAA[#MCC-F-55FFFFA2#MCC-F-00AAAA] Swim:        #MCC-F-5555FF%s"
       'getStrBool { "_attr/swim?" "Yes" "No" }list
  
       {
@@ -802,7 +802,7 @@ lvar ourMorphPropTable
     }list
  
     { "A3"
-      "~&060[~&160A3~&060] Gills:        ~&140%s"
+      "#MCC-F-00AAAA[#MCC-F-55FFFFA3#MCC-F-00AAAA] Gills:        #MCC-F-5555FF%s"
       'getStrBool { "_attr/gills?" "Yes" "No" }list
  
       {
@@ -813,8 +813,8 @@ lvar ourMorphPropTable
     }list
  
     { "A4"
-      "~&060[~&160A4~&060] Size:        ~&140%s"
-      'getStr     { "_attr/size" "~&110[Unset]~&R" }list
+      "#MCC-F-00AAAA[#MCC-F-55FFFFA4#MCC-F-00AAAA] Size:        #MCC-F-5555FF%s"
+      'getStr     { "_attr/size" "#MCC-F-FF5555[Unset]#MCC-X-000000" }list
  
       {
         "** Builders may access this attribute by @locking to attr/size:<value>, or with the MPI code: {if:{eq:{prop:attr/size,me},<value>},<code>}"
@@ -824,7 +824,7 @@ lvar ourMorphPropTable
     }list
  
     { "A5"
-      "~&060[~&160A5~&060] Can Drive:   ~&140%s"
+      "#MCC-F-00AAAA[#MCC-F-55FFFFA5#MCC-F-00AAAA] Can Drive:   #MCC-F-5555FF%s"
       'getStrBool { "_attr/candrive?" "Yes" "No" }list
  
       {
@@ -835,7 +835,7 @@ lvar ourMorphPropTable
     }list
  
     { "A6"
-      "~&060[~&160A6~&060] Space Travel: ~&140%s"
+      "#MCC-F-00AAAA[#MCC-F-55FFFFA6#MCC-F-00AAAA] Space Travel: #MCC-F-5555FF%s"
       'getStrBool { "_attr/spacetravel?" "Yes" "No" }list
  
       {
@@ -847,7 +847,7 @@ lvar ourMorphPropTable
  
     ""
     { "B"
-      "~&060[~&160B~&060]ack to %s Edit"
+      "#MCC-F-00AAAA[#MCC-F-55FFFFB#MCC-F-00AAAA]ack to %s Edit"
       'getObject { "Room" "Player" "Object" }list
  
       {
@@ -864,8 +864,8 @@ lvar ourMorphPropTable
     1
  
     { "N"
-      "~&060[~&160N~&060]ame (Pronoun substitution name):    ~&140%s"
-      'getStr     { "%n" "~&040%n~&R" }list
+      "#MCC-F-00AAAA[#MCC-F-55FFFFN#MCC-F-00AAAA]ame (Pronoun substitution name):    #MCC-F-5555FF%s"
+      'getStr     { "%n" "#MCC-F-0000AA%n#MCC-X-000000" }list
  
       {
         "This name holds a special purpose.  The system's pronoun substitution routines also can retrieve your name, but unlike most retrievals of your name, you can set this value to whatever you want.  If this feature is abused, people will likely stop using it, so please just stick to reasonable things.  Such as: if your name is The_Great_Gazoo, entering 'The Great Gazoo' for your pronoun substition name is perfectly reasonable.  So are things like 'the grey cat' or 'a fuzzy walrus'."
@@ -877,8 +877,8 @@ lvar ourMorphPropTable
     }list
  
     { "A"
-      "~&060[~&160A~&060]bsolute Posessive (his/hers/its):   ~&140%s"
-      'getStr     { "%a" "~&040%a~&R" }list
+      "#MCC-F-00AAAA[#MCC-F-55FFFFA#MCC-F-00AAAA]bsolute Posessive (his/hers/its):   #MCC-F-5555FF%s"
+      'getStr     { "%a" "#MCC-F-0000AA%a#MCC-X-000000" }list
  
       {
         "Enter the absolute posessive pronoun (his/hers/its) of this character:"
@@ -887,8 +887,8 @@ lvar ourMorphPropTable
     }list
  
     { "S"
-      "~&060[~&160S~&060]ubjective (he/she/it):              ~&140%s"
-      'getStr     { "%s" "~&040%s~&R" }list
+      "#MCC-F-00AAAA[#MCC-F-55FFFFS#MCC-F-00AAAA]ubjective (he/she/it):              #MCC-F-5555FF%s"
+      'getStr     { "%s" "#MCC-F-0000AA%s#MCC-X-000000" }list
  
       {
         "Enter the subjective pronoun (he/she/it) of this character:"
@@ -897,8 +897,8 @@ lvar ourMorphPropTable
     }list
  
     { "O"
-      "~&060[~&160O~&060]bjective (him/her/it):              ~&140%s"
-      'getStr     { "%o" "~&040%o~&R" }list
+      "#MCC-F-00AAAA[#MCC-F-55FFFFO#MCC-F-00AAAA]bjective (him/her/it):              #MCC-F-5555FF%s"
+      'getStr     { "%o" "#MCC-F-0000AA%o#MCC-X-000000" }list
  
       {
         "Enter the objective pronoun (him/her/it) of this character:"
@@ -907,8 +907,8 @@ lvar ourMorphPropTable
     }list
  
     { "P"
-      "~&060[~&160P~&060]ossessive (his/her/its):            ~&140%s"
-      'getStr     { "%p" "~&040%p~&R" }list
+      "#MCC-F-00AAAA[#MCC-F-55FFFFP#MCC-F-00AAAA]ossessive (his/her/its):            #MCC-F-5555FF%s"
+      'getStr     { "%p" "#MCC-F-0000AA%p#MCC-X-000000" }list
  
       {
         "Enter the poessive pronoun (his/her/its) of this character:"
@@ -917,8 +917,8 @@ lvar ourMorphPropTable
     }list
  
     { "R"
-      "~&060[~&160R~&060]eflexive (himself/herself/itself):  ~&140%s"
-      'getStr     { "%r" "~&040%r~&R" }list
+      "#MCC-F-00AAAA[#MCC-F-55FFFFR#MCC-F-00AAAA]eflexive (himself/herself/itself):  #MCC-F-5555FF%s"
+      'getStr     { "%r" "#MCC-F-0000AA%r#MCC-X-000000" }list
  
       {
         "Enter the reflexive pronoun (himself/herself/itself) of this character:"
@@ -928,7 +928,7 @@ lvar ourMorphPropTable
  
     ""
     { "B"
-      "~&060[~&160B~&060]ack to %s Edit"
+      "#MCC-F-00AAAA[#MCC-F-55FFFFB#MCC-F-00AAAA]ack to %s Edit"
       'getObject { "Room" "Player" "Object" }list
  
       {
@@ -945,8 +945,8 @@ lvar ourMorphPropTable
     1
  
     { ""
-      "~&060Species: ~&140%s"
-      'getStr     { "_/species" "~&110[Unset]~&R" }list
+      "#MCC-F-00AAAASpecies: #MCC-F-5555FF%s"
+      'getStr     { "_/species" "#MCC-F-FF5555[Unset]#MCC-X-000000" }list
  
       {
       }list "\r" array_join
@@ -954,8 +954,8 @@ lvar ourMorphPropTable
     }list
  
     { ""
-      "~&060Gender:  ~&140%s"
-      'getStr     { "gender_prop" sysparm "~&110[Unset]~&R" }list
+      "#MCC-F-00AAAAGender:  #MCC-F-5555FF%s"
+      'getStr     { "gender_prop" sysparm "#MCC-F-FF5555[Unset]#MCC-X-000000" }list
  
       {
       }list "\r" array_join
@@ -965,8 +965,8 @@ lvar ourMorphPropTable
     "" 1
  
     { ""
-      "~&060Description: ~&140%s"
-      'getMPI     { "_/de" "~&110[Unset]~&R" }list
+      "#MCC-F-00AAAADescription: #MCC-F-5555FF%s"
+      'getMPI     { "_/de" "#MCC-F-FF5555[Unset]#MCC-X-000000" }list
  
       {
       }list "\r" array_join
@@ -974,8 +974,8 @@ lvar ourMorphPropTable
     }list
  
     { ""
-      "~&060Scent:       ~&140%s"
-      'getMPI     { "_/scent" "~&110[Unset]~&R" }list
+      "#MCC-F-00AAAAScent:       #MCC-F-5555FF%s"
+      'getMPI     { "_/scent" "#MCC-F-FF5555[Unset]#MCC-X-000000" }list
  
       {
       }list "\r" array_join
@@ -983,8 +983,8 @@ lvar ourMorphPropTable
     }list
  
     { ""
-      "~&060Texture:     ~&140%s"
-      'getMPI     { "_/texture" "~&110[Unset]~&R" }list
+      "#MCC-F-00AAAATexture:     #MCC-F-5555FF%s"
+      'getMPI     { "_/texture" "#MCC-F-FF5555[Unset]#MCC-X-000000" }list
  
       {
       }list "\r" array_join
@@ -992,8 +992,8 @@ lvar ourMorphPropTable
     }list
  
     { ""
-      "~&060flavor:      ~&140%s"
-      'getMPI     { "_/flavor" "~&110[Unset]~&R" }list
+      "#MCC-F-00AAAAflavor:      #MCC-F-5555FF%s"
+      'getMPI     { "_/flavor" "#MCC-F-FF5555[Unset]#MCC-X-000000" }list
  
       {
       }list "\r" array_join
@@ -1001,8 +1001,8 @@ lvar ourMorphPropTable
     }list
  
     { ""
-      "~&060Aura:        ~&140%s"
-      'getMPI     { "_/aura" "~&110[Unset]~&R" }list
+      "#MCC-F-00AAAAAura:        #MCC-F-5555FF%s"
+      'getMPI     { "_/aura" "#MCC-F-FF5555[Unset]#MCC-X-000000" }list
  
       {
       }list "\r" array_join
@@ -1010,8 +1010,8 @@ lvar ourMorphPropTable
     }list
  
     { ""
-      "~&060Sound:       ~&140%s"
-      'getMPI { "_/sound" "~&040[Unset]~&R" }list
+      "#MCC-F-00AAAASound:       #MCC-F-5555FF%s"
+      'getMPI { "_/sound" "#MCC-F-0000AA[Unset]#MCC-X-000000" }list
  
       {
       }list "\r" array_join
@@ -1019,8 +1019,8 @@ lvar ourMorphPropTable
     }list
  
     { ""
-      "~&060Writing:     ~&140%s"
-      'getMPI { "_/writing" "~&040[Unset]~&R" }list
+      "#MCC-F-00AAAAWriting:     #MCC-F-5555FF%s"
+      'getMPI { "_/writing" "#MCC-F-0000AA[Unset]#MCC-X-000000" }list
  
       {
       }list "\r" array_join
@@ -1032,7 +1032,7 @@ lvar ourMorphPropTable
     "Morphs" 4
  
     { "M"
-      "~&060[~&160M~&060]orph List"
+      "#MCC-F-00AAAA[#MCC-F-55FFFFM#MCC-F-00AAAA]orph List"
       'getNull { }list
  
       {
@@ -1041,7 +1041,7 @@ lvar ourMorphPropTable
     }list
  
     { "S"
-      "  ~&060[~&160S~&060]ave Morph"
+      "  #MCC-F-00AAAA[#MCC-F-55FFFFS#MCC-F-00AAAA]ave Morph"
       'getNull { }list
  
       {
@@ -1053,7 +1053,7 @@ lvar ourMorphPropTable
     }list
  
     { "L"
-      "   ~&060[~&160L~&060]oad Morph"
+      "   #MCC-F-00AAAA[#MCC-F-55FFFFL#MCC-F-00AAAA]oad Morph"
       'getNull { }list
  
       {
@@ -1063,7 +1063,7 @@ lvar ourMorphPropTable
     }list
  
     { "D"
-      "    ~&060[~&160D~&060]elete Morph"
+      "    #MCC-F-00AAAA[#MCC-F-55FFFFD#MCC-F-00AAAA]elete Morph"
       'getNull { }list
  
       {
@@ -1075,8 +1075,8 @@ lvar ourMorphPropTable
     "" "Morph Messages" 1
  
     { "1"
-      "~&060[~&1601~&060] Morph Message:  ~&140%s"
-      'getStr     { "_morph_mesg" "~&040[Unset]~&R" }list
+      "#MCC-F-00AAAA[#MCC-F-55FFFF1#MCC-F-00AAAA] Morph Message:  #MCC-F-5555FF%s"
+      'getStr     { "_morph_mesg" "#MCC-F-0000AA[Unset]#MCC-X-000000" }list
  
       {
         "This message is displayed to you when you change to this morph.  (with the 'morph' command only)"
@@ -1088,8 +1088,8 @@ lvar ourMorphPropTable
     }list
  
     { "2"
-      "~&060[~&1602~&060] Morph OMessage: ~&140%s"
-      'getStr     { "_config/morph_omesg" "~&040[Unset]~&R" }list
+      "#MCC-F-00AAAA[#MCC-F-55FFFF2#MCC-F-00AAAA] Morph OMessage: #MCC-F-5555FF%s"
+      'getStr     { "_config/morph_omesg" "#MCC-F-0000AA[Unset]#MCC-X-000000" }list
  
       {
         "This message is displayed to everyone else in your location when you change to this morph.  (with the 'morph' command only)"
@@ -1103,7 +1103,7 @@ lvar ourMorphPropTable
 
     ""
     { "{P|B}"
-      "~&060[~&160B~&060]ack to Player Edit"
+      "#MCC-F-00AAAA[#MCC-F-55FFFFB#MCC-F-00AAAA]ack to Player Edit"
       'getNull { }list
  
       {
@@ -1119,7 +1119,7 @@ lvar ourMorphPropTable
     "" (* Blank line after header *)
     "Preferences" 2
     { "1"
-      "~&060[~&1601~&060] Allowing 'hand':          ~&140%s"
+      "#MCC-F-00AAAA[#MCC-F-55FFFF1#MCC-F-00AAAA] Allowing 'hand':          #MCC-F-5555FF%s"
       'getStrBool { "_hand/hand_ok" "Yes" "No" }list
  
       {
@@ -1131,7 +1131,7 @@ lvar ourMorphPropTable
     }list
  
     { "2"
-      "~&060[~&1602~&060] Showing @doing in whospe: ~&140%s"
+      "#MCC-F-00AAAA[#MCC-F-55FFFF2#MCC-F-00AAAA] Showing @doing in whospe: #MCC-F-5555FF%s"
       'getStrBool { "_prefs/wsseedoing" "Yes" "No" }list
  
       {
@@ -1143,7 +1143,7 @@ lvar ourMorphPropTable
     }list
  
     { "3"
-      "~&060[~&1603~&060] Hiding from whospe #far:  ~&140%s"
+      "#MCC-F-00AAAA[#MCC-F-55FFFF3#MCC-F-00AAAA] Hiding from whospe #far:  #MCC-F-5555FF%s"
       'getStrBool { "_prefs/wsobject" "Yes" "No" }list
  
       {
@@ -1155,7 +1155,7 @@ lvar ourMorphPropTable
     }list
  
     { "4"
-      "~&060[~&1604~&060] Hiding from whereis:      ~&140%s"
+      "#MCC-F-00AAAA[#MCC-F-55FFFF4#MCC-F-00AAAA] Hiding from whereis:      #MCC-F-5555FF%s"
       'getStrBool { "_prefs/whereis/unfindable" "Yes" "No" }list
  
       {
@@ -1167,7 +1167,7 @@ lvar ourMorphPropTable
     }list
  
     { "5"
-      "~&060[~&1605~&060] Ride mode:                ~&140%s"
+      "#MCC-F-00AAAA[#MCC-F-55FFFF5#MCC-F-00AAAA] Ride mode:                #MCC-F-5555FF%s"
       'getStr { "ride/_mode" "Walk" }list
  
       {
@@ -1178,7 +1178,7 @@ lvar ourMorphPropTable
     }list
  
     { "6"
-      "~&060[~&1606~&060] Run 'saysetup'"
+      "#MCC-F-00AAAA[#MCC-F-55FFFF6#MCC-F-00AAAA] Run 'saysetup'"
       'getNull { }list
  
       {
@@ -1189,8 +1189,8 @@ lvar ourMorphPropTable
     "" "Sweep messages" 1
  
     { "S1"
-      "~&060[~&160S1~&060] Sweep Room Message:      ~&140%s"
-      'getStr     { "_sweep/sweep" "~&040[Unset]~&R" }list
+      "#MCC-F-00AAAA[#MCC-F-55FFFFS1#MCC-F-00AAAA] Sweep Room Message:      #MCC-F-5555FF%s"
+      'getStr     { "_sweep/sweep" "#MCC-F-0000AA[Unset]#MCC-X-000000" }list
  
       {
         "This message is shown to everyone in the room, including yourself, when you sweep a room.  To sweep a room, simply type 'sweep', and all the sleepers in the room will be kicked out.  Your name is prefixed to this message automatically."
@@ -1201,8 +1201,8 @@ lvar ourMorphPropTable
     }list
  
     { "S2"
-      "~&060[~&160S2~&060] Sweep Player Message:    ~&140%s"
-      'getStr     { "_sweep/fmt/std" "~&040[Unset]~&R" }list
+      "#MCC-F-00AAAA[#MCC-F-55FFFFS2#MCC-F-00AAAA] Sweep Player Message:    #MCC-F-5555FF%s"
+      'getStr     { "_sweep/fmt/std" "#MCC-F-0000AA[Unset]#MCC-X-000000" }list
  
       {
         "This message is shown to everyone in the room, including yourself, when you sweep an indivisual player or object.  To sweep a player, type sweep <name>, and it'll be tossed out.  Your name is prefixed to this message automatically."
@@ -1214,8 +1214,8 @@ lvar ourMorphPropTable
     }list
  
     { "S3"
-      "~&060[~&160S3~&060] Swept Message:           ~&140%s"
-      'getStr     { "_sweep/swept" "~&040[Unset]~&R" }list
+      "#MCC-F-00AAAA[#MCC-F-55FFFFS3#MCC-F-00AAAA] Swept Message:           #MCC-F-5555FF%s"
+      'getStr     { "_sweep/swept" "#MCC-F-0000AA[Unset]#MCC-X-000000" }list
  
       {
         "This message is shown to everyone in the room, including yourself, when you get swept from a room.  Your name is prefixed to this message automatically."
@@ -1228,7 +1228,7 @@ lvar ourMorphPropTable
  
     ""
     { "B"
-      "~&060[~&160B~&060]ack to %s Edit"
+      "#MCC-F-00AAAA[#MCC-F-55FFFFB#MCC-F-00AAAA]ack to %s Edit"
       'getObject { "Room" "Player" "Object" }list
  
       {
@@ -1244,8 +1244,8 @@ lvar ourMorphPropTable
     "" (* Blank line after header *)
  
     { "1"
-      "~&060[~&1601~&060] Species: ~&140%s"
-      'getStr     { "_/species" "~&110[Unset]~&R" }list
+      "#MCC-F-00AAAA[#MCC-F-55FFFF1#MCC-F-00AAAA] Species: #MCC-F-5555FF%s"
+      'getStr     { "_/species" "#MCC-F-FF5555[Unset]#MCC-X-000000" }list
  
       {
         "Your species is the type of being your character is."
@@ -1259,8 +1259,8 @@ lvar ourMorphPropTable
     2
  
     { "2"
-      "~&060[~&1602~&060] Gender:  ~&140%s"
-      'getStr     { "gender_prop" sysparm "~&110[Unset]~&R" }list
+      "#MCC-F-00AAAA[#MCC-F-55FFFF2#MCC-F-00AAAA] Gender:  #MCC-F-5555FF%s"
+      'getStr     { "gender_prop" sysparm "#MCC-F-FF5555[Unset]#MCC-X-000000" }list
  
       {
         "The system recognizes the values 'Male', 'Female', 'Herm', 'Hermaphrodite', and 'Neuter'.  However, you're free to enter whatever you want."
@@ -1271,7 +1271,7 @@ lvar ourMorphPropTable
     }list
  
     { "3"
-      "~&060[~&1603~&060] Pronoun Substitution"
+      "#MCC-F-00AAAA[#MCC-F-55FFFF3#MCC-F-00AAAA] Pronoun Substitution"
       'getNull { }list
  
       {
@@ -1282,8 +1282,8 @@ lvar ourMorphPropTable
     "" "Descriptions" 1
  
     { "{D1|D}"
-      "~&060[~&160D1~&060] Description: ~&140%s"
-      'getMPI     { "_/de" "~&110[Unset]~&R" }list
+      "#MCC-F-00AAAA[#MCC-F-55FFFFD1#MCC-F-00AAAA] Description: #MCC-F-5555FF%s"
+      'getMPI     { "_/de" "#MCC-F-FF5555[Unset]#MCC-X-000000" }list
  
       {
         "The 'Description' of a player is the description of their physical characteristics and mannerisms."
@@ -1299,8 +1299,8 @@ lvar ourMorphPropTable
     }list
  
     { "D2"
-      "~&060[~&160D2~&060] Scent:       ~&140%s"
-      'getMPI     { "_/scent" "~&110[Unset]~&R" }list
+      "#MCC-F-00AAAA[#MCC-F-55FFFFD2#MCC-F-00AAAA] Scent:       #MCC-F-5555FF%s"
+      'getMPI     { "_/scent" "#MCC-F-FF5555[Unset]#MCC-X-000000" }list
  
       {
         "This is where you enter this character's aroma."
@@ -1312,8 +1312,8 @@ lvar ourMorphPropTable
     }list
  
     { "D3"
-      "~&060[~&160D3~&060] Texture:     ~&140%s"
-      'getMPI     { "_/texture" "~&110[Unset]~&R" }list
+      "#MCC-F-00AAAA[#MCC-F-55FFFFD3#MCC-F-00AAAA] Texture:     #MCC-F-5555FF%s"
+      'getMPI     { "_/texture" "#MCC-F-FF5555[Unset]#MCC-X-000000" }list
  
       {
         "A character's 'texture' is the sensation of touching the character."
@@ -1325,8 +1325,8 @@ lvar ourMorphPropTable
     }list
  
     { "D4"
-      "~&060[~&160D4~&060] flavor:      ~&140%s"
-      'getMPI     { "_/flavor" "~&110[Unset]~&R" }list
+      "#MCC-F-00AAAA[#MCC-F-55FFFFD4#MCC-F-00AAAA] flavor:      #MCC-F-5555FF%s"
+      'getMPI     { "_/flavor" "#MCC-F-FF5555[Unset]#MCC-X-000000" }list
  
       {
         "This is where you describe the taste of this character when nibbled or licked."
@@ -1338,8 +1338,8 @@ lvar ourMorphPropTable
     }list
  
     { "D5"
-      "~&060[~&160D5~&060] Aura:        ~&140%s"
-      'getMPI     { "_/aura" "~&110[Unset]~&R" }list
+      "#MCC-F-00AAAA[#MCC-F-55FFFFD5#MCC-F-00AAAA] Aura:        #MCC-F-5555FF%s"
+      'getMPI     { "_/aura" "#MCC-F-FF5555[Unset]#MCC-X-000000" }list
  
       {
         "Your 'aura' is the general feelings you inspire.  For example, if you look at a car salesman, his description may be 'He's smiling, happy, polite, and friendly', but his aura would be 'He's a liar and a cheat and he hates you.'"
@@ -1351,8 +1351,8 @@ lvar ourMorphPropTable
     }list
  
     { "D6"
-      "~&060[~&160D6~&060] Sound:       ~&140%s"
-      'getMPI { "_/sound" "~&040[Unset]~&R" }list
+      "#MCC-F-00AAAA[#MCC-F-55FFFFD6#MCC-F-00AAAA] Sound:       #MCC-F-5555FF%s"
+      'getMPI { "_/sound" "#MCC-F-0000AA[Unset]#MCC-X-000000" }list
  
       {
         "This property is for the sounds this character often makes.  You aren't limited to sounds which you constantly make.  You can also describe sounds you make from time to time."
@@ -1364,8 +1364,8 @@ lvar ourMorphPropTable
     }list
  
     { "D7"
-      "~&060[~&160D7~&060] Writing:     ~&140%s"
-      'getMPI { "_/writing" "~&040[Unset]~&R" }list
+      "#MCC-F-00AAAA[#MCC-F-55FFFFD7#MCC-F-00AAAA] Writing:     #MCC-F-5555FF%s"
+      'getMPI { "_/writing" "#MCC-F-0000AA[Unset]#MCC-X-000000" }list
  
       {
         "This property is for any overt writing on this character.  i.e. T-Shirts, Signs, etc."
@@ -1379,7 +1379,7 @@ lvar ourMorphPropTable
     "" "Flags" 3
  
     { "C"
-      "~&060[~&160C~&060]olor: ~&140%s"
+      "#MCC-F-00AAAA[#MCC-F-55FFFFC#MCC-F-00AAAA]olor: #MCC-F-5555FF%s"
       'getFlag    { "COLOR" "          Yes" "BLACK & WHITE" }list
  
       {
@@ -1389,7 +1389,7 @@ lvar ourMorphPropTable
     }list
  
     { "S"
-      "~&060[~&160S~&060]ilent:         ~&140%s"
+      "#MCC-F-00AAAA[#MCC-F-55FFFFS#MCC-F-00AAAA]ilent:         #MCC-F-5555FF%s"
       'getFlag    { "SILENT" "Yes" "No" }list
  
       {
@@ -1401,7 +1401,7 @@ lvar ourMorphPropTable
     }list
  
     { "H"
-      "~&060[~&160H~&060]aven:          ~&140%s"
+      "#MCC-F-00AAAA[#MCC-F-55FFFFH#MCC-F-00AAAA]aven:          #MCC-F-5555FF%s"
       'getFlag    { "HAVEN" "Yes" "No" }list
  
       {
@@ -1414,8 +1414,8 @@ lvar ourMorphPropTable
     }list
  
     ({ "L"
-      "~&060[~&160L~&060]ink_OK:        ~&140%s"
-      'getFlag    { "LINK_OK" "~&110YES~&R" "No" }list
+      "#MCC-F-00AAAA[#MCC-F-55FFFFL#MCC-F-00AAAA]ink_OK:        #MCC-F-5555FF%s"
+      'getFlag    { "LINK_OK" "#MCC-F-FF5555YES#MCC-X-000000" "No" }list
  
       {
         "When you're set LINK_OK, people can set the 'homes' of objects on you.  This is generally dangerous, because when combined with the STICKY flag on an object, it can be real hard to get rid of if someone sets its home on you.  If you end up in this situation, try @unlink <object name>.  It's a good idea to leave this off at all times unless you want someone to link an object to you."
@@ -1426,7 +1426,7 @@ lvar ourMorphPropTable
     }list
  
     { "K"
-      "~&060[~&160K~&060]ill_OK:        ~&140%s"
+      "#MCC-F-00AAAA[#MCC-F-55FFFFK#MCC-F-00AAAA]ill_OK:        #MCC-F-5555FF%s"
       'getFlag    { "KILL_OK" "Yes" "No" }list
  
       {
@@ -1439,8 +1439,8 @@ lvar ourMorphPropTable
     }list
  
     { "X"
-      "~&060[~&160X~&060] Forcible:     ~&140%s"
-      'getFlag    { "XFORCIBLE" "~&110YES~&R" "No" }list
+      "#MCC-F-00AAAA[#MCC-F-55FFFFX#MCC-F-00AAAA] Forcible:     #MCC-F-5555FF%s"
+      'getFlag    { "XFORCIBLE" "#MCC-F-FF5555YES#MCC-X-000000" "No" }list
  
       {
         "When set XForcible, a player can force your character to perform an action as though it was entered directly by that character."
@@ -1452,7 +1452,7 @@ lvar ourMorphPropTable
     }list
  
     { "J"
-      "~&060[~&160J~&060]ump_OK:        ~&140%s"
+      "#MCC-F-00AAAA[#MCC-F-55FFFFJ#MCC-F-00AAAA]ump_OK:        #MCC-F-5555FF%s"
       'getFlag    { "JUMP_OK" "Yes" "No" }list
  
       {
@@ -1464,7 +1464,7 @@ lvar ourMorphPropTable
     "" "Settings" 2
  
     { "S1"
-      "~&060[~&160S1~&060] Automatically Show Map: ~&140%s"
+      "#MCC-F-00AAAA[#MCC-F-55FFFFS1#MCC-F-00AAAA] Automatically Show Map: #MCC-F-5555FF%s"
       'getStrBool2 { "_prefs/automap" "Yes" "No" }list
  
       {
@@ -1476,7 +1476,7 @@ lvar ourMorphPropTable
     }list
  
     { "S3"
-      "~&060[~&160S3~&060] Morphs"
+      "#MCC-F-00AAAA[#MCC-F-55FFFFS3#MCC-F-00AAAA] Morphs"
       'getNull { }list
  
       {
@@ -1485,7 +1485,7 @@ lvar ourMorphPropTable
     }list
  
     { "S2"
-      "~&060[~&160S2~&060] Preferences"
+      "#MCC-F-00AAAA[#MCC-F-55FFFFS2#MCC-F-00AAAA] Preferences"
       'getNull { }list
  
       {
@@ -1494,7 +1494,7 @@ lvar ourMorphPropTable
     }list
  
     { "S4"
-      "~&060[~&160S4~&060] Attributes"
+      "#MCC-F-00AAAA[#MCC-F-55FFFFS4#MCC-F-00AAAA] Attributes"
       'getNull { }list
  
       {
@@ -1514,8 +1514,8 @@ lvar ourMorphPropTable
     "" "Flags" 1
  
     { "A"
-      "~&060[~&160A~&060]bode:   ~&140%s"
-      'getFlag { "ABODE" "~&110YES ~&100(Object/player homes can be set here freely!)~&R" "No ~&100(Object/player homes can not be set here freely.)~&R" }list
+      "#MCC-F-00AAAA[#MCC-F-55FFFFA#MCC-F-00AAAA]bode:   #MCC-F-5555FF%s"
+      'getFlag { "ABODE" "#MCC-F-FF5555YES #MCC-F-555555(Object/player homes can be set here freely!)#MCC-X-000000" "No #MCC-F-555555(Object/player homes can not be set here freely.)#MCC-X-000000" }list
  
       {
         "With the ABODE flag, you can allow anyone to '@link' their objects/players into your room.  When an object is swept, it will go to its 'home' which is defined by the '@link' command.  Normally, people can't set an object's home in an area they don't control unless the ABODE flag is set."
@@ -1527,8 +1527,8 @@ lvar ourMorphPropTable
     }list
  
     { "D"
-      "~&060[~&160D~&060]ark:    ~&140%s"
-      'getFlag { "DARK" "~&110YES~&R ~&100(The contents list does not show!)~&R" "No ~&100(The contents list behaves normally.)~&R" }list
+      "#MCC-F-00AAAA[#MCC-F-55FFFFD#MCC-F-00AAAA]ark:    #MCC-F-5555FF%s"
+      'getFlag { "DARK" "#MCC-F-FF5555YES#MCC-X-000000 #MCC-F-555555(The contents list does not show!)#MCC-X-000000" "No #MCC-F-555555(The contents list behaves normally.)#MCC-X-000000" }list
  
       {
         "If you set a room DARK, then no one will be able to see the contents of your room, even while inside it.  Meaning players won't be able to detect that other players or objects are inside your area."
@@ -1540,8 +1540,8 @@ lvar ourMorphPropTable
     }list
  
     { "H"
-      "~&060[~&160H~&060]aven:   ~&140%s"
-      'getFlag { "HAVEN" "Yes ~&100(Kill and whereis are forbidden.)~&R" "No ~&100(Kill and whereis behave normally.)~&R" }list
+      "#MCC-F-00AAAA[#MCC-F-55FFFFH#MCC-F-00AAAA]aven:   #MCC-F-5555FF%s"
+      'getFlag { "HAVEN" "Yes #MCC-F-555555(Kill and whereis are forbidden.)#MCC-X-000000" "No #MCC-F-555555(Kill and whereis behave normally.)#MCC-X-000000" }list
  
       {
         "If a room is set HAVEN, you can not use the kill command in that room."
@@ -1553,7 +1553,7 @@ lvar ourMorphPropTable
     }list
  
     ({ "J"
-      "~&060[~&160J~&060]ump_OK: ~&140%s"
+      "#MCC-F-00AAAA[#MCC-F-55FFFFJ#MCC-F-00AAAA]ump_OK: #MCC-F-5555FF%s"
       'getFlag { "JUMP_OK" "Yes" "No" }list
  
       {
@@ -1565,8 +1565,8 @@ lvar ourMorphPropTable
     }list)
  
     { "L"
-      "~&060[~&160L~&060]ink_OK: ~&140%s"
-      'getFlag { "LINK_OK" "~&110YES~&R ~&100(This room can be linked to freely!)~&R" "No ~&100(This room may not be linked to freely.)~&R" }list
+      "#MCC-F-00AAAA[#MCC-F-55FFFFL#MCC-F-00AAAA]ink_OK: #MCC-F-5555FF%s"
+      'getFlag { "LINK_OK" "#MCC-F-FF5555YES#MCC-X-000000 #MCC-F-555555(This room can be linked to freely!)#MCC-X-000000" "No #MCC-F-555555(This room may not be linked to freely.)#MCC-X-000000" }list
  
       {
         "Setting the LINK_OK flag on a room allows anyone to create an exit into your room.  If you want someone to create an exit into your area, set the area LINK_OK, then tell them it's 'dbref' number (You'll see it to the right of the name of the room in 'look', if you're not set SILENT.)  If you want a reverse exit, then you'll have to get them to set their area LINK_OK."
@@ -1578,8 +1578,8 @@ lvar ourMorphPropTable
     }list
  
     { "S"
-      "~&060[~&160S~&060]ticky:  ~&140%s"
-      'getFlag { "STICKY" "Yes ~&100(Drop-to is delayed.)~&R" "No ~&100(Drop-to is instantaneous.)~&R" }list
+      "#MCC-F-00AAAA[#MCC-F-55FFFFS#MCC-F-00AAAA]ticky:  #MCC-F-5555FF%s"
+      'getFlag { "STICKY" "Yes #MCC-F-555555(Drop-to is delayed.)#MCC-X-000000" "No #MCC-F-555555(Drop-to is instantaneous.)#MCC-X-000000" }list
  
       {
         "If a room is STICKY, its drop-to is delayed until the last person leaves the room.  A drop-to is where objects go when you drop them in that room, and it's set with @link."
@@ -1590,8 +1590,8 @@ lvar ourMorphPropTable
     }list
  
     { "V"
-      "~&060[~&160V~&060]ehicle: ~&140%s"
-      'getFlag { "VEHICLE" "Yes ~&100(Vehicles may NOT use this room.)~&R" "No ~&100(Vehicles may use this room.)~&R" }list
+      "#MCC-F-00AAAA[#MCC-F-55FFFFV#MCC-F-00AAAA]ehicle: #MCC-F-5555FF%s"
+      'getFlag { "VEHICLE" "Yes #MCC-F-555555(Vehicles may NOT use this room.)#MCC-X-000000" "No #MCC-F-555555(Vehicles may use this room.)#MCC-X-000000" }list
  
       {
         "When the VEHICLE flag is set on a room it means that vehicle objects may *NOT* use the room.  This allows a way to prevent vehicles from entering areas where it would be illogical for them to be."
@@ -1602,8 +1602,8 @@ lvar ourMorphPropTable
     }list
  
     { "Z"
-      "~&060[~&160Z~&060]ombie:  ~&140%s"
-      'getFlag { "ZOMBIE" "Yes ~&100(Puppets may NOT use this room.)~&R" "No ~&100(Puppets may use this room.)~&R" }list
+      "#MCC-F-00AAAA[#MCC-F-55FFFFZ#MCC-F-00AAAA]ombie:  #MCC-F-5555FF%s"
+      'getFlag { "ZOMBIE" "Yes #MCC-F-555555(Puppets may NOT use this room.)#MCC-X-000000" "No #MCC-F-555555(Puppets may use this room.)#MCC-X-000000" }list
  
       {
         "When the ZOMBIE flag is set on a room it means that puppet/zombie objects may *NOT* use the room.  This allows a way to prevent zombies from entering areas where they are not wanted."
@@ -1615,7 +1615,7 @@ lvar ourMorphPropTable
  
     ""
     { "{P|B}"
-      "~&060[~&160B~&060]ack to Room Edit"
+      "#MCC-F-00AAAA[#MCC-F-55FFFFB#MCC-F-00AAAA]ack to Room Edit"
       'getNull { }list
  
       {
@@ -1631,7 +1631,7 @@ lvar ourMorphPropTable
     1
  
     { "N"
-      "~&060[~&160N~&060]ame: ~&140%s"
+      "#MCC-F-00AAAA[#MCC-F-55FFFFN#MCC-F-00AAAA]ame: #MCC-F-5555FF%s"
       'getObjName { }list
  
       {
@@ -1643,7 +1643,7 @@ lvar ourMorphPropTable
     3
  
     { "F"
-      "~&060[~&160F~&060]lags"
+      "#MCC-F-00AAAA[#MCC-F-55FFFFF#MCC-F-00AAAA]lags"
       'getNull { }list
  
       {
@@ -1654,8 +1654,8 @@ lvar ourMorphPropTable
     "" "Descriptions" 1
  
     { "{D1|D}"
-      "~&060[~&160D1~&060] Description: ~&140%s"
-      'getMPI     { "_/de" "~&110[Unset]~&R" }list
+      "#MCC-F-00AAAA[#MCC-F-55FFFFD1#MCC-F-00AAAA] Description: #MCC-F-5555FF%s"
+      'getMPI     { "_/de" "#MCC-F-FF5555[Unset]#MCC-X-000000" }list
  
       {
         "The 'Description' of a room is the visual description of what's noticed when entering or exploring it."
@@ -1671,8 +1671,8 @@ lvar ourMorphPropTable
     }list
  
     { "D2"
-      "~&060[~&160D2~&060] Scent:       ~&140%s"
-      'getMPI     { "_/scent" "~&110[Unset]~&R" }list
+      "#MCC-F-00AAAA[#MCC-F-55FFFFD2#MCC-F-00AAAA] Scent:       #MCC-F-5555FF%s"
+      'getMPI     { "_/scent" "#MCC-F-FF5555[Unset]#MCC-X-000000" }list
  
       {
         "This is where you enter the room's aroma."
@@ -1684,8 +1684,8 @@ lvar ourMorphPropTable
     }list
  
     { "D3"
-      "~&060[~&160D3~&060] Texture:     ~&140%s"
-      'getMPI     { "_/texture" "~&110[Unset]~&R" }list
+      "#MCC-F-00AAAA[#MCC-F-55FFFFD3#MCC-F-00AAAA] Texture:     #MCC-F-5555FF%s"
+      'getMPI     { "_/texture" "#MCC-F-FF5555[Unset]#MCC-X-000000" }list
  
       {
         "You may enter anything you want for the room's texture.  Because rooms are often large, it'd be hard to go around feeling every surface in them, so describe whatever you want.  Choose some surfaces or all of them, and describe the sensation of touching them."
@@ -1697,8 +1697,8 @@ lvar ourMorphPropTable
     }list
  
     { "D4"
-      "~&060[~&160D4~&060] flavor:      ~&140%s"
-      'getMPI     { "_/flavor" "~&110[Unset]~&R" }list
+      "#MCC-F-00AAAA[#MCC-F-55FFFFD4#MCC-F-00AAAA] flavor:      #MCC-F-5555FF%s"
+      'getMPI     { "_/flavor" "#MCC-F-FF5555[Unset]#MCC-X-000000" }list
  
       {
         "Here, describe what it's like to lick this area."
@@ -1710,8 +1710,8 @@ lvar ourMorphPropTable
     }list
  
     { "D5"
-      "~&060[~&160D5~&060] Aura:        ~&140%s"
-      'getMPI     { "_/aura" "~&110[Unset]~&R" }list
+      "#MCC-F-00AAAA[#MCC-F-55FFFFD5#MCC-F-00AAAA] Aura:        #MCC-F-5555FF%s"
+      'getMPI     { "_/aura" "#MCC-F-FF5555[Unset]#MCC-X-000000" }list
  
       {
         "An area's 'aura' is the feeling it inspires.  For example, if you look at an old mansion, you may see 'The furnature is beautifully crafted and priclessly maintained, and the architecture is astonishing.', but its aura may be 'This place is terrifying, it's dark and creepy.'"
@@ -1723,8 +1723,8 @@ lvar ourMorphPropTable
     }list
  
     { "D6"
-      "~&060[~&160D6~&060] Sound:       ~&140%s"
-      'getMPI { "_/sound" "~&040[Unset]~&R" }list
+      "#MCC-F-00AAAA[#MCC-F-55FFFFD6#MCC-F-00AAAA] Sound:       #MCC-F-5555FF%s"
+      'getMPI { "_/sound" "#MCC-F-0000AA[Unset]#MCC-X-000000" }list
  
       {
         "This property is for the sounds most often heard in the room.  It's best to make a general description of what aural feelings the room tends to inspire."
@@ -1736,8 +1736,8 @@ lvar ourMorphPropTable
     }list
  
     { "D7"
-      "~&060[~&160D7~&060] Writing:     ~&140%s"
-      'getMPI { "_/writing" "~&040[Unset]~&R" }list
+      "#MCC-F-00AAAA[#MCC-F-55FFFFD7#MCC-F-00AAAA] Writing:     #MCC-F-5555FF%s"
+      'getMPI { "_/writing" "#MCC-F-0000AA[Unset]#MCC-X-000000" }list
  
       {
         "This property is for any overt writing in the area.  i.e. a large banner.  As for signs, it's best to create a sign object with @create and set the writing on that instead."
@@ -1751,8 +1751,8 @@ lvar ourMorphPropTable
     "" "Messages" 2
  
     { "M1"
-      "~&060[~&160M1~&060] @success Message:  ~&140%s"
-      'getMPI { "_/sc" "~&040[Unset]~&R" }list
+      "#MCC-F-00AAAA[#MCC-F-55FFFFM1#MCC-F-00AAAA] @success Message:  #MCC-F-5555FF%s"
+      'getMPI { "_/sc" "#MCC-F-0000AA[Unset]#MCC-X-000000" }list
  
       {
         "The @success and @oscuccess messages are seen when an object is 'used'.  Using a room is done by entering it and looking around, both automatically when first entering the room, and when issuing the 'look' command."
@@ -1767,8 +1767,8 @@ lvar ourMorphPropTable
     }list
  
     { "M2"
-      "~&060[~&160M2~&060] @osuccess Message: ~&140%s"
-      'getMPI { "_/osc" "~&040[Unset]~&R" }list
+      "#MCC-F-00AAAA[#MCC-F-55FFFFM2#MCC-F-00AAAA] @osuccess Message: #MCC-F-5555FF%s"
+      'getMPI { "_/osc" "#MCC-F-0000AA[Unset]#MCC-X-000000" }list
  
       {
         "The @success and @osuccess messages are seen when an object is 'used'.  Using a room is done by entering it and looking around, both automatically when first entering the room, and when issuing the 'look' command."
@@ -1783,8 +1783,8 @@ lvar ourMorphPropTable
     }list
  
     { "M3"
-      "~&060[~&160M3~&060] @fail Message:     ~&140%s"
-      'getMPI { "_/fl" "~&040[Unset]~&R" }list
+      "#MCC-F-00AAAA[#MCC-F-55FFFFM3#MCC-F-00AAAA] @fail Message:     #MCC-F-5555FF%s"
+      'getMPI { "_/fl" "#MCC-F-0000AA[Unset]#MCC-X-000000" }list
  
       {
         "The @fail and @ofail messages are seen when an object fails to be 'used'.  Using a room is done by entering it and looking around, both automatically when first entering the room, and when issuing the 'look' command."
@@ -1799,8 +1799,8 @@ lvar ourMorphPropTable
     }list
  
     { "M4"
-      "~&060[~&160M4~&060] @ofail Message:    ~&140%s"
-      'getMPI { "_/ofl" "~&040[Unset]~&R" }list
+      "#MCC-F-00AAAA[#MCC-F-55FFFFM4#MCC-F-00AAAA] @ofail Message:    #MCC-F-5555FF%s"
+      'getMPI { "_/ofl" "#MCC-F-0000AA[Unset]#MCC-X-000000" }list
  
       {
         "The @fail and @ofail messages are seen when an object fails to be 'used'.  Using a room is done by entering it and looking around, both automatically when first entering the room, and when issuing the 'look' command."
@@ -1816,8 +1816,8 @@ lvar ourMorphPropTable
     }list
  
     { "M5"
-      "~&060[~&160M5~&060] @drop Message:     ~&140%s"
-      'getMPI { "_/dr" "~&040[Unset]~&R" }list
+      "#MCC-F-00AAAA[#MCC-F-55FFFFM5#MCC-F-00AAAA] @drop Message:     #MCC-F-5555FF%s"
+      'getMPI { "_/dr" "#MCC-F-0000AA[Unset]#MCC-X-000000" }list
  
       {
         "The @drop and @odrop messages, when set on a room, are triggered when someone drops a program or thing type object in this room."
@@ -1831,8 +1831,8 @@ lvar ourMorphPropTable
     }list
  
     { "M6"
-      "~&060[~&160M6~&060] @odrop Message:    ~&140%s"
-      'getMPI { "_/odr" "~&040[Unset]~&R" }list
+      "#MCC-F-00AAAA[#MCC-F-55FFFFM6#MCC-F-00AAAA] @odrop Message:    #MCC-F-5555FF%s"
+      'getMPI { "_/odr" "#MCC-F-0000AA[Unset]#MCC-X-000000" }list
  
       {
         "The @drop and @odrop messages, when set on a room, are triggered when someone drops a program or thing type object in this room."
@@ -1848,7 +1848,7 @@ lvar ourMorphPropTable
     "" "Exits" 4
  
     { "E1"
-      "~&060[~&160E1~&060] New Exit"
+      "#MCC-F-00AAAA[#MCC-F-55FFFFE1#MCC-F-00AAAA] New Exit"
       'getNull { }list
  
       {
@@ -1857,7 +1857,7 @@ lvar ourMorphPropTable
     }list
  
     { "E2"
-      "~&060[~&160E2~&060] Recycle Exit"
+      "#MCC-F-00AAAA[#MCC-F-55FFFFE2#MCC-F-00AAAA] Recycle Exit"
       'getNull { }list
  
       {
@@ -1867,7 +1867,7 @@ lvar ourMorphPropTable
  
  
     { "E3"
-      "~&060[~&160E3~&060] Edit Exit"
+      "#MCC-F-00AAAA[#MCC-F-55FFFFE3#MCC-F-00AAAA] Edit Exit"
       'getNull { }list
  
       {
@@ -1876,8 +1876,8 @@ lvar ourMorphPropTable
     }list
  
     { "E4"
-      "~&060[~&160E4~&060] Shown: ~&140%s"
-      'getObvExits { "Yes" "~&110NO~&R" "~&040Unknown~&R" }list
+      "#MCC-F-00AAAA[#MCC-F-55FFFFE4#MCC-F-00AAAA] Shown: #MCC-F-5555FF%s"
+      'getObvExits { "Yes" "#MCC-F-FF5555NO#MCC-X-000000" "#MCC-F-0000AAUnknown#MCC-X-000000" }list
  
       {
         "Do you want all exits without the DARK flag to be shown automatically when looking at the room? (y/n)"
@@ -1898,7 +1898,7 @@ lvar ourMorphPropTable
     1
  
     { "N"
-      "~&060[~&160N~&060]ame: ~&140%s"
+      "#MCC-F-00AAAA[#MCC-F-55FFFFN#MCC-F-00AAAA]ame: #MCC-F-5555FF%s"
       'getObjName { }list
  
       {
@@ -1912,7 +1912,7 @@ lvar ourMorphPropTable
     2
  
     { "S"
-      "~&060[~&160S~&060]ource: ~&140%s"
+      "#MCC-F-00AAAA[#MCC-F-55FFFFS#MCC-F-00AAAA]ource: #MCC-F-5555FF%s"
       'getSource { }list
  
       {
@@ -1924,8 +1924,8 @@ lvar ourMorphPropTable
     }list
  
     { "T"
-      "~&060[~&160T~&060]arget: ~&140%s"
-      'getObjLink { "~&110NOTHING!~&R" }list
+      "#MCC-F-00AAAA[#MCC-F-55FFFFT#MCC-F-00AAAA]arget: #MCC-F-5555FF%s"
+      'getObjLink { "#MCC-F-FF5555NOTHING!#MCC-X-000000" }list
  
       {
         "The destination of an exit is its target.  It can be another room, a thing object, a program, or a player.  In the case of a room, using the exit will teleport you to that room.  In the case of a program, using the exit will execute the program.  In the case of a thing object, using the exit will teleport the objet to you.  In the case of a player, using the exit will teleport you to that player."
@@ -1939,7 +1939,7 @@ lvar ourMorphPropTable
     4
  
     { "A"
-      "~&060[~&160A~&060]bate: ~&140%s"
+      "#MCC-F-00AAAA[#MCC-F-55FFFFA#MCC-F-00AAAA]bate: #MCC-F-5555FF%s"
       'getFlag { "ABATE" "Yes" "No" }list
  
       {
@@ -1951,7 +1951,7 @@ lvar ourMorphPropTable
     }list
  
     { "D"
-      "~&060[~&160D~&060]ark: ~&140%s"
+      "#MCC-F-00AAAA[#MCC-F-55FFFFD#MCC-F-00AAAA]ark: #MCC-F-5555FF%s"
       'getFlag { "DARK" "Yes" "No" }list
  
       {
@@ -1964,7 +1964,7 @@ lvar ourMorphPropTable
     }list
  
     { "V"
-      "~&060[~&160V~&060]ehicle: ~&140%s"
+      "#MCC-F-00AAAA[#MCC-F-55FFFFV#MCC-F-00AAAA]ehicle: #MCC-F-5555FF%s"
       'getFlag { "VEHICLE" "Yes" "No" }list
  
       {
@@ -1976,7 +1976,7 @@ lvar ourMorphPropTable
     }list
  
     { "Z"
-      "~&060[~&160Z~&060]zombie: ~&140%s"
+      "#MCC-F-00AAAA[#MCC-F-55FFFFZ#MCC-F-00AAAA]zombie: #MCC-F-5555FF%s"
       'getFlag { "ZOMBIE" "Yes" "No" }list
  
       {
@@ -1990,8 +1990,8 @@ lvar ourMorphPropTable
     "" "Descriptions" 1
  
     { "{D1|D}"
-      "~&060[~&160D1~&060] Description: ~&140%s"
-      'getMPI     { "_/de" "~&110[Unset]~&R" }list
+      "#MCC-F-00AAAA[#MCC-F-55FFFFD1#MCC-F-00AAAA] Description: #MCC-F-5555FF%s"
+      'getMPI     { "_/de" "#MCC-F-FF5555[Unset]#MCC-X-000000" }list
  
       {
         "It's most effective to alias your exits to 'door' or 'archway' or 'path' and use this field as a visual description of that entrance.  It's always best not to leave this on its defaults, if you're certian that this exit has no physical description, enter something like 'You can't see it' and possibly a description why."
@@ -2002,8 +2002,8 @@ lvar ourMorphPropTable
     }list
  
     { "D2"
-      "~&060[~&160D2~&060] Scent:       ~&140%s"
-      'getMPI     { "_/scent" "~&110[Unset]~&R" }list
+      "#MCC-F-00AAAA[#MCC-F-55FFFFD2#MCC-F-00AAAA] Scent:       #MCC-F-5555FF%s"
+      'getMPI     { "_/scent" "#MCC-F-FF5555[Unset]#MCC-X-000000" }list
  
       {
         "It's most effective to alias your exits to 'door' or 'archway' or 'path', etc.  and use this field as a description of that entrance's aroma."
@@ -2014,8 +2014,8 @@ lvar ourMorphPropTable
     }list
  
     { "D3"
-      "~&060[~&160D3~&060] Texture:     ~&140%s"
-      'getMPI     { "_/texture" "~&110[Unset]~&R" }list
+      "#MCC-F-00AAAA[#MCC-F-55FFFFD3#MCC-F-00AAAA] Texture:     #MCC-F-5555FF%s"
+      'getMPI     { "_/texture" "#MCC-F-FF5555[Unset]#MCC-X-000000" }list
  
       {
         "It's most effective to alias your exits to 'door' or 'archway' or 'path', etc.  and use this field as a description of that entrance's feeling to the touch."
@@ -2026,8 +2026,8 @@ lvar ourMorphPropTable
     }list
  
     { "D4"
-      "~&060[~&160D4~&060] flavor:      ~&140%s"
-      'getMPI     { "_/flavor" "~&110[Unset]~&R" }list
+      "#MCC-F-00AAAA[#MCC-F-55FFFFD4#MCC-F-00AAAA] flavor:      #MCC-F-5555FF%s"
+      'getMPI     { "_/flavor" "#MCC-F-FF5555[Unset]#MCC-X-000000" }list
  
       {
         "It's most effective to alias your exits to 'door' or 'archway' or 'path', etc.  and use this field as a description of that entrance's flavor."
@@ -2038,8 +2038,8 @@ lvar ourMorphPropTable
     }list
  
     { "D5"
-      "~&060[~&160D5~&060] Aura:        ~&140%s"
-      'getMPI     { "_/aura" "~&110[Unset]~&R" }list
+      "#MCC-F-00AAAA[#MCC-F-55FFFFD5#MCC-F-00AAAA] Aura:        #MCC-F-5555FF%s"
+      'getMPI     { "_/aura" "#MCC-F-FF5555[Unset]#MCC-X-000000" }list
  
       {
         "It's most effective to alias your exits to 'door' or 'archway' or 'path', etc.  and use this field as a description of the feeling this direction gives a character.  For example, 'you think it might be a bad idea to go that way' is very useful to the observant player."
@@ -2050,8 +2050,8 @@ lvar ourMorphPropTable
     }list
  
     { "D6"
-      "~&060[~&160D6~&060] Sound:       ~&140%s"
-      'getMPI { "_/sound" "~&110[Unset]~&R" }list
+      "#MCC-F-00AAAA[#MCC-F-55FFFFD6#MCC-F-00AAAA] Sound:       #MCC-F-5555FF%s"
+      'getMPI { "_/sound" "#MCC-F-FF5555[Unset]#MCC-X-000000" }list
  
       {
         "Use this field to describe the sounds coming from the direction of the exit."
@@ -2062,8 +2062,8 @@ lvar ourMorphPropTable
     }list
  
     { "D7"
-      "~&060[~&160D7~&060] Writing:     ~&140%s"
-      'getMPI { "_/writing" "~&110[Unset]~&R" }list
+      "#MCC-F-00AAAA[#MCC-F-55FFFFD7#MCC-F-00AAAA] Writing:     #MCC-F-5555FF%s"
+      'getMPI { "_/writing" "#MCC-F-FF5555[Unset]#MCC-X-000000" }list
  
       {
         "Use this field if there's writing on your exit.  For example 'Room 101' and 'Rented by xyz' are very useful to passers by."
@@ -2076,8 +2076,8 @@ lvar ourMorphPropTable
     "" "Messages" 2
  
     { "M1"
-      "~&060[~&160M1~&060] @success Message:  ~&140%s"
-      'getMPI { "_/sc" "~&110[Unset]~&R" }list
+      "#MCC-F-00AAAA[#MCC-F-55FFFFM1#MCC-F-00AAAA] @success Message:  #MCC-F-5555FF%s"
+      'getMPI { "_/sc" "#MCC-F-FF5555[Unset]#MCC-X-000000" }list
  
       {
         "This message is shown when anyone who uses this exit, to the person who uses it.  You should always set this on non-program exits."
@@ -2090,8 +2090,8 @@ lvar ourMorphPropTable
     }list
  
     { "M2"
-      "~&060[~&160M2~&060] @osuccess Message: ~&140%s"
-      'getMPI { "_/osc" "~&110[Unset]~&R" }list
+      "#MCC-F-00AAAA[#MCC-F-55FFFFM2#MCC-F-00AAAA] @osuccess Message: #MCC-F-5555FF%s"
+      'getMPI { "_/osc" "#MCC-F-FF5555[Unset]#MCC-X-000000" }list
  
       {
         "This message is shown when anyone uses this exit, to everyone else in the room.  You should always set this on non-program exits."
@@ -2104,8 +2104,8 @@ lvar ourMorphPropTable
     }list
  
     { "M3"
-      "~&060[~&160M3~&060] @fail Message:     ~&140%s"
-      'getMPI { "_/fl" "~&110[Unset]~&R" }list
+      "#MCC-F-00AAAA[#MCC-F-55FFFFM3#MCC-F-00AAAA] @fail Message:     #MCC-F-5555FF%s"
+      'getMPI { "_/fl" "#MCC-F-FF5555[Unset]#MCC-X-000000" }list
  
       {
         "This message is shown when someone tries to use an exit, but fails (because it's locked or otherwise), to the person who tried to use it. You should always set this on non-program exits."
@@ -2118,8 +2118,8 @@ lvar ourMorphPropTable
     }list
  
     { "M4"
-      "~&060[~&160M4~&060] @ofail Message:    ~&140%s"
-      'getMPI { "_/ofl" "~&110[Unset]~&R" }list
+      "#MCC-F-00AAAA[#MCC-F-55FFFFM4#MCC-F-00AAAA] @ofail Message:    #MCC-F-5555FF%s"
+      'getMPI { "_/ofl" "#MCC-F-FF5555[Unset]#MCC-X-000000" }list
  
       {
         "This message is shown when someone tries to use an exit, but fails (because it's locked or otherwise), to everyone else in the room. You should always set this on non-program exits."
@@ -2132,8 +2132,8 @@ lvar ourMorphPropTable
     }list
  
     { "M5"
-      "~&060[~&160M5~&060] @drop Message:     ~&140%s"
-      'getMPI { "_/dr" "~&040[Unset]~&R" }list
+      "#MCC-F-00AAAA[#MCC-F-55FFFFM5#MCC-F-00AAAA] @drop Message:     #MCC-F-5555FF%s"
+      'getMPI { "_/dr" "#MCC-F-0000AA[Unset]#MCC-X-000000" }list
  
       {
         "This message is shown to the person using the exit, when they arrive on the other side of the exit.  It's pretty much useless, as in order for this message to be sown, the @success message must have just shown as well.  There's little reason to se this."
@@ -2146,8 +2146,8 @@ lvar ourMorphPropTable
     }list
  
     { "M6"
-      "~&060[~&160M6~&060] @odrop Message:    ~&140%s"
-      'getMPI { "_/odr" "~&110[Unset]~&R" }list
+      "#MCC-F-00AAAA[#MCC-F-55FFFFM6#MCC-F-00AAAA] @odrop Message:    #MCC-F-5555FF%s"
+      'getMPI { "_/odr" "#MCC-F-FF5555[Unset]#MCC-X-000000" }list
  
       {
         "This message is essential for every exit.  It's shown when someone using your exit has arrived on the other side, to everyone else on the other side.  It is crucial in order for people to understand where someone just came from, if they join you in the room."
@@ -2161,8 +2161,8 @@ lvar ourMorphPropTable
  
     ""
     { "{P|R|O}"
-      "~&060Edit Parent %s"
-      'getParent { "~&060[~&160R~&060]oom" "~&060[~&160P~&060]layer" "~&060[~&160O~&060]bject" }list
+      "#MCC-F-00AAAAEdit Parent %s"
+      'getParent { "#MCC-F-00AAAA[#MCC-F-55FFFFR#MCC-F-00AAAA]oom" "#MCC-F-00AAAA[#MCC-F-55FFFFP#MCC-F-00AAAA]layer" "#MCC-F-00AAAA[#MCC-F-55FFFFO#MCC-F-00AAAA]bject" }list
  
       {
       }list "\r" array_join
@@ -2179,7 +2179,7 @@ lvar ourMorphPropTable
     "" (* Blank line after header *)
     "Preferences" 2
     { "1"
-      "~&060[~&1601~&060] Allowing 'hand':          ~&140%s"
+      "#MCC-F-00AAAA[#MCC-F-55FFFF1#MCC-F-00AAAA] Allowing 'hand':          #MCC-F-5555FF%s"
       'getStrBool { "_hand/hand_ok" "Yes" "No" }list
  
       {
@@ -2191,7 +2191,7 @@ lvar ourMorphPropTable
     }list
  
     { "2"
-      "~&060[~&1602~&060] Showing @doing in whospe: ~&140%s"
+      "#MCC-F-00AAAA[#MCC-F-55FFFF2#MCC-F-00AAAA] Showing @doing in whospe: #MCC-F-5555FF%s"
       'getStrBool { "_prefs/wsseedoing" "Yes" "No" }list
  
       {
@@ -2203,7 +2203,7 @@ lvar ourMorphPropTable
     }list
  
     { "3"
-      "~&060[~&1603~&060] Ride mode:                ~&140%s"
+      "#MCC-F-00AAAA[#MCC-F-55FFFF3#MCC-F-00AAAA] Ride mode:                #MCC-F-5555FF%s"
       'getStr { "ride/_mode" "Walk" }list
  
       {
@@ -2214,7 +2214,7 @@ lvar ourMorphPropTable
     }list
  
     { "4"
-      "~&060[~&1604~&060] Run 'saysetup'"
+      "#MCC-F-00AAAA[#MCC-F-55FFFF4#MCC-F-00AAAA] Run 'saysetup'"
       'getNull { }list
  
       {
@@ -2224,7 +2224,7 @@ lvar ourMorphPropTable
  
     ""
     { "B"
-      "~&060[~&160B~&060]ack to %s Edit"
+      "#MCC-F-00AAAA[#MCC-F-55FFFFB#MCC-F-00AAAA]ack to %s Edit"
       'getObject { "Room" "Player" "Object" }list
  
       {
@@ -2239,8 +2239,8 @@ lvar ourMorphPropTable
     "" "Flags" 1
  
     { "D"
-      "~&060[~&160D~&060]ark:    ~&140%s"
-      'getFlag { "DARK" "Yes ~&100(This object is hidden from 'contents' listings.)~&R" "No  ~&100(This object appears in 'contents' listings.)~&R" }list
+      "#MCC-F-00AAAA[#MCC-F-55FFFFD#MCC-F-00AAAA]ark:    #MCC-F-5555FF%s"
+      'getFlag { "DARK" "Yes #MCC-F-555555(This object is hidden from 'contents' listings.)#MCC-X-000000" "No  #MCC-F-555555(This object appears in 'contents' listings.)#MCC-X-000000" }list
  
       {
         "Use this flag to prevent your object from being shown in a 'contents' listing when looking at its container.  For example, it makes objects appear invisible when placed in rooms."
@@ -2251,8 +2251,8 @@ lvar ourMorphPropTable
     }list
  
     { "J"
-      "~&060[~&160J~&060]ump_OK: ~&140%s"
-      'getFlag { "JUMP_OK" "Yes ~&100(This object may be teleported freely.)~&R" "No  ~&100(This object may only be teleported by its controller.)~&R" }list
+      "#MCC-F-00AAAA[#MCC-F-55FFFFJ#MCC-F-00AAAA]ump_OK: #MCC-F-5555FF%s"
+      'getFlag { "JUMP_OK" "Yes #MCC-F-555555(This object may be teleported freely.)#MCC-X-000000" "No  #MCC-F-555555(This object may only be teleported by its controller.)#MCC-X-000000" }list
  
       {
         "Some programs made by lower-leveled programmers on the MUCK may wish to teleport your objects.  Setting the JUMP_OK flag on your object permits programs to teleport them."
@@ -2263,8 +2263,8 @@ lvar ourMorphPropTable
     }list
  
     { "S"
-      "~&060[~&160S~&060]ticky:  ~&140%s"
-      'getFlag { "STICKY" "Yes ~&100(This object goes home when it's dropped.)~&R" "No  ~&100(This object may be dropped.)~&R" }list
+      "#MCC-F-00AAAA[#MCC-F-55FFFFS#MCC-F-00AAAA]ticky:  #MCC-F-5555FF%s"
+      'getFlag { "STICKY" "Yes #MCC-F-555555(This object goes home when it's dropped.)#MCC-X-000000" "No  #MCC-F-555555(This object may be dropped.)#MCC-X-000000" }list
  
       {
         "To have an object get automatically sent home when dropped, set the STICKY flag on it.  This is useful for creating objects which you don't want to become lost in the muck when their users are no longer interested in them.  If you prefer to teleport your objects home manually, investigate the @find and @tel commands."
@@ -2275,8 +2275,8 @@ lvar ourMorphPropTable
     }list
  
     { "V"
-      "~&060[~&160V~&060]ehicle: ~&140%s"
-      'getFlag { "VEHICLE" "Yes ~&100(You can climb into this object.)~&R" "No  ~&100(This object doesn't hold players.)~&R" }list
+      "#MCC-F-00AAAA[#MCC-F-55FFFFV#MCC-F-00AAAA]ehicle: #MCC-F-5555FF%s"
+      'getFlag { "VEHICLE" "Yes #MCC-F-555555(You can climb into this object.)#MCC-X-000000" "No  #MCC-F-555555(This object doesn't hold players.)#MCC-X-000000" }list
  
       {
         "When an object has the VEHICLE flag, it allows players to climb inside of the object, by using an exit placed on the vehcile, linked to the vehicle.  Also, it allows the occupents of the vehicle to hear what's going on outside.  (But not vice-versa)"
@@ -2287,8 +2287,8 @@ lvar ourMorphPropTable
     }list
  
     { "Z"
-      "~&060[~&160Z~&060]ombie:  ~&140%s"
-      'getFlag { "ZOMBIE" "Yes ~&100(This object simulates a player.)~&R" "No  ~&100(This object does not simualte a player.)~&R" }list
+      "#MCC-F-00AAAA[#MCC-F-55FFFFZ#MCC-F-00AAAA]ombie:  #MCC-F-5555FF%s"
+      'getFlag { "ZOMBIE" "Yes #MCC-F-555555(This object simulates a player.)#MCC-X-000000" "No  #MCC-F-555555(This object does not simualte a player.)#MCC-X-000000" }list
  
       {
         "When an object has the ZOMBIE flag, it simulates a player object.  Some programs will begin to treat it as a player (such as whospe), and you can give it preferences, attributes, a sex and a gender.  Also, on MUCKs configured to allow zombies, anything the zombie hears will be automatically broadcasted to the object's owner.  Allowing you to use it as a player with the @force command.  See 'help force' for more details.  (Zombies are also known as 'puppets' or 'pets')"
@@ -2301,7 +2301,7 @@ lvar ourMorphPropTable
  
     ""
     { "{P|B}"
-      "~&060[~&160B~&060]ack to Object Edit"
+      "#MCC-F-00AAAA[#MCC-F-55FFFFB#MCC-F-00AAAA]ack to Object Edit"
       'getNull { }list
  
       {
@@ -2317,7 +2317,7 @@ lvar ourMorphPropTable
     2
  
     { "N"
-      "~&060[~&160N~&060]ame: ~&140%s"
+      "#MCC-F-00AAAA[#MCC-F-55FFFFN#MCC-F-00AAAA]ame: #MCC-F-5555FF%s"
       'getObjName { }list
  
       {
@@ -2327,8 +2327,8 @@ lvar ourMorphPropTable
     }list
  
     { "H"
-      "~&060[~&160H~&060]ome: ~&140%s"
-      'getObjLink { "~&110Nowhere?!~&R" }list
+      "#MCC-F-00AAAA[#MCC-F-55FFFFH#MCC-F-00AAAA]ome: #MCC-F-5555FF%s"
+      'getObjLink { "#MCC-F-FF5555Nowhere?!#MCC-X-000000" }list
  
       {
         "An object's 'home' is where it's sent when the server isn't sure where to put it.  For example, if it's contained in a room that gets recycled, or it's swept with the 'sweep' command, it will be sent to its home.  A thing's home can be a player, room, or another object."
@@ -2339,8 +2339,8 @@ lvar ourMorphPropTable
     }list
  
     { "1"
-      "~&060[~&1601~&060] Species: ~&140%s"
-      'getStr     { "_/species" "~&040[Unset]~&R" }list
+      "#MCC-F-00AAAA[#MCC-F-55FFFF1#MCC-F-00AAAA] Species: #MCC-F-5555FF%s"
+      'getStr     { "_/species" "#MCC-F-0000AA[Unset]#MCC-X-000000" }list
  
       {
         "Your species is the type of being your puppet/object is.  This has little meaning unless this object has the ZOMBIE flag turned on."
@@ -2352,8 +2352,8 @@ lvar ourMorphPropTable
     }list
  
     { "2"
-      "~&060[~&1602~&060] Gender: ~&140%s"
-      'getStr     { "gender_prop" sysparm "~&040[Unset]~&R" }list
+      "#MCC-F-00AAAA[#MCC-F-55FFFF2#MCC-F-00AAAA] Gender: #MCC-F-5555FF%s"
+      'getStr     { "gender_prop" sysparm "#MCC-F-0000AA[Unset]#MCC-X-000000" }list
  
       {
         "The sex flag is used for objects with the ZOMBIE flag, as well as for any other reason an object would need pronoun substitution.  For example, you may want to set this to 'Neuter' if you want its pronouns to come up as 'it/its/etc' when you use the smell command on it."
@@ -2367,8 +2367,8 @@ lvar ourMorphPropTable
     "" "Descriptions" 1
  
     { "{D1|D}"
-      "~&060[~&160D1~&060] Description: ~&140%s"
-      'getMPI     { "_/de" "~&110[Unset]~&R" }list
+      "#MCC-F-00AAAA[#MCC-F-55FFFFD1#MCC-F-00AAAA] Description: #MCC-F-5555FF%s"
+      'getMPI     { "_/de" "#MCC-F-FF5555[Unset]#MCC-X-000000" }list
  
       {
         "If this object is a zombie, you should enter a description in the same way you would enter a player description.  Otherwise, simply give a general description of the visual appearance of this object.  Also, if this object has any exits attached, you may want to put a short description of how to access its commands here."
@@ -2379,8 +2379,8 @@ lvar ourMorphPropTable
     }list
  
     { "D2"
-      "~&060[~&160D2~&060] Scent:       ~&140%s"
-      'getMPI     { "_/scent" "~&110[Unset]~&R" }list
+      "#MCC-F-00AAAA[#MCC-F-55FFFFD2#MCC-F-00AAAA] Scent:       #MCC-F-5555FF%s"
+      'getMPI     { "_/scent" "#MCC-F-FF5555[Unset]#MCC-X-000000" }list
  
       {
         "This is where you enter the object's aroma.  You can see an object/room/exit/player/program's scent with the 'smell' command."
@@ -2391,8 +2391,8 @@ lvar ourMorphPropTable
     }list
  
     { "D3"
-      "~&060[~&160D3~&060] Texture:     ~&140%s"
-      'getMPI     { "_/texture" "~&110[Unset]~&R" }list
+      "#MCC-F-00AAAA[#MCC-F-55FFFFD3#MCC-F-00AAAA] Texture:     #MCC-F-5555FF%s"
+      'getMPI     { "_/texture" "#MCC-F-FF5555[Unset]#MCC-X-000000" }list
  
       {
         "This is where you enter the object's feeling to the touch.  You can see an object/room/exit/player/program's texture with the 'feel' command."
@@ -2403,8 +2403,8 @@ lvar ourMorphPropTable
     }list
  
     { "D4"
-      "~&060[~&160D4~&060] flavor:      ~&140%s"
-      'getMPI     { "_/flavor" "~&110[Unset]~&R" }list
+      "#MCC-F-00AAAA[#MCC-F-55FFFFD4#MCC-F-00AAAA] flavor:      #MCC-F-5555FF%s"
+      'getMPI     { "_/flavor" "#MCC-F-FF5555[Unset]#MCC-X-000000" }list
  
       {
         "This is where you enter the object's sensation to the taste.  You can see an object/room/exit/player/program's flavor with the 'taste' command."
@@ -2415,8 +2415,8 @@ lvar ourMorphPropTable
     }list
  
     { "D5"
-      "~&060[~&160D5~&060] Aura:        ~&140%s"
-      'getMPI     { "_/aura" "~&110[Unset]~&R" }list
+      "#MCC-F-00AAAA[#MCC-F-55FFFFD5#MCC-F-00AAAA] Aura:        #MCC-F-5555FF%s"
+      'getMPI     { "_/aura" "#MCC-F-FF5555[Unset]#MCC-X-000000" }list
  
       {
         "This is where you enter the feeling which the object gives a character.  For example 'That thing looks scary!', or 'Perhaps it's not a useful as it looks' are very good aura descriptions.  You can see an object/room/exit/player/program's aura with the 'sense' command."
@@ -2427,8 +2427,8 @@ lvar ourMorphPropTable
     }list
  
     { "D6"
-      "~&060[~&160D6~&060] Sound:       ~&140%s"
-      'getMPI { "_/sound" "~&040[Unset]~&R" }list
+      "#MCC-F-00AAAA[#MCC-F-55FFFFD6#MCC-F-00AAAA] Sound:       #MCC-F-5555FF%s"
+      'getMPI { "_/sound" "#MCC-F-0000AA[Unset]#MCC-X-000000" }list
  
       {
         "Use this field only if the object makes sounds, and enter a short description of the noises it makes.  You can see an object/room/exit/player/program's sound with the 'hear' command."
@@ -2439,8 +2439,8 @@ lvar ourMorphPropTable
     }list
  
     { "D7"
-      "~&060[~&160D7~&060] Writing:     ~&140%s"
-      'getMPI { "_/writing" "~&040[Unset]~&R" }list
+      "#MCC-F-00AAAA[#MCC-F-55FFFFD7#MCC-F-00AAAA] Writing:     #MCC-F-5555FF%s"
+      'getMPI { "_/writing" "#MCC-F-0000AA[Unset]#MCC-X-000000" }list
  
       {
         "If anything is written on your object, enter it here.  For example 'Made in Japan', or 'Property of xyz'.  You can see an object/room/exit/player/program's writing with the 'read' command."
@@ -2453,8 +2453,8 @@ lvar ourMorphPropTable
     "" "Messages" 2
  
     { "M1"
-      "~&060[~&160M1~&060] @success Message:  ~&140%s"
-      'getMPI { "_/sc" "~&110[Unset]~&R" }list
+      "#MCC-F-00AAAA[#MCC-F-55FFFFM1#MCC-F-00AAAA] @success Message:  #MCC-F-5555FF%s"
+      'getMPI { "_/sc" "#MCC-F-FF5555[Unset]#MCC-X-000000" }list
  
       {
         ""
@@ -2466,8 +2466,8 @@ lvar ourMorphPropTable
     }list
  
     { "M2"
-      "~&060[~&160M2~&060] @osuccess Message: ~&140%s"
-      'getMPI { "_/osc" "~&110[Unset]~&R" }list
+      "#MCC-F-00AAAA[#MCC-F-55FFFFM2#MCC-F-00AAAA] @osuccess Message: #MCC-F-5555FF%s"
+      'getMPI { "_/osc" "#MCC-F-FF5555[Unset]#MCC-X-000000" }list
  
       {
         ""
@@ -2479,8 +2479,8 @@ lvar ourMorphPropTable
     }list
  
     { "M3"
-      "~&060[~&160M3~&060] @fail Message:     ~&140%s"
-      'getMPI { "_/fl" "~&110[Unset]~&R" }list
+      "#MCC-F-00AAAA[#MCC-F-55FFFFM3#MCC-F-00AAAA] @fail Message:     #MCC-F-5555FF%s"
+      'getMPI { "_/fl" "#MCC-F-FF5555[Unset]#MCC-X-000000" }list
  
       {
         ""
@@ -2492,8 +2492,8 @@ lvar ourMorphPropTable
     }list
  
     { "M4"
-      "~&060[~&160M4~&060] @ofail Message:    ~&140%s"
-      'getMPI { "_/ofl" "~&110[Unset]~&R" }list
+      "#MCC-F-00AAAA[#MCC-F-55FFFFM4#MCC-F-00AAAA] @ofail Message:    #MCC-F-5555FF%s"
+      'getMPI { "_/ofl" "#MCC-F-FF5555[Unset]#MCC-X-000000" }list
  
       {
         ""
@@ -2505,8 +2505,8 @@ lvar ourMorphPropTable
     }list
  
     { "M5"
-      "~&060[~&160M5~&060] @drop Message:     ~&140%s"
-      'getMPI { "_/dr" "~&110[Unset]~&R" }list
+      "#MCC-F-00AAAA[#MCC-F-55FFFFM5#MCC-F-00AAAA] @drop Message:     #MCC-F-5555FF%s"
+      'getMPI { "_/dr" "#MCC-F-FF5555[Unset]#MCC-X-000000" }list
  
       {
         ""
@@ -2518,8 +2518,8 @@ lvar ourMorphPropTable
     }list
  
     { "M6"
-      "~&060[~&160M6~&060] @odrop Message:    ~&140%s"
-      'getMPI { "_/odr" "~&110[Unset]~&R" }list
+      "#MCC-F-00AAAA[#MCC-F-55FFFFM6#MCC-F-00AAAA] @odrop Message:    #MCC-F-5555FF%s"
+      'getMPI { "_/odr" "#MCC-F-FF5555[Unset]#MCC-X-000000" }list
  
       {
         ""
@@ -2533,7 +2533,7 @@ lvar ourMorphPropTable
     "" "Settings" 3
  
     { "S1"
-      "~&060[~&160S1~&060] Preferences"
+      "#MCC-F-00AAAA[#MCC-F-55FFFFS1#MCC-F-00AAAA] Preferences"
       'getNull { }list
  
       {
@@ -2542,7 +2542,7 @@ lvar ourMorphPropTable
     }list
  
     { "S2"
-      "~&060[~&160S2~&060] Attributes"
+      "#MCC-F-00AAAA[#MCC-F-55FFFFS2#MCC-F-00AAAA] Attributes"
       'getNull { }list
  
       {
@@ -2551,7 +2551,7 @@ lvar ourMorphPropTable
     }list
  
     { "{S3|F}"
-      "~&060[~&160F~&060]lags"
+      "#MCC-F-00AAAA[#MCC-F-55FFFFF#MCC-F-00AAAA]lags"
       'getNull { }list
  
       {
@@ -2575,33 +2575,33 @@ lvar ourMorphPropTable
  
 : doMenuHeader (  --  )
  
-  "~&170----~&040[ ~&130Object Editor~&040 ]~&170" dup ansi_strlen .chars-per-row swap - "-" * strcat
+  "#MCC-F-FFFFFF----#MCC-F-0000AA[ #MCC-F-FFFF55Object Editor#MCC-F-0000AA ]#MCC-F-FFFFFF" dup .color_strlen .chars-per-row swap - "-" * strcat
   ourObject @ unparseobj
  
-  dup ansi_strlen .chars-per-row 20 - <= if
-    "~&040[ ~&R" swap strcat "~&040 ]~&170----" strcat
-     dup ansi_strlen .chars-per-row swap - rot swap ansi_strcut pop swap strcat
+  dup .color_strlen .chars-per-row 20 - <= if
+    "#MCC-F-0000AA[ #MCC-X-000000" swap strcat "#MCC-F-0000AA ]#MCC-F-FFFFFF----" strcat
+     dup .color_strlen .chars-per-row swap - rot swap .color_strcut pop swap strcat
   else
-    "\r~&RObject: " swap strcat strcat
+    "\r#MCC-X-000000Object: " swap strcat strcat
   then
  
-  ansi-tell
+  .color_tell
 ;
  
 : doMenuFooter (  --  )
-  "~&040[ ~&070" prog name strcat .version strcat prog "L" flag? prog "V" flag? or if " (#" strcat prog intostr strcat ")" strcat then " -- by " strcat .author strcat "~&040 ]~&170----" strcat
+  "#MCC-F-0000AA[ #MCC-F-AAAAAA" prog name strcat .version strcat prog "L" flag? prog "V" flag? or if " (#" strcat prog intostr strcat ")" strcat then " -- by " strcat .author strcat "#MCC-F-0000AA ]#MCC-F-FFFFFF----" strcat
  
-  "~&170" "-" .chars-per-row * strcat over ansi_strlen .chars-per-row swap - ansi_strcut pop swap strcat
+  "#MCC-F-FFFFFF" "-" .chars-per-row * strcat over .color_strlen .chars-per-row swap - .color_strcut pop swap strcat
  
-  ansi-tell
+  .color_tell
 ;
  
 : drawSeparator ( s -- s )
   dup not if
     pop " "
   else
-    "~&170-----~&040[ ~&060" swap strcat "~&040 ]~&170" strcat "-" .chars-per-row * strcat
-    .chars-per-row ansi_strcut pop
+    "#MCC-F-FFFFFF-----#MCC-F-0000AA[ #MCC-F-00AAAA" swap strcat "#MCC-F-0000AA ]#MCC-F-FFFFFF" strcat "-" .chars-per-row * strcat
+    .chars-per-row .color_strcut pop
   then
 ;
  
@@ -2629,7 +2629,7 @@ lvar ourMorphPropTable
     dup int? if
       (* Flush the current row if we're on it. *)
       item_on_row @ if
-        row_string @ ansi-tell
+        row_string @ .color_tell
         "" row_string !
         0 item_on_row !
       then
@@ -2643,13 +2643,13 @@ lvar ourMorphPropTable
     dup string? if
       (* Flush the current row if we're on it. *)
       item_on_row @ if
-        row_string @ ansi-tell
+        row_string @ .color_tell
         "" row_string !
         0 item_on_row !
       then
  
       (* Draw a separator *)
-      drawSeparator ansi-tell
+      drawSeparator .color_tell
  
       continue
     then
@@ -2660,10 +2660,10 @@ lvar ourMorphPropTable
       drawItem
  
       (* Pad with required spaces *)
-      .chars-per-row items_per_row @ / over ansi_strlen over >= if
-        4 - ansi_strcut pop "~&R ..." strcat
+      .chars-per-row items_per_row @ / over .color_strlen over >= if
+        4 - .color_strcut pop "#MCC-X-000000 ..." strcat
       else
-        over ansi_strlen -
+        over .color_strlen -
         begin
           dup while
  
@@ -2678,7 +2678,7 @@ lvar ourMorphPropTable
       item_on_row @ ++ (* Increment the current item count *)
  
       dup items_per_row @ >= if
-        row_string @ ansi-tell
+        row_string @ .color_tell
         "" row_string !
  
         pop 0
@@ -2694,7 +2694,7 @@ lvar ourMorphPropTable
  
   (* Flush the current row if we're on it. *)
   item_on_row @ if
-    row_string @ ansi-tell
+    row_string @ .color_tell
     "" row_string !
     0 item_on_row !
   then
@@ -2705,7 +2705,7 @@ lvar ourMorphPropTable
   dup 5 [] over 6 [] rot 4 []
  
   (* Display help string *)
-  ansi-tell
+  .color_tell
  
   (* Get value *)
   array_vals ++ rotate execute
@@ -2876,9 +2876,9 @@ $LIBDEF M-CMD-AT_EDITOBJECT-EditObject
 .
 c
 q
-@register m-cmd-@editobject.muf=m/cmd/at_editobject
-@set $m/cmd/at_editobject=L
-@set $m/cmd/at_editobject=M3
-@set $m/cmd/at_editobject=W
-@set $m/cmd/at_editobject=V
+!@register m-cmd-@editobject.muf=m/cmd/at_editobject
+!@set $m/cmd/at_editobject=L
+!@set $m/cmd/at_editobject=M3
+!@set $m/cmd/at_editobject=W
+!@set $m/cmd/at_editobject=V
 
