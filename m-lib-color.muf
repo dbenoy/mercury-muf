@@ -5,12 +5,16 @@ $PRAGMA comment_recurse
 (*****************************************************************************)
 (* m-lib-color - $m/lib/color                                                *)
 (*   A text color library that converts HTML style color codes into color    *)
-(*   text output depending on your terminal type.                            *)
+(*   text output depending on your terminal type. For example:               *)
+(*                                                                           *)
+(* "#MCC-F-7FFF00Chartreuse!" "MCC" "ANSI-24BIT" M-LIB-COLOR-Transcode .tell *)
+(* "#MCC-F-7FFF00Charclose!" "MCC" "ANSI-8BIT" M-LIB-COLOR-Transcode .tell   *)
+(* "#MCC-F-7FFF00Green :/" "MCC" "ANSI-4BIT-VGA" M-LIB-COLOR-Transcode .tell *)
 (*                                                                           *)
 (*   GitHub: https://github.com/dbenoy/mercury-muf (See for install info)    *)
 (*                                                                           *)
 (* PUBLIC ROUTINES:                                                          *)
-(*   M-LIB-COLOR-Transcode[ str:from_type str:to_type str:source_string      *)
+(*   M-LIB-COLOR-Transcode[ str:source_string str:from_type str:to_type      *)
 (*                          -- str:result_string ]                           *)
 (*     Converts from one encoding type to another. At present, you can only  *)
 (*     convert from MCC to ANSI or NOCOLOR. If a color can't be precicely    *)
@@ -29,6 +33,20 @@ $PRAGMA comment_recurse
 (*     Returns an array of strings formatted for the given ANSI encoding     *)
 (*     type that demonstrate the ANSI mode. This is useful to help players   *)
 (*     determine which ANSI mode they should be using to match their client. *)
+(*                                                                           *)
+(*   M-LIB-COLOR-get_encoding[ ref:object -- str:type ]                      *)
+(*     Get a player's currently set ANSI encoding type. This value is used   *)
+(*     by some convenience '.color-' convenience calls, and represents the   *)
+(*     player's preferred encoding. If a player has no COLOR flag, then this *)
+(*     will return 'NOCOLOR'. At present, this will only allow you to use    *)
+(*     ANSI encodings.                                                       *)
+(*                                                                           *)
+(*   M-LIB-COLOR-set_encoding[ ref:object str:type -- ]                      *)
+(*     Alter a player's currently set ANSI encoding type. This value is used *)
+(*     by some convenience '.color-' convenience calls, and represents the   *)
+(*     player's preferred encoding. If a player has no COLOR flag, then this *)
+(*     will return 'NOCOLOR'. At present, this will only allow you to use    *)
+(*     ANSI encodings.                                                       *)
 (*                                                                           *)
 (* ENCODING TYPES:                                                           *)
 (*   MCC                                                                     *)
@@ -429,9 +447,12 @@ $PRAGMA comment_recurse
 $VERSION 1.0
 $AUTHOR  Daniel Benoy
 $NOTE    Text color library.
-$DOCCMD  @list __PROG__=2-172
+$DOCCMD  @list __PROG__=2-443
 
 (* Begin configurable options *)
+
+$def ENCODING_DEFAULT "ANSI-8BIT"
+$def ENCODING_PROP "_config/color/type"
  
 (* End configurable options *)
 
@@ -440,7 +461,12 @@ $DOCCMD  @list __PROG__=2-172
 
 $PUBDEF :
 
+$DEF NEEDSM2 trig caller = not caller mlevel 2 < and if "Requires MUCKER level 2 or above." abort then
+$DEF NEEDSM3 trig caller = not caller mlevel 3 < and if "Requires MUCKER level 3 or above." abort then
+$DEF NEEDSM4 trig caller = not caller "WIZARD" flag? not and if "Requires MUCKER level 4 or above." abort then
+
 $DEF .version prog "_version" getpropstr begin dup strlen 1 - over ".0" rinstr = not while dup ".0" instr while "." ".0" subst repeat
+$DEF .author prog "_author" getpropstr
 
 (* ------------------------------------------------------------------------ *)
 
@@ -992,9 +1018,7 @@ lvar ansi8_nearest_cache
 lvar ansi4_nearest_vga_cache
 : ansi4_nearest_vga[ str:ansi_type str:target_rgb -- int:color4 ]
   ansi4_nearest_vga_cache @ not if
-    (* Add some precalculated values *)
-    {
-    }dict ansi4_nearest_vga_cache !
+    { }dict ansi4_nearest_vga_cache !
   then
   ansi_table_4bit_vga_rgb var! color_table_rgb
   { 172 172 172 }list color_table_rgb @ 37 array_setitem color_table_rgb ! (* 170->172 so that XTerm 'dark gray' will be recognized VGA 'dark gray' and not VGA 'gray' *)
@@ -1005,8 +1029,7 @@ lvar ansi4_nearest_xterm_cache
 : ansi4_nearest_xterm[ str:ansi_type str:target_rgb -- int:color4 ]
   ansi4_nearest_xterm_cache @ not if
     (* Add some precalculated values *)
-    {
-    }dict ansi4_nearest_xterm_cache !
+    { }dict ansi4_nearest_xterm_cache !
   then
   ansi_table_4bit_xterm_rgb var! color_table_rgb
   { 128 127 0 }list color_table_rgb @ 33 array_setitem color_table_rgb ! (* 128->127 so that VGA 'brown' will be recognized as yellow and not red *)
@@ -1187,43 +1210,58 @@ lvar ansi_table_3bit_xterm_rgb
 ;
 
 (*****************************************************************************)
-(*                           M-LIB-COLOR-Transcode                           *)
+(*                          M-LIB-COLOR-get_encoding                         *)
 (*****************************************************************************)
-: M-LIB-COLOR-transcode[ str:source_string str:from_type str:to_type -- str:result_string ]
-  (* M1 OK *)
-
-  from_type @ string? not if "Non-string argument (1)." abort then
-  to_type @ string? not if "Non-string argument (2)." abort then
-  source_string @ string? not if "Non-string argument (3)." abort then
-
-  SUPPORTED_TYPES
-  from_type @ over array_hasval not if "from_type not recognized (2)." abort then
-  to_type @ swap array_hasval not if "to_type not recognized (3)." abort then
-
-  from_type @ to_type @ = if
-    source_string @ exit
+: M-LIB-COLOR-get_encoding[ ref:object -- str:type ]
+  object @ "me" match != if
+    NEEDSM3
   then
 
-  from_type @ "MCC" = if
-    to_type @ "ANSI-" instr 1 = to_type @ "NOCOLOR" = or if
-      source_string @ to_type @ mcc_convert exit
-    then
+  object @ dbref? not if "Non-dbref argument (1)." abort then
+
+  object @ player? not if
+    object @ owner M-LIB-COLOR-get_encoding exit
   then
 
-  from_type @ "NOCOLOR" = if
-    to_type @ "MCC" = if
-      source_string @ "#MCC-X-FFFFFF" "#" subst exit
-    then
+  object @ "COLOR" flag? not if
+    "NOCOLOR" exit
   then
 
-  from_type @ "ANSI-" instr 1 = if
-    "Decoding ANSI strings is not yet supported." abort
+  object @ ENCODING_PROP getpropstr
+
+  dup not if
+    pop ENCODING_DEFAULT exit
   then
 
-  { "Transcoding from " from_type @ " to " to_type @ " is not yet supported." }join abort
+  dup SUPPORTED_TYPES array_hasval not if
+    pop ENCODING_DEFAULT exit
+  then
+
+  dup "ANSI-" instr 1 = not if
+    pop "NOCOLOR" exit
+  then
 ;
-PUBLIC M-LIB-COLOR-transcode
-$LIBDEF M-LIB-COLOR-transcode
+PUBLIC M-LIB-COLOR-get_encoding
+$LIBDEF M-LIB-COLOR-get_encoding
+
+(*****************************************************************************)
+(*                          M-LIB-COLOR-set_encoding                         *)
+(*****************************************************************************)
+: M-LIB-COLOR-set_encoding[ ref:object str:type -- ]
+  object @ "me" match != if
+    NEEDSM3
+  then
+
+  object @ dbref? not if "Non-dbref argument (1)." abort then
+  object @ player? not if "Object must be a player (1)." abort then
+  type @ string? not if "Non-string argument (2)." abort then
+  type @ SUPPORTED_TYPES array_hasval not if "Encoding type not recognized (2)." abort then
+  type @ "ANSI-" instr 1 = not if "Only ANSI encodings are supported right now. Use the COLOR flag to set NOCOLOR. (2)" abort then
+
+  object @ ENCODING_PROP type @ setprop
+;
+PUBLIC M-LIB-COLOR-set_encoding
+$LIBDEF M-LIB-COLOR-set_encoding
 
 (*****************************************************************************)
 (*                            M-LIB-COLOR-strcut                             *)
@@ -1493,7 +1531,45 @@ $LIBDEF M-LIB-COLOR-strcut
 PUBLIC M-LIB-COLOR-testpattern
 $LIBDEF M-LIB-COLOR-testpattern
 
-(* TODO: A player property for which encoding they use *)
+(*****************************************************************************)
+(*                           M-LIB-COLOR-transcode                           *)
+(*****************************************************************************)
+: M-LIB-COLOR-transcode[ str:source_string str:from_type str:to_type -- str:result_string ]
+  (* M1 OK *)
+
+  from_type @ string? not if "Non-string argument (1)." abort then
+  to_type @ string? not if "Non-string argument (2)." abort then
+  source_string @ string? not if "Non-string argument (3)." abort then
+
+  SUPPORTED_TYPES
+  from_type @ over array_hasval not if "from_type not recognized (2)." abort then
+  to_type @ swap array_hasval not if "to_type not recognized (3)." abort then
+
+  from_type @ to_type @ = if
+    source_string @ exit
+  then
+
+  from_type @ "MCC" = if
+    to_type @ "ANSI-" instr 1 = to_type @ "NOCOLOR" = or if
+      source_string @ to_type @ mcc_convert exit
+    then
+  then
+
+  from_type @ "NOCOLOR" = if
+    to_type @ "MCC" = if
+      source_string @ "#MCC-X-FFFFFF" "#" subst exit
+    then
+  then
+
+  from_type @ "ANSI-" instr 1 = if
+    "Decoding ANSI strings is not yet supported." abort
+  then
+
+  { "Transcoding from " from_type @ " to " to_type @ " is not yet supported." }join abort
+;
+PUBLIC M-LIB-COLOR-transcode
+$LIBDEF M-LIB-COLOR-transcode
+
 (* TODO: Convenience calls like .mcc_transcode .mcc_tell .mcc_otell .mcc_notify .mcc_connotify .mcc_escape .mcc_strip .mcc_strlen *)
 
 (* ------------------------------------------------------------------------ *)
