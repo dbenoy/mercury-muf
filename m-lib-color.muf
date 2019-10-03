@@ -121,7 +121,9 @@ $PRAGMA comment_recurse
 (*                                                                           *)
 (*   Also, the color space conversion can be a (relatively) slow operation,  *)
 (*   so for large graphics, unless it's important to you, you may want to    *)
-(*   limit your color selections to ones from the XTERM256 palette.          *)
+(*   limit your color selections to ones from the XTERM256 palette. Colors   *)
+(*   that are re-used during the same program run will be converted from     *)
+(*   cache, and will also be fast.                                           *)
 (*                                                                           *)
 (*   XTERM Palette:                                                          *)
 (*   0  Black          #MCC-F-000000                                         *)
@@ -748,6 +750,72 @@ lvar g_ansi_table_4bit_xterm_rgb
 
 (* ------------------------------------------------------------------------ *)
 
+(* Convert a single hex 0-9 A-F character to an integer *)
+: xtoi1 ( s -- i )
+  dup string? not if
+    pop -1 exit
+  then
+
+  dup strlen 1 = not if
+    pop -1 exit
+  then
+
+  dup number? if
+    atoi exit
+  then
+
+  ctoi "A" ctoi - 10 +
+
+  dup 10 < over 15 > or if
+    pop -1 exit
+  then
+;
+
+(* Check if a string is made of 0-9 A-F characters, and is between 1 and 7 characters *)
+: hex? ( s -- b )
+  dup string? not if
+    pop 0 exit
+  then
+
+  dup strlen dup 1 >= swap 7 <= and not if
+    pop 0 exit
+  then
+
+  begin
+    dup while
+    1 strcut swap
+    dup number? not over ctoi "A" ctoi < and swap ctoi "F" ctoi > or if
+      pop 0 exit
+    then
+  repeat
+
+  pop 1 exit
+;
+
+(* Convert a hexadecimal string between 1 and 7 characters into an integer *)
+: xtoi ( s -- i )
+  dup hex? not if
+    pop -1 exit
+  then
+
+  0 var! retval
+  1 var! expfact
+
+  begin
+    dup while
+    dup strlen 1 - strcut
+    xtoi1
+    dup 0 >= over 16 < and not if
+      pop pop -1 exit
+    then
+    retval @ swap expfact @ * + retval !
+    expfact @ 16 * expfact !
+  repeat
+  pop
+
+  retval @
+;
+
 (* Get the highest float in an array of floats *)
 : list_max ( a -- f )
   dup 0 array_getitem
@@ -873,7 +941,14 @@ lvar g_ansi_table_4bit_xterm_rgb
 ;
 
 (* Given a target color, find the closest approximate color in a color palette table *)
-: closest_color[ list:target_rgb dict:color_table_rgb -- int:closest_key ]
+: closest_color[ str:target_rgb dict:color_table_rgb -- int:closest_key ]
+  (* Convert target_rgb into a list of integer components *)
+  target_rgb @
+  2 strcut swap xtoi var! r
+  2 strcut swap xtoi var! g
+  2 strcut swap xtoi var! b
+  pop
+  { r @ g @ b @ }list target_rgb !
   (* Look for exact matches *)
   color_table_rgb @ foreach
     target_rgb @ array_compare not if exit then
@@ -894,133 +969,100 @@ lvar g_ansi_table_4bit_xterm_rgb
   closest_key @
 ;
 
-: ansi8_nearest[ str:ansi_type list:target_rgb -- int:color8 ]
-  target_rgb @ ansi_table_8bit_rgb closest_color
+(* Wraps closest_color with a cache of color matches *)
+: closest_color_cached[ str:target_rgb dict:color_table_rgb var:match_cache -- int:closest_key ]
+  match_cache @ @ target_rgb @ array_getitem dup if
+    exit
+  else
+    pop
+  then
+  target_rgb @ color_table_rgb @ closest_color
+  dup match_cache @ @ target_rgb @ array_setitem match_cache @ !
 ;
 
-: ansi4_nearest_vga[ str:ansi_type list:target_rgb -- int:color4 ]
+(* RGB to ANSI color code conversion routines *)
+lvar ansi8_nearest_cache
+: ansi8_nearest[ str:ansi_type str:target_rgb -- int:color8 ]
+  ansi8_nearest_cache @ not if
+    { }dict ansi8_nearest_cache !
+  then
+  target_rgb @ ansi_table_8bit_rgb ansi8_nearest_cache closest_color_cached
+;
+
+lvar ansi4_nearest_vga_cache
+: ansi4_nearest_vga[ str:ansi_type str:target_rgb -- int:color4 ]
+  ansi4_nearest_vga_cache @ not if
+    (* Add some precalculated values *)
+    {
+    }dict ansi4_nearest_vga_cache !
+  then
   ansi_table_4bit_vga_rgb var! color_table_rgb
   { 172 172 172 }list color_table_rgb @ 37 array_setitem color_table_rgb ! (* 170->172 so that XTerm 'dark gray' will be recognized VGA 'dark gray' and not VGA 'gray' *)
-  target_rgb @ color_table_rgb @ closest_color
+  target_rgb @ color_table_rgb @ ansi4_nearest_vga_cache closest_color_cached
 ;
 
-: ansi4_nearest_xterm[ str:ansi_type list:target_rgb -- int:color4 ]
+lvar ansi4_nearest_xterm_cache
+: ansi4_nearest_xterm[ str:ansi_type str:target_rgb -- int:color4 ]
+  ansi4_nearest_xterm_cache @ not if
+    (* Add some precalculated values *)
+    {
+    }dict ansi4_nearest_xterm_cache !
+  then
   ansi_table_4bit_xterm_rgb var! color_table_rgb
   { 128 127 0 }list color_table_rgb @ 33 array_setitem color_table_rgb ! (* 128->127 so that VGA 'brown' will be recognized as yellow and not red *)
-  target_rgb @ color_table_rgb @ closest_color
+  target_rgb @ color_table_rgb @ ansi4_nearest_xterm_cache closest_color_cached
 ;
 
 lvar ansi_table_3bit_vga_rgb
-: ansi3_nearest_vga[ str:ansi_type list:target_rgb -- int:color4 ]
-  ansi_type @ target_rgb @ ansi4_nearest_xterm
+: ansi3_nearest_vga[ str:ansi_type str:target_rgb -- int:color4 ]
+  ansi_type @ target_rgb @ ansi4_nearest_vga
   dup 90 = if pop 37 then
   dup 91 >= if 60 - then
 ;
 
 lvar ansi_table_3bit_xterm_rgb
-: ansi3_nearest_xterm[ str:ansi_type list:target_rgb -- int:color4 ]
+: ansi3_nearest_xterm[ str:ansi_type str:target_rgb -- int:color4 ]
   ansi_type @ target_rgb @ ansi4_nearest_xterm
   dup 90 = if pop 37 then
   dup 91 >= if 60 - then
 ;
 
-: xtoi1 ( s -- i )
-  dup string? not if
-    pop -1 exit
-  then
-
-  dup strlen 1 = not if
-    pop -1 exit
-  then
-
-  dup number? if
-    atoi exit
-  then
-
-  ctoi "A" ctoi - 10 +
-
-  dup 10 < over 15 > or if
-    pop -1 exit
-  then
-;
-
-: hex? ( s -- b )
-  dup string? not if
-    pop 0 exit
-  then
-
-  dup strlen dup 1 >= swap 7 <= and not if
-    pop 0 exit
-  then
-
-  begin
-    dup while
-    1 strcut swap
-    dup number? not over ctoi "A" ctoi < and swap ctoi "F" ctoi > or if
-      pop 0 exit
-    then
-  repeat
-
-  pop 1 exit
-;
-
-: xtoi ( s -- i )
-  dup hex? not if
-    pop -1 exit
-  then
-
-  0 var! retval
-  1 var! expfact
-
-  begin
-    dup while
-    dup strlen 1 - strcut
-    xtoi1
-    dup 0 >= over 16 < and not if
-      pop pop -1 exit
-    then
-    retval @ swap expfact @ * + retval !
-    expfact @ 16 * expfact !
-  repeat
-  pop
-
-  retval @
-;
-
+(* Convert an individual MCC code sequence tag to ANSI *)
 : mcc_seq[ str:to_type str:code_type int:code_value -- str:ansi_seq ]
   code_type @ "B" = code_type @ "F" = or if
-    code_value @
-    2 strcut swap xtoi var! r
-    2 strcut swap xtoi var! g
-    2 strcut swap xtoi var! b
     "" var! retval
     to_type @ "NOCOLOR" = if
       "" exit
     then
     to_type @ "ANSI-3BIT-VGA" = if
-      { "\[[" to_type @ { r @ g @ b @ }list ansi3_nearest_vga code_type @ "B" = if 10 + then intostr "m" }join exit
+      { "\[[" to_type @ code_value @ ansi3_nearest_vga code_type @ "B" = if 10 + then intostr "m" }join exit
     then
     to_type @ "ANSI-3BIT-XTERM" = if
-      { "\[[" to_type @ { r @ g @ b @ }list ansi3_nearest_xterm code_type @ "B" = if 10 + then intostr "m" }join exit
+      { "\[[" to_type @ code_value @ ansi3_nearest_xterm code_type @ "B" = if 10 + then intostr "m" }join exit
     then
     to_type @ "ANSI-4BIT-VGA" = if
       code_type @ "F" = if
-        { "\[[" to_type @ { r @ g @ b @ }list ansi4_nearest_vga intostr "m" }join exit
+        { "\[[" to_type @ code_value @ ansi4_nearest_vga intostr "m" }join exit
       else
-        { "\[[" to_type @ { r @ g @ b @ }list ansi3_nearest_vga 10 + intostr "m" }join exit
+        { "\[[" to_type @ code_value @ ansi3_nearest_vga 10 + intostr "m" }join exit
       then
     then
     to_type @ "ANSI-4BIT-XTERM" = if
       code_type @ "F" = if
-        { "\[[" to_type @ { r @ g @ b @ }list ansi4_nearest_xterm intostr "m" }join exit
+        { "\[[" to_type @ code_value @ ansi4_nearest_xterm intostr "m" }join exit
       else
-        { "\[[" to_type @ { r @ g @ b @ }list ansi3_nearest_xterm 10 + intostr "m" }join exit
+        { "\[[" to_type @ code_value @ ansi3_nearest_xterm 10 + intostr "m" }join exit
       then
     then
     to_type @ "ANSI-8BIT" = if
-      { code_type @ "F" = if "\[[38;5;" else "\[[48;5;" then to_type @ { r @ g @ b @ }list ansi8_nearest intostr "m" }join exit
+      { code_type @ "F" = if "\[[38;5;" else "\[[48;5;" then to_type @ code_value @ ansi8_nearest intostr "m" }join exit
     then
     to_type @ "ANSI-24BIT" = if
+      code_value @
+      2 strcut swap xtoi var! r
+      2 strcut swap xtoi var! g
+      2 strcut swap xtoi var! b
+      pop
       { code_type @ "F" = if "\[[38;2;" else "\[[48;2;" then r @ intostr ";" g @ intostr ";" b @ intostr "m" }join exit
     then
     "Invalid ANSI type" abort
@@ -1043,6 +1085,7 @@ lvar ansi_table_3bit_xterm_rgb
   { "[INVALID #MCC V" .version " CODE - UNKNOWN TYPE " code_type @ " ]" }join
 ;
 
+(* Convert an entire MCC sequence to another encoding *)
 : mcc_convert[ str:source_string str:to_type -- str:result_string ]
   to_type @ "X" "000000" mcc_seq var! color_reset
 
@@ -1067,7 +1110,7 @@ lvar ansi_table_3bit_xterm_rgb
   { color_reset @ retval @ color_reset @ }join
 ;
 
-(* Take a tag at the start of a string and parse it. *)
+(* Take an MCC code sequence tag at the start of a string and parse it. *)
 : mcc_tagparse[ str:check_string -- str:code_type str:code_value ]
   check_string @
   5 strcut swap var! code_mcc
