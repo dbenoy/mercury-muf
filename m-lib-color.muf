@@ -114,6 +114,10 @@ $PRAGMA comment_recurse
 (*   you want from the list below, and older clients of both types of client *)
 (*   should still see the full gamut of 16 colors.                           *)
 (*                                                                           *)
+(*   Also, the color space conversion can be a (relatively) slow operation,  *)
+(*   so for large graphics, unless it's important to you, you may want to    *)
+(*   limit your color selections to ones from the XTERM256 palette.          *)
+(*                                                                           *)
 (*   XTERM Palette:                                                          *)
 (*   0  Black          #MCC-F-000000                                         *)
 (*   1  Red            #MCC-F-800000                                         *)
@@ -150,6 +154,248 @@ $PRAGMA comment_recurse
 (*   14 Bright Cyan    #MCC-F-55FFFF                                         *)
 (*   15 Bright White   #MCC-F-FFFFFF                                         *)
 (*                                                                           *)
+(*   XTERM256 Palette:                                                       *)
+(*   16  Black             #MCC-F-000000                                     *)
+(*   17  NavyBlue          #MCC-F-00005F                                     *)
+(*   18  DarkBlue          #MCC-F-000087                                     *)
+(*   19  Blue3             #MCC-F-0000AF                                     *)
+(*   20  Blue3             #MCC-F-0000D7                                     *)
+(*   21  Blue1             #MCC-F-0000FF                                     *)
+(*   22  DarkGreen         #MCC-F-005F00                                     *)
+(*   23  DeepSkyBlue4      #MCC-F-005F5F                                     *)
+(*   24  DeepSkyBlue4      #MCC-F-005F87                                     *)
+(*   25  DeepSkyBlue4      #MCC-F-005FAF                                     *)
+(*   26  DodgerBlue3       #MCC-F-005FD7                                     *)
+(*   27  DodgerBlue2       #MCC-F-005FFF                                     *)
+(*   28  Green4            #MCC-F-008700                                     *)
+(*   29  SpringGreen4      #MCC-F-00875F                                     *)
+(*   30  Turquoise4        #MCC-F-008787                                     *)
+(*   31  DeepSkyBlue3      #MCC-F-0087AF                                     *)
+(*   32  DeepSkyBlue3      #MCC-F-0087D7                                     *)
+(*   33  DodgerBlue1       #MCC-F-0087FF                                     *)
+(*   34  Green3            #MCC-F-00AF00                                     *)
+(*   35  SpringGreen3      #MCC-F-00AF5F                                     *)
+(*   36  DarkCyan          #MCC-F-00AF87                                     *)
+(*   37  LightSeaGreen     #MCC-F-00AFAF                                     *)
+(*   38  DeepSkyBlue2      #MCC-F-00AFD7                                     *)
+(*   39  DeepSkyBlue1      #MCC-F-00AFFF                                     *)
+(*   40  Green3            #MCC-F-00D700                                     *)
+(*   41  SpringGreen3      #MCC-F-00D75F                                     *)
+(*   42  SpringGreen2      #MCC-F-00D787                                     *)
+(*   43  Cyan3             #MCC-F-00D7AF                                     *)
+(*   44  DarkTurquoise     #MCC-F-00D7D7                                     *)
+(*   45  Turquoise2        #MCC-F-00D7FF                                     *)
+(*   46  Green1            #MCC-F-00FF00                                     *)
+(*   47  SpringGreen2      #MCC-F-00FF5F                                     *)
+(*   48  SpringGreen1      #MCC-F-00FF87                                     *)
+(*   49  MediumSpringGreen #MCC-F-00FFAF                                     *)
+(*   50  Cyan2             #MCC-F-00FFD7                                     *)
+(*   51  Cyan1             #MCC-F-00FFFF                                     *)
+(*   52  DarkRed           #MCC-F-5F0000                                     *)
+(*   53  DeepPink4         #MCC-F-5F005F                                     *)
+(*   54  Purple4           #MCC-F-5F0087                                     *)
+(*   55  Purple4           #MCC-F-5F00AF                                     *)
+(*   56  Purple3           #MCC-F-5F00D7                                     *)
+(*   57  BlueViolet        #MCC-F-5F00FF                                     *)
+(*   58  Orange4           #MCC-F-5F5F00                                     *)
+(*   59  Grey37            #MCC-F-5F5F5F                                     *)
+(*   60  MediumPurple4     #MCC-F-5F5F87                                     *)
+(*   61  SlateBlue3        #MCC-F-5F5FAF                                     *)
+(*   62  SlateBlue3        #MCC-F-5F5FD7                                     *)
+(*   63  RoyalBlue1        #MCC-F-5F5FFF                                     *)
+(*   64  Chartreuse4       #MCC-F-5F8700                                     *)
+(*   65  DarkSeaGreen4     #MCC-F-5F875F                                     *)
+(*   66  PaleTurquoise4    #MCC-F-5F8787                                     *)
+(*   67  SteelBlue         #MCC-F-5F87AF                                     *)
+(*   68  SteelBlue3        #MCC-F-5F87D7                                     *)
+(*   69  CornflowerBlue    #MCC-F-5F87FF                                     *)
+(*   70  Chartreuse3       #MCC-F-5FAF00                                     *)
+(*   71  DarkSeaGreen4     #MCC-F-5FAF5F                                     *)
+(*   72  CadetBlue         #MCC-F-5FAF87                                     *)
+(*   73  CadetBlue         #MCC-F-5FAFAF                                     *)
+(*   74  SkyBlue3          #MCC-F-5FAFD7                                     *)
+(*   75  SteelBlue1        #MCC-F-5FAFFF                                     *)
+(*   76  Chartreuse3       #MCC-F-5FD700                                     *)
+(*   77  PaleGreen3        #MCC-F-5FD75F                                     *)
+(*   78  SeaGreen3         #MCC-F-5FD787                                     *)
+(*   79  Aquamarine3       #MCC-F-5FD7AF                                     *)
+(*   80  MediumTurquoise   #MCC-F-5FD7D7                                     *)
+(*   81  SteelBlue1        #MCC-F-5FD7FF                                     *)
+(*   82  Chartreuse2       #MCC-F-5FFF00                                     *)
+(*   83  SeaGreen2         #MCC-F-5FFF5F                                     *)
+(*   84  SeaGreen1         #MCC-F-5FFF87                                     *)
+(*   85  SeaGreen1         #MCC-F-5FFFAF                                     *)
+(*   86  Aquamarine1       #MCC-F-5FFFD7                                     *)
+(*   87  DarkSlateGray2    #MCC-F-5FFFFF                                     *)
+(*   88  DarkRed           #MCC-F-870000                                     *)
+(*   89  DeepPink4         #MCC-F-87005F                                     *)
+(*   90  DarkMagenta       #MCC-F-870087                                     *)
+(*   91  DarkMagenta       #MCC-F-8700AF                                     *)
+(*   92  DarkViolet        #MCC-F-8700D7                                     *)
+(*   93  Purple            #MCC-F-8700FF                                     *)
+(*   94  Orange4           #MCC-F-875F00                                     *)
+(*   95  LightPink4        #MCC-F-875F5F                                     *)
+(*   96  Plum4             #MCC-F-875F87                                     *)
+(*   97  MediumPurple3     #MCC-F-875FAF                                     *)
+(*   98  MediumPurple3     #MCC-F-875FD7                                     *)
+(*   99  SlateBlue1        #MCC-F-875FFF                                     *)
+(*   100 Yellow4           #MCC-F-878700                                     *)
+(*   101 Wheat4            #MCC-F-87875F                                     *)
+(*   102 Grey53            #MCC-F-878787                                     *)
+(*   103 LightSlateGrey    #MCC-F-8787AF                                     *)
+(*   104 MediumPurple      #MCC-F-8787D7                                     *)
+(*   105 LightSlateBlue    #MCC-F-8787FF                                     *)
+(*   106 Yellow4           #MCC-F-87AF00                                     *)
+(*   107 DarkOliveGreen3   #MCC-F-87AF5F                                     *)
+(*   108 DarkSeaGreen      #MCC-F-87AF87                                     *)
+(*   109 LightSkyBlue3     #MCC-F-87AFAF                                     *)
+(*   110 LightSkyBlue3     #MCC-F-87AFD7                                     *)
+(*   111 SkyBlue2          #MCC-F-87AFFF                                     *)
+(*   112 Chartreuse2       #MCC-F-87D700                                     *)
+(*   113 DarkOliveGreen3   #MCC-F-87D75F                                     *)
+(*   114 PaleGreen3        #MCC-F-87D787                                     *)
+(*   115 DarkSeaGreen3     #MCC-F-87D7AF                                     *)
+(*   116 DarkSlateGray3    #MCC-F-87D7D7                                     *)
+(*   117 SkyBlue1          #MCC-F-87D7FF                                     *)
+(*   118 Chartreuse1       #MCC-F-87FF00                                     *)
+(*   119 LightGreen        #MCC-F-87FF5F                                     *)
+(*   120 LightGreen        #MCC-F-87FF87                                     *)
+(*   121 PaleGreen1        #MCC-F-87FFAF                                     *)
+(*   122 Aquamarine1       #MCC-F-87FFD7                                     *)
+(*   123 DarkSlateGray1    #MCC-F-87FFFF                                     *)
+(*   124 Red3              #MCC-F-AF0000                                     *)
+(*   125 DeepPink4         #MCC-F-AF005F                                     *)
+(*   126 MediumVioletRed   #MCC-F-AF0087                                     *)
+(*   127 Magenta3          #MCC-F-AF00AF                                     *)
+(*   128 DarkViolet        #MCC-F-AF00D7                                     *)
+(*   129 Purple            #MCC-F-AF00FF                                     *)
+(*   130 DarkOrange3       #MCC-F-AF5F00                                     *)
+(*   131 IndianRed         #MCC-F-AF5F5F                                     *)
+(*   132 HotPink3          #MCC-F-AF5F87                                     *)
+(*   133 MediumOrchid3     #MCC-F-AF5FAF                                     *)
+(*   134 MediumOrchid      #MCC-F-AF5FD7                                     *)
+(*   135 MediumPurple2     #MCC-F-AF5FFF                                     *)
+(*   136 DarkGoldenrod     #MCC-F-AF8700                                     *)
+(*   137 LightSalmon3      #MCC-F-AF875F                                     *)
+(*   138 RosyBrown         #MCC-F-AF8787                                     *)
+(*   139 Grey63            #MCC-F-AF87AF                                     *)
+(*   140 MediumPurple2     #MCC-F-AF87D7                                     *)
+(*   141 MediumPurple1     #MCC-F-AF87FF                                     *)
+(*   142 Gold3             #MCC-F-AFAF00                                     *)
+(*   143 DarkKhaki         #MCC-F-AFAF5F                                     *)
+(*   144 NavajoWhite3      #MCC-F-AFAF87                                     *)
+(*   145 Grey69            #MCC-F-AFAFAF                                     *)
+(*   146 LightSteelBlue3   #MCC-F-AFAFD7                                     *)
+(*   147 LightSteelBlue    #MCC-F-AFAFFF                                     *)
+(*   148 Yellow3           #MCC-F-AFD700                                     *)
+(*   149 DarkOliveGreen3   #MCC-F-AFD75F                                     *)
+(*   150 DarkSeaGreen3     #MCC-F-AFD787                                     *)
+(*   151 DarkSeaGreen2     #MCC-F-AFD7AF                                     *)
+(*   152 LightCyan3        #MCC-F-AFD7D7                                     *)
+(*   153 LightSkyBlue1     #MCC-F-AFD7FF                                     *)
+(*   154 GreenYellow       #MCC-F-AFFF00                                     *)
+(*   155 DarkOliveGreen2   #MCC-F-AFFF5F                                     *)
+(*   156 PaleGreen1        #MCC-F-AFFF87                                     *)
+(*   157 DarkSeaGreen2     #MCC-F-AFFFAF                                     *)
+(*   158 DarkSeaGreen1     #MCC-F-AFFFD7                                     *)
+(*   159 PaleTurquoise1    #MCC-F-AFFFFF                                     *)
+(*   160 Red3              #MCC-F-D70000                                     *)
+(*   161 DeepPink3         #MCC-F-D7005F                                     *)
+(*   162 DeepPink3         #MCC-F-D70087                                     *)
+(*   163 Magenta3          #MCC-F-D700AF                                     *)
+(*   164 Magenta3          #MCC-F-D700D7                                     *)
+(*   165 Magenta2          #MCC-F-D700FF                                     *)
+(*   166 DarkOrange3       #MCC-F-D75F00                                     *)
+(*   167 IndianRed         #MCC-F-D75F5F                                     *)
+(*   168 HotPink3          #MCC-F-D75F87                                     *)
+(*   169 HotPink2          #MCC-F-D75FAF                                     *)
+(*   170 Orchid            #MCC-F-D75FD7                                     *)
+(*   171 MediumOrchid1     #MCC-F-D75FFF                                     *)
+(*   172 Orange3           #MCC-F-D78700                                     *)
+(*   173 LightSalmon3      #MCC-F-D7875F                                     *)
+(*   174 LightPink3        #MCC-F-D78787                                     *)
+(*   175 Pink3             #MCC-F-D787AF                                     *)
+(*   176 Plum3             #MCC-F-D787D7                                     *)
+(*   177 Violet            #MCC-F-D787FF                                     *)
+(*   178 Gold3             #MCC-F-D7AF00                                     *)
+(*   179 LightGoldenrod3   #MCC-F-D7AF5F                                     *)
+(*   180 Tan               #MCC-F-D7AF87                                     *)
+(*   181 MistyRose3        #MCC-F-D7AFAF                                     *)
+(*   182 Thistle3          #MCC-F-D7AFD7                                     *)
+(*   183 Plum2             #MCC-F-D7AFFF                                     *)
+(*   184 Yellow3           #MCC-F-D7D700                                     *)
+(*   185 Khaki3            #MCC-F-D7D75F                                     *)
+(*   186 LightGoldenrod2   #MCC-F-D7D787                                     *)
+(*   187 LightYellow3      #MCC-F-D7D7AF                                     *)
+(*   188 Grey84            #MCC-F-D7D7D7                                     *)
+(*   189 LightSteelBlue1   #MCC-F-D7D7FF                                     *)
+(*   190 Yellow2           #MCC-F-D7FF00                                     *)
+(*   191 DarkOliveGreen1   #MCC-F-D7FF5F                                     *)
+(*   192 DarkOliveGreen1   #MCC-F-D7FF87                                     *)
+(*   193 DarkSeaGreen1     #MCC-F-D7FFAF                                     *)
+(*   194 Honeydew2         #MCC-F-D7FFD7                                     *)
+(*   195 LightCyan1        #MCC-F-D7FFFF                                     *)
+(*   196 Red1              #MCC-F-FF0000                                     *)
+(*   197 DeepPink2         #MCC-F-FF005F                                     *)
+(*   198 DeepPink1         #MCC-F-FF0087                                     *)
+(*   199 DeepPink1         #MCC-F-FF00AF                                     *)
+(*   200 Magenta2          #MCC-F-FF00D7                                     *)
+(*   201 Magenta1          #MCC-F-FF00FF                                     *)
+(*   202 OrangeRed1        #MCC-F-FF5F00                                     *)
+(*   203 IndianRed1        #MCC-F-FF5F5F                                     *)
+(*   204 IndianRed1        #MCC-F-FF5F87                                     *)
+(*   205 HotPink           #MCC-F-FF5FAF                                     *)
+(*   206 HotPink           #MCC-F-FF5FD7                                     *)
+(*   207 MediumOrchid1     #MCC-F-FF5FFF                                     *)
+(*   208 DarkOrange        #MCC-F-FF8700                                     *)
+(*   209 Salmon1           #MCC-F-FF875F                                     *)
+(*   210 LightCoral        #MCC-F-FF8787                                     *)
+(*   211 PaleVioletRed1    #MCC-F-FF87AF                                     *)
+(*   212 Orchid2           #MCC-F-FF87D7                                     *)
+(*   213 Orchid1           #MCC-F-FF87FF                                     *)
+(*   214 Orange1           #MCC-F-FFAF00                                     *)
+(*   215 SandyBrown        #MCC-F-FFAF5F                                     *)
+(*   216 LightSalmon1      #MCC-F-FFAF87                                     *)
+(*   217 LightPink1        #MCC-F-FFAFAF                                     *)
+(*   218 Pink1             #MCC-F-FFAFD7                                     *)
+(*   219 Plum1             #MCC-F-FFAFFF                                     *)
+(*   220 Gold1             #MCC-F-FFD700                                     *)
+(*   221 LightGoldenrod2   #MCC-F-FFD75F                                     *)
+(*   222 LightGoldenrod2   #MCC-F-FFD787                                     *)
+(*   223 NavajoWhite1      #MCC-F-FFD7AF                                     *)
+(*   224 MistyRose1        #MCC-F-FFD7D7                                     *)
+(*   225 Thistle1          #MCC-F-FFD7FF                                     *)
+(*   226 Yellow1           #MCC-F-FFFF00                                     *)
+(*   227 LightGoldenrod1   #MCC-F-FFFF5F                                     *)
+(*   228 Khaki1            #MCC-F-FFFF87                                     *)
+(*   229 Wheat1            #MCC-F-FFFFAF                                     *)
+(*   230 Cornsilk1         #MCC-F-FFFFD7                                     *)
+(*   231 Grey100           #MCC-F-FFFFFF                                     *)
+(*   232 Grey3             #MCC-F-080808                                     *)
+(*   233 Grey7             #MCC-F-121212                                     *)
+(*   234 Grey11            #MCC-F-1C1C1C                                     *)
+(*   235 Grey15            #MCC-F-262626                                     *)
+(*   236 Grey19            #MCC-F-303030                                     *)
+(*   237 Grey23            #MCC-F-3A3A3A                                     *)
+(*   238 Grey27            #MCC-F-444444                                     *)
+(*   239 Grey30            #MCC-F-4E4E4E                                     *)
+(*   240 Grey35            #MCC-F-585858                                     *)
+(*   241 Grey39            #MCC-F-626262                                     *)
+(*   242 Grey42            #MCC-F-6C6C6C                                     *)
+(*   243 Grey46            #MCC-F-767676                                     *)
+(*   244 Grey50            #MCC-F-808080                                     *)
+(*   245 Grey54            #MCC-F-8A8A8A                                     *)
+(*   246 Grey58            #MCC-F-949494                                     *)
+(*   247 Grey62            #MCC-F-9E9E9E                                     *)
+(*   248 Grey66            #MCC-F-A8A8A8                                     *)
+(*   249 Grey70            #MCC-F-B2B2B2                                     *)
+(*   250 Grey74            #MCC-F-BCBCBC                                     *)
+(*   251 Grey78            #MCC-F-C6C6C6                                     *)
+(*   252 Grey82            #MCC-F-D0D0D0                                     *)
+(*   253 Grey85            #MCC-F-DADADA                                     *)
+(*   254 Grey89            #MCC-F-E4E4E4                                     *)
+(*   255 Grey93            #MCC-F-EEEEEE                                     *)
+(*                                                                           *)
 (*****************************************************************************)
 (* Revision History:                                                         *)
 (*   Version 1.0 -- Daniel Benoy -- October, 2019                            *)
@@ -183,10 +429,7 @@ $DOCCMD  @list __PROG__=2-172
 (* End configurable options *)
 
 (* TODO: A check to see if colors can be exactly represented on a given ANSI type? *)
-(* TODO: Produce test string output for users to look at to see if they support a given ANSI type *)
 (* TODO: More 'color code' encodings for compatibility with other MUCK software *)
-(* TODO: A player property for which encoding they use *)
-(* TODO: Convenience calls like .mcc_transcode .mcc_tell .mcc_otell .mcc_notify .mcc_connotify .mcc_escape .mcc_strip .mcc_strlen *)
 
 $PUBDEF :
 
@@ -626,6 +869,12 @@ lvar g_ansi_table_4bit_xterm_rgb
 
 (* Given a target color, find the closest approximate color in a color palette table *)
 : closest_color[ list:target_rgb dict:color_table_rgb -- int:closest_key ]
+  (* Look for exact matches *)
+  color_table_rgb @ foreach
+    target_rgb @ array_compare not if exit then
+    pop
+  repeat
+  (* Check for the nearest color using a color space algorithm *)
   target_rgb @ rgb2bicone var! target_bicone
   inf var! closest_dist
   var closest_key
@@ -789,7 +1038,7 @@ lvar ansi_table_3bit_xterm_rgb
   { "[INVALID #MCC V" .version " CODE - UNKNOWN TYPE " code_type @ " ]" }join
 ;
 
-: mcc_convert[ str:to_type str:source_string -- str:result_string ]
+: mcc_convert[ str:source_string str:to_type -- str:result_string ]
   to_type @ "X" "000000" mcc_seq var! color_reset
 
   source_string @ "#MCC-" instr not if
@@ -878,8 +1127,6 @@ lvar ansi_table_3bit_xterm_rgb
   foreground_code @ swap strcat
   background_code @ swap strcat
 ;
-PUBLIC mcc_strcut
-$LIBDEF mcc_strcut
 
 : array_hasval ( ? a -- b )
   foreach
@@ -911,7 +1158,7 @@ $LIBDEF mcc_strcut
 
   from_type @ "MCC" = if
     to_type @ "ANSI-" instr 1 = to_type @ "NOCOLOR" = or if
-      to_type @ source_string @ mcc_convert exit
+      source_string @ to_type @ mcc_convert exit
     then
   then
 
@@ -959,6 +1206,247 @@ $LIBDEF M-LIB-COLOR-transcode
 ;
 PUBLIC M-LIB-COLOR-strcut
 $LIBDEF M-LIB-COLOR-strcut
+
+(* TODO: Produce test string output for users to look at to see if they support a given ANSI type *)
+(*****************************************************************************)
+(*                          M-LIB-COLOR-testpattern                          *)
+(*****************************************************************************)
+: M-LIB-COLOR-testpattern[ str:ansi_type -- arr:strings ]
+  ansi_type @ "ANSI-3BIT-VGA" = if
+    {
+      "/- ANSI-3BIT-VGA -\\  This is the oldest and most compatible color   "
+      "|  #MCC-B-AAAAAA#MCC-F-000000Black#MCC-X-000000          | encoding standard, in the legacy 8 color mode.  " ansi_type @ mcc_convert
+      "|   #MCC-B-000000#MCC-F-AA0000Red#MCC-X-000000           |                                                 " ansi_type @ mcc_convert
+      "|    #MCC-B-000000#MCC-F-00AA00Green#MCC-X-000000        |   The ANSI standard does not specify palette    " ansi_type @ mcc_convert
+      "|     #MCC-B-000000#MCC-F-AA5500Brown#MCC-X-000000       |   information, only color names, and on most    " ansi_type @ mcc_convert
+      "|      #MCC-B-000000#MCC-F-0000AABlue#MCC-X-000000       | clients you are free to set whatever palette you" ansi_type @ mcc_convert
+      "|       #MCC-B-000000#MCC-F-AA00AAMagenta#MCC-X-000000   |  want for these colors, so for the purposes of  " ansi_type @ mcc_convert
+      "|        #MCC-B-000000#MCC-F-00AAAACyan#MCC-X-000000     | color conversion on this MUCK, you should select" ansi_type @ mcc_convert
+      "|         #MCC-B-000000#MCC-F-AAAAAAWhite#MCC-X-000000   |  the ANSI palette that matches the one used in  " ansi_type @ mcc_convert
+      "\\-----------------/                 your MUD client.                "
+      "                                                                              "
+      "The VGA palette represents the standard colors popularized on early IBM       "
+      "computers and are the most iconic ANSI colors. It is still considered the     "
+      "standard by ANSI artists to this day.                                         "
+      "                                                                              "
+      "In the box above, you will see 8 colors. Their color should be vibrantly      "
+      "saturated but dimly lit. Ensure that all 8 colors are visible and match this  "
+      "description. On the VGA palette, the normally 'yellow' color appears brown.   "
+      "Ensure that all 8 colors are visible and match this description.              "
+      "                                                                              "
+      "This mode is available for compatibility but should generally be avoided, as  "
+      "almost all clients support ANSI-4BIT color codes.                             "
+      "                               _______________________________________________"
+      "                               | ID |     Color      |   Hex   |  R   G   B  |"
+      "                               | 0  | Black          | #000000 |   0   0   0 |"
+      "  If your client supports it,  | 1  | Red            | #AA0000 | 170   0   0 |"
+      " you can use the values on the | 2  | Green          | #00AA00 |   0 170   0 |"
+      " right to change your palette  | 3  | Yellow         | #AA5500 | 170  85   0 |"
+      "  to match the ANSI VGA color  | 4  | Blue           | #0000AA |   0   0 170 |"
+      "           palette.            | 5  | Magenta        | #AA00AA | 170   0 170 |"
+      "                               | 6  | Cyan           | #00AAAA |   0 170 170 |"
+      "                               | 7  | White          | #AAAAAA | 170 170 170 |"
+      "                               -----------------------------------------------"
+    }list exit
+  then
+  ansi_type @ "ANSI-3BIT-XTERM" = if
+    {
+      "/- ANSI-3BIT-XTERM -\\  This is the oldest and most compatible color   "
+      "|   #MCC-B-C0C0C0#MCC-F-000000Black#MCC-X-000000           | encoding standard, in the legacy 8 color mode.  " ansi_type @ mcc_convert
+      "|    #MCC-B-000000#MCC-F-800000Red#MCC-X-000000            |                                                 " ansi_type @ mcc_convert
+      "|     #MCC-B-000000#MCC-F-008000Green#MCC-X-000000         |   The ANSI standard does not specify palette    " ansi_type @ mcc_convert
+      "|      #MCC-B-000000#MCC-F-800000Brown#MCC-X-000000        |   information, only color names, and on most    " ansi_type @ mcc_convert
+      "|       #MCC-B-000000#MCC-F-000080Blue#MCC-X-000000        | clients you are free to set whatever palette you" ansi_type @ mcc_convert
+      "|        #MCC-B-000000#MCC-F-800080Magenta#MCC-X-000000    |  want for these colors, so for the purposes of  " ansi_type @ mcc_convert
+      "|         #MCC-B-000000#MCC-F-008080Cyan#MCC-X-000000      | color conversion on this MUCK, you should select" ansi_type @ mcc_convert
+      "|          #MCC-B-000000#MCC-F-C0C0C0White#MCC-X-000000    |  the ANSI palette that matches the one used in  " ansi_type @ mcc_convert
+      "\\-------------------/                 your MUD client.                "
+      "                                                                              "
+      "The XTerm color palette is arguably the most common color palette for MUD     "
+      "clients. It was popularized with the advent of Linux GUIs and it has more     "
+      "vibrant colors than the standard VGA palette.                                 "
+      "                                                                              "
+      "In the box above, you will see 8 colors. Their color should be vibrantly      "
+      "saturated but dimly lit. Ensure that all 8 colors are visible and match this  "
+      "description.                                                                  "
+      "                                                                              "
+      "This mode is available for compatibility but should generally be avoided, as  "
+      "almost all clients support ANSI-4BIT color codes.                             "
+      "                               _______________________________________________"
+      "                               | ID |     Color      |   Hex   |  R   G   B  |"
+      "                               | 0  | Black          | #000000 |   0   0   0 |"
+      "  If your client supports it,  | 1  | Red            | #800000 | 128   0   0 |"
+      " you can use the values on the | 2  | Green          | #008000 |   0 128   0 |"
+      " right to change your palette  | 3  | Yellow         | #800000 | 128   0   0 |"
+      "  to match the ANSI VGA color  | 4  | Blue           | #000080 |   0   0 128 |"
+      "           palette.            | 5  | Magenta        | #800080 | 128   0 128 |"
+      "                               | 6  | Cyan           | #008080 |   0 128 128 |"
+      "                               | 7  | White          | #C0C0C0 | 192 192 192 |"
+      "                               -----------------------------------------------"
+    }list exit
+  then
+  ansi_type @ "ANSI-4BIT-VGA" = if
+    {
+      "/------ ANSI-4BIT-VGA ------\\  This is the oldest and most compatible color   "
+      "| #MCC-B-AAAAAA#MCC-F-000000Black#MCC-X-000000        #MCC-B-000000#MCC-F-555555Dark Grey#MCC-X-000000    |   encoding standard, with a 16 color palette.   " ansi_type @ mcc_convert
+      "| #MCC-B-000000#MCC-F-AA0000Dim Red#MCC-X-000000      #MCC-B-000000#MCC-F-FF5555Pale Red#MCC-X-000000     |                                                 " ansi_type @ mcc_convert
+      "| #MCC-B-000000#MCC-F-00AA00Dim Green#MCC-X-000000    #MCC-B-000000#MCC-F-55FF55Pale Green#MCC-X-000000   |   The ANSI standard does not specify palette    " ansi_type @ mcc_convert
+      "| #MCC-B-000000#MCC-F-AA5500Dim Brown#MCC-X-000000    #MCC-B-000000#MCC-F-FFFF55Pale Yellow#MCC-X-000000  |   information, only color names, and on most    " ansi_type @ mcc_convert
+      "| #MCC-B-000000#MCC-F-0000AADim Blue#MCC-X-000000     #MCC-B-000000#MCC-F-5555FFPale Blue#MCC-X-000000    | clients you are free to set whatever palette you" ansi_type @ mcc_convert
+      "| #MCC-B-000000#MCC-F-AA00AADim Magenta#MCC-X-000000  #MCC-B-000000#MCC-F-FF55FFPale Magenta#MCC-X-000000 |  want for these colors, so for the purposes of  " ansi_type @ mcc_convert
+      "| #MCC-B-000000#MCC-F-00AAAADim Cyan#MCC-X-000000     #MCC-B-000000#MCC-F-55FFFFPale Cyan#MCC-X-000000    | color conversion on this MUCK, you should select" ansi_type @ mcc_convert
+      "| #MCC-B-000000#MCC-F-AAAAAAWhite#MCC-X-000000        #MCC-B-000000#MCC-F-FFFFFFWhite#MCC-X-000000        |  the ANSI palette that matches the one used in  " ansi_type @ mcc_convert
+      "\\---------------------------/                 your MUD client.                "
+      "                                                                              "
+      "The VGA palette represents the standard colors popularized on early IBM       "
+      "computers and are the most iconic ANSI colors. It is still considered the     "
+      "standard by ANSI artists to this day.                                         "
+      "                                                                              "
+      "In the box above, you will see 2 columns of 8 colors. On the left are the     "
+      "'normal' versions, and on the right are the 'bright' versions.                "
+      "                                                                              "
+      "In the VGA palette, the 'normal' versions of colors are dim but vivid. They   "
+      "are saturated and clear in their color, but they are not very brightly lit.   "
+      "The 'bright' versions of colors appear less saturated and more pale. 'normal' "
+      "yellow is unusual in particular, as it appears brown on the VGA palette.      "
+      "Ensure that you can see all 16 colors, and that they match this description.  "
+      "                               _______________________________________________"
+      "                               | ID |     Color      |   Hex   |  R   G   B  |"
+      "                               | 0  | Black          | #000000 |   0   0   0 |"
+      "   Both the 'nomal' and the    | 1  | Red            | #AA0000 | 170   0   0 |"
+      "  'bright' colors should have  | 2  | Green          | #00AA00 |   0 170   0 |"
+      "  the same font weight. Some   | 3  | Yellow         | #AA5500 | 170  85   0 |"
+      "   clients will display the    | 4  | Blue           | #0000AA |   0   0 170 |"
+      " brighter colors as bold text  | 5  | Magenta        | #AA00AA | 170   0 170 |"
+      "  This should be disabled in   | 6  | Cyan           | #00AAAA |   0 170 170 |"
+      "         your client.          | 7  | White          | #AAAAAA | 170 170 170 |"
+      "                               | 8  | Bright Black   | #555555 |  85  85  85 |"
+      "  If your client supports it,  | 9  | Bright Red     | #FF5555 | 255  85  85 |"
+      " you can use the values on the | 10 | Bright Green   | #55FF55 |  85 255  85 |"
+      " right to change your palette  | 11 | Bright Yellow  | #FFFF55 | 255 255  85 |"
+      "  to match the ANSI VGA color  | 12 | Bright Blue    | #5555FF |  85  85 255 |"
+      "           palette.            | 13 | Bright Magenta | #FF55FF | 255  85 255 |"
+      "                               | 14 | Bright Cyan    | #55FFFF |  85 255 255 |"
+      "                               | 15 | Bright White   | #FFFFFF | 255 255 255 |"
+      "                               -----------------------------------------------"
+    }list exit
+  then
+  ansi_type @ "ANSI-4BIT-XTERM" = if
+    {
+      "/----- ANSI-4BIT-XTERM -----\\  This is the oldest and most compatible color   "
+      "|  #MCC-B-C0C0C0#MCC-F-000000Black#MCC-X-000000    #MCC-B-000000#MCC-F-808080Dark Grey#MCC-X-000000       |   encoding standard, with a 16 color palette.   " ansi_type @ mcc_convert
+      "|  #MCC-B-000000#MCC-F-800000Red#MCC-X-000000      #MCC-B-000000#MCC-F-FF0000Pale Red#MCC-X-000000        |                                                 " ansi_type @ mcc_convert
+      "|  #MCC-B-000000#MCC-F-008000Green#MCC-X-000000    #MCC-B-000000#MCC-F-00FF00Pale Green#MCC-X-000000      |   The ANSI standard does not specify palette    " ansi_type @ mcc_convert
+      "|  #MCC-B-000000#MCC-F-800000Yellow#MCC-X-000000   #MCC-B-000000#MCC-F-FFFF00Pale Yellow#MCC-X-000000     |   information, only color names, and on most    " ansi_type @ mcc_convert
+      "|  #MCC-B-000000#MCC-F-000080Blue#MCC-X-000000     #MCC-B-000000#MCC-F-0000FFPale Blue#MCC-X-000000       | clients you are free to set whatever palette you" ansi_type @ mcc_convert
+      "|  #MCC-B-000000#MCC-F-800080Magenta#MCC-X-000000  #MCC-B-000000#MCC-F-FF00FFBright Magenta#MCC-X-000000  |  want for these colors, so for the purposes of  " ansi_type @ mcc_convert
+      "|  #MCC-B-000000#MCC-F-008080Cyan#MCC-X-000000     #MCC-B-000000#MCC-F-00FFFFPale Cyan#MCC-X-000000       | color conversion on this MUCK, you should select" ansi_type @ mcc_convert
+      "|  #MCC-B-000000#MCC-F-C0C0C0White#MCC-X-000000    #MCC-B-000000#MCC-F-FFFFFFWhite#MCC-X-000000           |  the ANSI palette that matches the one used in  " ansi_type @ mcc_convert
+      "\\---------------------------/                 your MUD client.                "
+      "                                                                              "
+      "The XTerm color palette is arguably the most common color palette for MUD     "
+      "clients. It was popularized with the advent of Linux GUIs and it has more     "
+      "vibrant colors than the standard VGA palette.                                 "
+      "                                                                              "
+      "In the box above, you will see 2 columns of 8 colors. On the left are the     "
+      "'normal' versions, and on the right are the 'bright' versions.                "
+      "                                                                              "
+      "In the XTerm palette, the 'normal' versions of colors are medium brightness,  "
+      "and vivid. They are saturated and clear in their color. Yellow appears as     "
+      "yellow, rather than brown. The 'bright' versions are the same intense         "
+      "saturation as the 'dim' versions, but are much more brightly lit. Ensure that "
+      "you can sell all 16 colors, and that they match this description.             "
+      "                               _______________________________________________"
+      "                               | ID |     Color      |   Hex   |  R   G   B  |"
+      "                               | 0  | Black          | #000000 |   0   0   0 |"
+      "   Both the 'nomal' and the    | 1  | Red            | #800000 | 128   0   0 |"
+      "  'bright' colors should have  | 2  | Green          | #008000 |   0 128   0 |"
+      "  the same font weight. Some   | 3  | Yellow         | #808000 | 128   0   0 |"
+      "   clients will display the    | 4  | Blue           | #000080 |   0   0 128 |"
+      " brighter colors as bold text  | 5  | Magenta        | #800080 | 128   0 128 |"
+      "  This should be disabled in   | 6  | Cyan           | #008080 |   0 128 128 |"
+      "         your client.          | 7  | White          | #C0C0C0 | 192 192 192 |"
+      "                               | 8  | Bright Black   | #808080 | 128 128 128 |"
+      "  If your client supports it,  | 9  | Bright Red     | #FF0000 | 255   0   0 |"
+      " you can use the values on the | 10 | Bright Green   | #00FF00 |   0 255   0 |"
+      " right to change your palette  | 11 | Bright Yellow  | #FFFF00 | 255 255   0 |"
+      "    to match the XTerm ANSI    | 12 | Bright Blue    | #0000FF |   0   0 255 |"
+      "         color palette.        | 13 | Bright Magenta | #FF00FF | 255   0 255 |"
+      "                               | 14 | Bright Cyan    | #00FFFF |   0 255 255 |"
+      "                               | 15 | Bright White   | #FFFFFF | 255 255 255 |"
+      "                               -----------------------------------------------"
+    }list exit
+  then
+  ansi_type @ "ANSI-8BIT" = if
+    {
+      "       +------------------------ ANSI-8BIT ---------------------------+       "
+      "       | #MCC-B-000000 16  #MCC-B-00005F 17  #MCC-B-000087 18  #MCC-B-0000AF 19  #MCC-B-0000D7 20  #MCC-B-0000FF 21  #MCC-B-005F00 22  #MCC-B-005F5F 23  #MCC-B-005F87 24  #MCC-B-005FAF 25  #MCC-B-005FD7 26  #MCC-B-005FFF 27  #MCC-X-000000 |       " ansi_type @ mcc_convert
+      "       | #MCC-B-008700 28  #MCC-B-00875F 29  #MCC-B-008787 30  #MCC-B-0087AF 31  #MCC-B-0087D7 32  #MCC-B-0087FF 33  #MCC-B-00AF00 34  #MCC-B-00AF5F 35  #MCC-B-00AF87 36  #MCC-B-00AFAF 37  #MCC-B-00AFD7 38  #MCC-B-00AFFF 39  #MCC-X-000000 |       " ansi_type @ mcc_convert
+      "       | #MCC-B-00D700 40  #MCC-B-00D75F 41  #MCC-B-00D787 42  #MCC-B-00D7AF 43  #MCC-B-00D7D7 44  #MCC-B-00D7FF 45  #MCC-B-00FF00 46  #MCC-B-00FF5F 47  #MCC-B-00FF87 48  #MCC-B-00FFAF 49  #MCC-B-00FFD7 50  #MCC-B-00FFFF 51  #MCC-X-000000 |       " ansi_type @ mcc_convert
+      "       | #MCC-B-5F0000 52  #MCC-B-5F005F 53  #MCC-B-5F0087 54  #MCC-B-5F00AF 55  #MCC-B-5F00D7 56  #MCC-B-5F00FF 57  #MCC-B-5F5F00 58  #MCC-B-5F5F5F 59  #MCC-B-5F5F87 60  #MCC-B-5F5FAF 61  #MCC-B-5F5FD7 62  #MCC-B-5F5FFF 63  #MCC-X-000000 |       " ansi_type @ mcc_convert
+      "       | #MCC-B-5F8700 64  #MCC-B-5F875F 65  #MCC-B-5F8787 66  #MCC-B-5F87AF 67  #MCC-B-5F87D7 68  #MCC-B-5F87FF 69  #MCC-B-5FAF00 70  #MCC-B-5FAF5F 71  #MCC-B-5FAF87 72  #MCC-B-5FAFAF 73  #MCC-B-5FAFD7 74  #MCC-B-5FAFFF 75  #MCC-X-000000 |       " ansi_type @ mcc_convert
+      "       | #MCC-B-5FD700 76  #MCC-B-5FD75F 77  #MCC-B-5FD787 78  #MCC-B-5FD7AF 79  #MCC-B-5FD7D7 80  #MCC-B-5FD7FF 81  #MCC-B-5FFF00 82  #MCC-B-5FFF5F 83  #MCC-B-5FFF87 84  #MCC-B-5FFFAF 85  #MCC-B-5FFFD7 86  #MCC-B-5FFFFF 87  #MCC-X-000000 |       " ansi_type @ mcc_convert
+      "       | #MCC-B-870000 88  #MCC-B-87005F 89  #MCC-B-870087 90  #MCC-B-8700AF 91  #MCC-B-8700D7 92  #MCC-B-8700FF 93  #MCC-B-875F00 94  #MCC-B-875F5F 95  #MCC-B-875F87 96  #MCC-B-875FAF 97  #MCC-B-875FD7 98  #MCC-B-875FFF 99  #MCC-X-000000 |       " ansi_type @ mcc_convert
+      "       | #MCC-B-878700 100 #MCC-B-87875F 101 #MCC-B-878787 102 #MCC-B-8787AF 103 #MCC-B-8787D7 104 #MCC-B-8787FF 105 #MCC-B-87AF00 106 #MCC-B-87AF5F 107 #MCC-B-87AF87 108 #MCC-B-87AFAF 109 #MCC-B-87AFD7 110 #MCC-B-87AFFF 111 #MCC-X-000000 |       " ansi_type @ mcc_convert
+      "       | #MCC-B-87D700 112 #MCC-B-87D75F 113 #MCC-B-87D787 114 #MCC-B-87D7AF 115 #MCC-B-87D7D7 116 #MCC-B-87D7FF 117 #MCC-B-87FF00 118 #MCC-B-87FF5F 119 #MCC-B-87FF87 120 #MCC-B-87FFAF 121 #MCC-B-87FFD7 122 #MCC-B-87FFFF 123 #MCC-X-000000 |       " ansi_type @ mcc_convert
+      "       | #MCC-B-AF0000 124 #MCC-B-AF005F 125 #MCC-B-AF0087 126 #MCC-B-AF00AF 127 #MCC-B-AF00D7 128 #MCC-B-AF00FF 129 #MCC-B-AF5F00 130 #MCC-B-AF5F5F 131 #MCC-B-AF5F87 132 #MCC-B-AF5FAF 133 #MCC-B-AF5FD7 134 #MCC-B-AF5FFF 135 #MCC-X-000000 |       " ansi_type @ mcc_convert
+      "       | #MCC-B-AF8700 136 #MCC-B-AF875F 137 #MCC-B-AF8787 138 #MCC-B-AF87AF 139 #MCC-B-AF87D7 140 #MCC-B-AF87FF 141 #MCC-B-AFAF00 142 #MCC-B-AFAF5F 143 #MCC-B-AFAF87 144 #MCC-B-AFAFAF 145 #MCC-B-AFAFD7 146 #MCC-B-AFAFFF 147 #MCC-X-000000 |       " ansi_type @ mcc_convert
+      "       | #MCC-B-AFD700 148 #MCC-B-AFD75F 149 #MCC-B-AFD787 150 #MCC-B-AFD7AF 151 #MCC-B-AFD7D7 152 #MCC-B-AFD7FF 153 #MCC-B-AFFF00 154 #MCC-B-AFFF5F 155 #MCC-B-AFFF87 156 #MCC-B-AFFFAF 157 #MCC-B-AFFFD7 158 #MCC-B-AFFFFF 159 #MCC-X-000000 |       " ansi_type @ mcc_convert
+      "       | #MCC-B-D70000 160 #MCC-B-D7005F 161 #MCC-B-D70087 162 #MCC-B-D700AF 163 #MCC-B-D700D7 164 #MCC-B-D700FF 165 #MCC-B-D75F00 166 #MCC-B-D75F5F 167 #MCC-B-D75F87 168 #MCC-B-D75FAF 169 #MCC-B-D75FD7 170 #MCC-B-D75FFF 171 #MCC-X-000000 |       " ansi_type @ mcc_convert
+      "       | #MCC-B-D78700 172 #MCC-B-D7875F 173 #MCC-B-D78787 174 #MCC-B-D787AF 175 #MCC-B-D787D7 176 #MCC-B-D787FF 177 #MCC-B-D7AF00 178 #MCC-B-D7AF5F 179 #MCC-B-D7AF87 180 #MCC-B-D7AFAF 181 #MCC-B-D7AFD7 182 #MCC-B-D7AFFF 183 #MCC-X-000000 |       " ansi_type @ mcc_convert
+      "       | #MCC-B-D7D700 184 #MCC-B-D7D75F 185 #MCC-B-D7D787 186 #MCC-B-D7D7AF 187 #MCC-B-D7D7D7 188 #MCC-B-D7D7FF 189 #MCC-B-D7FF00 190 #MCC-B-D7FF5F 191 #MCC-B-D7FF87 192 #MCC-B-D7FFAF 193 #MCC-B-D7FFD7 194 #MCC-B-D7FFFF 195 #MCC-X-000000 |       " ansi_type @ mcc_convert
+      "       | #MCC-B-FF0000 196 #MCC-B-FF005F 197 #MCC-B-FF0087 198 #MCC-B-FF00AF 199 #MCC-B-FF00D7 200 #MCC-B-FF00FF 201 #MCC-B-FF5F00 202 #MCC-B-FF5F5F 203 #MCC-B-FF5F87 204 #MCC-B-FF5FAF 205 #MCC-B-FF5FD7 206 #MCC-B-FF5FFF 207 #MCC-X-000000 |       " ansi_type @ mcc_convert
+      "       | #MCC-B-FF8700 208 #MCC-B-FF875F 209 #MCC-B-FF8787 210 #MCC-B-FF87AF 211 #MCC-B-FF87D7 212 #MCC-B-FF87FF 213 #MCC-B-FFAF00 214 #MCC-B-FFAF5F 215 #MCC-B-FFAF87 216 #MCC-B-FFAFAF 217 #MCC-B-FFAFD7 218 #MCC-B-FFAFFF 219 #MCC-X-000000 |       " ansi_type @ mcc_convert
+      "       | #MCC-B-FFD700 220 #MCC-B-FFD75F 221 #MCC-B-FFD787 222 #MCC-B-FFD7AF 223 #MCC-B-FFD7D7 224 #MCC-B-FFD7FF 225 #MCC-B-FFFF00 226 #MCC-B-FFFF5F 227 #MCC-B-FFFF87 228 #MCC-B-FFFFAF 229 #MCC-B-FFFFD7 230 #MCC-B-FFFFFF 231 #MCC-X-000000 |       " ansi_type @ mcc_convert
+      "       | #MCC-B-080808 232 #MCC-B-121212 233 #MCC-B-1C1C1C 234 #MCC-B-262626 235 #MCC-B-303030 236 #MCC-B-3A3A3A 237 #MCC-B-444444 238 #MCC-B-4E4E4E 239 #MCC-B-585858 240 #MCC-B-626262 241 #MCC-B-6C6C6C 242 #MCC-B-767676 243 #MCC-X-000000 |       " ansi_type @ mcc_convert
+      "       | #MCC-B-808080 244 #MCC-B-8A8A8A 245 #MCC-B-949494 246 #MCC-B-9E9E9E 247 #MCC-B-A8A8A8 248 #MCC-B-B2B2B2 249 #MCC-B-BCBCBC 250 #MCC-B-C6C6C6 251 #MCC-B-D0D0D0 252 #MCC-B-DADADA 253 #MCC-B-E4E4E4 254 #MCC-B-EEEEEE 255 #MCC-X-000000 |       " ansi_type @ mcc_convert
+      "       +--------------------------------------------------------------+       "
+      "                                                                              "
+      "This is the ANSI 256 color mode, and it's largely well supported by MUD       "
+      "clients. For color accuracy reasons, the first 16 colors are not used, so     "
+      "there are 240 possible colors.                                                "
+      "                                                                              "
+      "The box above contains every available color. You should see that each one of "
+      "them is a different color, distinct from any of the others.                   "
+    }list exit
+  then
+  ansi_type @ "ANSI-24BIT" = if
+    {
+      "     +--------------------------- ANSI-24BIT ---------------------------+     "
+      "     | #MCC-B-000000 #MCC-B-040000 #MCC-B-080000 #MCC-B-0C0000 #MCC-B-100000 #MCC-B-140000 #MCC-B-180000 #MCC-B-1C0000 #MCC-B-200000 #MCC-B-240000 #MCC-B-280000 #MCC-B-2C0000 #MCC-B-300000 #MCC-B-340000 #MCC-B-380000 #MCC-B-3C0000 #MCC-B-400000 #MCC-B-440000 #MCC-B-480000 #MCC-B-4C0000 #MCC-B-500000 #MCC-B-540000 #MCC-B-580000 #MCC-B-5C0000 #MCC-B-600000 #MCC-B-640000 #MCC-B-680000 #MCC-B-6C0000 #MCC-B-700000 #MCC-B-740000 #MCC-B-780000 #MCC-B-7C0000 #MCC-B-800000 #MCC-B-840000 #MCC-B-880000 #MCC-B-8C0000 #MCC-B-900000 #MCC-B-940000 #MCC-B-980000 #MCC-B-9C0000 #MCC-B-A00000 #MCC-B-A40000 #MCC-B-A80000 #MCC-B-AC0000 #MCC-B-B00000 #MCC-B-B40000 #MCC-B-B80000 #MCC-B-BC0000 #MCC-B-C00000 #MCC-B-C40000 #MCC-B-C80000 #MCC-B-CC0000 #MCC-B-D00000 #MCC-B-D40000 #MCC-B-D80000 #MCC-B-DC0000 #MCC-B-E00000 #MCC-B-E40000 #MCC-B-E80000 #MCC-B-EC0000 #MCC-B-F00000 #MCC-B-F40000 #MCC-B-F80000 #MCC-B-FC0000 #MCC-X-000000 |     " ansi_type @ mcc_convert
+      "     | #MCC-B-010000 #MCC-B-050000 #MCC-B-090000 #MCC-B-0D0000 #MCC-B-110000 #MCC-B-150000 #MCC-B-190000 #MCC-B-1D0000 #MCC-B-210000 #MCC-B-250000 #MCC-B-290000 #MCC-B-2D0000 #MCC-B-310000 #MCC-B-350000 #MCC-B-390000 #MCC-B-3D0000 #MCC-B-410000 #MCC-B-450000 #MCC-B-490000 #MCC-B-4D0000 #MCC-B-510000 #MCC-B-550000 #MCC-B-590000 #MCC-B-5D0000 #MCC-B-610000 #MCC-B-650000 #MCC-B-690000 #MCC-B-6D0000 #MCC-B-710000 #MCC-B-750000 #MCC-B-790000 #MCC-B-7D0000 #MCC-B-810000 #MCC-B-850000 #MCC-B-890000 #MCC-B-8D0000 #MCC-B-910000 #MCC-B-950000 #MCC-B-990000 #MCC-B-9D0000 #MCC-B-A10000 #MCC-B-A50000 #MCC-B-A90000 #MCC-B-AD0000 #MCC-B-B10000 #MCC-B-B50000 #MCC-B-B90000 #MCC-B-BD0000 #MCC-B-C10000 #MCC-B-C50000 #MCC-B-C90000 #MCC-B-CD0000 #MCC-B-D10000 #MCC-B-D50000 #MCC-B-D90000 #MCC-B-DD0000 #MCC-B-E10000 #MCC-B-E50000 #MCC-B-E90000 #MCC-B-ED0000 #MCC-B-F10000 #MCC-B-F50000 #MCC-B-F90000 #MCC-B-FD0000 #MCC-X-000000 |     " ansi_type @ mcc_convert
+      "     | #MCC-B-020000 #MCC-B-060000 #MCC-B-0A0000 #MCC-B-0E0000 #MCC-B-120000 #MCC-B-160000 #MCC-B-1A0000 #MCC-B-1E0000 #MCC-B-220000 #MCC-B-260000 #MCC-B-2A0000 #MCC-B-2E0000 #MCC-B-320000 #MCC-B-360000 #MCC-B-3A0000 #MCC-B-3E0000 #MCC-B-420000 #MCC-B-460000 #MCC-B-4A0000 #MCC-B-4E0000 #MCC-B-520000 #MCC-B-560000 #MCC-B-5A0000 #MCC-B-5E0000 #MCC-B-620000 #MCC-B-660000 #MCC-B-6A0000 #MCC-B-6E0000 #MCC-B-720000 #MCC-B-760000 #MCC-B-7A0000 #MCC-B-7E0000 #MCC-B-820000 #MCC-B-860000 #MCC-B-8A0000 #MCC-B-8E0000 #MCC-B-920000 #MCC-B-960000 #MCC-B-9A0000 #MCC-B-9E0000 #MCC-B-A20000 #MCC-B-A60000 #MCC-B-AA0000 #MCC-B-AE0000 #MCC-B-B20000 #MCC-B-B60000 #MCC-B-BA0000 #MCC-B-BE0000 #MCC-B-C20000 #MCC-B-C60000 #MCC-B-CA0000 #MCC-B-CE0000 #MCC-B-D20000 #MCC-B-D60000 #MCC-B-DA0000 #MCC-B-DE0000 #MCC-B-E20000 #MCC-B-E60000 #MCC-B-EA0000 #MCC-B-EE0000 #MCC-B-F20000 #MCC-B-F60000 #MCC-B-FA0000 #MCC-B-FE0000 #MCC-X-000000 |     " ansi_type @ mcc_convert
+      "     | #MCC-B-030000 #MCC-B-070000 #MCC-B-0B0000 #MCC-B-0F0000 #MCC-B-130000 #MCC-B-170000 #MCC-B-1B0000 #MCC-B-1F0000 #MCC-B-230000 #MCC-B-270000 #MCC-B-2B0000 #MCC-B-2F0000 #MCC-B-330000 #MCC-B-370000 #MCC-B-3B0000 #MCC-B-3F0000 #MCC-B-430000 #MCC-B-470000 #MCC-B-4B0000 #MCC-B-4F0000 #MCC-B-530000 #MCC-B-570000 #MCC-B-5B0000 #MCC-B-5F0000 #MCC-B-630000 #MCC-B-670000 #MCC-B-6B0000 #MCC-B-6F0000 #MCC-B-730000 #MCC-B-770000 #MCC-B-7B0000 #MCC-B-7F0000 #MCC-B-830000 #MCC-B-870000 #MCC-B-8B0000 #MCC-B-8F0000 #MCC-B-930000 #MCC-B-970000 #MCC-B-9B0000 #MCC-B-9F0000 #MCC-B-A30000 #MCC-B-A70000 #MCC-B-AB0000 #MCC-B-AF0000 #MCC-B-B30000 #MCC-B-B70000 #MCC-B-BB0000 #MCC-B-BF0000 #MCC-B-C30000 #MCC-B-C70000 #MCC-B-CB0000 #MCC-B-CF0000 #MCC-B-D30000 #MCC-B-D70000 #MCC-B-DB0000 #MCC-B-DF0000 #MCC-B-E30000 #MCC-B-E70000 #MCC-B-EB0000 #MCC-B-EF0000 #MCC-B-F30000 #MCC-B-F70000 #MCC-B-FB0000 #MCC-B-FF0000 #MCC-X-000000 |     " ansi_type @ mcc_convert
+      "     | #MCC-B-000000 #MCC-B-000400 #MCC-B-000800 #MCC-B-000C00 #MCC-B-001000 #MCC-B-001400 #MCC-B-001800 #MCC-B-001C00 #MCC-B-002000 #MCC-B-002400 #MCC-B-002800 #MCC-B-002C00 #MCC-B-003000 #MCC-B-003400 #MCC-B-003800 #MCC-B-003C00 #MCC-B-004000 #MCC-B-004400 #MCC-B-004800 #MCC-B-004C00 #MCC-B-005000 #MCC-B-005400 #MCC-B-005800 #MCC-B-005C00 #MCC-B-006000 #MCC-B-006400 #MCC-B-006800 #MCC-B-006C00 #MCC-B-007000 #MCC-B-007400 #MCC-B-007800 #MCC-B-007C00 #MCC-B-008000 #MCC-B-008400 #MCC-B-008800 #MCC-B-008C00 #MCC-B-009000 #MCC-B-009400 #MCC-B-009800 #MCC-B-009C00 #MCC-B-00A000 #MCC-B-00A400 #MCC-B-00A800 #MCC-B-00AC00 #MCC-B-00B000 #MCC-B-00B400 #MCC-B-00B800 #MCC-B-00BC00 #MCC-B-00C000 #MCC-B-00C400 #MCC-B-00C800 #MCC-B-00CC00 #MCC-B-00D000 #MCC-B-00D400 #MCC-B-00D800 #MCC-B-00DC00 #MCC-B-00E000 #MCC-B-00E400 #MCC-B-00E800 #MCC-B-00EC00 #MCC-B-00F000 #MCC-B-00F400 #MCC-B-00F800 #MCC-B-00FC00 #MCC-X-000000 |     " ansi_type @ mcc_convert
+      "     | #MCC-B-000100 #MCC-B-000500 #MCC-B-000900 #MCC-B-000D00 #MCC-B-001100 #MCC-B-001500 #MCC-B-001900 #MCC-B-001D00 #MCC-B-002100 #MCC-B-002500 #MCC-B-002900 #MCC-B-002D00 #MCC-B-003100 #MCC-B-003500 #MCC-B-003900 #MCC-B-003D00 #MCC-B-004100 #MCC-B-004500 #MCC-B-004900 #MCC-B-004D00 #MCC-B-005100 #MCC-B-005500 #MCC-B-005900 #MCC-B-005D00 #MCC-B-006100 #MCC-B-006500 #MCC-B-006900 #MCC-B-006D00 #MCC-B-007100 #MCC-B-007500 #MCC-B-007900 #MCC-B-007D00 #MCC-B-008100 #MCC-B-008500 #MCC-B-008900 #MCC-B-008D00 #MCC-B-009100 #MCC-B-009500 #MCC-B-009900 #MCC-B-009D00 #MCC-B-00A100 #MCC-B-00A500 #MCC-B-00A900 #MCC-B-00AD00 #MCC-B-00B100 #MCC-B-00B500 #MCC-B-00B900 #MCC-B-00BD00 #MCC-B-00C100 #MCC-B-00C500 #MCC-B-00C900 #MCC-B-00CD00 #MCC-B-00D100 #MCC-B-00D500 #MCC-B-00D900 #MCC-B-00DD00 #MCC-B-00E100 #MCC-B-00E500 #MCC-B-00E900 #MCC-B-00ED00 #MCC-B-00F100 #MCC-B-00F500 #MCC-B-00F900 #MCC-B-00FD00 #MCC-X-000000 |     " ansi_type @ mcc_convert
+      "     | #MCC-B-000200 #MCC-B-000600 #MCC-B-000A00 #MCC-B-000E00 #MCC-B-001200 #MCC-B-001600 #MCC-B-001A00 #MCC-B-001E00 #MCC-B-002200 #MCC-B-002600 #MCC-B-002A00 #MCC-B-002E00 #MCC-B-003200 #MCC-B-003600 #MCC-B-003A00 #MCC-B-003E00 #MCC-B-004200 #MCC-B-004600 #MCC-B-004A00 #MCC-B-004E00 #MCC-B-005200 #MCC-B-005600 #MCC-B-005A00 #MCC-B-005E00 #MCC-B-006200 #MCC-B-006600 #MCC-B-006A00 #MCC-B-006E00 #MCC-B-007200 #MCC-B-007600 #MCC-B-007A00 #MCC-B-007E00 #MCC-B-008200 #MCC-B-008600 #MCC-B-008A00 #MCC-B-008E00 #MCC-B-009200 #MCC-B-009600 #MCC-B-009A00 #MCC-B-009E00 #MCC-B-00A200 #MCC-B-00A600 #MCC-B-00AA00 #MCC-B-00AE00 #MCC-B-00B200 #MCC-B-00B600 #MCC-B-00BA00 #MCC-B-00BE00 #MCC-B-00C200 #MCC-B-00C600 #MCC-B-00CA00 #MCC-B-00CE00 #MCC-B-00D200 #MCC-B-00D600 #MCC-B-00DA00 #MCC-B-00DE00 #MCC-B-00E200 #MCC-B-00E600 #MCC-B-00EA00 #MCC-B-00EE00 #MCC-B-00F200 #MCC-B-00F600 #MCC-B-00FA00 #MCC-B-00FE00 #MCC-X-000000 |     " ansi_type @ mcc_convert
+      "     | #MCC-B-000300 #MCC-B-000700 #MCC-B-000B00 #MCC-B-000F00 #MCC-B-001300 #MCC-B-001700 #MCC-B-001B00 #MCC-B-001F00 #MCC-B-002300 #MCC-B-002700 #MCC-B-002B00 #MCC-B-002F00 #MCC-B-003300 #MCC-B-003700 #MCC-B-003B00 #MCC-B-003F00 #MCC-B-004300 #MCC-B-004700 #MCC-B-004B00 #MCC-B-004F00 #MCC-B-005300 #MCC-B-005700 #MCC-B-005B00 #MCC-B-005F00 #MCC-B-006300 #MCC-B-006700 #MCC-B-006B00 #MCC-B-006F00 #MCC-B-007300 #MCC-B-007700 #MCC-B-007B00 #MCC-B-007F00 #MCC-B-008300 #MCC-B-008700 #MCC-B-008B00 #MCC-B-008F00 #MCC-B-009300 #MCC-B-009700 #MCC-B-009B00 #MCC-B-009F00 #MCC-B-00A300 #MCC-B-00A700 #MCC-B-00AB00 #MCC-B-00AF00 #MCC-B-00B300 #MCC-B-00B700 #MCC-B-00BB00 #MCC-B-00BF00 #MCC-B-00C300 #MCC-B-00C700 #MCC-B-00CB00 #MCC-B-00CF00 #MCC-B-00D300 #MCC-B-00D700 #MCC-B-00DB00 #MCC-B-00DF00 #MCC-B-00E300 #MCC-B-00E700 #MCC-B-00EB00 #MCC-B-00EF00 #MCC-B-00F300 #MCC-B-00F700 #MCC-B-00FB00 #MCC-B-00FF00 #MCC-X-000000 |     " ansi_type @ mcc_convert
+      "     | #MCC-B-000000 #MCC-B-000004 #MCC-B-000008 #MCC-B-00000C #MCC-B-000010 #MCC-B-000014 #MCC-B-000018 #MCC-B-00001C #MCC-B-000020 #MCC-B-000024 #MCC-B-000028 #MCC-B-00002C #MCC-B-000030 #MCC-B-000034 #MCC-B-000038 #MCC-B-00003C #MCC-B-000040 #MCC-B-000044 #MCC-B-000048 #MCC-B-00004C #MCC-B-000050 #MCC-B-000054 #MCC-B-000058 #MCC-B-00005C #MCC-B-000060 #MCC-B-000064 #MCC-B-000068 #MCC-B-00006C #MCC-B-000070 #MCC-B-000074 #MCC-B-000078 #MCC-B-00007C #MCC-B-000080 #MCC-B-000084 #MCC-B-000088 #MCC-B-00008C #MCC-B-000090 #MCC-B-000094 #MCC-B-000098 #MCC-B-00009C #MCC-B-0000A0 #MCC-B-0000A4 #MCC-B-0000A8 #MCC-B-0000AC #MCC-B-0000B0 #MCC-B-0000B4 #MCC-B-0000B8 #MCC-B-0000BC #MCC-B-0000C0 #MCC-B-0000C4 #MCC-B-0000C8 #MCC-B-0000CC #MCC-B-0000D0 #MCC-B-0000D4 #MCC-B-0000D8 #MCC-B-0000DC #MCC-B-0000E0 #MCC-B-0000E4 #MCC-B-0000E8 #MCC-B-0000EC #MCC-B-0000F0 #MCC-B-0000F4 #MCC-B-0000F8 #MCC-B-0000FC #MCC-X-000000 |     " ansi_type @ mcc_convert
+      "     | #MCC-B-000001 #MCC-B-000005 #MCC-B-000009 #MCC-B-00000D #MCC-B-000011 #MCC-B-000015 #MCC-B-000019 #MCC-B-00001D #MCC-B-000021 #MCC-B-000025 #MCC-B-000029 #MCC-B-00002D #MCC-B-000031 #MCC-B-000035 #MCC-B-000039 #MCC-B-00003D #MCC-B-000041 #MCC-B-000045 #MCC-B-000049 #MCC-B-00004D #MCC-B-000051 #MCC-B-000055 #MCC-B-000059 #MCC-B-00005D #MCC-B-000061 #MCC-B-000065 #MCC-B-000069 #MCC-B-00006D #MCC-B-000071 #MCC-B-000075 #MCC-B-000079 #MCC-B-00007D #MCC-B-000081 #MCC-B-000085 #MCC-B-000089 #MCC-B-00008D #MCC-B-000091 #MCC-B-000095 #MCC-B-000099 #MCC-B-00009D #MCC-B-0000A1 #MCC-B-0000A5 #MCC-B-0000A9 #MCC-B-0000AD #MCC-B-0000B1 #MCC-B-0000B5 #MCC-B-0000B9 #MCC-B-0000BD #MCC-B-0000C1 #MCC-B-0000C5 #MCC-B-0000C9 #MCC-B-0000CD #MCC-B-0000D1 #MCC-B-0000D5 #MCC-B-0000D9 #MCC-B-0000DD #MCC-B-0000E1 #MCC-B-0000E5 #MCC-B-0000E9 #MCC-B-0000ED #MCC-B-0000F1 #MCC-B-0000F5 #MCC-B-0000F9 #MCC-B-0000FD #MCC-X-000000 |     " ansi_type @ mcc_convert
+      "     | #MCC-B-000002 #MCC-B-000006 #MCC-B-00000A #MCC-B-00000E #MCC-B-000012 #MCC-B-000016 #MCC-B-00001A #MCC-B-00001E #MCC-B-000022 #MCC-B-000026 #MCC-B-00002A #MCC-B-00002E #MCC-B-000032 #MCC-B-000036 #MCC-B-00003A #MCC-B-00003E #MCC-B-000042 #MCC-B-000046 #MCC-B-00004A #MCC-B-00004E #MCC-B-000052 #MCC-B-000056 #MCC-B-00005A #MCC-B-00005E #MCC-B-000062 #MCC-B-000066 #MCC-B-00006A #MCC-B-00006E #MCC-B-000072 #MCC-B-000076 #MCC-B-00007A #MCC-B-00007E #MCC-B-000082 #MCC-B-000086 #MCC-B-00008A #MCC-B-00008E #MCC-B-000092 #MCC-B-000096 #MCC-B-00009A #MCC-B-00009E #MCC-B-0000A2 #MCC-B-0000A6 #MCC-B-0000AA #MCC-B-0000AE #MCC-B-0000B2 #MCC-B-0000B6 #MCC-B-0000BA #MCC-B-0000BE #MCC-B-0000C2 #MCC-B-0000C6 #MCC-B-0000CA #MCC-B-0000CE #MCC-B-0000D2 #MCC-B-0000D6 #MCC-B-0000DA #MCC-B-0000DE #MCC-B-0000E2 #MCC-B-0000E6 #MCC-B-0000EA #MCC-B-0000EE #MCC-B-0000F2 #MCC-B-0000F6 #MCC-B-0000FA #MCC-B-0000FE #MCC-X-000000 |     " ansi_type @ mcc_convert
+      "     | #MCC-B-000003 #MCC-B-000007 #MCC-B-00000B #MCC-B-00000F #MCC-B-000013 #MCC-B-000017 #MCC-B-00001B #MCC-B-00001F #MCC-B-000023 #MCC-B-000027 #MCC-B-00002B #MCC-B-00002F #MCC-B-000033 #MCC-B-000037 #MCC-B-00003B #MCC-B-00003F #MCC-B-000043 #MCC-B-000047 #MCC-B-00004B #MCC-B-00004F #MCC-B-000053 #MCC-B-000057 #MCC-B-00005B #MCC-B-00005F #MCC-B-000063 #MCC-B-000067 #MCC-B-00006B #MCC-B-00006F #MCC-B-000073 #MCC-B-000077 #MCC-B-00007B #MCC-B-00007F #MCC-B-000083 #MCC-B-000087 #MCC-B-00008B #MCC-B-00008F #MCC-B-000093 #MCC-B-000097 #MCC-B-00009B #MCC-B-00009F #MCC-B-0000A3 #MCC-B-0000A7 #MCC-B-0000AB #MCC-B-0000AF #MCC-B-0000B3 #MCC-B-0000B7 #MCC-B-0000BB #MCC-B-0000BF #MCC-B-0000C3 #MCC-B-0000C7 #MCC-B-0000CB #MCC-B-0000CF #MCC-B-0000D3 #MCC-B-0000D7 #MCC-B-0000DB #MCC-B-0000DF #MCC-B-0000E3 #MCC-B-0000E7 #MCC-B-0000EB #MCC-B-0000EF #MCC-B-0000F3 #MCC-B-0000F7 #MCC-B-0000FB #MCC-B-0000FF #MCC-X-000000 |     " ansi_type @ mcc_convert
+      "     +------------------------------------------------------------------+     "
+      "                                                                              "
+      "This is True-Color ANSI mode, and represents the full gamut of colors         "
+      "available on modern displays. Sadly, this encoding is not well supported by   "
+      "MUD clients, but it's the ultimate color accuracy option and is recommended   "
+      "if available.                                                                 "
+      "                                                                              "
+      "The box above contains three bands of color, representing a small fraction of "
+      "the colors available in this mode, which appear as a smooth gradient with dark"
+      "on the left, and bright on the right. It should not contain any 'banding' of  "
+      "colors where there are sharp changes in hue or intensity. If it does, or your "
+      "client doesn't display it correctly at all, then you are not using true 24-bit"
+      "color mode, and you should select a different encoding.                       "
+    }list exit
+  then
+  "Invalid ANSI type." abort
+;
+PUBLIC M-LIB-COLOR-testpattern
+$LIBDEF M-LIB-COLOR-testpattern
+
+(* TODO: A player property for which encoding they use *)
+(* TODO: Convenience calls like .mcc_transcode .mcc_tell .mcc_otell .mcc_notify .mcc_connotify .mcc_escape .mcc_strip .mcc_strlen *)
 
 (* ------------------------------------------------------------------------ *)
 
