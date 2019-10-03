@@ -484,8 +484,8 @@ lvar ourMorphPropTable
       "Sex" "gender_prop" sysparm
       "Character attribute information" "_attr"
       "Say/pose configuration" "_config/say"
-      "Morph 'Message'" "_config/morph_mesg"
-      "Morph 'OMessage'" "_config/morph_omesg"
+      "Morph 'Message'" "_morph_mesg"
+      "Morph 'OMessage'" "_morph_omesg"
     }dict ourMorphPropTable !
   then
 
@@ -1076,7 +1076,7 @@ lvar ourMorphPropTable
  
     { "1"
       "~&060[~&1601~&060] Morph Message:  ~&140%s"
-      'getStr     { "_config/morph_mesg" "~&040[Unset]~&R" }list
+      'getStr     { "_morph_mesg" "~&040[Unset]~&R" }list
  
       {
         "This message is displayed to you when you change to this morph.  (with the 'morph' command only)"
@@ -1084,7 +1084,7 @@ lvar ourMorphPropTable
         ""
         "Please enter your morph message:"
       }list "\r" array_join
-      'setStr     { "_config/morph_mesg" }list
+      'setStr     { "_morph_mesg" }list
     }list
  
     { "2"
