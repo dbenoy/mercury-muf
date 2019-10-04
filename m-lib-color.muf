@@ -171,7 +171,7 @@ $PRAGMA comment_recurse
 (*                                                                           *)
 (*   That way it's up to you whether you prefer the XTERM or the VGA color   *)
 (*   palette when you're creating your MCC strings. Just use the color codes *)
-(*   you want from the list below, and older clients of both types of client *)
+(*   you want from the list below, and older clients using either palette    *)
 (*   should still see the full gamut of 16 colors.                           *)
 (*                                                                           *)
 (*   Also, the color space conversion can be a (relatively) slow operation,  *)
@@ -495,8 +495,8 @@ $def ENCODING_PROP "_config/color/type"
 
 $def CODE_TYPE_FOREGROUND "#"
 $def CODE_TYPE_BACKGROUND "*"
-$def CODE_TYPE_FOREGROUND_AT ">"
-$def CODE_TYPE_BACKGROUND_AT "<"
+$def CODE_TYPE_FOREGROUND_AT "<"
+$def CODE_TYPE_BACKGROUND_AT ">"
 $def CODE_TYPE_SPECIAL "!"
 
 $define CODE_TYPE_VALID
