@@ -111,7 +111,7 @@ $include $m/lib/color
     "@COLOR"
     "  Display your current color text settings."
     " "
-    "@COLOR #TEST"
+    "@COLOR #SETUP"
     "  Enter a color test dialog that helps you configure your color text settings."
     " "
     "@COLOR #SET <type>"
@@ -119,7 +119,7 @@ $include $m/lib/color
   }tell
 ;
 
-: cmd_test ( s -- )
+: cmd_setup ( s -- )
   pop
 
   me @ "COLOR" flag? var! had_color
@@ -176,64 +176,18 @@ $include $m/lib/color
 ;
 
 : main ( s --  )
-
   " " split
   strip var! args
   strip var! option
   option @ if
     "#HELP" option @ stringcmp not if args @ cmd_help exit then
-    "#TEST" option @ stringcmp not if args @ cmd_test exit then
+    "#SETUP" option @ stringcmp not if args @ cmd_setup exit then
     "#SET"  option @ stringcmp not if args @ cmd_set exit then
   else
     info
     " " .tell
   then
   "See @color #help" 85 85 255 0 18 0 0 text_gradient " for options." 85 85 255 0 18 0 1 text_gradient strcat .color_tell
-
-  exit
-
-  ( "ANSI-3BIT-VGA" M-LIB-COLOR-testpattern { me @ }list array_notify )
-  ( "ANSI-3BIT-XTERM" M-LIB-COLOR-testpattern { me @ }list array_notify )
-  ( "ANSI-4BIT-VGA" M-LIB-COLOR-testpattern { me @ }list array_notify )
-  ( "ANSI-4BIT-XTERM" M-LIB-COLOR-testpattern { me @ }list array_notify )
-  ( "ANSI-8BIT" M-LIB-COLOR-testpattern { me @ }list array_notify )
-  ( "ANSI-24BIT" M-LIB-COLOR-testpattern { me @ }list array_notify )
-  ( exit )
-
-  ( { "#MCC-F-808080" "#MCC-F-AA5500" }list )
-  {
-    "#MCC-F-000000" "#MCC-F-800000" "#MCC-F-008000" "#MCC-F-808000" "#MCC-F-000080" "#MCC-F-800080" "#MCC-F-008080" "#MCC-F-C0C0C0"
-    "#MCC-F-808080" "#MCC-F-FF0000" "#MCC-F-00FF00" "#MCC-F-FFFF00" "#MCC-F-0000FF" "#MCC-F-FF00FF" "#MCC-F-00FFFF" "#MCC-F-FFFFFF"
-    "#MCC-F-000000" "#MCC-F-AA0000" "#MCC-F-00AA00" "#MCC-F-AA5500" "#MCC-F-0000AA" "#MCC-F-AA00AA" "#MCC-F-00AAAA" "#MCC-F-AAAAAA"
-    "#MCC-F-555555" "#MCC-F-FF5555" "#MCC-F-55FF55" "#MCC-F-FFFF55" "#MCC-F-5555FF" "#MCC-F-FF55FF" "#MCC-F-55FFFF" "#MCC-F-FFFFFF"
-    "#MCC-B-000000" "#MCC-B-800000" "#MCC-B-008000" "#MCC-B-808000" "#MCC-B-000080" "#MCC-B-800080" "#MCC-B-008080" "#MCC-B-C0C0C0"
-    "#MCC-B-808080" "#MCC-B-FF0000" "#MCC-B-00FF00" "#MCC-B-FFFF00" "#MCC-B-0000FF" "#MCC-B-FF00FF" "#MCC-B-00FFFF" "#MCC-B-FFFFFF"
-    "#MCC-B-000000" "#MCC-B-AA0000" "#MCC-B-00AA00" "#MCC-B-AA5500" "#MCC-B-0000AA" "#MCC-B-AA00AA" "#MCC-B-00AAAA" "#MCC-B-AAAAAA"
-    "#MCC-B-555555" "#MCC-B-FF5555" "#MCC-B-55FF55" "#MCC-B-FFFF55" "#MCC-B-5555FF" "#MCC-B-FF55FF" "#MCC-B-55FFFF" "#MCC-B-FFFFFF"
-  }list
-  foreach
-    nip
-    "TEST" strcat var! translate_me
-    "----" .tell
-    translate_me @ tell
-    { "3-bit (VGA): \"" translate_me @ "MCC" "ANSI-3BIT-VGA" M-LIB-COLOR-transcode "\"" }join .tell
-    { "3-bit (XTerm): \"" translate_me @ "MCC" "ANSI-3BIT-XTERM" M-LIB-COLOR-transcode "\"" }join .tell
-    { "4-bit (VGA): \"" translate_me @ "MCC" "ANSI-4BIT-VGA" M-LIB-COLOR-transcode "\"" }join .tell
-    { "4-bit (XTerm): \"" translate_me @ "MCC" "ANSI-4BIT-XTERM" M-LIB-COLOR-transcode "\"" }join .tell
-    { "8-bit: \"" translate_me @ "MCC" "ANSI-8BIT" M-LIB-COLOR-transcode "\"" }join .tell
-    { "24-bit: \"" translate_me @ "MCC" "ANSI-24BIT" M-LIB-COLOR-transcode "\"" }join .tell
-(
-    { "3-bit (VGA): \"" translate_me @ "MCC" "ANSI-3BIT-VGA" M-LIB-COLOR-transcode "\\[" "\[" subst "\" -> "\"" translate_me @ "MCC" "ANSI-3BIT-VGA" M-LIB-COLOR-transcode "\"" }join .tell
-    { "3-bit (XTerm): \"" translate_me @ "MCC" "ANSI-3BIT-XTERM" M-LIB-COLOR-transcode "\\[" "\[" subst "\" -> "\"" translate_me @ "MCC" "ANSI-3BIT-XTERM" M-LIB-COLOR-transcode "\"" }join .tell
-    { "4-bit (VGA): \"" translate_me @ "MCC" "ANSI-4BIT-VGA" M-LIB-COLOR-transcode "\\[" "\[" subst "\" -> "\"" translate_me @ "MCC" "ANSI-4BIT-VGA" M-LIB-COLOR-transcode "\"" }join .tell
-    { "4-bit (XTerm): \"" translate_me @ "MCC" "ANSI-4BIT-XTERM" M-LIB-COLOR-transcode "\\[" "\[" subst "\" -> "\"" translate_me @ "MCC" "ANSI-4BIT-XTERM" M-LIB-COLOR-transcode "\"" }join .tell
-    { "8-bit: \"" translate_me @ "MCC" "ANSI-8BIT" M-LIB-COLOR-transcode "\\[" "\[" subst "\" -> "\"" translate_me @ "MCC" "ANSI-8BIT" M-LIB-COLOR-transcode "\"" }join .tell
-    { "24-bit: \"" translate_me @ "MCC" "ANSI-24BIT" M-LIB-COLOR-transcode "\\[" "\[" subst "\" -> "\"" translate_me @ "MCC" "ANSI-24BIT" M-LIB-COLOR-transcode "\"" }join .tell
-    { "Stripped: \"" translate_me @ "MCC" "NOCOLOR" M-LIB-COLOR-transcode "\\[" "\[" subst "\" -> "\"" translate_me @ "MCC" "NOCOLOR" M-LIB-COLOR-transcode "\"" }join .tell
-    { "Escaped: \"" translate_me @ "NOCOLOR" "MCC" M-LIB-COLOR-transcode "\\[" "\[" subst "\" -> "\"" translate_me @ "NOCOLOR" "MCC" M-LIB-COLOR-transcode "\"" }join .tell
-)
-    "----" .tell
-  repeat
 ;
 .
 c
