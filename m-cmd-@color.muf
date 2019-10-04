@@ -70,7 +70,7 @@ $include $m/lib/color
       color_me @ 1 strcut color_me !
     then
     (* Colorize the character *)
-    { "#MCC-F-" red @ itox2 green @ itox2 blue @ itox2 }join swap strcat
+    { "[#" red @ itox2 green @ itox2 blue @ itox2 "]" }join swap strcat
     (* Concatinate the character with retval *)
     reverse @ if
       retval @ strcat retval !
@@ -95,14 +95,14 @@ $include $m/lib/color
 
 : info ( -- )
   {
-    { "Current Color Encoding: " 85 85 255 0 15 0 0 text_gradient "#MCC-F-BBBBBB" me @ M-LIB-COLOR-encoding_get }join .color_transcode
+    { "Current Color Encoding: " 85 85 255 0 15 0 0 text_gradient "[#BBBBBB]" me @ M-LIB-COLOR-encoding_get }join .color_transcode
     " "
     "Available Encodings: " 85 85 255 0 15 0 0 text_gradient .color_transcode
     M-LIB-COLOR-encoding_player_valid foreach
       nip
-      { "  #MCC-F-BBBBBB" rot }join .color_transcode
+      { "  [#BBBBBB]" rot }join .color_transcode
     repeat
-    "  #MCC-F-BBBBBBNOCOLOR" .color_transcode
+    "  [#BBBBBB]NOCOLOR" .color_transcode
   }tell
 ;
 
@@ -160,7 +160,7 @@ $include $m/lib/color
   dup 1 array_make M-LIB-COLOR-encoding_player_valid array_intersect not if
     " " .tell
     dup if
-      "#MCC-F-BBBBBB" swap strcat "Encoding '' unknown." 255 85 85 0 0 15 0 text_gradient 10 .color_strcut rot swap strcat strcat .color_tell
+      "[#BBBBBB]" swap strcat "Encoding '' unknown." 255 85 85 0 0 15 0 text_gradient 10 .color_strcut rot swap strcat strcat .color_tell
     else
       pop "Please specify an encoding." 255 85 85 0 0 15 0 text_gradient .color_tell
     then
