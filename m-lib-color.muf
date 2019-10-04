@@ -1126,6 +1126,21 @@ lvar ansi_table_3bit_xterm_rgb
   { "[INVALID #MCC V" .version " CODE - UNKNOWN TYPE " code_type @ " ]" }join
 ;
 
+(* Take an MCC code sequence tag at the start of a string and parse it. *)
+: mcc_tagparse[ str:check_string -- str:code_type str:code_value str:post_code ]
+  check_string @
+  5 strcut swap var! code_mcc
+  1 strcut swap var! code_type
+  1 strcut swap var! code_dash
+  6 strcut swap var! code_value
+  var! post_code
+  code_mcc @ "#MCC-" = code_type @ ctoi "A" ctoi >= and code_type @ ctoi "Z" ctoi <= and code_dash @ "-" = and code_value @ strlen 6 = and code_value @ hex? and if
+    code_type @ code_value @ post_code @ exit
+  else
+    "" "" "" exit
+  then
+;
+
 (* Convert an entire MCC sequence to another encoding *)
 : mcc_convert[ str:source_string str:to_type -- str:result_string ]
   to_type @ "X" "000000" mcc_seq var! color_reset
@@ -1137,33 +1152,16 @@ lvar ansi_table_3bit_xterm_rgb
   source_string @ "#MCC-" split swap var! retval
   "#MCC-" explode_array foreach
     nip
-    1 strcut swap var! code_type
-    1 strcut swap var! code_dash
-    6 strcut swap var! code_value
-    var! post_code
-    code_type @ ctoi "A" ctoi >= code_type @ ctoi "Z" ctoi <= and code_dash @ "-" = and code_value @ strlen 6 = and code_value @ hex? and if
-      { retval @ to_type @ code_type @ code_value @ mcc_seq post_code @ }join retval !
+    "#MCC-" swap strcat
+    dup mcc_tagparse var! post_code var! code_value var! code_type
+    code_type @ code_value @ and if
+      pop { retval @ to_type @ code_type @ code_value @ mcc_seq post_code @ }join retval !
     else
-      { retval @ "#MCC-" code_type @ code_dash @ code_value @ post_code @ }join retval !
+      retval @ swap strcat retval !
     then
   repeat
 
   { color_reset @ retval @ color_reset @ }join
-;
-
-(* Take an MCC code sequence tag at the start of a string and parse it. *)
-: mcc_tagparse[ str:check_string -- str:code_type str:code_value ]
-  check_string @
-  5 strcut swap var! code_mcc
-  1 strcut swap var! code_type
-  1 strcut swap var! code_dash
-  6 strcut swap var! code_value
-  pop
-  code_mcc @ "#MCC-" = code_type @ ctoi "A" ctoi >= and code_type @ ctoi "Z" ctoi <= and code_dash @ "-" = and code_value @ strlen 6 = and code_value @ hex? and if
-    code_type @ code_value @ exit
-  else
-    "" "" exit
-  then
 ;
 
 : mcc_strcut[ str:source_string str:split_point -- str:result_string ]
@@ -1177,22 +1175,20 @@ lvar ansi_table_3bit_xterm_rgb
   0 var! place_in_string_without_codes
   begin
     source_string @ place_in_string @ strcut nip var! remaining_string
-    remaining_string @ mcc_tagparse dup if
+    remaining_string @ mcc_tagparse var! post_code var! code_value var! code_type
+    code_type @ code_value @ and if
       (* We're currently at the start of a code. Take note of the code and advance our position to the end of the code. *)
-      pop dup "F" = over "B" = or if
-        remaining_string @ 13 strcut pop swap
-        "F" = if
+      code_type @ "F" = code_type @ "B" = or if
+        { "#MCC-" code_type @ "-" code_value @ }join
+        code_type @ "F" = if
           foreground_code !
         else
           background_code !
         then
-      else
-        pop pop
       then
-      place_in_string @ 13 + place_in_string !
+      source_string @ strlen post_code @ strlen - place_in_string !
     else
       (* We're not currently in a code. Check how long this span will be until the next code, and see if we're ready to cut. *)
-      pop pop
       remaining_string @ "#MCC-" instr
       dup if
         --
