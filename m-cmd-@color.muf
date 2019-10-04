@@ -106,6 +106,14 @@ $include $m/lib/color
   }tell
 ;
 
+: cmd_echo ( s -- )
+  strip
+  dup not if
+    pop " "
+  then
+  .color_tell
+;
+
 : cmd_help ( -- )
   {
     "@COLOR"
@@ -117,6 +125,32 @@ $include $m/lib/color
     "@COLOR #SET <type>"
     "  Set a specific color encoding type. (e.g. Use '@COLOR #SET NOCOLOR' to turn off color)"
   }tell
+;
+
+: cmd_set ( s -- )
+  dup "NOCOLOR" stringcmp 0 = if
+    pop
+    me @ "!COLOR" set
+    "Color off." .tell
+    exit
+  then
+
+  dup 1 array_make M-LIB-COLOR-encoding_player_valid array_intersect not if
+    " " .tell
+    dup if
+      "[#BBBBBB]" swap strcat "Encoding '' unknown." 255 85 85 0 0 15 0 text_gradient 10 .color_strcut rot swap strcat strcat .color_tell
+    else
+      pop "Please specify an encoding." 255 85 85 0 0 15 0 text_gradient .color_tell
+    then
+    " " .tell
+    info
+    " " .tell
+    exit
+  then
+
+  me @ "COLOR" set
+  me @ swap toupper M-LIB-COLOR-encoding_set
+  "Done." 85 85 255 0 50 0 0 text_gradient .color_tell
 ;
 
 : cmd_setup ( s -- )
@@ -149,40 +183,15 @@ $include $m/lib/color
   "Color disabled." .tell
 ;
 
-: cmd_set ( s -- b )
-  dup "NOCOLOR" stringcmp 0 = if
-    pop
-    me @ "!COLOR" set
-    "Color off." .tell
-    exit
-  then
-
-  dup 1 array_make M-LIB-COLOR-encoding_player_valid array_intersect not if
-    " " .tell
-    dup if
-      "[#BBBBBB]" swap strcat "Encoding '' unknown." 255 85 85 0 0 15 0 text_gradient 10 .color_strcut rot swap strcat strcat .color_tell
-    else
-      pop "Please specify an encoding." 255 85 85 0 0 15 0 text_gradient .color_tell
-    then
-    " " .tell
-    info
-    " " .tell
-    exit
-  then
-
-  me @ "COLOR" set
-  me @ swap toupper M-LIB-COLOR-encoding_set
-  "Done." 85 85 255 0 50 0 0 text_gradient .color_tell
-;
-
 : main ( s --  )
   " " split
   strip var! args
   strip var! option
   option @ if
+    "#ECHO" option @ stringcmp not if args @ cmd_echo exit then
     "#HELP" option @ stringcmp not if args @ cmd_help exit then
-    "#SETUP" option @ stringcmp not if args @ cmd_setup exit then
     "#SET"  option @ stringcmp not if args @ cmd_set exit then
+    "#SETUP" option @ stringcmp not if args @ cmd_setup exit then
   else
     info
     " " .tell
