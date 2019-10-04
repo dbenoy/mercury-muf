@@ -68,15 +68,21 @@ $PRAGMA comment_recurse
 (*     control sequence when converted to a displayable encoding, or an      *)
 (*     error message if the code is invalid.                                 *)
 (*                                                                           *)
-(*       [#HHHHHH] - Foreground color in RGB format (Like HTML codes)        *)
-(*       [*HHHHHH] - Background color in RGB format (Like HTML codes)        *)
+(*       [#XXXXXX] - Foreground color in RGB format (Like HTML codes)        *)
+(*       [*XXXXXX] - Background color in RGB format (Like HTML codes)        *)
+(*                                                                           *)
+(*       [>DDDDXX] - Take foreground color XX (in hex) from the XTERM256     *)
+(*                   palette and place it in front of character DDDD (in     *)
+(*                   decimal) in the string.                                 *)
+(*       [<DDDDXX] - Like above, but for the background color.               *)
+(*                                                                           *)
 (*       [!000000] - This is removed and replaced with nothing.              *)
 (*       [!000001] - This becomes a '[' character                            *)
 (*       [!000002] - This becomes a ']' character                            *)
 (*       [!FFFFFF] - 'Reset' the colors and formatting back to default       *)
 (*                                                                           *)
 (*       These symbols are reserved for future use:                          *)
-(*         " $ % & ' (  ) + , -  . / : ; < = > ? @ [ \ ] ^ _ ` { | } ~       *)
+(*         " $ % & ' (  ) + , -  . / : ; = ? @ [ \ ] ^ _ ` { | } ~           *)
 (*                                                                           *)
 (*   NOCOLOR                                                                 *)
 (*     This encoding has no color information.                               *)
@@ -477,6 +483,8 @@ $def ENCODING_PROP "_config/color/type"
 
 $def CODE_TYPE_FOREGROUND "#"
 $def CODE_TYPE_BACKGROUND "*"
+$def CODE_TYPE_FOREGROUND_AT ">"
+$def CODE_TYPE_BACKGROUND_AT "<"
 $def CODE_TYPE_SPECIAL "!"
 
 $define CODE_TYPE_VALID
@@ -485,9 +493,11 @@ $define CODE_TYPE_VALID
   CODE_TYPE_FOREGROUND
   CODE_TYPE_BACKGROUND
   CODE_TYPE_SPECIAL
+  CODE_TYPE_FOREGROUND_AT
+  CODE_TYPE_BACKGROUND_AT
 
   (* Reserved *)
-  "\"" "$" "%" "&" "'" "(" ")" "*" "+" "," "-" "." "/" ":" ";" "<" "=" ">" "?" "@" "[" "\\" "]" "^" "_" "`" "{" "|" "}" "~"
+  "\"" "$" "%" "&" "'" "(" ")" "*" "+" "," "-" "." "/" ":" ";" "=" "?" "@" "[" "\\" "]" "^" "_" "`" "{" "|" "}" "~"
 }list
 $enddef
 
@@ -823,6 +833,28 @@ lvar g_ansi_table_4bit_xterm_rgb
   pop 0
 ;
 
+(* Convert an integer into a single hex 0-9 A-F character *)
+: itox1 ( i -- s )
+  dup 16 >= over 0 < or if
+    "Only converts one hexadecimal digit." abort
+  then
+
+  dup 10 < if
+    intostr
+  else
+    10 - "A" ctoi + itoc
+  then
+;
+
+(* Convert a one-byte integer into a hex string *)
+: itox2 ( i -- s )
+  dup 256 >= over 0 < or if
+    "Only converts one byte values into hex." abort
+  then
+
+  dup 16 / itox1 swap 16 % itox1 strcat
+;
+
 (* Convert a single hex 0-9 A-F character to an integer *)
 : xtoi1 ( s -- i )
   dup string? not if
@@ -1137,6 +1169,8 @@ lvar ansi_table_3bit_xterm_rgb
     then
     "Invalid ANSI type" abort
   then
+  code_type @ CODE_TYPE_BACKGROUND_AT = code_type @ CODE_TYPE_FOREGROUND_AT = or if
+  then
   code_type @ CODE_TYPE_SPECIAL = if
     code_value @ "FFFFFF" = if
       to_type @ "NOCOLOR" = if
@@ -1162,7 +1196,7 @@ lvar ansi_table_3bit_xterm_rgb
     code_value @ "000002" = if
       "]" exit
     then
-    { "[INVALID MCC V" .version " CODE - UNKNOWN '" CODE_TYPE_SPECIAL "' VALUE ]" }join exit
+    { "[INVALID MCC V" .version " CODE - UNKNOWN '" code_type @ "' VALUE ]" }join exit
   then
   { "[INVALID MCC V" .version " CODE - UNKNOWN TYPE '" code_type @ "' ]" }join
 ;
@@ -1182,30 +1216,8 @@ lvar ansi_table_3bit_xterm_rgb
   then
 ;
 
-(* Convert an entire MCC sequence to another encoding *)
-: mcc_convert[ str:source_string str:to_type -- str:result_string ]
-  to_type @ CODE_TYPE_SPECIAL "FFFFFF" mcc_seq var! color_reset
-
-  source_string @ "[" instr not if
-    source_string @ exit
-  then
-
-  source_string @ "[" split swap var! retval
-  "[" explode_array foreach
-    nip
-    "[" swap strcat
-    dup mcc_tagparse var! post_code var! code_value var! code_type
-    code_type @ code_value @ and if
-      pop { retval @ to_type @ code_type @ code_value @ mcc_seq post_code @ }join retval !
-    else
-      retval @ swap strcat retval !
-    then
-  repeat
-
-  { color_reset @ retval @ color_reset @ }join
-;
-
-: mcc_strcut[ str:source_string str:split_point -- str:result_string ]
+(* Splits a string, ignoring MCC codes when deciding where to split *)
+: mcc_strcut[ str:source_string str:split_point bool:keep_color -- str:result_string ]
   source_string @ "[" instr not if
     source_string @ split_point @ strcut exit
   then
@@ -1256,8 +1268,127 @@ lvar ansi_table_3bit_xterm_rgb
   until
   (* We've worked out the spot in the string where the split will happen, perform the split, and duplicate the color state at the point of the split. *)
   source_string @ place_in_string @ strcut
-  foreground_code @ swap strcat
-  background_code @ swap strcat
+  keep_color @ if
+    foreground_code @ swap strcat
+    background_code @ swap strcat
+  then
+;
+
+(* Splits a string, ignoring MCC codes when deciding where to split *)
+: mcc_strlen[ str:check_string -- int:length ]
+  0 var! length
+  begin
+    (* Are we at a tag? *)
+    check_string @ "[" instr 1 = if
+      check_string @ mcc_tagparse -rot and if
+        (* We are. Drop the tag and continue. *)
+        check_string !
+      else
+        pop
+        (* We are at a '[' without being at an actual tag. Skip it and move on. *)
+        length ++
+        check_string @ 1 strcut swap pop check_string !
+      then
+    else
+      (* Find the next potential tag and count the number of characters skipped. *)
+      check_string @ "[" instr
+      dup not if
+        (* We hit the end of the string. Add the length and bail. *)
+        pop
+        length @ check_string @ strlen + length !
+        break
+      then
+      --
+      length @ over + length !
+      check_string @ swap strcut swap pop check_string !
+    then
+    check_string @ not
+  until
+  length @
+;
+
+(* Convert an entire MCC sequence to another encoding *)
+: mcc_convert[ str:source_string str:to_type -- str:result_string ]
+  source_string @ "[" instr not if
+    source_string @ exit
+  then
+
+  var retval
+
+  (* Preprocessing *)
+  source_string @ mcc_strlen var! source_string_length
+  var pre_insert_pos
+  var pre_insert_color
+  { }list var! pre_inserts
+  source_string @ "[" split swap retval !
+  "[" explode_array foreach
+    nip
+    "[" swap strcat
+    dup mcc_tagparse var! post_code var! code_value var! code_type
+    code_type @ CODE_TYPE_FOREGROUND_AT = code_type @ CODE_TYPE_BACKGROUND_AT = or code_value @ and if
+      pop
+      code_value @ 4 strcut
+      pre_insert_color !
+      pre_insert_pos !
+      (* Parse the insert position *)
+      pre_insert_pos @ number? not if
+        { retval @ "[INVALID MCC V" .version " CODE - INVALID '" code_type @ "' POSITION VALUE ]" post_code @ }join retval !
+        continue
+      then
+      pre_insert_pos @ atoi pre_insert_pos !
+      pre_insert_pos @ source_string_length @ >= if
+        { retval @ "[INVALID MCC V" .version " CODE - '" code_type @ "' POSITION VALUE BIGGER THAN STRING ]" post_code @ }join retval !
+        continue
+      then
+      (* Parse the insert color *)
+      pre_insert_color @ xtoi pre_insert_color !
+      pre_insert_color @ 16 < if
+        { retval @ "[INVALID MCC V" .version " CODE - INVALID '" code_type @ "' COLOR VALUE ]" post_code @ }join retval !
+        continue
+      then
+        ansi_table_8bit_rgb pre_insert_color @ array_getitem pre_insert_color !
+        { pre_insert_color @ 0 [] itox2 pre_insert_color @ 1 [] itox2 pre_insert_color @ 2 [] itox2 }join pre_insert_color !
+      (* Store the insert for later *)
+      code_type @ CODE_TYPE_FOREGROUND_AT = if
+        { "[#" pre_insert_color @ "]" }join
+      else
+        { "[*" pre_insert_color @ "]" }join
+      then
+      pre_insert_color !
+      { pre_insert_pos @ pre_insert_color @ }list pre_inserts @ array_appenditem pre_inserts !
+      (* Store the string with this code stripped out *)
+      retval @ post_code @ strcat retval !
+    else
+      retval @ swap strcat retval !
+    then
+  repeat
+  (* Preprocessing - Update the source string now that the pre-processing codes have been stripped out *)
+  retval @ source_string !
+  (* Preprocessing - Modify the source string with the stored inserts *)
+  pre_inserts @ foreach
+    nip
+    array_vals pop
+    pre_insert_color !
+    pre_insert_pos !
+    source_string @ pre_insert_pos @ 0 mcc_strcut pre_insert_color @ swap strcat strcat source_string !
+  repeat
+
+  (* Main sequence decoding *)
+  source_string @ "[" split swap retval !
+  "[" explode_array foreach
+    nip
+    "[" swap strcat
+    dup mcc_tagparse var! post_code var! code_value var! code_type
+    code_type @ code_value @ and if
+      pop { retval @ to_type @ code_type @ code_value @ mcc_seq post_code @ }join retval !
+    else
+      retval @ swap strcat retval !
+    then
+  repeat
+
+  (* Return the result, automatically resetting before and after *)
+  to_type @ CODE_TYPE_SPECIAL "FFFFFF" mcc_seq var! color_reset
+  { color_reset @ retval @ color_reset @ }join
 ;
 
 (*****************************************************************************)
@@ -1346,7 +1477,7 @@ $LIBDEF M-LIB-COLOR-encoding_player_valid
   then
 
   type @ "MCC" = if
-    source_string @ split_point @ mcc_strcut exit
+    source_string @ split_point @ 1 mcc_strcut exit
   then
 
   type @ "ANSI-" instr 1 = if
