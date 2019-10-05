@@ -493,6 +493,20 @@ $def ENCODING_PROP "_config/color/type"
  
 (* End configurable options *)
 
+(* TODO: A check to see if colors can be exactly represented on a given ANSI type? *)
+(* TODO: More 'color code' encodings for compatibility with other MUCK software. *)
+
+$DEF NEEDSM2 trig caller = not caller mlevel 2 < and if "Requires MUCKER level 2 or above." abort then
+$DEF NEEDSM3 trig caller = not caller mlevel 3 < and if "Requires MUCKER level 3 or above." abort then
+$DEF NEEDSM4 trig caller = not caller "WIZARD" flag? not and if "Requires MUCKER level 4 or above." abort then
+
+$DEF .version prog "_version" getpropstr begin dup strlen 1 - over ".0" rinstr = not while dup ".0" instr while "." ".0" subst repeat
+$DEF .author prog "_author" getpropstr
+
+(* ------------------------------------------------------------------------ *)
+
+$PUBDEF :
+
 $def CODE_TYPE_FOREGROUND "#"
 $def CODE_TYPE_BACKGROUND "*"
 $def CODE_TYPE_FOREGROUND_AT "<"
@@ -512,20 +526,6 @@ $define CODE_TYPE_VALID
   "\"" "$" "%" "&" "'" "(" ")" "*" "+" "," "-" "." "/" ":" ";" "=" "?" "@" "[" "\\" "]" "^" "_" "`" "{" "|" "}" "~"
 }list
 $enddef
-
-(* TODO: A check to see if colors can be exactly represented on a given ANSI type? *)
-(* TODO: More 'color code' encodings for compatibility with other MUCK software. *)
-
-$PUBDEF :
-
-$DEF NEEDSM2 trig caller = not caller mlevel 2 < and if "Requires MUCKER level 2 or above." abort then
-$DEF NEEDSM3 trig caller = not caller mlevel 3 < and if "Requires MUCKER level 3 or above." abort then
-$DEF NEEDSM4 trig caller = not caller "WIZARD" flag? not and if "Requires MUCKER level 4 or above." abort then
-
-$DEF .version prog "_version" getpropstr begin dup strlen 1 - over ".0" rinstr = not while dup ".0" instr while "." ".0" subst repeat
-$DEF .author prog "_author" getpropstr
-
-(* ------------------------------------------------------------------------ *)
 
 $def SUPPORTED_TYPES_ANSI { "ANSI-24BIT" "ANSI-8BIT" "ANSI-4BIT-VGA" "ANSI-4BIT-XTERM" "ANSI-3BIT-VGA" "ANSI-3BIT-XTERM" }list
 $def SUPPORTED_TYPES_CODE { "MCC" "NOCOLOR" }list
