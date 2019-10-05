@@ -37,12 +37,13 @@ $NOTE    Array manipulation routines.
 $DOCCMD  @list __PROG__=2-30
 
 $PUBDEF :
+
+$PUBDEF .carve_array ( s1 s2 -- a ) dup -rot explode_array 1 array_cut foreach nip 3 pick swap strcat swap array_appenditem repeat nip
 $PUBDEF .array_hasval ( ? a -- i ) 0 -rot foreach nip over = if swap pop 1 swap break then repeat pop
 $PUBDEF .array_haskey ( ? a -- i ) 0 -rot foreach pop over = if swap pop 1 swap break then repeat pop
 $PUBDEF .array_max ( a -- ? ) dup 0 array_getitem swap foreach nip over over > if pop else nip then repeat
 $PUBDEF .array_min ( a -- ? ) dup 0 array_getitem swap foreach nip over over < if pop else nip then repeat
 $PUBDEF .array_appendarray ( a a -- a ) foreach nip swap array_appenditem repeat
-$PUBDEF .array_join ( a s -- s ) "" swap 1 array_cut swap array_vals pop swap foreach nip 3 pick swap strcat strcat repeat swap pop
 $PUBDEF .join ( {s} s -- s ) over 2 + 0 swap - rotate array_make swap .array_join
 
 : main
