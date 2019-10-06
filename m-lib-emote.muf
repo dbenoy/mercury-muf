@@ -72,7 +72,8 @@ $INCLUDE $m/lib/array
 $INCLUDE $m/lib/string
 $INCLUDE $m/lib/color
 
-$DEF OPTIONS_VALID { "highlight" "color_name" "color_quoted" "color_unquoted" }list
+$DEF OPTIONS_PROPDIR "_config/emote/"
+$DEF OPTIONS_VALID { "highlight" "color_name" "color_quoted" "color_unquoted" "color_mention" }list
 $DEF OPTIONS_VALID_HIGHLIGHT { "STANDARD" "STOCK" "PLAIN" "NONE" "TAGS" }list
 
 (
@@ -118,63 +119,12 @@ style[ message, sender, recipient ]
   - Colorize the name of the source (or its underscores-to-spaces equivalent) object no matter where it appears on the line.
   - The name can be arbitrarily colored by the sender
   - Colorize things based on the quote level
-  - If no coloring is specified by the sender's settings, then generate it from a hash of their name. (Or simply randomly assign it the first time the code attempts to retrieve it and fails?)
-  - Only the sender's name (Or its underscores-to-spaces equivalent) can be arbitrarily colorized by the sender, so it should stand out where the message originated from
+  - If no coloring is specified by the sender's settings, then generate it from a hash of their name.
+  - Only the sender's name (Or its underscores-to-spaces equivalent) can be arbitrarily colorized by the sender, so it should stand out where the message originated from.
+  - The sender's name is not colorized if it appears in quotes.
   - Colorize or otherwise highlight when *your* name is said
   - The recipient controls whether they see colors or not, and if not, then highlighting can be added in different ways, like underscores or tildes or whatever.
   - Aborts if it has newlines in it
-)
-
-(
-: doColorize ( s -- s )
-  
-  var myRetval       "" myRetval       !
-  var myCurrentColor 0  myCurrentColor !
-  var myLastChange
- 
-  "\"" explode
-  
-  (* loop until string is gone *)
-  begin
-    dup while
-    swap
-    
-    myCurrentColor @
-    
-    (* If the retval now ends in a space, or is null, color++, otherwise color-- *)
-    (* This change will apply next iteration *)
-    over not if
-      myCurrentColor @ myLastChange @ + myCurrentColor !
-    else
-      over dup strlen swap striptail strlen = if
-        myCurrentColor @ -- myCurrentColor !
-        -1 myLastChange !
-      else
-        myCurrentColor @ ++ myCurrentColor !
-        1 myLastChange !
-      then
-      (* Edit by NightEyes: never let indent depth go negative, it makes no sense *)
-      myCurrentColor @ 0 < if
-        1 myCurrentColor !
-        1 myLastChange !
-      then
-    then
-    
-    (* Apply the color to the current string, and add it to the retval *)
-    getColor textattr myRetval @ swap strcat
-    
-    over 1 = not if (* If this isn't the last one, then we should replace the quote. *)
-      "\"" getQuoteColor textattr strcat
-    then
-    
-    myRetval !
-    
-    --
-  repeat
-  
-  pop
-  myRetval @+
-;
 )
 
 (* ------------------------------------------------------------------------ *)
@@ -209,30 +159,21 @@ style[ message, sender, recipient ]
   r @ 256 * 256 * g @ 256 * + b @ + .itox 6 .zeropad
 ;
 
-: color_constrain[ str:color int:min int:max -- str:newcolor ]
-  max @ min @ < if
-    max @ dup min @ max ! min !
-  then
-
-  color @
-  2 strcut swap .xtoi var! r
-  2 strcut swap .xtoi var! g
-  2 strcut swap .xtoi var! b
-
-  max @ min @ - 255.0 /
-  dup r @ * int r !
-  dup g @ * int g !
-  b @ * int b !
-
-  min @
-  dup r @ + r !
-  dup g @ + g !
-  b @ + b !
-
-  r @ 256 * 256 * g @ 256 * + b @ + .itox 6 .zeropad
+: color_complementary[ str:color -- str:result ]
+    color_srand M-LIB-COLOR-rgb2hsl var! hsl
+    hsl @ 0 [] 0.5 + 1.0 fmod hsl @ 0 ->[] hsl !
+    hsl @ M-LIB-COLOR-hsl2rgb
 ;
 
-: option_valid[ ref:object str:option str:value -- bool:valid? ]
+: color_saturate[ str:color -- str:result ]
+    color_srand M-LIB-COLOR-rgb2hsl var! hsl
+    1.0 hsl @ 1 ->[] hsl !
+    hsl @ M-LIB-COLOR-hsl2rgb
+;
+
+: option_valid[ str:value ref:object str:option -- bool:valid? ]
+  value @ not if 0 exit then
+
   option @ tolower option !
 
   option @ "highlight" = if
@@ -243,8 +184,8 @@ style[ message, sender, recipient ]
     value @ .color_strip object @ name stringcmp 0 = exit
   then
 
-  option @ "color_quoted" = option @ "color_unquoted" = or if
-    "[0-9A-F][0-9A-F][0-9A-F][0-9A-F][0-9A-F][0-9A-F]" smatch exit
+  option @ "color_quoted" = option @ "color_unquoted" = or option @ "color_mention" = or if
+    value @ "[0-9A-F][0-9A-F][0-9A-F][0-9A-F][0-9A-F][0-9A-F]" smatch exit
   then
 ;
 
@@ -252,6 +193,7 @@ style[ message, sender, recipient ]
   option @ tolower option !
 
   option @ "highlight" = if
+    "STANDARD"
   then
 
   option @ "color_name" = option @ "color_quoted" = or option @ "color_unquoted" = or if
@@ -276,10 +218,18 @@ style[ message, sender, recipient ]
     else
     then
   then
+
+  option @ "color_mention" = if
+    "2828FF"
+  then
 ;
 
 : option_get[ ref:object str:option -- str:value ]
-  object @ option @ option_default
+  object @ OPTIONS_PROPDIR option @ strcat getpropstr
+
+  dup object @ option @ option_valid not if
+    pop object @ option @ option_default
+  then
 ;
 
 : color_quotelevel[ ref:object int:level ]
@@ -297,12 +247,17 @@ style[ message, sender, recipient ]
 
 $DEF EINSTRING over swap instring dup not if pop strlen else nip -- then
 : style[ str:message ref:from ref:to -- str:result ]
+  "" var! result
+  (* Emotes are not colored by the user *)
   message @ .color_escape message !
-  0 var! quote_level
-  1 var! quoting_up
-  "" var! highlighted_message
+  (* Store some frequently accessed information *)
   from @ name var! from_name
   from @ name " " "_" subst var! from_sname
+  to @ name var! to_name
+  to @ name " " "_" subst var! to_sname
+  (* Iterate through the string *)
+  0 var! quote_level
+  1 var! quoting_up
   0 var! message_pos
   begin
     (* Pull out the remaining message at this point, and the previous character before this point *)
@@ -316,28 +271,44 @@ $DEF EINSTRING over swap instring dup not if pop strlen else nip -- then
     then
     var! message_remain
     var! message_prevchar
-    (* Check if there is anything here to highlight *)
+    (* Check for from object's name *)
     message_remain @ from_name @ instring 1 = message_remain @ from_sname @ instring 1 = or if
       message_prevchar @ "[0-9a-zA-Z]" smatch not if
         message_remain @ from_name @ strlen strcut swap pop "[0-9a-zA-Z]*" smatch not if
-          (* We are at the object's name, and it is on its own, Place the highlighted name and increment past it. *)
-          highlighted_message @ from @ "color_name" option_get .color_strcat highlighted_message !
-          message_pos @ from_name @ strlen + message_pos !
-          continue
+          quote_level @ not if
+            (* We are at the from object's name, and it is on its own, and we're outside of quotes. Place the highlighted name and increment past it. *)
+            result @ from @ "color_name" option_get .color_strcat result !
+            message_pos @ from_name @ strlen + message_pos !
+            continue
+          then
         then
       then
     then
+    (* Check for to object's name *)
+    from @ to @ != if
+      message_remain @ to_name @ instring 1 = message_remain @ to_sname @ instring 1 = or if
+        message_prevchar @ "[0-9a-zA-Z]" smatch not if
+          message_remain @ to_name @ strlen strcut swap pop "[0-9a-zA-Z]*" smatch not if
+            (* We are at the to object's name, and it is on its own, and we are not emoting to ourselves. Place the highlighted name and increment past it. *)
+            result @ { { "[#" to @ "color_mention" option_get "]" }join message_remain @ to_name @ strlen strcut pop }join .color_strcat result !
+            message_pos @ to_name @ strlen + message_pos !
+            continue
+          then
+        then
+      then
+    then
+    (* Check for quotes *)
     message_remain @ "\"" instr 1 = if
       message_prevchar @ "\"" = quoting_up @ and message_prevchar @ " " = or message_prevchar @ "" = or if
         (* Going up! Increase the quote level then place the quote mark. *)
         1 quoting_up !
         quote_level ++
-        highlighted_message @ { "[#" from @ quote_level @ color_quotelevel "]\"" }join .color_strcat highlighted_message !
+        result @ { "[#" from @ quote_level @ color_quotelevel "]\"" }join .color_strcat result !
         message_pos ++
         continue
       else
         (* Going down. Place the quote marke, then decrease the quote level. *)
-        highlighted_message @ { "[#" from @ quote_level @ color_quotelevel "]\"" }join .color_strcat highlighted_message !
+        result @ { "[#" from @ quote_level @ color_quotelevel "]\"" }join .color_strcat result !
         message_pos ++
         0 quoting_up !
         quote_level --
@@ -349,17 +320,19 @@ $DEF EINSTRING over swap instring dup not if pop strlen else nip -- then
     {
       message_remain @ from_name @ EINSTRING
       message_remain @ from_sname @ EINSTRING
+      message_remain @ to_name @ EINSTRING
+      message_remain @ to_sname @ EINSTRING
       message_remain @ "\"" EINSTRING
     }list .array_min
     dup 1 < if
       pop 1
     then
-    highlighted_message @ message_remain @ 3 pick strcut pop { "[#" from @ quote_level @ color_quotelevel "]" }join swap strcat .color_strcat highlighted_message !
+    result @ message_remain @ 3 pick strcut pop { "[#" from @ quote_level @ color_quotelevel "]" }join swap strcat .color_strcat result !
     message_pos @ swap + message_pos !
     message_pos @ message @ strlen >=
   until
 
-  highlighted_message @
+  result @
 ;
 
 (* ------------------------------------------------------------------------ *)
@@ -411,9 +384,9 @@ $LIBDEF M-LIB-EMOTE-history_get
   (* M1 OK *)
 
   option @ string? not if "Non-string argument (1)." abort then
-  option @ OPTIONS_VALID .array_hasval not if
-    "Invalid option." abort
-  then
+  option @ OPTIONS_VALID .array_hasval not if "Invalid option." abort then
+
+  object @ option @ option_get
 ;
 PUBLIC M-LIB-EMOTE-option_get
 $LIBDEF M-LIB-EMOTE-option_get
@@ -425,9 +398,15 @@ $LIBDEF M-LIB-EMOTE-option_get
   .needs_mlev3
 
   option @ string? not if "Non-string argument (1)." abort then
-  option @ OPTIONS_VALID .array_hasval not if
-    "Invalid option." abort
+  option @ OPTIONS_VALID .array_hasval not if "Invalid option." abort then
+  object @ thing? object @ player? or not if "Only player and thing objects can have emote options." abort then
+
+  value @ object @ option @ option_valid not if
+    0 exit
   then
+
+  object @ OPTIONS_PROPDIR option @ strcat value @ setprop
+  1
 ;
 PUBLIC M-LIB-EMOTE-option_set
 $LIBDEF M-LIB-EMOTE-option_set
@@ -441,6 +420,8 @@ $LIBDEF M-LIB-EMOTE-option_set
   message @ string? not if "Non-string argument (1)." abort then
   from @ dbref? not if "Non-dbref argument (2)." abort then
   to @ dbref? not if "Non-dbref argument (3)." abort then
+
+  message @ "\r" instr if "Newlines are not allowed in style strings" abort then
 
   message @ from @ to @ style
 ;
