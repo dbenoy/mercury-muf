@@ -89,10 +89,10 @@ $PRAGMA comment_recurse
 (*       [#XXXXXX] - Foreground color in RGB format (Like HTML codes)        *)
 (*       [*XXXXXX] - Background color in RGB format (Like HTML codes)        *)
 (*                                                                           *)
-(*       [<DDDDXX] - Take foreground color XX (in hex) from the XTERM256     *)
-(*                   palette and place it in front of character DDDD (in     *)
-(*                   decimal) in the string.                                 *)
-(*       [>DDDDXX] - Like above, but for the background color.               *)
+(*       [<PPPCCC] - "Color At" Take the foreground color CCC and place it   *)
+(*                   at location PPP. The values are in decimal, and use the *)
+(*                   XTERM256 palette numbers below.                         *)
+(*       [>PPPCCC] - Like above, but for the background color.               *)
 (*                                                                           *)
 (*       [!000000] - This is removed and replaced with nothing.              *)
 (*       [!000001] - This becomes a '[' character                            *)
@@ -1181,9 +1181,9 @@ lvar ansi_table_3bit_xterm_rgb
     code_value @ CODE_VALUE_SPECIAL_CLOSEBRACKET = if
       "]" exit
     then
-    { "[INVALID MCC V" .version " CODE - UNKNOWN '" code_type @ "' VALUE ]" }join exit
+    { "[MCC-v" .version " " code_type @ " BADVAL]" }join exit
   then
-  { "[INVALID MCC V" .version " CODE - UNKNOWN TYPE '" code_type @ "' ]" }join
+  { "[MCC-v" .version " " code_type @ " BADTYP]" }join
 ;
 
 (* Take an MCC code sequence tag at the start of a string and parse it. *)
@@ -1280,20 +1280,21 @@ lvar ansi_table_3bit_xterm_rgb
     dup mcc_tagparse var! post_code var! code_value var! code_type
     code_type @ CODE_TYPE_FOREGROUND_AT = code_type @ CODE_TYPE_BACKGROUND_AT = or code_value @ and if
       pop
-      code_value @ 4 strcut
+      code_value @ 3 strcut
       pre_insert_color !
       pre_insert_pos !
       (* Parse the insert position *)
       pre_insert_pos @ number? not if
-        { retval @ "[INVALID MCC V" .version " CODE - INVALID '" code_type @ "' POSITION VALUE ]" post_code @ }join retval !
+
+        { retval @ "[MCC-v" .version " " code_type @ " BADPOS]" post_code @ }join retval !
         errors ++
         continue
       then
       pre_insert_pos @ atoi pre_insert_pos !
       (* Parse the insert color *)
-      pre_insert_color @ xtoi pre_insert_color !
-      pre_insert_color @ 16 < if
-        { retval @ "[INVALID MCC V" .version " CODE - INVALID '" code_type @ "' COLOR VALUE ]" post_code @ }join retval !
+      pre_insert_color @ atoi pre_insert_color !
+      pre_insert_color @ 16 < pre_insert_color @ 255 > or if
+        { retval @ "[MCC-v" .version " " code_type @ " BADCLR]" post_code @ }join retval !
         errors ++
         continue
       then
