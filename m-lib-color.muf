@@ -4,8 +4,9 @@ i
 $PRAGMA comment_recurse
 (*****************************************************************************)
 (* m-lib-color - $m/lib/color                                                *)
-(*   A text color library that converts HTML style color codes into color    *)
-(*   text output depending on your terminal type.                            *)
+(*   A text color library that converts MCC (Mercury Color Code) HTML-style  *)
+(*   color codes into color text codes that can be understood by player      *)
+(*   terminals.                                                              *)
 (*                                                                           *)
 (*   GitHub: https://github.com/dbenoy/mercury-muf (See for install info)    *)
 (*                                                                           *)
@@ -53,6 +54,12 @@ $PRAGMA comment_recurse
 (*   M-LIB-COLOR-explode_array[ str:source str:sep -- arr:result ]           *)
 (*     Acts like the EXPLODE_ARRAY primitive, but it works for strings with  *)
 (*     MMC color codes and will operate as if on the colorized string.       *)
+(*                                                                           *)
+(*   M-LIB-COLOR-strcat[ str:source1 str:source2 -- str:result ]             *)
+(*     Works like the STRCAT primitive for MCC strings, but unlike the       *)
+(*     STRCAT primitive it combines them in a such a way that the colors are *)
+(*     preserved and the color codes in one string will not affect the       *)
+(*     colors in the other string.                                           *)
 (*                                                                           *)
 (*   M-LIB-COLOR-strcut[ str:source int:split_point str:type                 *)
 (*                      -- str:string1 str:string2 ]                         *)
@@ -501,6 +508,7 @@ $def ENCODING_PROP "_config/color/type"
 
 (* TODO: A check to see if colors can be exactly represented on a given ANSI type? *)
 (* TODO: More 'color code' encodings for compatibility with other MUCK software. *)
+(* TODO: Precalculate the biconal color space values. *)
 
 (* ------------------------------------------------------------------------ *)
 
@@ -1269,6 +1277,10 @@ lvar ansi_table_3bit_xterm_rgb
 
 (* Preprocess an MCC line for 'modify something elsewhere on the line' codes *)
 : mcc_preprocess_line[ str: source -- str:result ]
+  source @ "[" instr not if
+    source @ exit
+  then
+
   0 var! errors
   var pre_insert_pos
   var pre_insert_color
@@ -1473,10 +1485,24 @@ $LIBDEF M-LIB-COLOR-encoding_player_valid
   source @ string? not if "Non-string argument (1)." abort then
   sep @ string? not if "Non-string argument (2)." abort then
 
-  source @ mcc_preprocess sep @ mcc_explode_array exit
+  source @ mcc_preprocess sep @ mcc_explode_array
 ;
 PUBLIC M-LIB-COLOR-explode_array
 $LIBDEF M-LIB-COLOR-explode_array
+
+(*****************************************************************************)
+(*                            M-LIB-COLOR-strcat                             *)
+(*****************************************************************************)
+: M-LIB-COLOR-strcat[ str:source1 str:source2 -- str:result ]
+  (* M1 OK *)
+
+  source1 @ string? not if "Non-string argument (1)." abort then
+  source2 @ string? not if "Non-string argument (2)." abort then
+
+  { source1 @ mcc_preprocess "[" CODE_TYPE_SPECIAL CODE_VALUE_SPECIAL_RESET "]" source2 @ mcc_preprocess }join
+;
+PUBLIC M-LIB-COLOR-strcat
+$LIBDEF M-LIB-COLOR-strcat
 
 (*****************************************************************************)
 (*                            M-LIB-COLOR-strcut                             *)
@@ -1488,7 +1514,7 @@ $LIBDEF M-LIB-COLOR-explode_array
   split_point @ int? not if "Non-integer argument (2)." abort then
   split_point @ 0 < if "Argument must be a positive integer (2)." abort then
 
-  source @ mcc_preprocess split_point @ 1 mcc_strcut exit
+  source @ mcc_preprocess split_point @ 1 mcc_strcut
 ;
 PUBLIC M-LIB-COLOR-strcut
 $LIBDEF M-LIB-COLOR-strcut
@@ -1511,7 +1537,7 @@ $LIBDEF M-LIB-COLOR-strcut
     nip
     result @ replace_to @ strcat swap strcat result !
   repeat
-  result @ exit
+  result @
 ;
 PUBLIC M-LIB-COLOR-subst
 $LIBDEF M-LIB-COLOR-subst
