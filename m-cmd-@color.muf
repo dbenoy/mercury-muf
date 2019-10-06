@@ -37,28 +37,9 @@ $NOTE    Manage text color settings.
 $DOCCMD  @list __PROG__=2-30
 
 $include $m/lib/color
+$include $m/lib/string
 
 (* ------------------------------------------------------------------------ *)
-
-: itox1 ( i -- s )
-  dup 16 >= over 0 < or if
-    "Only converts one hexadecimal digit." abort
-  then
-
-  dup 10 < if
-    intostr
-  else
-    10 - "A" ctoi + itoc
-  then
-;
-
-: itox2 ( i -- s )
-  dup 256 >= over 0 < or if
-    "Only converts one byte values into hex." abort
-  then
-
-  dup 16 / itox1 swap 16 % itox1 strcat
-;
 
 : text_gradient[ str:color_me int:red int:green int:blue int:step_red int:step_green int:step_blue bool:reverse -- str:result ]
   "" var! retval
@@ -70,7 +51,7 @@ $include $m/lib/color
       color_me @ 1 strcut color_me !
     then
     (* Colorize the character *)
-    { "[#" red @ itox2 green @ itox2 blue @ itox2 "]" }join swap strcat
+    { "[#" red @ .itox 2 .zeropad green @ .itox 2 .zeropad blue @ .itox 2 .zeropad "]" }join swap strcat
     (* Concatinate the character with retval *)
     reverse @ if
       retval @ strcat retval !

@@ -55,6 +55,14 @@ $PRAGMA comment_recurse
 (*     Acts like the EXPLODE_ARRAY primitive, but it works for strings with  *)
 (*     MMC color codes and will operate as if on the colorized string.       *)
 (*                                                                           *)
+(*   M-LIB-COLOR-hsl2rgb[ arr:hsl -- str:rgb ]                               *)
+(*     Takes an HSV value array of three floats and converts it to a 6-digit *)
+(*     hexadecimal RGB string.                                               *)
+(*                                                                           *)
+(*   M-LIB-COLOR-rgb2hsl[ str:rgb -- arr:hsl ]                               *)
+(*     Takes a 6-digit hexadecimal RGB string and converts it to an HSV      *)
+(*     value array of three floats.                                          *)
+(*                                                                           *)
 (*   M-LIB-COLOR-strcat[ str:source1 str:source2 -- str:result ]             *)
 (*     Works like the STRCAT primitive for MCC strings, but unlike the       *)
 (*     STRCAT primitive it combines them in a such a way that the colors are *)
@@ -516,6 +524,7 @@ $PUBDEF :
 
 $include $m/lib/program
 $include $m/lib/array
+$include $m/lib/string
 
 $def CODE_TYPE_FOREGROUND "#"
 $def CODE_TYPE_BACKGROUND "*"
@@ -850,94 +859,6 @@ lvar g_ansi_table_4bit_xterm_rgb
 
 (* ------------------------------------------------------------------------ *)
 
-(* Convert an integer into a single hex 0-9 A-F character *)
-: itox1 ( i -- s )
-  dup 16 >= over 0 < or if
-    "Only converts one hexadecimal digit." abort
-  then
-
-  dup 10 < if
-    intostr
-  else
-    10 - "A" ctoi + itoc
-  then
-;
-
-(* Convert a one-byte integer into a hex string *)
-: itox2 ( i -- s )
-  dup 256 >= over 0 < or if
-    "Only converts one byte values into hex." abort
-  then
-
-  dup 16 / itox1 swap 16 % itox1 strcat
-;
-
-(* Convert a single hex 0-9 A-F character to an integer *)
-: xtoi1 ( s -- i )
-  dup string? not if
-    pop -1 exit
-  then
-
-  dup strlen 1 = not if
-    pop -1 exit
-  then
-
-  dup number? if
-    atoi exit
-  then
-
-  ctoi "A" ctoi - 10 +
-
-  dup 10 < over 15 > or if
-    pop -1 exit
-  then
-;
-
-(* Check if a string is made of 0-9 A-F characters, and is between 1 and 7 characters *)
-: hex? ( s -- b )
-  dup string? not if
-    pop 0 exit
-  then
-
-  dup strlen dup 1 >= swap 7 <= and not if
-    pop 0 exit
-  then
-
-  begin
-    dup while
-    1 strcut swap
-    dup number? not over ctoi "A" ctoi < and swap ctoi "F" ctoi > or if
-      pop 0 exit
-    then
-  repeat
-
-  pop 1 exit
-;
-
-(* Convert a hexadecimal string between 1 and 7 characters into an integer *)
-: xtoi ( s -- i )
-  dup hex? not if
-    pop -1 exit
-  then
-
-  0 var! retval
-  1 var! expfact
-
-  begin
-    dup while
-    dup strlen 1 - strcut
-    xtoi1
-    dup 0 >= over 16 < and not if
-      pop pop -1 exit
-    then
-    retval @ swap expfact @ * + retval !
-    expfact @ 16 * expfact !
-  repeat
-  pop
-
-  retval @
-;
-
 (* Convert RGB color space to HSL color space *)
 : rgb2hsl ( a -- a )
   (* http://axonflux.com/handy-rgb-to-hsl-and-rgb-to-hsv-color-model-c *)
@@ -977,6 +898,56 @@ lvar g_ansi_table_4bit_xterm_rgb
   then
 
   { h @ s @ l @ }list
+;
+
+(* Convert HSL color space to RGB color space *)
+: hue2rgb[ int:p int:q int: t -- int:result ]
+  t @ 0 < if
+    t ++
+  then
+  t @ 1 > if
+    t --
+  then
+  t @ 1.0 6.0 / < if
+    q @ p @ - 6 * t @ * p @ + exit
+  then
+  t @ 1.0 2.0 / < if
+    q @ exit
+  then
+  t @ 2.0 3.0 / < if
+    q @ p @ - 2.0 3.0 / t @ - * 6 * p @ + exit
+  then
+  p @
+;
+: hsl2rgb ( a -- a )
+  (* http://axonflux.com/handy-rgb-to-hsl-and-rgb-to-hsv-color-model-c *)
+  array_vals
+  pop
+  var! l
+  var! s
+  var! h
+  var r
+  var g
+  var b
+  s @ 0.0 = if
+    l @
+    dup r !
+    dup g !
+    b !
+  else
+    l @ 0.5 < if
+      l @ s @ 1 + *
+    else
+      l @ s @ + l @ s @ * -
+    then
+    var! q
+    2 l @ * q @ - var! p
+    p @ q @ h @ 1.0 3.0 / + hue2rgb r !
+    p @ q @ h @ hue2rgb g !
+    p @ q @ h @ 1.0 3.0 / - hue2rgb b !
+  then
+
+  { r @ 255 * int g @ 255 * int b @ 255 * int }list
 ;
 
 (* Convert RGB color space to HCL color space *)
@@ -1040,9 +1011,9 @@ lvar g_ansi_table_4bit_xterm_rgb
 : closest_color[ str:target_rgb dict:color_table_rgb -- int:closest_key ]
   (* Convert target_rgb into a list of integer components *)
   target_rgb @
-  2 strcut swap xtoi var! r
-  2 strcut swap xtoi var! g
-  2 strcut swap xtoi var! b
+  2 strcut swap .xtoi var! r
+  2 strcut swap .xtoi var! g
+  2 strcut swap .xtoi var! b
   pop
   { r @ g @ b @ }list target_rgb !
   (* Look for exact matches *)
@@ -1152,9 +1123,9 @@ lvar ansi_table_3bit_xterm_rgb
     then
     to_type @ "ANSI-24BIT" = if
       code_value @
-      2 strcut swap xtoi var! r
-      2 strcut swap xtoi var! g
-      2 strcut swap xtoi var! b
+      2 strcut swap .xtoi var! r
+      2 strcut swap .xtoi var! g
+      2 strcut swap .xtoi var! b
       pop
       { code_type @ CODE_TYPE_FOREGROUND = if "\[[38;2;" else "\[[48;2;" then r @ intostr ";" g @ intostr ";" b @ intostr "m" }join exit
     then
@@ -1202,7 +1173,7 @@ lvar ansi_table_3bit_xterm_rgb
   6 strcut swap var! code_value
   1 strcut swap var! code_closebracket
   var! post_code
-  code_openbracket @ "[" = code_type @ CODE_TYPE_VALID .array_hasval and code_value @ hex? and code_closebracket @ "]" = and if
+  code_openbracket @ "[" = code_type @ CODE_TYPE_VALID .array_hasval and code_value @ .hex? and code_closebracket @ "]" = and if
     code_type @ code_value @ post_code @ exit
   else
     "" "" "" exit
@@ -1311,7 +1282,7 @@ lvar ansi_table_3bit_xterm_rgb
         continue
       then
         ansi_table_8bit_rgb pre_insert_color @ array_getitem pre_insert_color !
-        { pre_insert_color @ 0 [] itox2 pre_insert_color @ 1 [] itox2 pre_insert_color @ 2 [] itox2 }join pre_insert_color !
+        { pre_insert_color @ 0 [] .itox 2 .zeropad pre_insert_color @ 1 [] .itox 2 .zeropad pre_insert_color @ 2 [] .itox 2 .zeropad }join pre_insert_color !
       (* Store the insert for later *)
       code_type @ CODE_TYPE_FOREGROUND_AT = if
         { "[#" pre_insert_color @ "]" }join
@@ -1489,6 +1460,43 @@ $LIBDEF M-LIB-COLOR-encoding_player_valid
 ;
 PUBLIC M-LIB-COLOR-explode_array
 $LIBDEF M-LIB-COLOR-explode_array
+
+(*****************************************************************************)
+(*                            M-LIB-COLOR-hsl2rgb                            *)
+(*****************************************************************************)
+: M-LIB-COLOR-hsl2rgb[ arr:hsl -- str:rgb ]
+  (* M1 OK *)
+  hsl @ array? hsl @ dictionary? not and not if "Non-array-list argument (1)." abort then
+  hsl @ array_count 3 != if "Invalid HSL values." abort then
+  hsl @ 0 [] float? hsl @ 1 [] float? and hsl @ 2 [] float? and not if "HSL values must be floats." abort then
+  hsl @ hsl2rgb
+  array_vals pop
+  var! b
+  var! g
+  var! r
+  { r @ .itox 2 .zeropad g @ .itox 2 .zeropad b @ .itox 2 .zeropad }join
+;
+PUBLIC M-LIB-COLOR-hsl2rgb
+$LIBDEF M-LIB-COLOR-hsl2rgb
+
+(*****************************************************************************)
+(*                            M-LIB-COLOR-rgb2hsl                            *)
+(*****************************************************************************)
+: M-LIB-COLOR-rgb2hsl[ str:rgb -- arr:hsl ]
+  (* M1 OK *)
+  rgb @ string? not if "Non-string argument (1)." abort then
+  rgb @ strlen 6 = rgb @ .hex? and not if "Invalid RGB string" abort then
+
+  rgb @
+  2 strcut swap .xtoi var! r
+  2 strcut swap .xtoi var! g
+  2 strcut swap .xtoi var! b
+  pop
+
+  { r @ g @ b @ }list rgb2hsl
+;
+PUBLIC M-LIB-COLOR-rgb2hsl
+$LIBDEF M-LIB-COLOR-rgb2hsl
 
 (*****************************************************************************)
 (*                            M-LIB-COLOR-strcat                             *)
@@ -1829,7 +1837,6 @@ $LIBDEF M-LIB-COLOR-testpattern
   from_type @ "NOCOLOR" = if
     to_type @ "MCC" = if
       source @ { "[" CODE_TYPE_SPECIAL CODE_VALUE_SPECIAL_OPENBRACKET "]" }join "[" subst exit
-      source @ { "[" CODE_TYPE_SPECIAL CODE_VALUE_SPECIAL_CLOSEBRACKET "]" }join "]" subst exit
     then
   then
 
@@ -1852,6 +1859,7 @@ $PUBDEF .color_otell loc @ contents begin over over swap "MCC" 3 pick M-LIB-COLO
 $PUBDEF .color_strip "MCC" "NOCOLOR" M-LIB-COLOR-transcode
 $PUBDEF .color_strlen "MCC" "NOCOLOR" M-LIB-COLOR-transcode strlen
 $PUBDEF .color_strcut M-LIB-COLOR-strcut
+$PUBDEF .color_strcat M-LIB-COLOR-strcat
 $PUBDEF .color_subst M-LIB-COLOR-subst
 $PUBDEF .color_tell me @ swap "MCC" "AUTO" M-LIB-COLOR-transcode notify
 $PUBDEF .color_transcode "MCC" "AUTO" M-LIB-COLOR-transcode
