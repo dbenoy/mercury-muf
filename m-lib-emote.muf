@@ -335,6 +335,25 @@ $DEF EINSTRING over swap instring dup not if pop strlen else nip -- then
   result @
 ;
 
+: emote_to_object[ str:message str:prefix str:suffix ref:from ref:parent -- ]
+  (* TODO: Sort out how 'listeners' work and make sure they're notified too? *)
+  parent @ contents begin
+    dup while
+    dup thing? over player? or if
+      dup var! to
+      to @ player? to @ thing? or if
+        to @ player? to @ "ZOMBIE" flag? or if
+          to @ { prefix @ message @ from @ to @ style suffix @ }join .color_notify
+        then
+        (* Notify all the things/players inside, too *)
+        message @ prefix @ suffix @ from @ to @ emote_to_object
+      then
+    then
+    next
+  repeat
+  pop
+;
+
 (* ------------------------------------------------------------------------ *)
 
 (*****************************************************************************)
@@ -346,15 +365,12 @@ $DEF EINSTRING over swap instring dup not if pop strlen else nip -- then
       .mlev2 not if "Requires MUCKER level 2 or above to send as other players." abort then
     then
   then
-  (* TODO: Alert every player, puppet, and _listen in the room, not just others in the same loc @ *)
-  loc @ contents begin
-    dup thing? over "ZOMBIE" flag? and over player? or if
-      dup var! to
-      to @ { prefix @ message @ from @ to @ style suffix @ }join .color_notify
-    then
-    next
-    dup not
-  until
+  (* Ascend the object tree until a room is found *)
+  from @ begin location dup room? until var! room
+  (* Store the emote in the room history *)
+    (* TODO *)
+  (* Construct styled messages and send out notifies *)
+  message @ prefix @ suffix @ from @ room @ emote_to_object
 ;
 PUBLIC M-LIB-EMOTE-emote
 $LIBDEF M-LIB-EMOTE-emote
