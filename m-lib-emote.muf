@@ -61,7 +61,17 @@ $DOCCMD  @list __PROG__=2-53
 
 (* Begin configurable options *)
 
+$DEF HISTORY_PROPDIR   "@emote/history/"
+$DEF HISTORY_DEFAULT_MAX_COUNT 100
+$DEF HISTORY_DEFAULT_MAX_AGE   604800 (* One week *)
+$DEF OPTIONS_PROPDIR  "_config/emote/"
+$DEF USERLOG
+
 (* End configurable options *)
+
+$IFDEF HISTORY_DEFAULT_MAX_COUNT<1
+  ($ABORT HISTORY_DEFAULT_MAX_COUNT must be greater than 0.) (* Doesn't seem to work at the moment: https://github.com/fuzzball-muck/fuzzball/issues/477 *)
+$ENDIF
 
 (* ------------------------------------------------------------------------ *)
 
@@ -72,7 +82,6 @@ $INCLUDE $m/lib/array
 $INCLUDE $m/lib/string
 $INCLUDE $m/lib/color
 
-$DEF OPTIONS_PROPDIR "_config/emote/"
 $DEF OPTIONS_VALID { "highlight" "color_name" "color_quoted" "color_unquoted" "color_mention" }list
 $DEF OPTIONS_VALID_HIGHLIGHT { "STANDARD" "STOCK" "PLAIN" "NONE" "TAGS" }list
 
@@ -129,25 +138,6 @@ style[ message, sender, recipient ]
 
 (* ------------------------------------------------------------------------ *)
 
-: hexstr ( i -- s )
-  dup 0 < if "Negative hex." abort then
-  ""
-  begin
-    over 16 % dup 10 < if intostr else 10 - "A" ctoi + itoc then swap strcat
-    swap 16 / swap
-    over not
-  until
-  nip
-;
-
-: zeropad ( s i -- s )
-  over strlen over < if
-    over strlen - "0" * swap strcat
-  else
-    pop
-  then
-;
-
 : color_srand[ -- str:colorhex ]
   srand abs
   dup 256 % var! r
@@ -170,6 +160,15 @@ style[ message, sender, recipient ]
     1.0 hsl @ 1 ->[] hsl !
     hsl @ M-LIB-COLOR-hsl2rgb
 ;
+
+: history_max_count
+  HISTORY_DEFAULT_MAX_COUNT
+;
+
+: history_max_age
+  HISTORY_DEFAULT_MAX_AGE
+;
+
 
 : option_valid[ str:value ref:object str:option -- bool:valid? ]
   value @ not if 0 exit then
@@ -220,16 +219,116 @@ style[ message, sender, recipient ]
   then
 
   option @ "color_mention" = if
-    "2828FF"
+    "2F2FFF"
   then
 ;
 
 : option_get[ ref:object str:option -- str:value ]
-  object @ OPTIONS_PROPDIR option @ strcat getpropstr
+  object @ OPTIONS_PROPDIR "/" strcat option @ strcat getpropstr
 
   dup object @ option @ option_valid not if
     pop object @ option @ option_default
   then
+;
+
+: history_clean[ ref:room int:max_count -- ]
+  systime var! now
+  (* Verify the validity of the entries and nuke invalid ones *)
+  0 var! max_serial (* Also find the highest serial *)
+  0 var! entry_count (* And also the total number of entries *)
+  { }list var! timestamps (* And collect all the timestamps, including duplicates *)
+  HISTORY_PROPDIR begin
+    room @ swap nextprop
+    dup not if pop break then
+    dup var! entry_dir
+    (* Check the serial *)
+    entry_dir @ "/" rsplit nip var! entry_serial
+    entry_serial @ number? not if
+$IFDEF USERLOG
+      { "Bad emote history entry '" entry_dir @ "' on room #" room @ intostr ": Invalid serial number. Removing." }join .tell
+$ENDIF
+      room @ entry_dir @ remove_prop
+      continue
+    then
+    entry_serial @ atoi entry_serial !
+    (* Ensure we're dealing with a propdir *)
+    room @ entry_dir @ propdir? not if
+$IFDEF USERLOG
+      { "Bad emote history entry '" entry_dir @ "' on room #" room @ intostr ": Not a propdir. Removing." }join .tell
+$ENDIF
+      room @ entry_dir @ remove_prop
+      continue
+    then
+    (* Grab the timestamp entry and ensure the message is not expired *)
+    room @ entry_dir @ "/" strcat "timestamp" strcat getprop var! entry_timestamp
+    entry_timestamp @ not if
+$IFDEF USERLOG
+      { "Bad emote history entry '" entry_dir @ "' on room #" room @ intostr ": No timestamp. Removing." }join .tell
+$ENDIF
+      room @ entry_dir @ remove_prop
+      continue
+    then
+    now @ entry_timestamp @ -
+    dup 0 < if
+$IFDEF USERLOG
+      { "Bad emote history entry '" entry_dir @ "' on room #" room @ intostr ": Future timestamp!" }join .tell
+$ENDIF
+    then
+    history_max_age > if
+      room @ entry_dir @ remove_prop
+      continue
+    then
+    (* We're good. Track this entry. *)
+    entry_serial @ max_serial @ > if entry_serial @ max_serial ! then
+    { entry_timestamp @ intostr "-" entry_serial @ intostr }join timestamps @ array_appenditem timestamps !
+    entry_count ++
+  repeat
+  (* Is the highest serial entry greater than the currently stored serial number? If so, increment it. *)
+  max_serial @ room @ HISTORY_PROPDIR getpropval > if
+    room @ HISTORY_PROPDIR max_serial @ setprop
+  then
+  (* Have we exceeded the maximum entry count? If so, remove entries starting with the smallest timestamp *)
+  entry_count @ max_count @ > if
+    timestamps @ 0 array_sort entry_count @ max_count @ - array_cut pop foreach
+      nip
+      (* Packed above in "TIMESTAMP-SERIAL" format. *)
+      "-" rsplit nip
+      HISTORY_PROPDIR "/" strcat swap strcat
+      room @ swap remove_prop
+    repeat
+  then
+;
+
+: history_add[ ref:message str:prefix str:suffix str:from ref:room -- ]
+  (* I don't know if this is concurrency-safe or not. I'm not sure how MUF  *)
+  (* parsels out its time. Accidental perfect simulteneity is probably a    *)
+  (* silly thing to worry about in a chat server but I might as well drop   *)
+  (* this comment here. Maybe it is possible for this to run at the exact   *)
+  (* same instant twice? Better increment the serial the instant we get     *)
+  (* here. Maybe the daemon will have threads in the future...              *)
+  room @ HISTORY_PROPDIR getpropval ++ var! serial
+  room @ HISTORY_PROPDIR serial @ setprop
+  {
+    "timestamp" systime
+    "trigger_command" command @
+    "trigger_dbref" "#" trig intostr strcat
+    "trigger_owner" trig owner name
+    "object_name" from @ name
+    "object_type"
+      begin
+        from @ player? if "PLAYER" break then
+        from @ thing? if "THING" break then
+        from @ exit? if "EXIT" break then
+        from @ room? if "ROOM" break then
+        from @ program? if "PROGRAM" break then
+        "UNKNOWN"
+      1 until
+    "object_owner" from @ owner name
+    "message_prefix" prefix @
+    "message_suffix" suffix @
+    "message_text" message @
+  }dict var! entry
+  room @ { HISTORY_PROPDIR "/" serial @ intostr "/" }join entry @ array_put_propvals
 ;
 
 : color_quotelevel[ ref:object int:level ]
@@ -344,6 +443,12 @@ $DEF EINSTRING over swap instring dup not if pop strlen else nip -- then
       to @ player? to @ thing? or if
         to @ player? to @ "ZOMBIE" flag? or if
           to @ { prefix @ message @ from @ to @ style suffix @ }join .color_notify
+          (
+          to @ { prefix @ message @ from @ to @ style suffix @ }join "MCC" "ANSI-24BIT" M-LIB-COLOR-transcode notify
+          to @ { prefix @ message @ from @ to @ style suffix @ }join "MCC" "ANSI-8BIT" M-LIB-COLOR-transcode notify
+          to @ { prefix @ message @ from @ to @ style suffix @ }join "MCC" "ANSI-4BIT-VGA" M-LIB-COLOR-transcode notify
+          to @ { prefix @ message @ from @ to @ style suffix @ }join "MCC" "ANSI-4BIT-XTERM" M-LIB-COLOR-transcode notify
+          )
         then
         (* Notify all the things/players inside, too *)
         message @ prefix @ suffix @ from @ to @ emote_to_object
@@ -360,15 +465,20 @@ $DEF EINSTRING over swap instring dup not if pop strlen else nip -- then
 (*                             M-LIB-EMOTE-emote                             *)
 (*****************************************************************************)
 : M-LIB-EMOTE-emote[ str:message str:prefix str:suffix ref:from -- ]
+  from @ dbref? not if "Non-dbref argument (4)." abort then
   "me" match from @ = not if
     "force_mlev1_name_notify" sysparm if
       .mlev2 not if "Requires MUCKER level 2 or above to send as other players." abort then
     then
   then
+  message @ string? not if "Non-string argument (1)." abort then
+  prefix @ string? not if "Non-string argument (2)." abort then
+  suffix @ string? not if "Non-string argument (3)." abort then
   (* Ascend the object tree until a room is found *)
   from @ begin location dup room? until var! room
   (* Store the emote in the room history *)
-    (* TODO *)
+  room @ history_max_count -- history_clean
+  message @ prefix @ suffix @ from @ room @ history_add
   (* Construct styled messages and send out notifies *)
   message @ prefix @ suffix @ from @ room @ emote_to_object
 ;
@@ -380,6 +490,8 @@ $LIBDEF M-LIB-EMOTE-emote
 (*****************************************************************************)
 : M-LIB-EMOTE-history_clean[ ref:room -- ]
   .needs_mlev3
+  room @ dbref? not if "Non-dbref argument (1)." abort then
+  history_max_count history_clean
 ;
 PUBLIC M-LIB-EMOTE-history_clean
 $LIBDEF M-LIB-EMOTE-history_clean
@@ -421,7 +533,7 @@ $LIBDEF M-LIB-EMOTE-option_get
     0 exit
   then
 
-  object @ OPTIONS_PROPDIR option @ strcat value @ setprop
+  object @ OPTIONS_PROPDIR "/" strcat option @ strcat value @ setprop
   1
 ;
 PUBLIC M-LIB-EMOTE-option_set
@@ -452,7 +564,6 @@ c
 q
 !@register m-lib-emote.muf=m/lib/emote
 !@set $m/lib/emote=M3
+!@set $m/lib/emote=W
 !@set $m/lib/emote=L
-!@set $m/lib/emote=S
-!@set $m/lib/emote=H
 
