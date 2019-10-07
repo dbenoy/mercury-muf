@@ -950,32 +950,27 @@ lvar g_ansi_table_4bit_xterm_rgb
   { r @ 255 * int g @ 255 * int b @ 255 * int }list
 ;
 
-(* Convert RGB color space to HCL color space *)
-: rgb2hcl ( a -- a )
-  dup array_vals
+(* Get a chroma value for a given RGB *)
+: chroma ( a -- f )
+  array_vals
   pop
   255.0 / var! b
   255.0 / var! g
   255.0 / var! r
-  rgb2hsl array_vals
-  pop
-  var! l
-  var! s
-  var! h
   { r @ g @ b @ }list .array_max var! max
   { r @ g @ b @ }list .array_min var! min
-  max @ min @ - var! c
-  { h @ c @ l @ }list  
+  max @ min @ -
 ;
 
 (* Plot a color position in a biconal color space *)
 : rgb2bicone ( a -- a )
   (* https://stackoverflow.com/questions/4057475/rounding-colour-values-to-the-nearest-of-a-small-set-of-colours *)
-  rgb2hcl
+  dup chroma var! c
+  rgb2hsl
   array_vals
   pop
   var! l
-  var! c
+  var! s
   var! h
   h @ 2.0 * h !
   l @ 0.5 - 2.0 * l !
@@ -1056,25 +1051,94 @@ lvar ansi8_nearest_cache
   target_rgb @ ansi_table_8bit_rgb ansi8_nearest_cache closest_color_cached
 ;
 
-lvar ansi4_nearest_vga_cache
 : ansi4_nearest_vga[ str:ansi_type str:target_rgb -- int:color4 ]
-  ansi4_nearest_vga_cache @ not if
-    { }dict ansi4_nearest_vga_cache !
+  target_rgb @
+  2 strcut swap .xtoi var! r
+  2 strcut swap .xtoi var! g
+  2 strcut swap .xtoi var! b
+  { r @ g @ b @ }list
+  dup chroma var! c
+  rgb2hsl var! target_hsl
+  target_hsl @ array_vals pop
+  var! l
+  var! s
+  var! h
+  (* If lacks chroma, then treat it as gray and pick the nearest lightness *)
+  c @ 0.1 < if
+    (* VGA Palette L Values: Black: 0%,  Bright Black: 33.33%, White: 66.67%, Bright White: 100% *)
+    (* The XTerm color for bright black is #808080. That is almost exactly on the line between VGA's white an bright black. *)
+    (* So we tweak the balance a tiny bit so that even in the VGA palette, #808080 value will result in bright black. *)
+    l @ 1.0 6.0 / < if 30 exit then (* Black *)
+    l @ 0.505 < if 90 exit then    (* Bright Black *)
+    l @ 5.0 6.0 / < if 37 exit then (* White *)
+    97 exit                         (* Bright White *)
   then
-  ansi_table_4bit_vga_rgb var! color_table_rgb
-  { 172 172 172 }list color_table_rgb @ 37 array_setitem color_table_rgb ! (* 170->172 so that XTerm 'dark gray' will be recognized VGA 'dark gray' and not VGA 'gray' *)
-  target_rgb @ color_table_rgb @ ansi4_nearest_vga_cache closest_color_cached
+  (* Return the color based on the direction on the color wheel, and whether is lightness is over the 'bright' point. *)
+  (* VGA Palette L Values: Normal: 33.33% Bright: 66.67% *)
+  (* The hues are 60 degrees apart starting at 0 EXCEPT yellow (only the dark version), which appears brown at the 30 degree point. *)
+  l @ 0.5 < if
+    h @ 330.0 360.0 / >= h @ 15.0  360.0 / < or  if 31 exit then (* Red *)
+    h @ 15.0  360.0 / >= h @ 75.0  360.0 / < and if 33 exit then (* Yellow *)
+    h @ 75.0  360.0 / >= h @ 150.0 360.0 / < and if 32 exit then (* Green *)
+    h @ 150.0 360.0 / >= h @ 210.0 360.0 / < and if 36 exit then (* Cyan *)
+    h @ 210.0 360.0 / >= h @ 270.0 360.0 / < and if 34 exit then (* Blue *)
+    h @ 270.0 360.0 / >= h @ 330.0 360.0 / < and if 35 exit then (* Magenta *)
+  else
+    h @ 330.0 360.0 / >= h @ 30.0  360.0 / < or  if 91 exit then (* Bright Red *)
+    h @ 30.0  360.0 / >= h @ 90.0  360.0 / < and if 93 exit then (* Bright Yellow *)
+    h @ 90.0  360.0 / >= h @ 150.0 360.0 / < and if 92 exit then (* Bright Green *)
+    h @ 150.0 360.0 / >= h @ 210.0 360.0 / < and if 96 exit then (* Bright Cyan *)
+    h @ 210.0 360.0 / >= h @ 270.0 360.0 / < and if 94 exit then (* Bright Blue *)
+    h @ 270.0 360.0 / >= h @ 330.0 360.0 / < and if 95 exit then (* Bright Magenta *)
+  then
+  (* Shouldn't get here. Return white. *)
+  "Internal Error." abort (* I'll leave this here for a while to catch bugs *)
+  37
 ;
 
-lvar ansi4_nearest_xterm_cache
 : ansi4_nearest_xterm[ str:ansi_type str:target_rgb -- int:color4 ]
-  ansi4_nearest_xterm_cache @ not if
-    (* Add some precalculated values *)
-    { }dict ansi4_nearest_xterm_cache !
+  target_rgb @
+  2 strcut swap .xtoi var! r
+  2 strcut swap .xtoi var! g
+  2 strcut swap .xtoi var! b
+  { r @ g @ b @ }list
+  dup chroma var! c
+  rgb2hsl var! target_hsl
+  target_hsl @ array_vals pop
+  var! l
+  var! s
+  var! h
+  (* If lacks chroma, then treat it as gray and pick the nearest lightness *)
+  c @ 0.1 < if
+    (* XTerm Palette L Values: Black: 0%,  Bright Black: 50.2%, White: 75%, Bright White: 100% *)
+    l @ 1.0 8.0 / < if 30 exit then (* Black *)
+    l @ 5.0 8.0 / < if 90 exit then (* Bright Black *)
+    l @ 7.0 8.0 / < if 37 exit then (* White *)
+    97 exit                         (* Bright White *)
   then
-  ansi_table_4bit_xterm_rgb var! color_table_rgb
-  { 128 127 0 }list color_table_rgb @ 33 array_setitem color_table_rgb ! (* 128->127 so that VGA 'brown' will be recognized as yellow and not red *)
-  target_rgb @ color_table_rgb @ ansi4_nearest_xterm_cache closest_color_cached
+  (* Return the color based on the direction on the color wheel, and whether is lightness is over the 'bright' point. *)
+  (* XTerm Palette L Values: Normal: 25% Bright: 50% *)
+  (* The hues are 60 degrees apart starting at 0 *)
+  (* The VGA color for yellow is #AA5500. That is almost exactly on the line between XTerm's red and yellow. *)
+  (* So we tweak the balance a tiny bit so that even in the VGA palette, #AA5500 value will result in yellow. *)
+  l @ 0.5 < if
+    h @ 330.0 360.0 / >= h @ 29.9  360.0 / < or  if 31 exit then (* Red *)
+    h @ 29.9  360.0 / >= h @ 90.0  360.0 / < and if 33 exit then (* Yellow *)
+    h @ 90.0  360.0 / >= h @ 150.0 360.0 / < and if 32 exit then (* Green *)
+    h @ 150.0 360.0 / >= h @ 210.0 360.0 / < and if 36 exit then (* Cyan *)
+    h @ 210.0 360.0 / >= h @ 270.0 360.0 / < and if 34 exit then (* Blue *)
+    h @ 270.0 360.0 / >= h @ 330.0 360.0 / < and if 35 exit then (* Magenta *)
+  else
+    h @ 330.0 360.0 / >= h @ 30.0  360.0 / < or  if 91 exit then (* Bright Red *)
+    h @ 30.0  360.0 / >= h @ 90.0  360.0 / < and if 93 exit then (* Bright Yellow *)
+    h @ 90.0  360.0 / >= h @ 150.0 360.0 / < and if 92 exit then (* Bright Green *)
+    h @ 150.0 360.0 / >= h @ 210.0 360.0 / < and if 96 exit then (* Bright Cyan *)
+    h @ 210.0 360.0 / >= h @ 270.0 360.0 / < and if 94 exit then (* Bright Blue *)
+    h @ 270.0 360.0 / >= h @ 330.0 360.0 / < and if 95 exit then (* Bright Magenta *)
+  then
+  (* Shouldn't get here. Return white. *)
+  "Internal Error." abort (* I'll leave this here for a while to catch bugs *)
+  37
 ;
 
 lvar ansi_table_3bit_vga_rgb
