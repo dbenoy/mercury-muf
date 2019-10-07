@@ -1044,14 +1044,14 @@ lvar g_ansi_table_4bit_xterm_rgb
 
 (* RGB to ANSI color code conversion routines *)
 lvar ansi8_nearest_cache
-: ansi8_nearest[ str:ansi_type str:target_rgb -- int:color8 ]
+: ansi8_nearest[ str:target_rgb -- int:color8 ]
   ansi8_nearest_cache @ not if
     { }dict ansi8_nearest_cache !
   then
   target_rgb @ ansi_table_8bit_rgb ansi8_nearest_cache closest_color_cached
 ;
 
-: ansi4_nearest_vga[ str:ansi_type str:target_rgb -- int:color4 ]
+: ansi4_nearest_vga[ str:target_rgb -- int:color4 ]
   target_rgb @
   2 strcut swap .xtoi var! r
   2 strcut swap .xtoi var! g
@@ -1069,7 +1069,7 @@ lvar ansi8_nearest_cache
     (* The XTerm color for bright black is #808080. That is almost exactly on the line between VGA's white an bright black. *)
     (* So we tweak the balance a tiny bit so that even in the VGA palette, #808080 value will result in bright black. *)
     l @ 1.0 6.0 / < if 30 exit then (* Black *)
-    l @ 0.505 < if 90 exit then    (* Bright Black *)
+    l @ 0.505 < if 90 exit then     (* Bright Black *)
     l @ 5.0 6.0 / < if 37 exit then (* White *)
     97 exit                         (* Bright White *)
   then
@@ -1096,7 +1096,7 @@ lvar ansi8_nearest_cache
   37
 ;
 
-: ansi4_nearest_xterm[ str:ansi_type str:target_rgb -- int:color4 ]
+: ansi4_nearest_xterm[ str:target_rgb -- int:color4 ]
   target_rgb @
   2 strcut swap .xtoi var! r
   2 strcut swap .xtoi var! g
@@ -1142,17 +1142,69 @@ lvar ansi8_nearest_cache
 ;
 
 lvar ansi_table_3bit_vga_rgb
-: ansi3_nearest_vga[ str:ansi_type str:target_rgb -- int:color4 ]
-  ansi_type @ target_rgb @ ansi4_nearest_vga
-  dup 90 = if pop 37 then
-  dup 91 >= if 60 - then
+: ansi3_nearest_vga[ str:target_rgb -- int:color4 ]
+  target_rgb @
+  2 strcut swap .xtoi var! r
+  2 strcut swap .xtoi var! g
+  2 strcut swap .xtoi var! b
+  { r @ g @ b @ }list
+  dup chroma var! c
+  rgb2hsl var! target_hsl
+  target_hsl @ array_vals pop
+  var! l
+  var! s
+  var! h
+  (* If lacks chroma, then treat it as gray and pick the nearest lightness *)
+  c @ 0.1 < if
+    (* VGA Palette L Values: Black: 0%,  White: 66.67% *)
+    (* But match ansi4 for the value at which to turn black. *)
+    l @ 1.0 6.0 / < if 30 exit then (* Black *)
+    37 exit                         (* White *)
+  then
+  (* Return the color based on the direction on the color wheel. *)
+  h @ 330.0 360.0 / >= h @ 15.0  360.0 / < or  if 31 exit then (* Red *)
+  h @ 15.0  360.0 / >= h @ 75.0  360.0 / < and if 33 exit then (* Yellow *)
+  h @ 75.0  360.0 / >= h @ 150.0 360.0 / < and if 32 exit then (* Green *)
+  h @ 150.0 360.0 / >= h @ 210.0 360.0 / < and if 36 exit then (* Cyan *)
+  h @ 210.0 360.0 / >= h @ 270.0 360.0 / < and if 34 exit then (* Blue *)
+  h @ 270.0 360.0 / >= h @ 330.0 360.0 / < and if 35 exit then (* Magenta *)
+  (* Shouldn't get here. Return white. *)
+  "Internal Error." abort (* I'll leave this here for a while to catch bugs *)
+  37
 ;
 
 lvar ansi_table_3bit_xterm_rgb
-: ansi3_nearest_xterm[ str:ansi_type str:target_rgb -- int:color4 ]
-  ansi_type @ target_rgb @ ansi4_nearest_xterm
-  dup 90 = if pop 37 then
-  dup 91 >= if 60 - then
+: ansi3_nearest_xterm[ str:target_rgb -- int:color4 ]
+  target_rgb @
+  2 strcut swap .xtoi var! r
+  2 strcut swap .xtoi var! g
+  2 strcut swap .xtoi var! b
+  { r @ g @ b @ }list
+  dup chroma var! c
+  rgb2hsl var! target_hsl
+  target_hsl @ array_vals pop
+  var! l
+  var! s
+  var! h
+  (* If lacks chroma, then treat it as gray and pick the nearest lightness *)
+  c @ 0.1 < if
+    (* XTerm Palette L Values: Black: 0%,  White: 75% *)
+    (* But match ansi4 for the value at which to turn black. *)
+    l @ 1.0 8.0 / < if 30 exit then (* Black *)
+    37 exit                         (* White *)
+  then
+  (* Return the color based on the direction on the color wheel, and whether is lightness is over the 'bright' point. *)
+  (* The VGA color for yellow is #AA5500. That is almost exactly on the line between XTerm's red and yellow. *)
+  (* So we tweak the balance a tiny bit so that even in the VGA palette, #AA5500 value will result in yellow. *)
+  h @ 330.0 360.0 / >= h @ 29.9  360.0 / < or  if 31 exit then (* Red *)
+  h @ 29.9  360.0 / >= h @ 90.0  360.0 / < and if 33 exit then (* Yellow *)
+  h @ 90.0  360.0 / >= h @ 150.0 360.0 / < and if 32 exit then (* Green *)
+  h @ 150.0 360.0 / >= h @ 210.0 360.0 / < and if 36 exit then (* Cyan *)
+  h @ 210.0 360.0 / >= h @ 270.0 360.0 / < and if 34 exit then (* Blue *)
+  h @ 270.0 360.0 / >= h @ 330.0 360.0 / < and if 35 exit then (* Magenta *)
+  (* Shouldn't get here. Return white. *)
+  "Internal Error." abort (* I'll leave this here for a while to catch bugs *)
+  37
 ;
 
 (* Convert an individual MCC code sequence tag to ANSI *)
@@ -1163,27 +1215,27 @@ lvar ansi_table_3bit_xterm_rgb
       "" exit
     then
     to_type @ "ANSI-3BIT-VGA" = if
-      { "\[[" to_type @ code_value @ ansi3_nearest_vga code_type @ CODE_TYPE_BACKGROUND = if 10 + then intostr "m" }join exit
+      { "\[[" code_value @ ansi3_nearest_vga code_type @ CODE_TYPE_BACKGROUND = if 10 + then intostr "m" }join exit
     then
     to_type @ "ANSI-3BIT-XTERM" = if
-      { "\[[" to_type @ code_value @ ansi3_nearest_xterm code_type @ CODE_TYPE_BACKGROUND = if 10 + then intostr "m" }join exit
+      { "\[[" code_value @ ansi3_nearest_xterm code_type @ CODE_TYPE_BACKGROUND = if 10 + then intostr "m" }join exit
     then
     to_type @ "ANSI-4BIT-VGA" = if
       code_type @ CODE_TYPE_FOREGROUND = if
-        { "\[[" to_type @ code_value @ ansi4_nearest_vga intostr "m" }join exit
+        { "\[[" code_value @ ansi4_nearest_vga intostr "m" }join exit
       else
-        { "\[[" to_type @ code_value @ ansi3_nearest_vga 10 + intostr "m" }join exit
+        { "\[[" code_value @ ansi3_nearest_vga 10 + intostr "m" }join exit
       then
     then
     to_type @ "ANSI-4BIT-XTERM" = if
       code_type @ CODE_TYPE_FOREGROUND = if
-        { "\[[" to_type @ code_value @ ansi4_nearest_xterm intostr "m" }join exit
+        { "\[[" code_value @ ansi4_nearest_xterm intostr "m" }join exit
       else
-        { "\[[" to_type @ code_value @ ansi3_nearest_xterm 10 + intostr "m" }join exit
+        { "\[[" code_value @ ansi3_nearest_xterm 10 + intostr "m" }join exit
       then
     then
     to_type @ "ANSI-8BIT" = if
-      { code_type @ CODE_TYPE_FOREGROUND = if "\[[38;5;" else "\[[48;5;" then to_type @ code_value @ ansi8_nearest intostr "m" }join exit
+      { code_type @ CODE_TYPE_FOREGROUND = if "\[[38;5;" else "\[[48;5;" then code_value @ ansi8_nearest intostr "m" }join exit
     then
     to_type @ "ANSI-24BIT" = if
       code_value @
