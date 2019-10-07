@@ -99,12 +99,16 @@ $PRAGMA comment_recurse
 (*                   highlight_mention_* options. (but not any characters    *)
 (*                   those options may have added.)                          *)
 (*                                                                           *)
+(*   "highlight_mention_names"                                               *)
+(*     A semicolon separated list of words which, if seen in an emote, will  *)
+(*     be highlighted. It defaults to the receiving object's name, and the   *)
+(*     object's underscores-to-spaces equivalent.                            *)
+(*                                                                           *)
 (*   "highlight_mention_before"                                              *)
 (*   "highlight_mention_after"                                               *)
-(*     When this object sees an emote, if this object's name appears in the  *)
-(*     emote, these MCC coded strings are placed before and after the name.  *)
-(*     The underscores-to-spaces equivalent is also highlighted. Color codes *)
-(*     in these strings are allowed to affect the name.                      *)
+(*     When highlighting words, these strings wrap around it. Color codes in *)
+(*     these strings are allowed to affect the highlighted name. It defaults *)
+(*     to giving the word a blue color.                                      *)
 (*                                                                           *)
 (*   "color_name"                                                            *)
 (*     When this object sends an emote, this MCC coded color string that     *)
@@ -146,7 +150,7 @@ $PRAGMA comment_recurse
 $VERSION 1.000
 $AUTHOR  Daniel Benoy
 $NOTE    Handle sending emotive messages.   
-$DOCCMD  @list __PROG__=2-53
+$DOCCMD  @list __PROG__=2-146
 
 (* Begin configurable options *)
 
@@ -176,7 +180,7 @@ $INCLUDE $m/lib/array
 $INCLUDE $m/lib/string
 $INCLUDE $m/lib/color
 
-$DEF OPTIONS_VALID { "highlight_allow_custom" "highlight_mention_before" "highlight_mention_after" "color_name" "color_quoted" "color_unquoted" }list
+$DEF OPTIONS_VALID { "highlight_allow_custom" "highlight_mention_before" "highlight_mention_after" "highlight_mention_names" "color_name" "color_quoted" "color_unquoted" }list
 $DEF OPTIONS_VALID_HIGHLIGHT_ALLOW_CUSTOM { "YES" "NO" "PLAIN" "NOCOLOR" }list
 
 (* ------------------------------------------------------------------------ *)
@@ -230,6 +234,9 @@ $DEF OPTIONS_VALID_HIGHLIGHT_ALLOW_CUSTOM { "YES" "NO" "PLAIN" "NOCOLOR" }list
   option @ "highlight_mention_before" = option @ "highlight_mention_after" = or if
     value @ strlen 30 < exit
   then
+  option @ "highlight_mention_names" = if
+    value @ strlen 200 < exit
+  then
 ;
 
 : option_default[ ref:object str:option -- str:default ]
@@ -265,6 +272,9 @@ $DEF OPTIONS_VALID_HIGHLIGHT_ALLOW_CUSTOM { "YES" "NO" "PLAIN" "NOCOLOR" }list
   then
   option @ "highlight_mention_after" = if
     "[<999063][<000069]" exit
+  then
+  option @ "highlight_mention_names" = if
+    { object @ name ";" object @ name " " "_" subst }join exit
   then
 ;
 
@@ -466,8 +476,8 @@ $DEF EINSTRING over swap instring dup not if pop strlen else nip -- then
   (* Store some frequently accessed information *)
   from @ name var! from_name
   from @ name " " "_" subst var! from_sname
-  to @ name var! to_name
-  to @ name " " "_" subst var! to_sname
+  to @ "highlight_mention_names" option_get ";" explode_array var! to_names
+  { to_names @ foreach nip dup not if pop then repeat }list to_names !
   (* Iterate through the string *)
   0 var! quote_level
   1 var! quoting_up
@@ -499,12 +509,13 @@ $DEF EINSTRING over swap instring dup not if pop strlen else nip -- then
     then
     (* Check for to object's name *)
     from @ to @ != if
-      message_remain @ to_name @ instring 1 = message_remain @ to_sname @ instring 1 = or if
+      "" to_names @ foreach nip dup message_remain @ swap instring 1 = if break else pop then repeat var! found_name
+      found_name @ if
         message_prevchar @ "[0-9a-zA-Z]" smatch not if
-          message_remain @ to_name @ strlen strcut swap pop "[0-9a-zA-Z]*" smatch not if
+          message_remain @ found_name @ strlen strcut swap pop "[0-9a-zA-Z]*" smatch not if
             (* We are at the to object's name, and it is on its own, and we are not emoting to ourselves. Place the highlighted name and increment past it. *)
-            result @ { to @ highlight_mention_before_get message_remain @ to_name @ strlen strcut pop to @ highlight_mention_after_get }join .color_strcat result !
-            message_pos @ to_name @ strlen + message_pos !
+            result @ { to @ highlight_mention_before_get message_remain @ found_name @ strlen strcut pop to @ highlight_mention_after_get }join .color_strcat result !
+            message_pos @ found_name @ strlen + message_pos !
             continue
           then
         then
@@ -533,8 +544,7 @@ $DEF EINSTRING over swap instring dup not if pop strlen else nip -- then
     {
       message_remain @ from_name @ EINSTRING
       message_remain @ from_sname @ EINSTRING
-      message_remain @ to_name @ EINSTRING
-      message_remain @ to_sname @ EINSTRING
+      to_names @ foreach nip message_remain @ swap EINSTRING repeat
       message_remain @ "\"" EINSTRING
     }list .array_min
     dup 1 < if
