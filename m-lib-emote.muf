@@ -30,6 +30,81 @@ $PRAGMA comment_recurse
 (*     (eg. color0 "color1 "color2" color1" color0)                          *)
 (*                                                                           *)
 (* PUBLIC ROUTINES:                                                          *)
+(*   M-LIB-EMOTE-emote[ str:message str:prefix str:suffix ref:from -- ]      *)
+(*     Send an emote from a given object. The emote is sent to every zombie  *)
+(*     and player object in the same room, no matter where the sender and    *)
+(*     the recipient are located in the room's object tree. The emote is     *)
+(*     also logged in the room's properties for a certain amount of time.    *)
+(*     The prefix and suffix are MCC coded colored strings that enclose the  *)
+(*     emote, and are not affected by the color highlighting routine. The    *)
+(*     message may not have a newline character.                             *)
+(*                                                                           *)
+(*     See OPTIONS SETTINGS for how the various options affect the emotes.   *)
+(*                                                                           *)
+(*   M-LIB-EMOTE-history_clean[ ref:room -- ]                                *)
+(*     Clears out old or invalid emote history entries on a given room.      *)
+(*                                                                           *)
+(*   M-LIB-EMOTE-history_get[ ref:room -- arr:history ]                      *)
+(*     Get the emote history stored in a room's properties. It is returned   *)
+(*     in this format, with an entry for each line:                          *)
+(*                                                                           *)
+(*     {                                                                     *)
+(*       {                                                                   *)
+(*         "timestamp"       - The 'systime' of the emote.                   *)
+(*         "trigger_command" - The command @ that sent the emote.            *)
+(*         "trigger_dbref"   - The trigger that sent the emote.              *)
+(*         "trigger_owner"   - The owner of the trigger.                     *)
+(*         "object_name"     - The name of the object that sent the emote.   *)
+(*         "object_type"     - Type of the object that sent the emote:       *)
+(*                             "PLAYER" "THING" "EXIT" "ROOM" "PROGRAM"      *)
+(*         "object_owner"    - Owner of the object that sent the emote.      *)
+(*         "message_prefix"  - The prefix text.                              *)
+(*         "message_suffix"  - The suffix text.                              *)
+(*         "message_text"    - The emote message itself.                     *)
+(*       }dict                                                               *)
+(*       ...                                                                 *)
+(*     }list                                                                 *)
+(*                                                                           *)
+(*     Only object_name and message_text are guaranteed to be present. The   *)
+(*     caller is expected to be able to handle the absence of entries, or    *)
+(*     the addition of new ones, but can expect them to always be strings,   *)
+(*     except for the timestamp, which will always be an integer.            *)
+(*                                                                           *)
+(*   M-LIB-EMOTE-option_get[ ref:object str:option -- str:value ]            *)
+(*     Get an emote setting from an object. See OPTION SETTINGS below.       *)
+(*                                                                           *)
+(*   M-LIB-EMOTE-option_set[ ref:object str:option str:value                 *)
+(*                           -- bool:success? ]                              *)
+(*     Set an emote setting from an object. See OPTION SETTINGS below.       *)
+(*                                                                           *)
+(*   M-LIB-EMOTE-style[ str:message ref:from ref:to -- str:result ]          *)
+(*     Colors and highlights an emote as if it were sent from and to the     *)
+(*     given objects and returns the resulting string.                       *)
+(*                                                                           *)
+(* OPTION SETTINGS:                                                          *)
+(*   "highlight"                                                             *)
+(*     TODO                                                                  *)
+(*                                                                           *)
+(*   "highlight_mention_before"                                              *)
+(*   "highlight_mention_after"                                               *)
+(*     When this object sees an emote, if this object's name appears in the  *)
+(*     emote, these MCC coded strings are placed before and after the name.  *)
+(*     The underscores-to-spaces equivalent is also highlighted. Color codes *)
+(*     in these strings are allowed to affect the name.                      *)
+(*                                                                           *)
+(*   "color_name"                                                            *)
+(*     When this object sends an emote, this MCC coded color string that     *)
+(*     will be used in place of its name. It must match the object's name    *)
+(*     when the colors are stripped out, but it may replace underscores with *)
+(*     spaces.                                                               *)
+(*                                                                           *)
+(*   "color_quoted"                                                          *)
+(*     When this object sends an emote, this six-digit hexadecimal RGB color *)
+(*     will be used for everything in the emote outside of quotes.           *)
+(*                                                                           *)
+(*   "color_unquoted"                                                        *)
+(*     When this object sends an emote, this six-digit hexadecimal RGB color *)
+(*     will be used for everything in the emote inside of quotes.            *)
 (*                                                                           *)
 (*****************************************************************************)
 (* Revision History:                                                         *)
@@ -61,10 +136,10 @@ $DOCCMD  @list __PROG__=2-53
 
 (* Begin configurable options *)
 
-$DEF HISTORY_PROPDIR   "@emote/history/"
+$DEF HISTORY_PROPDIR           "@emote/history/" (* Use a @ privileged property! *)
 $DEF HISTORY_DEFAULT_MAX_COUNT 100
 $DEF HISTORY_DEFAULT_MAX_AGE   604800 (* One week *)
-$DEF OPTIONS_PROPDIR  "_config/emote/"
+$DEF OPTIONS_PROPDIR           "_config/emote/"
 $DEF USERLOG
 
 (* End configurable options *)
@@ -82,59 +157,8 @@ $INCLUDE $m/lib/array
 $INCLUDE $m/lib/string
 $INCLUDE $m/lib/color
 
-$DEF OPTIONS_VALID { "highlight" "color_name" "color_quoted" "color_unquoted" "color_mention" }list
-$DEF OPTIONS_VALID_HIGHLIGHT { "STANDARD" "STOCK" "PLAIN" "NONE" "TAGS" }list
-
-(
-option_get
-option_set
-  "highlight"
-    "STANDARD" - Standard highlighting
-    "STOCK" - Colors are assigned to users automatically. User specified colors are ignored.
-    "PLAIN" - Every line is highlighted the same, using the built-in color theme.
-    "NONE" - The entire emote is a single color, using the built-in color theme.
-    "TAGS" - Like NONE, but also adds additional character tags into the line to highlight names.
-  "color_name"
-    A string of the object's name with color codes in it. (Must match the object's name when color-stripped to be valid)
-  "color_quoted"
-    Six-digit capitalized hex number for the color of the text inside quotes.
-  "color_unquoted"
-    Six-digit capitalized hex number for the color of the text outside quotes.
-
-history_get[ room ]
-  {
-    {
-      "timestamp" <integer timestamp>
-      "object_name" <string name of object>
-      "object_type" <"PLAYER" "THING" "EXIT" "ROOM" or "PROGRAM">
-      "object_owner" <string name of player>
-      "message_prefix" <string of message prefix>
-      "message_text" string
-    }dict
-    ...
-  }list
-
-history_clean[ room ]
-  - Removes messages with old timestamps
-  - Removes oldest messages if they exceed the maximum lines the room is set to keep
-  - Removes everything if the room is set to not keep history
-
-emote[ message, prefix, suffix, sender ]
-  - Sends an object's spoof, pose, say, page, whisper, variety of actions, etc to the room the object is in.
-  - Ascend the tree until you hit a 'room' type object, then notify every object under that room. This handles alerting your contents, people outside your vehicle, etc. This should probably check if objects are either players, puppets, or listeners before going through the effort of running 'style' on the message.
-  - Stores a history of the messages in the room object along with details like the sender, and timestamp.
-
-style[ message, sender, recipient ]
-  - Colorize the name of the source (or its underscores-to-spaces equivalent) object no matter where it appears on the line.
-  - The name can be arbitrarily colored by the sender
-  - Colorize things based on the quote level
-  - If no coloring is specified by the sender's settings, then generate it from a hash of their name.
-  - Only the sender's name (Or its underscores-to-spaces equivalent) can be arbitrarily colorized by the sender, so it should stand out where the message originated from.
-  - The sender's name is not colorized if it appears in quotes.
-  - Colorize or otherwise highlight when *your* name is said
-  - The recipient controls whether they see colors or not, and if not, then highlighting can be added in different ways, like underscores or tildes or whatever.
-  - Aborts if it has newlines in it
-)
+$DEF OPTIONS_VALID { "highlight" "highlight_mention_before" "highlight_mention_after" "color_name" "color_quoted" "color_unquoted" }list
+$DEF OPTIONS_VALID_HIGHLIGHT { "STANDARD" "STOCK" "PLAIN" "NONE" }list
 
 (* ------------------------------------------------------------------------ *)
 
@@ -161,12 +185,14 @@ style[ message, sender, recipient ]
     hsl @ M-LIB-COLOR-hsl2rgb
 ;
 
-: history_max_count
-  HISTORY_DEFAULT_MAX_COUNT
+: history_max_count ( d -- )
+  (* TODO: Get it from the room properties. Also maybe have an enforced maximum? *)
+  pop HISTORY_DEFAULT_MAX_COUNT
 ;
 
-: history_max_age
-  HISTORY_DEFAULT_MAX_AGE
+: history_max_age ( d -- )
+  (* TODO: Get it from the room properties. Also maybe have an enforced maximum? *)
+  pop HISTORY_DEFAULT_MAX_AGE
 ;
 
 
@@ -183,8 +209,12 @@ style[ message, sender, recipient ]
     value @ .color_strip object @ name stringcmp 0 = exit
   then
 
-  option @ "color_quoted" = option @ "color_unquoted" = or option @ "color_mention" = or if
+  option @ "color_quoted" = option @ "color_unquoted" = or if
     value @ "[0-9A-F][0-9A-F][0-9A-F][0-9A-F][0-9A-F][0-9A-F]" smatch exit
+  then
+
+  option @ "highlight_mention_before" = option @ "highlight_mention_after" = or if
+    value @ strlen 30 < exit
   then
 ;
 
@@ -218,8 +248,12 @@ style[ message, sender, recipient ]
     then
   then
 
-  option @ "color_mention" = if
-    "2F2FFF"
+  option @ "highlight_mention_before" = if
+    "[#2F2FFF]"
+  then
+
+  option @ "highlight_mention_after" = if
+    ""
   then
 ;
 
@@ -245,7 +279,7 @@ style[ message, sender, recipient ]
     entry_dir @ "/" rsplit nip var! entry_serial
     entry_serial @ number? not if
 $IFDEF USERLOG
-      { "Bad emote history entry '" entry_dir @ "' on room #" room @ intostr ": Invalid serial number. Removing." }join .tell
+      { "Bad emote history entry '" entry_dir @ "' on room #" room @ intostr ": Invalid serial number. Removing." }join userlog
 $ENDIF
       room @ entry_dir @ remove_prop
       continue
@@ -254,7 +288,7 @@ $ENDIF
     (* Ensure we're dealing with a propdir *)
     room @ entry_dir @ propdir? not if
 $IFDEF USERLOG
-      { "Bad emote history entry '" entry_dir @ "' on room #" room @ intostr ": Not a propdir. Removing." }join .tell
+      { "Bad emote history entry '" entry_dir @ "' on room #" room @ intostr ": Not a propdir. Removing." }join userlog
 $ENDIF
       room @ entry_dir @ remove_prop
       continue
@@ -263,7 +297,7 @@ $ENDIF
     room @ entry_dir @ "/" strcat "timestamp" strcat getprop var! entry_timestamp
     entry_timestamp @ not if
 $IFDEF USERLOG
-      { "Bad emote history entry '" entry_dir @ "' on room #" room @ intostr ": No timestamp. Removing." }join .tell
+      { "Bad emote history entry '" entry_dir @ "' on room #" room @ intostr ": No timestamp. Removing." }join userlog
 $ENDIF
       room @ entry_dir @ remove_prop
       continue
@@ -271,10 +305,32 @@ $ENDIF
     now @ entry_timestamp @ -
     dup 0 < if
 $IFDEF USERLOG
-      { "Bad emote history entry '" entry_dir @ "' on room #" room @ intostr ": Future timestamp!" }join .tell
+      { "Bad emote history entry '" entry_dir @ "' on room #" room @ intostr ": Future timestamp!" }join userlog
 $ENDIF
     then
-    history_max_age > if
+    room @ history_max_age > if
+      room @ entry_dir @ remove_prop
+      continue
+    then
+    (* Verify every property in here is a string, and ensure some essential properties *)
+    0 var! good_count
+    entry_dir @ "/" strcat begin
+      room @ swap nextprop
+      dup not if pop break then
+      dup "/" rsplit nip "timestamp" = if
+        continue
+      then
+      room @ over getprop string? not if
+        0 good_count !
+        pop break
+      then
+      dup "/" rsplit nip "object_name" = if good_count ++ then
+      dup "/" rsplit nip "message_text" = if good_count ++ then
+    repeat
+    good_count @ 2 < if
+$IFDEF USERLOG
+      { "Bad emote history entry '" entry_dir @ "' on room #" room @ intostr ": Invalid properties, or essential properties missing. Removing." }join userlog
+$ENDIF
       room @ entry_dir @ remove_prop
       continue
     then
@@ -389,7 +445,7 @@ $DEF EINSTRING over swap instring dup not if pop strlen else nip -- then
         message_prevchar @ "[0-9a-zA-Z]" smatch not if
           message_remain @ to_name @ strlen strcut swap pop "[0-9a-zA-Z]*" smatch not if
             (* We are at the to object's name, and it is on its own, and we are not emoting to ourselves. Place the highlighted name and increment past it. *)
-            result @ { { "[#" to @ "color_mention" option_get "]" }join message_remain @ to_name @ strlen strcut pop }join .color_strcat result !
+            result @ { to @ "highlight_mention_before" option_get message_remain @ to_name @ strlen strcut pop to @ "highlight_mention_after" option_get }join .color_strcat result !
             message_pos @ to_name @ strlen + message_pos !
             continue
           then
@@ -474,10 +530,11 @@ $DEF EINSTRING over swap instring dup not if pop strlen else nip -- then
   message @ string? not if "Non-string argument (1)." abort then
   prefix @ string? not if "Non-string argument (2)." abort then
   suffix @ string? not if "Non-string argument (3)." abort then
+  message @ not if "Empty emote." abort then
   (* Ascend the object tree until a room is found *)
   from @ begin location dup room? until var! room
   (* Store the emote in the room history *)
-  room @ history_max_count -- history_clean
+  room @ room @ history_max_count -- history_clean
   message @ prefix @ suffix @ from @ room @ history_add
   (* Construct styled messages and send out notifies *)
   message @ prefix @ suffix @ from @ room @ emote_to_object
@@ -491,7 +548,7 @@ $LIBDEF M-LIB-EMOTE-emote
 : M-LIB-EMOTE-history_clean[ ref:room -- ]
   .needs_mlev3
   room @ dbref? not if "Non-dbref argument (1)." abort then
-  history_max_count history_clean
+  room @ room @ history_max_count history_clean
 ;
 PUBLIC M-LIB-EMOTE-history_clean
 $LIBDEF M-LIB-EMOTE-history_clean
@@ -501,6 +558,14 @@ $LIBDEF M-LIB-EMOTE-history_clean
 (*****************************************************************************)
 : M-LIB-EMOTE-history_get[ ref:room -- arr:history ]
   .needs_mlev3
+  room @ room @ history_max_count history_clean
+  {
+    HISTORY_PROPDIR begin
+      room @ swap nextprop
+      dup not if pop break then
+      room @ over array_get_propvals swap
+    repeat
+  }list
 ;
 PUBLIC M-LIB-EMOTE-history_get
 $LIBDEF M-LIB-EMOTE-history_get
