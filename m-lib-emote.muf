@@ -29,6 +29,50 @@ $PRAGMA comment_recurse
 (*   o Nested quotations are detected, and highlighted.                      *)
 (*     (eg. color0 "color1 "color2" color1" color0)                          *)
 (*                                                                           *)
+(* CONFIGURATION OPTIONS:                                                    *)
+(*   "_config/emote/highlight_allow_custom"                                  *)
+(*     Use this to alter how objects see custom colors on emotes. This does  *)
+(*     not affect any colors that may be in the prefix or suffix components  *)
+(*     of the emote.                                                         *)
+(*       "YES" -     Normal behavior. The sending object's color_* options   *)
+(*                   take effect.                                            *)
+(*       "NO"  -     Default colors. The sending object's color_* options    *)
+(*                   are ignored and the emotes are seen as if the sender    *)
+(*                   never set any colors in the first place (they are       *)
+(*                   auto-selected).                                         *)
+(*       "PLAIN" -   The sending object's color_* options are ignored and    *)
+(*                   everyone's colors are made to be the same. A system     *)
+(*                   default is used.                                        *)
+(*       "NOCOLOR" - Colors are stripped out entirely, even from the         *)
+(*                   highlight_mention_* options. (but not any characters    *)
+(*                   those options may have added.)                          *)
+(*                                                                           *)
+(*   "_config/emote/highlight_mention_names"                                 *)
+(*     A semicolon separated list of words which, if seen in an emote, will  *)
+(*     be highlighted. It defaults to the receiving object's name, and the   *)
+(*     object's underscores-to-spaces equivalent. Set this to a semicolon    *)
+(*     to disable highlighting.                                              *)
+(*                                                                           *)
+(*   "_config/emote/highlight_mention_before"                                *)
+(*   "highlight_mention_after"                                               *)
+(*     When highlighting words, these strings wrap around it. Color codes in *)
+(*     these strings are allowed to affect the highlighted name. It defaults *)
+(*     to giving the word a blue color.                                      *)
+(*                                                                           *)
+(*   "_config/emote/color_name"                                              *)
+(*     When this object sends an emote, this MCC coded color string that     *)
+(*     will be used in place of its name. It must match the object's name    *)
+(*     when the colors are stripped out, but it may replace underscores with *)
+(*     spaces.                                                               *)
+(*                                                                           *)
+(*   "_config/emote/color_quoted"                                            *)
+(*     When this object sends an emote, this six-digit hexadecimal RGB color *)
+(*     will be used for everything in the emote outside of quotes.           *)
+(*                                                                           *)
+(*   "_config/emote/color_unquoted"                                          *)
+(*     When this object sends an emote, this six-digit hexadecimal RGB color *)
+(*     will be used for everything in the emote inside of quotes.            *)
+(*                                                                           *)
 (* PUBLIC ROUTINES:                                                          *)
 (*   M-LIB-EMOTE-emote[ str:message str:prefix str:suffix ref:from -- ]      *)
 (*     Send an emote from a given object. The emote is sent to every zombie  *)
@@ -71,59 +115,13 @@ $PRAGMA comment_recurse
 (*     except for the timestamp, which will always be an integer.            *)
 (*                                                                           *)
 (*   M-LIB-EMOTE-option_get[ ref:object str:option -- str:value ]            *)
-(*     Get an emote setting from an object. See OPTION SETTINGS below.       *)
-(*                                                                           *)
-(*   M-LIB-EMOTE-option_set[ ref:object str:option str:value                 *)
-(*                           -- bool:success? ]                              *)
-(*     Set an emote setting from an object. See OPTION SETTINGS below.       *)
+(*     Specify a configuration option name (without the propdir) to get an   *)
+(*     emote setting from an object. If the option property is invalid, a    *)
+(*     default is returned instead. See CONFIGURATION OPTIONS above.         *)
 (*                                                                           *)
 (*   M-LIB-EMOTE-style[ str:message ref:from ref:to -- str:result ]          *)
 (*     Colors and highlights an emote as if it were sent from and to the     *)
 (*     given objects and returns the resulting string.                       *)
-(*                                                                           *)
-(* OPTION SETTINGS:                                                          *)
-(*   "highlight_allow_custom"                                                *)
-(*     Use this to alter how objects see custom colors on emotes. This does  *)
-(*     not affect any colors that may be in the prefix or suffix components  *)
-(*     of the emote.                                                         *)
-(*       "YES" -     Normal behavior. The sending object's color_* options   *)
-(*                   take effect.                                            *)
-(*       "NO"  -     Default colors. The sending object's color_* options    *)
-(*                   are ignored and the emotes are seen as if the sender    *)
-(*                   never set any colors in the first place (they are       *)
-(*                   auto-selected).                                         *)
-(*       "PLAIN" -   The sending object's color_* options are ignored and    *)
-(*                   everyone's colors are made to be the same. A system     *)
-(*                   default is used.                                        *)
-(*       "NOCOLOR" - Colors are stripped out entirely, even from the         *)
-(*                   highlight_mention_* options. (but not any characters    *)
-(*                   those options may have added.)                          *)
-(*                                                                           *)
-(*   "highlight_mention_names"                                               *)
-(*     A semicolon separated list of words which, if seen in an emote, will  *)
-(*     be highlighted. It defaults to the receiving object's name, and the   *)
-(*     object's underscores-to-spaces equivalent. Set this to a semicolon    *)
-(*     to disable highlighting.                                              *)
-(*                                                                           *)
-(*   "highlight_mention_before"                                              *)
-(*   "highlight_mention_after"                                               *)
-(*     When highlighting words, these strings wrap around it. Color codes in *)
-(*     these strings are allowed to affect the highlighted name. It defaults *)
-(*     to giving the word a blue color.                                      *)
-(*                                                                           *)
-(*   "color_name"                                                            *)
-(*     When this object sends an emote, this MCC coded color string that     *)
-(*     will be used in place of its name. It must match the object's name    *)
-(*     when the colors are stripped out, but it may replace underscores with *)
-(*     spaces.                                                               *)
-(*                                                                           *)
-(*   "color_quoted"                                                          *)
-(*     When this object sends an emote, this six-digit hexadecimal RGB color *)
-(*     will be used for everything in the emote outside of quotes.           *)
-(*                                                                           *)
-(*   "color_unquoted"                                                        *)
-(*     When this object sends an emote, this six-digit hexadecimal RGB color *)
-(*     will be used for everything in the emote inside of quotes.            *)
 (*                                                                           *)
 (*****************************************************************************)
 (* Revision History:                                                         *)
@@ -224,7 +222,7 @@ $DEF OPTIONS_VALID_HIGHLIGHT_ALLOW_CUSTOM { "YES" "NO" "PLAIN" "NOCOLOR" }list
   value @ not if 0 exit then
   option @ tolower option !
   option @ "highlight_allow_custom" = if
-    value @ OPTIONS_VALID_HIGHLIGHT_ALLOW_CUSTOM .array_hasval exit
+    { value @ }list OPTIONS_VALID_HIGHLIGHT_ALLOW_CUSTOM array_union not not exit
   then
   option @ "color_name" = if
     value @ .color_strip object @ name stringcmp 0 = exit
@@ -283,6 +281,9 @@ $DEF OPTIONS_VALID_HIGHLIGHT_ALLOW_CUSTOM { "YES" "NO" "PLAIN" "NOCOLOR" }list
   object @ OPTIONS_PROPDIR "/" strcat option @ strcat getpropstr
   dup object @ option @ option_valid not if
     pop object @ option @ option_default
+  then
+  option @ "highlight_allow_custom" = if
+    toupper
   then
 ;
 
@@ -652,26 +653,6 @@ $LIBDEF M-LIB-EMOTE-history_get
 ;
 PUBLIC M-LIB-EMOTE-option_get
 $LIBDEF M-LIB-EMOTE-option_get
-
-(*****************************************************************************)
-(*                          M-LIB-EMOTE-option_set                           *)
-(*****************************************************************************)
-: M-LIB-EMOTE-option_set[ ref:object str:option str:value -- bool:success? ]
-  .needs_mlev3
-
-  option @ string? not if "Non-string argument (1)." abort then
-  option @ OPTIONS_VALID .array_hasval not if "Invalid option." abort then
-  object @ thing? object @ player? or not if "Only player and thing objects can have emote options." abort then
-
-  value @ object @ option @ option_valid not if
-    0 exit
-  then
-
-  object @ OPTIONS_PROPDIR "/" strcat option @ strcat value @ setprop
-  1
-;
-PUBLIC M-LIB-EMOTE-option_set
-$LIBDEF M-LIB-EMOTE-option_set
 
 (*****************************************************************************)
 (*                             M-LIB-EMOTE-style                             *)

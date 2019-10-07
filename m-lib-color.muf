@@ -29,27 +29,24 @@ $PRAGMA comment_recurse
 (*   of the string instead of having it interject into the middle of your    *)
 (*   art.                                                                    *)
 (*                                                                           *)
+(* CONFIGURATION OPTIONS:                                                    *)
+(*   "_config/color/type"                                                    *)
+(*     This, in addition to the COLOR flag, is the player property used to   *)
+(*     determine which terminal encoding to with M-LIB-COLOR-encoding_get,   *)
+(*     and "AUTO" transcoding. When this is used on a non-player object, the *)
+(*     encoding is retreived from the object's owner instead.                *)
+(*                                                                           *)
 (* PUBLIC ROUTINES:                                                          *)
 (*   M-LIB-COLOR-encoding_default[ -- str:type ]                             *)
 (*     Returns the default encoding.                                         *)
 (*                                                                           *)
 (*   M-LIB-COLOR-encoding_get[ ref:object -- str:type ]                      *)
-(*     Get a player's currently set ANSI encoding type. This value is used   *)
-(*     for the 'AUTO' encoding type, and represents the player's preferred   *)
-(*     encoding. If a player has no COLOR flag, then this will return        *)
-(*     'NOCOLOR'. At present, this will only allow you to use ANSI           *)
-(*     encodings. If no encoding is set, the default encoding is returned.   *)
-(*                                                                           *)
-(*   M-LIB-COLOR-encoding_set[ ref:object str:type -- ]                      *)
-(*     Alter a player's currently set ANSI encoding type. This value is used *)
-(*     by some convenience '.color-' convenience calls, and represents the   *)
-(*     player's preferred encoding. If a player has no COLOR flag, then this *)
-(*     will return 'NOCOLOR'. At present, this will only allow you to use    *)
-(*     ANSI encodings.                                                       *)
+(*     Get a player's currently set ANSI encoding type. If no encoding is    *)
+(*     set, the default encoding is returned.                                *)
 (*                                                                           *)
 (*   M-LIB-COLOR-encoding_player_valid[ -- list:options ]                    *)
-(*     Returns a list of valid encodings for with M-LIB-COLOR-encoding_set   *)
-(*     in order of quality from best to worst.                               *)
+(*     Returns a list of valid encodings that players can set in their       *)
+(*     properties in order of quality from best to worst.                    *)
 (*                                                                           *)
 (*   M-LIB-COLOR-explode_array[ str:source str:sep -- arr:result ]           *)
 (*     Acts like the EXPLODE_ARRAY primitive, but it works for strings with  *)
@@ -509,7 +506,7 @@ $PRAGMA comment_recurse
 $VERSION 1.0
 $AUTHOR  Daniel Benoy
 $NOTE    Text color library.
-$DOCCMD  @list __PROG__=2-480
+$DOCCMD  @list __PROG__=2-502
 
 (* Begin configurable options *)
 
@@ -1558,23 +1555,6 @@ $LIBDEF M-LIB-COLOR-encoding_default
 ;
 PUBLIC M-LIB-COLOR-encoding_get
 $LIBDEF M-LIB-COLOR-encoding_get
-
-(*****************************************************************************)
-(*                          M-LIB-COLOR-encoding_set                         *)
-(*****************************************************************************)
-: M-LIB-COLOR-encoding_set[ ref:object str:type -- ]
-  .needs_mlev3
-
-  object @ dbref? not if "Non-dbref argument (1)." abort then
-  object @ player? not if "Object must be a player (1)." abort then
-  type @ string? not if "Non-string argument (2)." abort then
-  type @ SUPPORTED_TYPES .array_hasval not if "Encoding type not recognized (2)." abort then
-  type @ "ANSI-" instr 1 = not if "Only ANSI encodings are supported right now. Use the COLOR flag to set NOCOLOR. (2)" abort then
-
-  object @ ENCODING_PROP type @ setprop
-;
-PUBLIC M-LIB-COLOR-encoding_set
-$LIBDEF M-LIB-COLOR-encoding_set
 
 (*****************************************************************************)
 (*                     M-LIB-COLOR-encoding_player_valid                     *)

@@ -36,10 +36,16 @@ $AUTHOR  Daniel Benoy
 $NOTE    Manage text color settings.
 $DOCCMD  @list __PROG__=2-30
 
-$include $m/lib/color
-$include $m/lib/string
+(* Begin configurable options *)
+
+$def ENCODING_PROP "_config/color/type"
+
+(* End configurable options *)
 
 (* ------------------------------------------------------------------------ *)
+
+$INCLUDE $m/lib/color
+$INCLUDE $m/lib/string
 
 : text_gradient[ str:color_me int:red int:green int:blue int:step_red int:step_green int:step_blue bool:reverse -- str:result ]
   "" var! retval
@@ -130,7 +136,7 @@ $include $m/lib/string
   then
 
   me @ "COLOR" set
-  me @ swap toupper M-LIB-COLOR-encoding_set
+  me @ ENCODING_PROP rot toupper setprop
   "Done." 85 85 255 0 50 0 0 text_gradient .color_tell
 ;
 
@@ -153,7 +159,7 @@ $include $m/lib/string
       "no" over stringpfx if pop break then
       "yes" over stringpfx if
         me @ "COLOR" set
-        me @ this_option @ M-LIB-COLOR-encoding_set
+        me @ ENCODING_PROP this_option @ setprop
         "Done." 85 85 255 0 50 0 0 text_gradient .color_tell
         exit
       then
