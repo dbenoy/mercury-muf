@@ -104,10 +104,14 @@ $PRAGMA comment_recurse
 (*       [#XXXXXX] - Foreground color in RGB format (Like HTML codes)        *)
 (*       [*XXXXXX] - Background color in RGB format (Like HTML codes)        *)
 (*                                                                           *)
-(*       [<PPPCCC] - "Color At" Take the foreground color CCC and place it   *)
-(*                   at location PPP. The values are in decimal, and use the *)
-(*                   XTERM256 palette numbers below.                         *)
-(*       [>PPPCCC] - Like above, but for the background color.               *)
+(*       [>PPPCCC] - "Color At" At the position PPP in the string, place     *)
+(*       [}PPPCCC]   color CCC. '>' for foreground and '}' for background    *)
+(*                   color. Use the XTERM256 palette numbers below. Both     *)
+(*                   numbers are in decimal.                                 *)
+(*                                                                           *)
+(*       [<PPPCCC] - "Reverse Color At" Like "Color At" but the position is  *)
+(*       [{PPPCCC]   counted from the end of the string instead of the       *)
+(*                   beginning.                                              *)
 (*                                                                           *)
 (*       [!000000] - This is removed and replaced with nothing.              *)
 (*       [!000001] - This becomes a '[' character                            *)
@@ -528,8 +532,10 @@ $include $m/lib/string
 
 $def CODE_TYPE_FOREGROUND "#"
 $def CODE_TYPE_BACKGROUND "*"
-$def CODE_TYPE_FOREGROUND_AT "<"
-$def CODE_TYPE_BACKGROUND_AT ">"
+$def CODE_TYPE_FOREGROUND_AT ">"
+$def CODE_TYPE_BACKGROUND_AT "}"
+$def CODE_TYPE_FOREGROUND_RAT "<"
+$def CODE_TYPE_BACKGROUND_RAT "{"
 $def CODE_TYPE_SPECIAL "!"
 
 $define CODE_TYPE_VALID
@@ -540,9 +546,11 @@ $define CODE_TYPE_VALID
   CODE_TYPE_SPECIAL
   CODE_TYPE_FOREGROUND_AT
   CODE_TYPE_BACKGROUND_AT
+  CODE_TYPE_FOREGROUND_RAT
+  CODE_TYPE_BACKGROUND_RAT
 
   (* Reserved *)
-  "\"" "$" "%" "&" "'" "(" ")" "*" "+" "," "-" "." "/" ":" ";" "=" "?" "@" "[" "\\" "]" "^" "_" "`" "{" "|" "}" "~"
+  "\"" "$" "%" "&" "'" "(" ")" "*" "+" "," "-" "." "/" ":" ";" "=" "?" "@" "[" "\\" "]" "^" "_" "`" "|" "~"
 }list
 $enddef
 
@@ -1247,9 +1255,9 @@ lvar ansi_table_3bit_xterm_rgb
     then
     "Invalid ANSI type" abort
   then
-  code_type @ CODE_TYPE_BACKGROUND_AT = code_type @ CODE_TYPE_FOREGROUND_AT = or if
-    (* We should only get here if we forgot to preprocess these codes away *)
-    "Internal error. Please note how to replicate this error and contact the author." abort
+  code_type @ CODE_TYPE_BACKGROUND_AT = code_type @ CODE_TYPE_FOREGROUND_AT = or code_type @ CODE_TYPE_BACKGROUND_RAT = or code_type @ CODE_TYPE_FOREGROUND_RAT = or if
+    (* These are handled in preprocessing *)
+    "" exit
   then
   code_type @ CODE_TYPE_SPECIAL = if
     code_value @ CODE_VALUE_SPECIAL_RESET = if
@@ -1324,10 +1332,6 @@ lvar ansi_table_3bit_xterm_rgb
           (* We hit a literal [ or ], so increment the place in string without codes by one. *)
           place_in_string_without_codes ++
         then
-        code_type @ CODE_TYPE_BACKGROUND_AT = code_type @ CODE_TYPE_FOREGROUND_AT = or if
-          (* We should only get here if we forgot to preprocess these codes away *)
-          "Internal error. Please note how to replicate this error and contact the author." abort
-        then
         source @ strlen post_code @ strlen - place_in_string !
       else
         (* '[' without being an actual code. Ignore it and move on. *)
@@ -1362,89 +1366,6 @@ lvar ansi_table_3bit_xterm_rgb
   then
 ;
 
-(* Preprocess an MCC line for 'modify something elsewhere on the line' codes *)
-: mcc_preprocess_line[ str: source -- str:result ]
-  source @ "[" instr not if
-    source @ exit
-  then
-
-  0 var! errors
-  var pre_insert_pos
-  var pre_insert_color
-  { }list var! pre_inserts
-  source @ "[" split swap var! retval
-  "[" explode_array foreach
-    nip
-    "[" swap strcat
-    dup mcc_tagparse var! post_code var! code_value var! code_type
-    code_type @ CODE_TYPE_FOREGROUND_AT = code_type @ CODE_TYPE_BACKGROUND_AT = or code_value @ and if
-      pop
-      code_value @ 3 strcut
-      pre_insert_color !
-      pre_insert_pos !
-      (* Parse the insert position *)
-      pre_insert_pos @ number? not if
-
-        { retval @ "[MCC-v" .version " " code_type @ " BADPOS]" post_code @ }join retval !
-        errors ++
-        continue
-      then
-      pre_insert_pos @ atoi pre_insert_pos !
-      (* Parse the insert color *)
-      pre_insert_color @ atoi pre_insert_color !
-      pre_insert_color @ 16 < pre_insert_color @ 255 > or if
-        { retval @ "[MCC-v" .version " " code_type @ " BADCLR]" post_code @ }join retval !
-        errors ++
-        continue
-      then
-        ansi_table_8bit_rgb pre_insert_color @ array_getitem pre_insert_color !
-        { pre_insert_color @ 0 [] .itox 2 .zeropad pre_insert_color @ 1 [] .itox 2 .zeropad pre_insert_color @ 2 [] .itox 2 .zeropad }join pre_insert_color !
-      (* Store the insert for later *)
-      code_type @ CODE_TYPE_FOREGROUND_AT = if
-        { "[#" pre_insert_color @ "]" }join
-      else
-        { "[*" pre_insert_color @ "]" }join
-      then
-      pre_insert_color !
-      { pre_insert_pos @ pre_insert_color @ }list pre_inserts @ array_appenditem pre_inserts !
-      (* Store the string with this code stripped out *)
-      retval @ post_code @ strcat retval !
-    else
-      retval @ swap strcat retval !
-    then
-  repeat
-  (* Now that we've worked out where the inserts will be, apply them to the result *)
-  errors @ if
-    (* If there were errors, they applied error messages to the string, which which would mess up the positioning so just bail out before applying inserts. *)
-    retval @ exit
-  then
-  pre_inserts @ foreach
-    nip
-    array_vals pop
-    pre_insert_color !
-    pre_insert_pos !
-    retval @ pre_insert_pos @ 0 mcc_strcut
-    dup if
-      pre_insert_color @ swap strcat strcat retval !
-    else
-      (* Don't bother putting codes at the end of the string. Resets are automatically inserted at the end of the string anyway so it won't do anything. *)
-      pop pop
-    then
-  repeat
-  retval @
-;
-
-(* Convert an entire MCC sequence to another encoding *)
-: mcc_preprocess[ str:source -- str:result ]
-  source @ "\r" explode_array 1 array_cut swap array_vals pop mcc_preprocess_line var! retval
-  foreach
-    nip
-    mcc_preprocess_line
-    retval @ "\r" strcat swap strcat retval !
-  repeat
-  retval @
-;
-
 (* Convert an entire line of MCC to another encoding *)
 : mcc_convert_line[ str:source str:to_type -- str:result ]
   source @ "[" instr not if
@@ -1475,6 +1396,110 @@ lvar ansi_table_3bit_xterm_rgb
   foreach
     nip
     to_type @ mcc_convert_line
+    retval @ "\r" strcat swap strcat retval !
+  repeat
+  retval @
+;
+
+(* Preprocess an MCC line for 'modify something elsewhere on the line' codes *)
+: mcc_preprocess_line[ str: source -- str:result ]
+  source @ "[" instr not if
+    source @ exit
+  then
+
+  source @ "NOCOLOR" mcc_convert strlen var! source_length
+
+  0 var! errors
+  var pre_insert_pos
+  var pre_insert_color
+  { }list var! pre_inserts
+  source @ "[" split swap var! retval
+  "[" explode_array foreach
+    nip
+    "[" swap strcat
+    dup mcc_tagparse var! post_code var! code_value var! code_type
+    code_type @ CODE_TYPE_FOREGROUND_AT = code_type @ CODE_TYPE_BACKGROUND_AT = or code_type @ CODE_TYPE_FOREGROUND_RAT = or code_type @ CODE_TYPE_BACKGROUND_RAT = or code_value @ and if
+      pop
+      code_value @ 3 strcut
+      pre_insert_color !
+      pre_insert_pos !
+      (* Parse the insert position *)
+      pre_insert_pos @ number? not if
+
+        { retval @ "[MCC-v" .version " " code_type @ " BADPOS]" post_code @ }join retval !
+        errors ++
+        continue
+      then
+      pre_insert_pos @ atoi pre_insert_pos !
+      (* If this is a 'reverse at', we count from the end of the string. *)
+      code_type @ CODE_TYPE_FOREGROUND_RAT = code_type @ CODE_TYPE_BACKGROUND_RAT = or if
+        source_length @ pre_insert_pos @ - pre_insert_pos !
+      then
+      (* Parse the insert color *)
+      pre_insert_color @ atoi pre_insert_color !
+      pre_insert_color @ 16 < pre_insert_color @ 255 > or if
+        { retval @ "[MCC-v" .version " " code_type @ " BADCLR]" post_code @ }join retval !
+        errors ++
+        continue
+      then
+        ansi_table_8bit_rgb pre_insert_color @ array_getitem pre_insert_color !
+        { pre_insert_color @ 0 [] .itox 2 .zeropad pre_insert_color @ 1 [] .itox 2 .zeropad pre_insert_color @ 2 [] .itox 2 .zeropad }join pre_insert_color !
+      (* Store the insert for later *)
+      code_type @ CODE_TYPE_FOREGROUND_AT = code_type @ CODE_TYPE_FOREGROUND_RAT = or if
+        { "[#" pre_insert_color @ "]" }join
+      else
+        { "[*" pre_insert_color @ "]" }join
+      then
+      pre_insert_color !
+      { pre_insert_pos @ pre_insert_color @ }list pre_inserts @ array_appenditem pre_inserts !
+      (* Store the string with this code stripped out *)
+      retval @ post_code @ strcat retval !
+    else
+      retval @ swap strcat retval !
+    then
+  repeat
+  errors @ if
+    (* If there were errors, they applied error messages to the string, which which would mess up the positioning so just bail out before applying inserts. *)
+    retval @ exit
+  then
+  (* Now that we've worked out where the inserts will be, apply them to the result *)
+  var largest_pre_string_insert
+  pre_inserts @ foreach
+    nip
+    array_vals pop
+    pre_insert_color !
+    pre_insert_pos !
+    pre_insert_pos @ 0 < if
+      largest_pre_string_insert @ not if
+        1
+      else
+        pre_insert_pos @ largest_pre_string_insert @ 0 [] >
+      then
+      if
+        { pre_insert_pos @ pre_insert_color @ }list largest_pre_string_insert !
+      then
+      continue
+    then
+    pre_insert_pos @ source_length @ >= if
+      continue
+    then
+    retval @ pre_insert_pos @ 0 mcc_strcut pre_insert_color @ swap strcat strcat retval !
+  repeat
+  largest_pre_string_insert @ if
+    largest_pre_string_insert @ array_vals pop
+    pre_insert_color !
+    pre_insert_pos !
+    pre_insert_color @ retval @ strcat retval !
+  then
+  retval @
+;
+
+(* Convert an entire MCC sequence to another encoding *)
+: mcc_preprocess[ str:source -- str:result ]
+  source @ "\r" explode_array 1 array_cut swap array_vals pop mcc_preprocess_line var! retval
+  foreach
+    nip
+    mcc_preprocess_line
     retval @ "\r" strcat swap strcat retval !
   repeat
   retval @
