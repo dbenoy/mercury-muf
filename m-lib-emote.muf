@@ -82,8 +82,22 @@ $PRAGMA comment_recurse
 (*     given objects and returns the resulting string.                       *)
 (*                                                                           *)
 (* OPTION SETTINGS:                                                          *)
-(*   "highlight"                                                             *)
-(*     TODO                                                                  *)
+(*   "highlight_allow_custom"                                                *)
+(*     Use this to alter how objects see custom colors on emotes. This does  *)
+(*     not affect any colors that may be in the prefix or suffix components  *)
+(*     of the emote.                                                         *)
+(*       "YES" -     Normal behavior. The sending object's color_* options   *)
+(*                   take effect.                                            *)
+(*       "NO"  -     Default colors. The sending object's color_* options    *)
+(*                   are ignored and the emotes are seen as if the sender    *)
+(*                   never set any colors in the first place (they are       *)
+(*                   auto-selected).                                         *)
+(*       "PLAIN" -   The sending object's color_* options are ignored and    *)
+(*                   everyone's colors are made to be the same. A system     *)
+(*                   default is used.                                        *)
+(*       "NOCOLOR" - Colors are stripped out entirely, even from the         *)
+(*                   highlight_mention_* options. (but not any characters    *)
+(*                   those options may have added.)                          *)
 (*                                                                           *)
 (*   "highlight_mention_before"                                              *)
 (*   "highlight_mention_after"                                               *)
@@ -136,11 +150,16 @@ $DOCCMD  @list __PROG__=2-53
 
 (* Begin configurable options *)
 
-$DEF HISTORY_PROPDIR           "@emote/history/" (* Use a @ privileged property! *)
+$DEF HISTORY_PROPDIR           "_emote/@history/" (* Use a @ privileged property! *)
+$DEF HISTORY_PROP_MAX_COUNT    "_emote/history_max_count"
+$DEF HISTORY_PROP_MAX_AGE      "_emote/history_max_count"
 $DEF HISTORY_DEFAULT_MAX_COUNT 100
 $DEF HISTORY_DEFAULT_MAX_AGE   604800 (* One week *)
 $DEF OPTIONS_PROPDIR           "_config/emote/"
 $DEF USERLOG
+$DEF THEME_COLOR_NAME          "A8A8A8"
+$DEF THEME_COLOR_UNQUOTED      "626262"
+$DEF THEME_COLOR_QUOTED        "A8A8A8"
 
 (* End configurable options *)
 
@@ -157,8 +176,8 @@ $INCLUDE $m/lib/array
 $INCLUDE $m/lib/string
 $INCLUDE $m/lib/color
 
-$DEF OPTIONS_VALID { "highlight" "highlight_mention_before" "highlight_mention_after" "color_name" "color_quoted" "color_unquoted" }list
-$DEF OPTIONS_VALID_HIGHLIGHT { "STANDARD" "STOCK" "PLAIN" "NONE" }list
+$DEF OPTIONS_VALID { "highlight_allow_custom" "highlight_mention_before" "highlight_mention_after" "color_name" "color_quoted" "color_unquoted" }list
+$DEF OPTIONS_VALID_HIGHLIGHT_ALLOW_CUSTOM { "YES" "NO" "PLAIN" "NOCOLOR" }list
 
 (* ------------------------------------------------------------------------ *)
 
@@ -198,21 +217,16 @@ $DEF OPTIONS_VALID_HIGHLIGHT { "STANDARD" "STOCK" "PLAIN" "NONE" }list
 
 : option_valid[ str:value ref:object str:option -- bool:valid? ]
   value @ not if 0 exit then
-
   option @ tolower option !
-
-  option @ "highlight" = if
-    value @ OPTIONS_VALID_HIGHLIGHT .array_hasval exit
+  option @ "highlight_allow_custom" = if
+    value @ OPTIONS_VALID_HIGHLIGHT_ALLOW_CUSTOM .array_hasval exit
   then
-
   option @ "color_name" = if
     value @ .color_strip object @ name stringcmp 0 = exit
   then
-
   option @ "color_quoted" = option @ "color_unquoted" = or if
     value @ "[0-9A-F][0-9A-F][0-9A-F][0-9A-F][0-9A-F][0-9A-F]" smatch exit
   then
-
   option @ "highlight_mention_before" = option @ "highlight_mention_after" = or if
     value @ strlen 30 < exit
   then
@@ -220,11 +234,6 @@ $DEF OPTIONS_VALID_HIGHLIGHT { "STANDARD" "STOCK" "PLAIN" "NONE" }list
 
 : option_default[ ref:object str:option -- str:default ]
   option @ tolower option !
-
-  option @ "highlight" = if
-    "STANDARD"
-  then
-
   option @ "color_name" = option @ "color_quoted" = or option @ "color_unquoted" = or if
     (* Generate a random pastel color seeded off the option name and the object's name *)
     { "COLOR" "muckname" sysparm object @ name }join sha1hash setseed
@@ -246,20 +255,21 @@ $DEF OPTIONS_VALID_HIGHLIGHT { "STANDARD" "STOCK" "PLAIN" "NONE" }list
       { "[#" rot "]" object @ name " " "_" subst }join
     else
     then
+    exit
   then
-
+  option @ "highlight_allow_custom" = if
+    "STANDARD" exit
+  then
   option @ "highlight_mention_before" = if
-    "[#2F2FFF]"
+    "[>000069][>001063]" exit
   then
-
   option @ "highlight_mention_after" = if
-    ""
+    "[<999063][<000069]" exit
   then
 ;
 
 : option_get[ ref:object str:option -- str:value ]
   object @ OPTIONS_PROPDIR "/" strcat option @ strcat getpropstr
-
   dup object @ option @ option_valid not if
     pop object @ option @ option_default
   then
@@ -387,23 +397,71 @@ $ENDIF
   room @ { HISTORY_PROPDIR "/" serial @ intostr "/" }join entry @ array_put_propvals
 ;
 
-: color_quotelevel[ ref:object int:level ]
+: highlight_quotelevel_get[ ref:to ref:from int:level -- str:result ]
+  to @ "highlight_allow_custom" option_get "NOCOLOR" = if "" exit then
+  var color_unquoted
+  var color_quoted
+  begin
+    to @ "highlight_allow_custom" option_get "NO" = if
+      from @ "color_unquoted" option_default color_unquoted !
+      from @ "color_quoted" option_default color_quoted !
+      break
+    then
+    to @ "highlight_allow_custom" option_get "PLAIN" = if
+      THEME_COLOR_UNQUOTED color_unquoted !
+      THEME_COLOR_QUOTED color_quoted !
+      break
+    then
+    from @ "color_unquoted" option_get color_unquoted !
+    from @ "color_quoted" option_get color_quoted !
+  1 until
+
   level @ 0 <= if
-    object @ "color_unquoted" option_get exit
+    color_unquoted @
+  else
+    color_quoted @
+    (* Boost the lightness by 10% for every additional quote level *)
+    M-LIB-COLOR-rgb2hsl var! hsl
+    hsl @ 2 [] level @ 1 - 10.0 / +
+    dup 1.0 > if pop 1.0 then
+    hsl @ 2 ->[] hsl !
+    hsl @ M-LIB-COLOR-hsl2rgb
   then
-  object @ "color_quoted" option_get
-  (* Boost the saturation by 10% for every additional quote level *)
-  M-LIB-COLOR-rgb2hsl var! hsl
-  hsl @ 1 [] level @ 1 - 10.0 / +
-  dup 1.0 > if pop 1.0 then
-  hsl @ 1 ->[] hsl !
-  hsl @ M-LIB-COLOR-hsl2rgb
+
+  "[#" swap strcat "]" strcat
+;
+
+: highlight_name[ ref:to ref:from -- str:result ]
+  to @ "highlight_allow_custom" option_get "NOCOLOR" = if
+    from @ name exit
+  then
+  to @ "highlight_allow_custom" option_get "NO" = if
+    from @ "color_name" option_default exit
+  then
+  to @ "highlight_allow_custom" option_get "PLAIN" = if
+    { "[#" THEME_COLOR_NAME "]" from @ name }join exit
+  then
+  from @ "color_name" option_get
+;
+
+: highlight_mention_before_get[ ref:to -- str:result ]
+  to @ "highlight_mention_before" option_get
+  to @ "highlight_allow_custom" option_get "NOCOLOR" = if
+    .color_strip
+  then
+;
+
+: highlight_mention_after_get[ ref:to -- str:result ]
+  to @ "highlight_mention_after" option_get
+  to @ "highlight_allow_custom" option_get "NOCOLOR" = if
+    .color_strip
+  then
 ;
 
 $DEF EINSTRING over swap instring dup not if pop strlen else nip -- then
 : style[ str:message ref:from ref:to -- str:result ]
   "" var! result
-  (* Emotes are not colored by the user *)
+  (* Emotes are not colored by the message text itself *)
   message @ .color_escape message !
   (* Store some frequently accessed information *)
   from @ name var! from_name
@@ -432,7 +490,7 @@ $DEF EINSTRING over swap instring dup not if pop strlen else nip -- then
         message_remain @ from_name @ strlen strcut swap pop "[0-9a-zA-Z]*" smatch not if
           quote_level @ not if
             (* We are at the from object's name, and it is on its own, and we're outside of quotes. Place the highlighted name and increment past it. *)
-            result @ from @ "color_name" option_get .color_strcat result !
+            result @ to @ from @ highlight_name .color_strcat result !
             message_pos @ from_name @ strlen + message_pos !
             continue
           then
@@ -445,7 +503,7 @@ $DEF EINSTRING over swap instring dup not if pop strlen else nip -- then
         message_prevchar @ "[0-9a-zA-Z]" smatch not if
           message_remain @ to_name @ strlen strcut swap pop "[0-9a-zA-Z]*" smatch not if
             (* We are at the to object's name, and it is on its own, and we are not emoting to ourselves. Place the highlighted name and increment past it. *)
-            result @ { to @ "highlight_mention_before" option_get message_remain @ to_name @ strlen strcut pop to @ "highlight_mention_after" option_get }join .color_strcat result !
+            result @ { to @ highlight_mention_before_get message_remain @ to_name @ strlen strcut pop to @ highlight_mention_after_get }join .color_strcat result !
             message_pos @ to_name @ strlen + message_pos !
             continue
           then
@@ -458,12 +516,12 @@ $DEF EINSTRING over swap instring dup not if pop strlen else nip -- then
         (* Going up! Increase the quote level then place the quote mark. *)
         1 quoting_up !
         quote_level ++
-        result @ { "[#" from @ quote_level @ color_quotelevel "]\"" }join .color_strcat result !
+        result @ to @ from @ quote_level @ highlight_quotelevel_get "\"" strcat .color_strcat result !
         message_pos ++
         continue
       else
         (* Going down. Place the quote marke, then decrease the quote level. *)
-        result @ { "[#" from @ quote_level @ color_quotelevel "]\"" }join .color_strcat result !
+        result @ to @ from @ quote_level @ highlight_quotelevel_get "\"" strcat .color_strcat result !
         message_pos ++
         0 quoting_up !
         quote_level --
@@ -482,7 +540,7 @@ $DEF EINSTRING over swap instring dup not if pop strlen else nip -- then
     dup 1 < if
       pop 1
     then
-    result @ message_remain @ 3 pick strcut pop { "[#" from @ quote_level @ color_quotelevel "]" }join swap strcat .color_strcat result !
+    result @ message_remain @ 3 pick strcut pop to @ from @ quote_level @ highlight_quotelevel_get swap strcat .color_strcat result !
     message_pos @ swap + message_pos !
     message_pos @ message @ strlen >=
   until
