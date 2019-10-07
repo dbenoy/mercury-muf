@@ -1425,7 +1425,6 @@ lvar ansi_table_3bit_xterm_rgb
       pre_insert_pos !
       (* Parse the insert position *)
       pre_insert_pos @ number? not if
-
         { retval @ "[MCC-v" .version " " code_type @ " BADPOS]" post_code @ }join retval !
         errors ++
         continue
@@ -1433,7 +1432,7 @@ lvar ansi_table_3bit_xterm_rgb
       pre_insert_pos @ atoi pre_insert_pos !
       (* If this is a 'reverse at', we count from the end of the string. *)
       code_type @ CODE_TYPE_FOREGROUND_RAT = code_type @ CODE_TYPE_BACKGROUND_RAT = or if
-        source_length @ pre_insert_pos @ - pre_insert_pos !
+        source_length @ pre_insert_pos @ - -- pre_insert_pos !
       then
       (* Parse the insert color *)
       pre_insert_color @ atoi pre_insert_color !
