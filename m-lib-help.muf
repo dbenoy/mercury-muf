@@ -21,7 +21,7 @@ $PRAGMA comment_recurse
 (*     program is checked for this property instead. If the program also     *)
 (*     does not have the property, the library will attepmt to ask the       *)
 (*     program itself by calling the public function "M-HELP-desc" if it is  *)
-(*     available, expecting a string.                                        *)
+(*     available, passing in the name of the action and expecting a string.  *)
 (*                                                                           *)
 (*   "_help/help"                                                            *)
 (*     Place this 'list' type property on an action to set help and usage    *)
@@ -29,7 +29,8 @@ $PRAGMA comment_recurse
 (*     linked to a program, the program is checked for this property         *)
 (*     instead. If the program also does not have the property, the library  *)
 (*     will attempt to ask the program itself by calling the public function *)
-(*     "M-HELP-help" if it is available, expecting a list array of strings.  *)
+(*     "M-HELP-help" if it is available, passing in the name of the action   *)
+(*     and expecting a list array of strings.                                *)
 (*                                                                           *)
 (* PUBLIC ROUTINES:                                                          *)
 (*   M-LIB-HELP-command_get_name[ ref:action -- str:result ]                 *)
@@ -109,6 +110,7 @@ $PUBDEF :
     (* No properties are set. Try asking the program itself. *)
     prog @ FUNC_COMMAND_DESC cancall? if
       0 try
+        action @ name tolower
         prog @ "M-HELP-desc" call
         depth 1 != if "One result expected." abort then
         dup string? not if "String expected." abort then
@@ -136,14 +138,22 @@ $PUBDEF :
     (* No properties are set. Try asking the program itself. *)
     prog @ FUNC_COMMAND_HELP cancall? if
       0 try
+        action @ name tolower
         prog @ FUNC_COMMAND_HELP call
         depth 1 != if "One result expected." abort then
         dup array? not if "Array expected." abort then
         dup foreach
           nip string? not if "Array of strings expected." then
         repeat
-      catch
-        { "ERROR: (" FUNC_COMMAND_HELP ") " }join swap strcat 1 array_make
+      catch_detailed
+        {
+          { "ERROR in " FUNC_COMMAND_HELP }join
+          rot foreach
+            dup int? if intostr then
+            dup dbref? if intostr "#" swap strcat then
+            ": " swap strcat strcat
+          repeat
+        }list
       endcatch
       exit
     then
