@@ -148,7 +148,7 @@ $PRAGMA comment_recurse
 (*****************************************************************************)
 $VERSION 1.000
 $AUTHOR  Daniel Benoy
-$NOTE    Handle sending emotive messages.   
+$NOTE    Handle sending emotive messages.
 $DOCCMD  @list __PROG__=2-146
 
 (* Begin configurable options *)
@@ -216,7 +216,6 @@ $DEF OPTIONS_VALID_HIGHLIGHT_ALLOW_CUSTOM { "YES" "NO" "PLAIN" "NOCOLOR" }list
   (* TODO: Get it from the room properties. Also maybe have an enforced maximum? *)
   pop HISTORY_DEFAULT_MAX_AGE
 ;
-
 
 : option_valid[ str:value ref:object str:option -- bool:valid? ]
   value @ not if 0 exit then

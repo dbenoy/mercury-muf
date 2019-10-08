@@ -1,4 +1,4 @@
-@program m-lib-ansi.muf
+!@program m-lib-ansi.muf
 1 99999 d
 i
 $PRAGMA comment_recurse
@@ -163,8 +163,8 @@ $DOCCMD  @list __PROG__=2-151
 
 $PUBDEF :
 
-(For the benefit of those reading this code who aren't aware of this, 
-  in FB6 \[ represents the escape charactor in strings. 
+(For the benefit of those reading this code who aren't aware of this,
+  in FB6 \[ represents the escape charactor in strings.
   That's ASCII code 27 decimal, and this convient table is provided if
   you want it in another base. <;
   (Yes! I do have too much time!)
@@ -185,23 +185,23 @@ Base      Number  Base      Number  Base      Number
 
 (Protect strings should be 2 chars long since ~& is for ansi_strcut.)
 $DEF PROTECT_STR "\[\["
- 
+
 ( s   -- s'  )
 $DEFINE _protect
   PROTECT_STR "\\~&" subst
   PROTECT_STR "~&~&" subst
 $ENDDEF
- 
+
 ( s'  -- s'' )
 $DEFINE _end_protect
   "~&" PROTECT_STR subst
 $ENDDEF
- 
+
 ( s' -- s  ) ( * almost; \~& will be replaced with ~&~&. )
 $DEFINE _cut_end_protect
   "~&~&" PROTECT_STR subst
 $ENDDEF
- 
+
 ( This can be changed if you don't want black on white to be the default
   color. )
 $DEF RESET_CODE "\[[0;37;40m"
@@ -216,7 +216,7 @@ $DEF RESET_CODE "\[[0;37;40m"
   ( ^^ Special Case ^^ )
   "\[["
   ( We add 1 to the string so - turns into -1, not 0, for us to not touch in the case statment. )
-  swap 
+  swap
   ("\[[" AFB)
   1 strcut
   ( "\[[" A FB )
@@ -226,7 +226,7 @@ $DEF RESET_CODE "\[[0;37;40m"
   else
     rot rot
   ( FB "\[[" A )
-    strcat ";" strcat swap 
+    strcat ";" strcat swap
   then
   ( "\[[..." FB )
   1 strcut
@@ -237,7 +237,7 @@ $DEF RESET_CODE "\[[0;37;40m"
     rot "3" strcat rot strcat ";" strcat swap
   then
   ("\[[" B)
-  
+
   dup "-" strcmp not if
     pop
     dup strlen 1 - strcut pop
@@ -246,8 +246,8 @@ $DEF RESET_CODE "\[[0;37;40m"
   then
   "m" strcat
 ;
- 
-(Returns length of ansi code following ~&. 
+
+(Returns length of ansi code following ~&.
  As in you can give it 06-Cyan!
  Or RResetted.., etc. as an argument.
 )
@@ -256,7 +256,7 @@ $DEF RESET_CODE "\[[0;37;40m"
   3 strcut pop
   "[-0-9][-0-9][-0-9]" smatch if 5 else 0 exit then
 ;
- 
+
 (*****************************************************************************)
 (*                               ansify_string                               *)
 (*****************************************************************************)
@@ -266,7 +266,7 @@ $DEF RESET_CODE "\[[0;37;40m"
   var append
 
   dup not if exit then
- 
+
   "" data !
   _protect
   dup "~&" instr not if
@@ -277,17 +277,17 @@ $DEF RESET_CODE "\[[0;37;40m"
   dup "~&" instr 1 = oddness !
   "~&" explode
   oddness @ not if
-     swap append ! 1 - 
+     swap append ! 1 -
   else
      "" append !
   then
-  begin 
+  begin
     dup while
     dup 1 + rotate
     dup if
       dup "[-0-9][-0-9][-0-9]*" smatch if
-        3 strcut swap tCodeData 
-     swap strcat 
+        3 strcut swap tCodeData
+     swap strcat
       then
     then
     data @ strcat data !
@@ -300,7 +300,7 @@ $DEF RESET_CODE "\[[0;37;40m"
 PUBLIC ansify-string
 $LIBDEF ansify-string
 $PUBDEF ansify_string ansify-string
- 
+
 (*****************************************************************************)
 (*                                   ansi?                                   *)
 (*****************************************************************************)
@@ -339,7 +339,7 @@ $LIBDEF ansi?
 PUBLIC ansi-strip
 $LIBDEF ansi-strip
 $PUBDEF ansi_strip ansi-strip
- 
+
 (*****************************************************************************)
 (*                                ansi-strcut                                *)
 (*****************************************************************************)
@@ -400,7 +400,7 @@ $PUBDEF ansi_strip ansi-strip
 PUBLIC ansi-strcut
 $LIBDEF ansi-strcut
 $PUBDEF ansi_strcut ansi-strcut
- 
+
 (*****************************************************************************)
 (*                               ansi-codecheck                              *)
 (*****************************************************************************)
@@ -521,10 +521,10 @@ $PUBDEF ansi_value ansi-value
 .
 c
 q
-@register m-lib-ansi.muf=m/lib/ansi
-@register m-lib-ansi.muf=lib/ansi
-@set $m/lib/ansi=M2
-@set $m/lib/ansi=L
-@set $m/lib/ansi=S
-@set $m/lib/ansi=H
+!@register m-lib-ansi.muf=m/lib/ansi
+!@register m-lib-ansi.muf=lib/ansi
+!@set $m/lib/ansi=M2
+!@set $m/lib/ansi=L
+!@set $m/lib/ansi=S
+!@set $m/lib/ansi=H
 

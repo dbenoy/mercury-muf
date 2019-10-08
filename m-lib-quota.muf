@@ -1,4 +1,4 @@
-@program m-lib-quota.muf
+!@program m-lib-quota.muf
 1 99999 d
 i
 $PRAGMA comment_recurse
@@ -67,7 +67,7 @@ $NOTE    Object quotas for building commands.
 $DOCCMD  @list __PROG__=2-60
 
 (* Begin configurable options *)
- 
+
 $DEFINE DEFAULT_QUOTA
 {
   "thing" -1
@@ -79,9 +79,7 @@ $ENDDEF
 
 (* End configurable options *)
 
-$DEF NEEDSM2 caller mlevel 2 < if "Requires MUCKER level 2 or above." abort then
-$DEF NEEDSM3 caller mlevel 3 < if "Requires MUCKER level 3 or above." abort then
-$DEF NEEDSM4 caller mlevel 3 < if "Requires MUCKER level 4 or above." abort then
+$INCLUDE $m/lib/program
 
 $PUBDEF :
 
@@ -89,7 +87,7 @@ $PUBDEF :
 (*                           M-LIB-QUOTA-GetQuota                            *)
 (*****************************************************************************)
 : M-LIB-QUOTA-GetQuota[ ref:player str:type -- int:quota ]
-  NEEDSM3
+  .needs_mlev3
 
   player @ dbref? not if "Non-dbref argument (1)." abort then
   type @ string? not if "Non-string argument (2)." abort then
@@ -117,7 +115,7 @@ $LIBDEF M-LIB-QUOTA-GetQuota
 (*                           M-LIB-QUOTA-GetUsage                            *)
 (*****************************************************************************)
 : M-LIB-QUOTA-GetUsage[ ref:player str:type -- int:usage ]
-  NEEDSM3
+  .needs_mlev3
 
   player @ dbref? not if "Non-dbref argument (1)." abort then
   type @ string? not if "Non-string argument (2)." abort then
@@ -178,8 +176,8 @@ $LIBDEF M-LIB-QUOTA-QuotaCheck
 .
 c
 q
-@register m-lib-quota.muf=m/lib/quota
-@set $m/lib/quota=L
-@set $m/lib/quota=M3
-@set $m/lib/quota=W
+!@register m-lib-quota.muf=m/lib/quota
+!@set $m/lib/quota=L
+!@set $m/lib/quota=M3
+!@set $m/lib/quota=W
 

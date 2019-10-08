@@ -1,4 +1,4 @@
-@program m-cmd-@link.muf
+!@program m-cmd-@link.muf
 1 99999 d
 i
 $PRAGMA comment_recurse
@@ -10,7 +10,6 @@ $PRAGMA comment_recurse
 (*   GitHub: https://github.com/dbenoy/mercury-muf (See for install info)    *)
 (*                                                                           *)
 (* FEATURES:                                                                 *)
-(*   o #help argument for usage information.                                 *)
 (*   o Can act as a library for other objects to link objects with proper    *)
 (*     permission checks, penny charges, etc.                                *)
 (*                                                                           *)
@@ -59,14 +58,31 @@ $DOCCMD  @list __PROG__=2-49
 
 (* End configurable options *)
 
+$INCLUDE $m/lib/program
 $INCLUDE $m/lib/match
 $INCLUDE $m/lib/pennies
 
-$DEF NEEDSM2 trig caller = not caller mlevel 2 < and if "Requires MUCKER level 2 or above." abort then
-$DEF NEEDSM3 trig caller = not caller mlevel 3 < and if "Requires MUCKER level 3 or above." abort then
-$DEF NEEDSM4 trig caller = not caller "WIZARD" flag? not and if "Requires MUCKER level 4 or above." abort then
-
 $PUBDEF :
+
+(* ------------------------------------------------------------------------ *)
+
+: M-HELP-desc ( s -- s )
+  pop
+  "Sets a 'link' between one object and another."
+;
+WIZCALL M-HELP-desc
+
+: M-HELP-help ( s -- a )
+  ";" split pop toupper var! action_name
+  {
+    { action_name @ " <object1>=<object2> [; <object3>; ...  <objectn> ]" }join
+    " "
+    "  Links <object1> to <object2>, provided you control <object1>, and <object2> is either controlled by you or linkable.  Actions may be linked to more than one thing, specified in a list separated by semi-colons."
+  }list
+;
+WIZCALL M-HELP-help
+
+(* ------------------------------------------------------------------------ *)
 
 : doSetLinksArray ( d1 a -- s )
   2 try
@@ -138,7 +154,7 @@ $DEF TESTLOCKPROP getprop dup lock? if testlock else pop pop 1 then
 : doLink[ str:thing str:links bool:relink -- bool:success? ]
   "link_cost" sysparm atoi var! tp_link_cost
   "exit_cost" sysparm atoi var! tp_exit_cost
-  
+
   thing @ 1 1 1 1 M-LIB-MATCH-Match thing !
 
   thing @ not if
@@ -234,10 +250,10 @@ $DEF TESTLOCKPROP getprop dup lock? if testlock else pop pop 1 then
         "No destinations linked." .tell
         0 exit
       then
-    
+
       thing @ linkRefs @ doSetLinksArray
       dup if .tell 0 exit else pop then
- 
+
       linkRefs @ foreach
         swap pop
         "Linked to " swap unparseobj strcat "." strcat .tell
@@ -296,7 +312,7 @@ $DEF TESTLOCKPROP getprop dup lock? if testlock else pop pop 1 then
 (*                            M-CMD-AT_LINK-Link                             *)
 (*****************************************************************************)
 : M-CMD-AT_LINK-Link[ str:thing str:links -- bool:success? ]
-  NEEDSM3
+  .needs_mlev3
 
   thing @ links @ 0 doLink
 ;
@@ -307,7 +323,7 @@ $LIBDEF M-CMD-AT_LINK-Link
 (*                           M-CMD-AT_LINK-Relink                            *)
 (*****************************************************************************)
 : M-CMD-AT_LINK-Relink[ str:thing str:links -- bool:success? ]
-  NEEDSM3
+  .needs_mlev3
 
   thing @ links @ 1 doLink
 ;
@@ -316,16 +332,7 @@ $LIBDEF M-CMD-AT_LINK-Relink
 
 (* ------------------------------------------------------------------------- *)
 
-: help (  --  )
-  "@LINK <object1>=<object2> [; <object3>; ...  <objectn> ]" .tell
-  " " .tell
-  "  Links <object1> to <object2>, provided you control <object1>, and <object2> is either controlled by you or linkable.  Actions may be linked to more than one thing, specified in a list separated by semi-colons." .tell
-  "Also see: @RELINK and @UNLINK" .tell
-;
- 
 : main ( s --  )
-  "#help" over stringpfx if pop help exit then
-  
   "=" split
   strip var! destination
   strip var! exitname
@@ -336,8 +343,8 @@ $LIBDEF M-CMD-AT_LINK-Relink
 .
 c
 q
-@register m-cmd-@link.muf=m/cmd/at_link
-@set $m/cmd/at_link=L
-@set $m/cmd/at_link=M3
-@set $m/cmd/at_link=W
+!@register m-cmd-@link.muf=m/cmd/at_link
+!@set $m/cmd/at_link=L
+!@set $m/cmd/at_link=M3
+!@set $m/cmd/at_link=W
 

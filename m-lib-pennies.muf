@@ -1,4 +1,4 @@
-@program m-lib-pennies.muf
+!@program m-lib-pennies.muf
 1 99999 d
 i
 $PRAGMA comment_recurse
@@ -91,9 +91,7 @@ $DEF ENDOWMENT_FORMULA        5 / --               (* Equation for pennies spent
 $DEF ENDOWMENT_FORMULA_STRING "((<cost> / 5) - 1)" (* The above equation in human readable form *)
 $DEF COST_FORMULA             ++ 5 *               (* Inverse of ENDOWMENT_FORMULA. Desired object value into pennies required *)
 
-$DEF NEEDSM2 caller mlevel 2 < if "Requires MUCKER level 2 or above." abort then
-$DEF NEEDSM3 caller mlevel 3 < if "Requires MUCKER level 3 or above." abort then
-$DEF NEEDSM4 caller mlevel 3 < if "Requires MUCKER level 4 or above." abort then
+$INCLUDE $m/lib/program
 
 $PUBDEF :
 
@@ -153,7 +151,7 @@ $LIBDEF M-LIB-PENNIES-Pennies
 (*                          M-LIB-PENNIES-ChkPayFor                          *)
 (*****************************************************************************)
 : M-LIB-PENNIES-ChkPayFor ( i -- b )
-  NEEDSM3
+  .needs_mlev3
   "i" checkargs
 
   dup 0 < if "Negative value (1)." abort then
@@ -161,7 +159,7 @@ $LIBDEF M-LIB-PENNIES-Pennies
   "me" match "WIZARD" flag? if (* Wizards have a sideways 8 in their pockets. *)
     pop 1 exit
   then
-  
+
   "me" match pennies <=
 ;
 PUBLIC M-LIB-PENNIES-ChkPayFor
@@ -171,7 +169,7 @@ $LIBDEF M-LIB-PENNIES-ChkPayFor
 (*                          M-LIB-PENNIES-DoPayFor                           *)
 (*****************************************************************************)
 : M-LIB-PENNIES-DoPayFor ( i --  )
-  NEEDSM3
+  .needs_mlev3
   "i" checkargs
 
   dup 0 < if "Negative value (1)." abort then
@@ -179,11 +177,11 @@ $LIBDEF M-LIB-PENNIES-ChkPayFor
   "me" match "WIZARD" flag? if (* Wizards have a sideways 8 in their pockets. *)
     pop exit
   then
-  
+
   dup M-LIB-PENNIES-ChkPayFor not if
     "Not enough pennies!" abort
   then
-  
+
   "me" match owner swap -1 * addpennies
 ;
 PUBLIC M-LIB-PENNIES-DoPayFor
@@ -195,8 +193,8 @@ $LIBDEF M-LIB-PENNIES-DoPayFor
 .
 c
 q
-@register m-lib-pennies.muf=m/lib/pennies
-@set $m/lib/pennies=L
-@set $m/lib/pennies=M3
-@set $m/lib/pennies=W
+!@register m-lib-pennies.muf=m/lib/pennies
+!@set $m/lib/pennies=L
+!@set $m/lib/pennies=M3
+!@set $m/lib/pennies=W
 

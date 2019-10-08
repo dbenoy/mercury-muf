@@ -1,4 +1,4 @@
-@program m-cmd-@excavate.muf
+!@program m-cmd-@excavate.muf
 1 99999 d
 i
 $PRAGMA comment_recurse
@@ -58,17 +58,27 @@ $INCLUDE $m/cmd/at_action
 $INCLUDE $m/cmd/at_dig
 $INCLUDE $m/cmd/at_link
 
-(* ------------------------------------------------------------------------- *)
+(* ------------------------------------------------------------------------ *)
 
-: help (  --  )
-  "@EXCAVATE <room>[=<exit to room>[=<backlink from room>]]" .tell
-  " " .tell
-  { "  Creates a new room and, optionally, an exit leading from your current location to the room, and/or an exit leading from the room to your current location. The room is automatically parented to the same position in the environment tree as your current location. Creating a room costs " "room_cost" sysparm M-LIB-PENNIES-Pennies ".  Creating an exit costs " "exit_cost" sysparm M-LIB-PENNIES-Pennies ". Only a builder may use this command." }join .tell
+: M-HELP-desc ( s -- s )
+  pop
+  "Creates rooms and exits at the same time."
 ;
- 
-: main ( s --  )
-  "#help" over stringpfx if pop help exit then
+WIZCALL M-HELP-desc
 
+: M-HELP-help ( s -- a )
+  ";" split pop toupper var! action_name
+  {
+    { action_name @ " <room>[=<exit to room>[=<backlink from room>]]" }join
+    " "
+    { "  Creates a new room and, optionally, an exit leading from your current location to the room, and/or an exit leading from the room to your current location. The room is automatically parented to the same position in the environment tree as your current location. Creating a room costs " "room_cost" sysparm M-LIB-PENNIES-Pennies ".  Creating an exit costs " "exit_cost" sysparm M-LIB-PENNIES-Pennies ". Only a builder may use this command." }join
+  }list
+;
+WIZCALL M-HELP-help
+
+(* ------------------------------------------------------------------------ *)
+
+: main ( s --  )
   "me" match "BUILDER" flag? "me" match "WIZARD" flag? or not if
     "Only builders are allowed to @excavate." .tell
     pop exit
@@ -78,16 +88,16 @@ $INCLUDE $m/cmd/at_link
   strip var! backexit
   strip var! foreexit
   strip var! roomname
-  
+
   roomname @ "" M-CMD-AT_DIG-Dig dup not if pop exit then var! newroom
-  
+
   foreexit @ if
     "Creating " foreexit @ strcat "..." strcat .tell
     { "#" loc @ intostr }join foreexit @ M-CMD-AT_ACTION-Action dup not if pop exit then var! newforeexit
     "Trying to link..." .tell
     { "#" newforeexit @ intostr }join { "#" newroom @ intostr }join M-CMD-AT_LINK-Link not if exit then
   then
-  
+
   backexit @ if
     "Creating " backexit @ strcat "..." strcat .tell
     { "#" newroom @ intostr }join backexit @ M-CMD-AT_ACTION-Action dup not if pop exit then var! newbackexit
@@ -98,6 +108,6 @@ $INCLUDE $m/cmd/at_link
 .
 c
 q
-@register m-cmd-@excavate.muf=m/cmd/at_excavate
-@set $m/cmd/at_excavate=M3
+!@register m-cmd-@excavate.muf=m/cmd/at_excavate
+!@set $m/cmd/at_excavate=M3
 

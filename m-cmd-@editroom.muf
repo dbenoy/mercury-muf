@@ -1,4 +1,4 @@
-@program m-cmd-@editroom.muf
+!@program m-cmd-@editroom.muf
 1 99999 d
 i
 $PRAGMA comment_recurse
@@ -38,20 +38,32 @@ $DOCCMD  @list __PROG__=2-30
 
 $INCLUDE $m/cmd/at_editobject
 
-: help ( -- )
-  "@EDITROOM" .tell
-  " " .tell
-  "  Open a room editor dialog." .tell
+(* ------------------------------------------------------------------------ *)
+
+: M-HELP-desc ( s -- s )
+  pop
+  "Opens a room editor dialog."
 ;
+WIZCALL M-HELP-desc
+
+: M-HELP-help ( s -- a )
+  ";" split pop toupper var! action_name
+  {
+    action_name @
+    " "
+    "  Opens a room editor dialog."
+  }list
+;
+WIZCALL M-HELP-help
+
+(* ------------------------------------------------------------------------ *)
 
 : main ( s --  )
-  if help exit then
-
   "here" M-CMD-AT_EDITOBJECT-EditObject pop
 ;
 .
 c
 q
-@register m-cmd-@editroom.muf=m/cmd/at_editroom
-@set $m/cmd/at_editroom=M3
+!@register m-cmd-@editroom.muf=m/cmd/at_editroom
+!@set $m/cmd/at_editroom=M3
 

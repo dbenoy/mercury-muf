@@ -1,4 +1,4 @@
-@program lib-stackrng.muf
+!@program lib-stackrng.muf
 1 99999 d
 1 i
 ( ***** Stack based range handling object -- SRNG ****                 
@@ -173,9 +173,9 @@ $pubdef SRNGswap __PROG__ "swapranges" call
 .
 c
 q 
-@register lib-stackrng.muf=lib/stackrng
-@set $lib/stackrng=M3
-@set $lib/stackrng=H
-@set $lib/stackrng=L
-@set $lib/stackrng=S
+!@register lib-stackrng.muf=lib/stackrng
+!@set $lib/stackrng=M3
+!@set $lib/stackrng=H
+!@set $lib/stackrng=L
+!@set $lib/stackrng=S
 

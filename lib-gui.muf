@@ -1,4 +1,4 @@
-@program lib-gui.muf
+!@program lib-gui.muf
 1 99999 d
 1 i
 (
@@ -854,9 +854,9 @@ $pubdef }PANE		}list
 .
 c
 q
-@register lib-gui.muf=lib/gui
-@set $lib/gui=3
-@set $lib/gui=H
-@set $lib/gui=L
-@set $lib/gui=S
+!@register lib-gui.muf=lib/gui
+!@set $lib/gui=3
+!@set $lib/gui=H
+!@set $lib/gui=L
+!@set $lib/gui=S
 

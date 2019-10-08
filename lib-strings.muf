@@ -1,4 +1,4 @@
-@program lib-strings.muf
+!@program lib-strings.muf
 1 99999 d
 1 i
 ( ***** Misc String routines -- STR *****
@@ -100,9 +100,9 @@ $pubdef STRsts		striptail
 .
 c
 q
-@register lib-strings.muf=lib/strings
-@set $lib/strings=M2
-@set $lib/strings=L
-@set $lib/strings=S
-@set $lib/strings=H
+!@register lib-strings.muf=lib/strings
+!@set $lib/strings=M2
+!@set $lib/strings=L
+!@set $lib/strings=S
+!@set $lib/strings=H
 

@@ -1,4 +1,4 @@
-@program lib-lmgr.muf
+!@program lib-lmgr.muf
 1 99999 d
 1 i
 ( ***** List Manager Object - LMGR *****  Version 1.2
@@ -406,10 +406,10 @@ $pubdef LMGRsetcount            __PROG__ "lmgr-setcount" call
 .
 c
 q
-@register lib-lmgr.muf=lib/lmgr
-@set $lib/lmgr=3
-@set $lib/lmgr=B
-@set $lib/lmgr=H
-@set $lib/lmgr=L
-@set $lib/lmgr=S
+!@register lib-lmgr.muf=lib/lmgr
+!@set $lib/lmgr=3
+!@set $lib/lmgr=B
+!@set $lib/lmgr=H
+!@set $lib/lmgr=L
+!@set $lib/lmgr=S
 

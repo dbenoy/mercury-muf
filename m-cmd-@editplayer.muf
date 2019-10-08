@@ -1,4 +1,4 @@
-@program m-cmd-@editplayer.muf
+!@program m-cmd-@editplayer.muf
 1 99999 d
 i
 $PRAGMA comment_recurse
@@ -38,6 +38,26 @@ $DOCCMD  @list __PROG__=2-30
 
 $INCLUDE $m/cmd/at_editobject
 
+(* ------------------------------------------------------------------------ *)
+
+: M-HELP-desc ( s -- s )
+  pop
+  "Opens a player editor dialog."
+;
+WIZCALL M-HELP-desc
+
+: M-HELP-help ( s -- a )
+  ";" split pop toupper var! action_name
+  {
+    action_name @
+    " "
+    "  Opens a player editor dialog"
+  }list
+;
+WIZCALL M-HELP-help
+
+(* ------------------------------------------------------------------------ *)
+
 : help ( -- )
   "@EDITPLAYER" .tell
   " " .tell
@@ -52,6 +72,6 @@ $INCLUDE $m/cmd/at_editobject
 .
 c
 q
-@register m-cmd-@editplayer.muf=m/cmd/at_editplayer
-@set $m/cmd/at_editplayer=M3
+!@register m-cmd-@editplayer.muf=m/cmd/at_editplayer
+!@set $m/cmd/at_editplayer=M3
 

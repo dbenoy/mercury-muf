@@ -512,7 +512,7 @@ $DOCCMD  @list __PROG__=2-502
 
 $def ENCODING_DEFAULT "ANSI-8BIT"
 $def ENCODING_PROP "_config/color/type"
- 
+
 (* End configurable options *)
 
 (* TODO: A check to see if colors can be exactly represented on a given ANSI type? *)
@@ -1032,7 +1032,7 @@ lvar g_ansi_table_4bit_xterm_rgb
       current_key @ closest_key !
       current_dist @ closest_dist !
     then
-  repeat   
+  repeat
   closest_key @
 ;
 

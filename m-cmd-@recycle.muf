@@ -10,7 +10,6 @@ $PRAGMA comment_recurse
 (*   GitHub: https://github.com/dbenoy/mercury-muf (See for install info)    *)
 (*                                                                           *)
 (* FEATURES:                                                                 *)
-(*   o #help argument for usage information.                                 *)
 (*   o Can act as a library for other objects to recycle objects with proper *)
 (*     permission checks, penny refunds, etc.                                *)
 (*                                                                           *)
@@ -64,18 +63,35 @@ $DOCCMD  @list __PROG__=2-45
 (* End configurable options *)
 
 $INCLUDE $m/lib/match
-
-$DEF NEEDSM2 trig caller = not caller mlevel 2 < and if "Requires MUCKER level 2 or above." abort then
-$DEF NEEDSM3 trig caller = not caller mlevel 3 < and if "Requires MUCKER level 3 or above." abort then
-$DEF NEEDSM4 trig caller = not caller "WIZARD" flag? not and if "Requires MUCKER level 4 or above." abort then
+$INCLUDE $m/lib/program
 
 $PUBDEF :
+
+(* ------------------------------------------------------------------------ *)
+
+: M-HELP-desc ( s -- s )
+  pop
+  "Destroy an object."
+;
+WIZCALL M-HELP-desc
+
+: M-HELP-help ( s -- a )
+  ";" split pop toupper var! action_name
+  {
+    { action_name @ " <object>" }join
+    " "
+    "Destroy an object and remove all references to it within the database. The object is then added to a free list, and newly created objects are assigned from the pool of recycled objects first.  You *must* own the object being recycled, even wizards must use the @chown command to recycle someone else's belongings."
+  }list
+;
+WIZCALL M-HELP-help
+
+(* ------------------------------------------------------------------------ *)
 
 (*****************************************************************************)
 (*                        M-CMD-AT_RECYCLE-Recycle                           *)
 (*****************************************************************************)
 : M-CMD-AT_RECYCLE-Recycle[ str:thing int:confirmation -- bool:success? ]
-  NEEDSM3
+  .needs_mlev3
 
   thing @ 1 1 1 1 M-LIB-MATCH-Match thing !
 
@@ -91,48 +107,48 @@ $PUBDEF :
     then
     0 exit
   then
-  
+
   thing @ player? if
     "You can't recycle a player!" .tell 0 exit
   then
-  
+
   thing @ ok? not if
     "That's already garbage!" .tell 0 exit
   then
-    
+
   thing @ owner "me" match owner = not if
     "Permission denied." .tell 0 exit
   then
-    
+
   thing @ room? if
     thing @ "player_start" sysparm stod = thing @ #0 = or if
       "This room may not be recycled (is either player start or the global environment)." .tell 0 exit
     then
   then
-  
+
   confirmation @ if
     "Are you certian you want to permanently recycle " thing @ unparseobj strcat "? (Type 'YES' in full to recycle, anything else to abort.)" strcat .tell
     read "yes" stringcmp if
       "Aborted!" .tell 0 exit
     then
   then
-  
+
   thing @ thing? if
     (* DB: This actually is the behavior of the built-in @recycle command.  I didn't make it up. *)
     thing @ "me" match = if
       thing @ name "'s owner commands it to kill itself.  It blinks a few times in shock, and says, \"But.. but.. WHY?\"  It suddenly clutches it's heart, grimacing with pain..  Staggers a few steps before falling to it's knees, then plops down on it's face.  *thud*  It kicks it's legs a few times, with weakening force, as it suffers a seizure.  It's color slowly starts changing to purple, before it explodes with a fatal *POOF*!" strcat
       dup .otell
-      
+
       thing @ owner location thing @ location = not if
         thing @ owner swap notify
       else
         pop
       then
-      
+
       thing @ owner "Now don't you feel guilty?" notify
     then
   then
-  
+
   (* NOTE: The MUF recycle primitive is actually returning your pennies to
      you, so I don't have to do that here.
      See: https://github.com/fuzzball-muck/fuzzball/issues/456
@@ -151,15 +167,7 @@ $LIBDEF M-CMD-AT_RECYCLE-Recycle
 
 (* ------------------------------------------------------------------------- *)
 
-: help (  --  )
-  "@RECYCLE <object>" .tell
-  " " .tell
-  "Destroy an object and remove all references to it within the database. The object is then added to a free list, and newly created objects are assigned from the pool of recycled objects first.  You *must* own the object being recycled, even wizards must use the @chown command to recycle someone else's belongings." .tell
-;
- 
 : main ( s --  )
-  "#help" over stringpfx if pop help exit then
-
   "=" split
   pop
   strip var! objectname
@@ -175,5 +183,4 @@ q
 !@set $m/cmd/at_recycle=L
 !@set $m/cmd/at_recycle=M3
 !@set $m/cmd/at_recycle=W
-
 

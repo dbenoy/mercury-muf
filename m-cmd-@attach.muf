@@ -1,4 +1,4 @@
-@program m-cmd-@attach.muf
+!@program m-cmd-@attach.muf
 1 99999 d
 i
 $PRAGMA comment_recurse
@@ -10,7 +10,6 @@ $PRAGMA comment_recurse
 (*   GitHub: https://github.com/dbenoy/mercury-muf (See for install info)    *)
 (*                                                                           *)
 (* FEATURES:                                                                 *)
-(*   o #help argument for usage information.                                 *)
 (*   o Can act as a library for other programs to attach exits with proper   *)
 (*     permission checks, penny charges, etc.                                *)
 (*                                                                           *)
@@ -52,13 +51,30 @@ $DOCCMD  @list __PROG__=2-42
 
 (* End configurable options *)
 
+$INCLUDE $m/lib/program
 $INCLUDE $m/lib/match
 
-$DEF NEEDSM2 trig caller = not caller mlevel 2 < and if "Requires MUCKER level 2 or above." abort then
-$DEF NEEDSM3 trig caller = not caller mlevel 3 < and if "Requires MUCKER level 3 or above." abort then
-$DEF NEEDSM4 trig caller = not caller "WIZARD" flag? not and if "Requires MUCKER level 4 or above." abort then
-
 $PUBDEF :
+
+(* ------------------------------------------------------------------------ *)
+
+: M-HELP-desc ( s -- s )
+  pop
+  "Relocates an action/exit."
+;
+WIZCALL M-HELP-desc
+
+: M-HELP-help ( s -- a )
+  ";" split pop toupper var! action_name
+  {
+    { action_name @ " <action>=<new source>" }join
+    " "
+    "  Removes the action from where it was and attaches it to the new source. You must control the action in question."
+  }list
+;
+WIZCALL M-HELP-help
+
+(* ------------------------------------------------------------------------ *)
 
 : doReattach ( d d -- s )
   2 try
@@ -71,13 +87,13 @@ $PUBDEF :
 (*                          M-CMD-AT_ATTACH-Attach                           *)
 (*****************************************************************************)
 : M-CMD-AT_ATTACH-Attach[ str:action str:source -- bool:success? ]
-  NEEDSM3
+  .needs_mlev3
 
   source @ not action @ not or if
     "You must specify an action name and a source object." .tell
     0 exit
   then
-  
+
   action @ 1 1 1 1 M-LIB-MATCH-Match action !
   action @ not if
     0 exit
@@ -115,8 +131,8 @@ $PUBDEF :
 
   action @ source @ doReattach
   dup if .tell pop #-1 exit else pop then
- 
-  "Action re-attached." .tell 
+
+  "Action re-attached." .tell
 
   action @ mlevel if
     action @ "!M" set
@@ -130,15 +146,7 @@ $LIBDEF M-CMD-AT_ATTACH-Attach
 
 (* ------------------------------------------------------------------------- *)
 
-: help (  --  )
-  "@ATTACH <action>=<new source>" .tell
-  " " .tell
-  "  Removes the action from where it was and attaches it to the new source. You must control the action in question." .tell
-;
- 
 : main ( s --  )
-  "#help" over stringpfx if pop help exit then
-
   "me" match "BUILDER" flag? "me" match "WIZARD" flag? or not if
     "Only builders are allowed to @attach." .tell
     pop exit
@@ -154,7 +162,7 @@ $LIBDEF M-CMD-AT_ATTACH-Attach
 .
 c
 q
-@register m-cmd-@attach.muf=m/cmd/at_attach
-@set $m/cmd/at_attach=L
-@set $m/cmd/at_attach=M3
+!@register m-cmd-@attach.muf=m/cmd/at_attach
+!@set $m/cmd/at_attach=L
+!@set $m/cmd/at_attach=M3
 

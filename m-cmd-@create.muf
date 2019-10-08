@@ -1,4 +1,4 @@
-@program m-cmd-@create.muf
+!@program m-cmd-@create.muf
 1 99999 d
 i
 $PRAGMA comment_recurse
@@ -10,7 +10,6 @@ $PRAGMA comment_recurse
 (*   GitHub: https://github.com/dbenoy/mercury-muf (See for install info)    *)
 (*                                                                           *)
 (* FEATURES:                                                                 *)
-(*   o #help argument for usage information.                                 *)
 (*   o Uses $m/lib/quota to enforce player object quotas.                    *)
 (*   o Can act as a library for other programs to create objects.            *)
 (*                                                                           *)
@@ -55,15 +54,32 @@ $DOCCMD  @list __PROG__=2-45
 
 (* End configurable options *)
 
+$INCLUDE $m/lib/program
 $INCLUDE $m/lib/quota
 $INCLUDE $m/lib/match
 $INCLUDE $m/lib/pennies
 
-$DEF NEEDSM2 trig caller = not caller mlevel 2 < and if "Requires MUCKER level 2 or above." abort then
-$DEF NEEDSM3 trig caller = not caller mlevel 3 < and if "Requires MUCKER level 3 or above." abort then
-$DEF NEEDSM4 trig caller = not caller "WIZARD" flag? not and if "Requires MUCKER level 4 or above." abort then
-
 $PUBDEF :
+
+(* ------------------------------------------------------------------------ *)
+
+: M-HELP-desc ( s -- s )
+  pop
+  "Creates a thing."
+;
+WIZCALL M-HELP-desc
+
+: M-HELP-help ( s -- a )
+  ";" split pop toupper var! action_name
+  {
+    { action_name @ " <object> [=<cost>[=<regname>]]" }join
+    " "
+    { "  Creates a new object and places it in your inventory.  This costs at least " "object_cost" sysparm M-LIB-PENNIES-Pennies ".  If <cost> is specified, you are charged that many pennies, and in return, the object is endowed with a value according to the formula: " M-LIB-PENNIES-GetEndowStr ".  The maximum value of an object is " "max_object_endowment" sysparm M-LIB-PENNIES-Pennies ", which would cost " "max_object_endowment" sysparm atoi M-LIB-PENNIES-GetCost intostr M-LIB-PENNIES-Pennies " to create. If a <regname> is specified, then the _reg/<regname> property on the player is set to the dbref of the new object.  This lets players refer to the object as $<regname> (ie: $mybutton) in @locks, @sets, et cetera.  Only a builder may use this command." }join
+  }list
+;
+WIZCALL M-HELP-help
+
+(* ------------------------------------------------------------------------ *)
 
 : doNewObject ( d s -- d s )
   2 try
@@ -77,7 +93,7 @@ $PUBDEF :
 (*                          M-CMD-AT_CREATE-Create                           *)
 (*****************************************************************************)
 : M-CMD-AT_CREATE-Create[ str:thingname str:payment -- ref:thing ]
-  NEEDSM3
+  .needs_mlev3
 
   "thing" 1 M-LIB-QUOTA-QuotaCheck not if #-1 exit then
 
@@ -93,7 +109,7 @@ $PUBDEF :
     "Please specify a valid name for this thing." .tell
     #-1 exit
   then
-  
+
   payment @ atoi payment !
   payment @ 0 < if
     "You can't create an object for less than nothing!" .tell
@@ -103,18 +119,18 @@ $PUBDEF :
   payment @ tp_object_cost @ < if
     tp_object_cost @ payment !
   then
-  
+
   payment @ M-LIB-PENNIES-ChkPayFor not if
     { "Sorry, you don't have enough " "pennies" sysparm "." }join .tell
     #-1 exit
   then
-  
+
   (* Create the object *)
   "me" match thingname @ doNewObject
   dup if .tell pop #-1 exit else pop then
-  
+
   "Object " over name strcat " (#" strcat over intostr strcat ") created." strcat .tell
-  
+
   (* Endow the object *)
   payment @ M-LIB-PENNIES-DoPayFor
   payment @ M-LIB-PENNIES-GetEndow var! thingValue
@@ -124,18 +140,10 @@ $PUBDEF :
 ;
 PUBLIC M-CMD-AT_CREATE-Create
 $LIBDEF M-CMD-AT_CREATE-Create
- 
+
 (* ------------------------------------------------------------------------- *)
 
-: help (  --  )
-  "@CREATE <object> [=<cost>[=<regname>]]" .tell
- 
-  { "  Creates a new object and places it in your inventory.  This costs at least " "object_cost" sysparm M-LIB-PENNIES-Pennies ".  If <cost> is specified, you are charged that many pennies, and in return, the object is endowed with a value according to the formula: " M-LIB-PENNIES-GetEndowStr ".  The maximum value of an object is " "max_object_endowment" sysparm M-LIB-PENNIES-Pennies ", which would cost " "max_object_endowment" sysparm atoi M-LIB-PENNIES-GetCost intostr M-LIB-PENNIES-Pennies " to create. If a <regname> is specified, then the _reg/<regname> property on the player is set to the dbref of the new object.  This lets players refer to the object as $<regname> (ie: $mybutton) in @locks, @sets, et cetera.  Only a builder may use this command." }join .tell
-;
- 
 : main ( s --  )
-  "#help" over stringpfx if pop help exit then
-
   "me" match "BUILDER" flag? "me" match "WIZARD" flag? or not if
     "Only builders are allowed to @create." .tell
     pop exit
@@ -161,8 +169,8 @@ $LIBDEF M-CMD-AT_CREATE-Create
 .
 c
 q
-@register m-cmd-@create.muf=m/cmd/at_create
-@set $m/cmd/at_create=L
-@set $m/cmd/at_create=M3
-@set $m/cmd/at_create=W
+!@register m-cmd-@create.muf=m/cmd/at_create
+!@set $m/cmd/at_create=L
+!@set $m/cmd/at_create=M3
+!@set $m/cmd/at_create=W
 

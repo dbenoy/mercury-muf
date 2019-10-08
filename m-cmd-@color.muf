@@ -47,6 +47,31 @@ $def ENCODING_PROP "_config/color/type"
 $INCLUDE $m/lib/color
 $INCLUDE $m/lib/string
 
+(* ------------------------------------------------------------------------ *)
+
+: M-HELP-desc ( s -- s )
+  pop
+  "Manage color settings."
+;
+WIZCALL M-HELP-desc
+
+: M-HELP-help ( s -- a )
+  ";" split pop toupper var! action_name
+  {
+    action_name @
+    "  Display your current color text settings."
+    " "
+    { action_name @ " #SETUP" }join
+    "  Enter a color test dialog that helps you configure your color text settings."
+    " "
+    { action_name @ " #SET <type>" }join
+    { "  Set a specific color encoding type. (e.g. Use '" action_name @ " #SET NOCOLOR' to turn off color)" }join
+  }list
+;
+WIZCALL M-HELP-help
+
+(* ------------------------------------------------------------------------ *)
+
 : text_gradient[ str:color_me int:red int:green int:blue int:step_red int:step_green int:step_blue bool:reverse -- str:result ]
   "" var! retval
   begin
@@ -99,19 +124,6 @@ $INCLUDE $m/lib/string
     pop " "
   then
   .color_tell
-;
-
-: cmd_help ( -- )
-  {
-    "@COLOR"
-    "  Display your current color text settings."
-    " "
-    "@COLOR #SETUP"
-    "  Enter a color test dialog that helps you configure your color text settings."
-    " "
-    "@COLOR #SET <type>"
-    "  Set a specific color encoding type. (e.g. Use '@COLOR #SET NOCOLOR' to turn off color)"
-  }tell
 ;
 
 : cmd_set ( s -- )
@@ -176,7 +188,6 @@ $INCLUDE $m/lib/string
   strip var! option
   option @ if
     "#ECHO" option @ stringcmp not if args @ cmd_echo exit then
-    "#HELP" option @ stringcmp not if args @ cmd_help exit then
     "#SET"  option @ stringcmp not if args @ cmd_set exit then
     "#SETUP" option @ stringcmp not if args @ cmd_setup exit then
   else

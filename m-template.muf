@@ -1,4 +1,4 @@
-@program m-<--FILENAME-->
+!@program m-<--FILENAME-->
 1 99999 d
 i
 $PRAGMA comment_recurse
@@ -53,16 +53,31 @@ $AUTHOR  <your name>
 $NOTE    <short description>
 $DOCCMD  @list __PROG__=2-<last header line>
 
-: help ( -- )
-  "<--HELP TEXT-->" .tell
+(* ------------------------------------------------------------------------ *)
+
+: M-HELP-desc ( s -- s )
+  pop
+  "<--SHORT HELP DESC-->"
 ;
+WIZCALL M-HELP-desc
+
+: M-HELP-help ( s -- a )
+  ";" split pop toupper var! action_name
+  {
+    { action_name @ " <--ARGS-->" }join
+    " "
+    "  <--HELP-->"
+  }list
+;
+WIZCALL M-HELP-help
+
+(* ------------------------------------------------------------------------ *)
 
 : main ( s --  )
-  "#help" over stringpfx if pop help exit then
 ;
 .
 c
 q
-@register m-<--FILENAME-->=m/<--REGISTRATION-->
-@set $m/<--REGISTRATION-->=<--FLAG-->
-...
+!@register m-<--FILENAME-->=m/<--REGISTRATION-->
+!@set $m/<--REGISTRATION-->=<--FLAG-->
+

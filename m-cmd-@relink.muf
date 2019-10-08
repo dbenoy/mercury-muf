@@ -1,4 +1,4 @@
-@program m-cmd-@relink.muf
+!@program m-cmd-@relink.muf
 1 99999 d
 i
 $PRAGMA comment_recurse
@@ -8,9 +8,6 @@ $PRAGMA comment_recurse
 (*   stock behavior while adding features.                                   *)
 (*                                                                           *)
 (*   GitHub: https://github.com/dbenoy/mercury-muf (See for install info)    *)
-(*                                                                           *)
-(* FEATURES:                                                                 *)
-(*   o #help argument for usage information.                                 *)
 (*                                                                           *)
 (* TECHNICAL NOTES:                                                          *)
 (*   Calls public routines on the following commands, so they must be        *)
@@ -56,18 +53,27 @@ $DOCCMD  @list __PROG__=2-43
 $INCLUDE $m/cmd/at_link
 $INCLUDE $m/cmd/at_unlink
 
-(* ------------------------------------------------------------------------- *)
+(* ------------------------------------------------------------------------ *)
 
-: help (  --  )
-  "@RELINK <object1>=<object2> [; <object3>; ...  <objectn> ]" .tell
-  " " .tell
-  "  Unlinks <object1>, then links it to <object2>, provided you control <object1>, and <object2> is either controlled by you or linkable. Actions may be linked to more than one thing, specified in a list separated by semi-colons." .tell
-  "Also see: @LINK and @UNLINK" .tell
+: M-HELP-desc ( s -- s )
+  pop
+  "Change what an action/exit links to."
 ;
- 
+WIZCALL M-HELP-desc
+
+: M-HELP-help ( s -- a )
+  ";" split pop toupper var! action_name
+  {
+    { action_name @ " <object1>=<object2> [; <object3>; ...  <objectn> ]" }join
+    " "
+    "  Unlinks <object1>, then links it to <object2>, provided you control <object1>, and <object2> is either controlled by you or linkable. Actions may be linked to more than one thing, specified in a list separated by semi-colons."
+  }list
+;
+WIZCALL M-HELP-help
+
+(* ------------------------------------------------------------------------ *)
+
 : main ( s --  )
-  "#help" over stringpfx if pop help exit then
-  
   "=" split
   strip var! destination
   strip var! exitname
@@ -78,10 +84,10 @@ $INCLUDE $m/cmd/at_unlink
   (* Perform link *)
   exitname @ destination @ M-CMD-AT_LINK-Link pop
 ;
- 
+
 .
 c
 q
-@register m-cmd-@relink.muf=m/cmd/at_relink
-@set $m/cmd/at_relink=M3
+!@register m-cmd-@relink.muf=m/cmd/at_relink
+!@set $m/cmd/at_relink=M3
 

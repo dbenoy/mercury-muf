@@ -1,4 +1,4 @@
-@program m-cmd-morph.muf
+!@program m-cmd-morph.muf
 1 99999 d
 i
 $PRAGMA comment_recurse
@@ -38,11 +38,28 @@ $DOCCMD  @list __PROG__=2-30
 
 $INCLUDE $m/cmd/at_editobject
 
+(* ------------------------------------------------------------------------ *)
+
+: M-HELP-desc ( s -- s )
+  pop
+  "Change into another preset form."
+;
+WIZCALL M-HELP-desc
+
+: M-HELP-help ( s -- a )
+  ";" split pop toupper var! action_name
+  {
+    { action_name @ " <morph name>" }join
+    " "
+    "  Loads a 'morph,' from the object editor."
+    "  Morphs are a preset collection of descriptions and other cosmetic details."
+  }list
+;
+WIZCALL M-HELP-help
+
+(* ------------------------------------------------------------------------ *)
+
 : help ( -- )
-  "MORPH <morph name>" .tell
-  " " .tell
-  "  Loads a 'morph,' from the object editor."
-  "  Morphs are a preset collection of descriptions and other cosmetic details." .tell
 ;
 
 : main ( s --  )
@@ -52,8 +69,6 @@ $INCLUDE $m/cmd/at_editobject
     M-CMD-AT_EDITOBJECT-ListMorphs
     exit
   then
-
-  "#help" over stringpfx if pop help exit then
 
   var! morph_name
 
@@ -65,6 +80,6 @@ $INCLUDE $m/cmd/at_editobject
 .
 c
 q
-@register m-cmd-morph.muf=m/cmd/morph
-@set $m/cmd/morph=M3
+!@register m-cmd-morph.muf=m/cmd/morph
+!@set $m/cmd/morph=M3
 

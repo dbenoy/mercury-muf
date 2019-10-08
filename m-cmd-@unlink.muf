@@ -1,4 +1,4 @@
-@program m-cmd-@unlink.muf
+!@program m-cmd-@unlink.muf
 1 99999 d
 i
 $PRAGMA comment_recurse
@@ -10,7 +10,6 @@ $PRAGMA comment_recurse
 (*   GitHub: https://github.com/dbenoy/mercury-muf (See for install info)    *)
 (*                                                                           *)
 (* FEATURES:                                                                 *)
-(*   o #help argument for usage information.                                 *)
 (*   o Can act as a library for other objects to unlink objects with proper  *)
 (*     permission checks, etc.                                               *)
 (*                                                                           *)
@@ -55,13 +54,32 @@ $DOCCMD  @list __PROG__=2-45
 
 (* End configurable options *)
 
+$INCLUDE $m/lib/program
 $INCLUDE $m/lib/match
-
-$DEF NEEDSM2 trig caller = not caller mlevel 2 < and if "Requires MUCKER level 2 or above." abort then
-$DEF NEEDSM3 trig caller = not caller mlevel 3 < and if "Requires MUCKER level 3 or above." abort then
-$DEF NEEDSM4 trig caller = not caller "WIZARD" flag? not and if "Requires MUCKER level 4 or above." abort then
+$INCLUDE $m/lib/pennies
 
 $PUBDEF :
+
+(* ------------------------------------------------------------------------ *)
+
+: M-HELP-desc ( s -- s )
+  pop
+  "Remove the 'link' between one object and another."
+;
+WIZCALL M-HELP-desc
+
+: M-HELP-help ( s -- a )
+  ";" split pop toupper var! action_name
+  {
+    { action_name @ " <exit>" }join
+    { action_name @ " here" }join
+    " "
+    { "  Removes the link on the exit in the specified direction, or removes the drop-to on the room. Unlinked exits may be picked up and dropped elsewhere. Be careful, anyone can relink an unlinked exit, becoming its new owner" "link_cost" sysparm atoi if " (but you will be reimbursed your " "link_cost" sysparm M-LIB-PENNIES-Pennies ")" then "." }join
+  }list
+;
+WIZCALL M-HELP-help
+
+(* ------------------------------------------------------------------------ *)
 
 : controlsLink[ ref:who ref:thing -- bool:success? ]
   thing @ ok? not if
@@ -87,11 +105,11 @@ $PUBDEF :
 (*                          M-CMD-AT_UNLINK-Unlink                           *)
 (*****************************************************************************)
 : M-CMD-AT_UNLINK-Unlink[ str:thing -- bool:success? ]
-  NEEDSM3
+  .needs_mlev3
 
   "link_cost" sysparm atoi var! tp_link_cost
   "player_start" sysparm match var! tp_player_start
-  
+
   thing @ 1 1 1 1 M-LIB-MATCH-Match thing !
 
   thing @ not if
@@ -139,17 +157,7 @@ $LIBDEF M-CMD-AT_UNLINK-Unlink
 
 (* ------------------------------------------------------------------------- *)
 
-: help (  --  )
-  "@UNLINK <exit>" .tell
-  "@UNLINK here" .tell
-  " " .tell
-  "  Removes the link on the exit in the specified direction, or removes the drop-to on the room. Unlinked exits may be picked up and dropped elsewhere. Be careful, anyone can relink an unlinked exit, becoming its new owner (but you will be reimbursed your 1 penny)." .tell
-  "Also see: @LINK and @RELINK" .tell
-;
- 
 : main ( s --  )
-  "#help" over stringpfx if pop help exit then
-
   "=" split
   pop
   strip var! exitname
@@ -160,8 +168,8 @@ $LIBDEF M-CMD-AT_UNLINK-Unlink
 .
 c
 q
-@register m-cmd-@unlink.muf=m/cmd/at_unlink
-@set $m/cmd/at_unlink=L
-@set $m/cmd/at_unlink=M3
-@set $m/cmd/at_unlink=W
+!@register m-cmd-@unlink.muf=m/cmd/at_unlink
+!@set $m/cmd/at_unlink=L
+!@set $m/cmd/at_unlink=M3
+!@set $m/cmd/at_unlink=W
 

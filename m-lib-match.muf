@@ -1,4 +1,4 @@
-@program m-lib-match.muf
+!@program m-lib-match.muf
 1 99999 d
 i
 $PRAGMA comment_recurse
@@ -61,9 +61,7 @@ $DOCCMD  @list __PROG__=2-51
 
 (* End configurable options *)
 
-$DEF NEEDSM2 caller mlevel 2 < if "Requires MUCKER level 2 or above." abort then
-$DEF NEEDSM3 caller mlevel 3 < if "Requires MUCKER level 3 or above." abort then
-$DEF NEEDSM4 caller mlevel 3 < if "Requires MUCKER level 4 or above." abort then
+$INCLUDE $m/lib/program
 
 $PUBDEF :
 
@@ -71,7 +69,7 @@ $PUBDEF :
 (*                             M-LIB-MATCH-Match                             *)
 (*****************************************************************************)
 : M-LIB-MATCH-Match[ str:name bool:noisy bool:absolute bool:nohome bool:nonil -- ref:dbref ]
-  NEEDSM3
+  .needs_mlev3
 
   name @ string? not if "Non-string argument (1)." abort then
 
@@ -88,10 +86,10 @@ $PUBDEF :
     end
     #-1 = when (* Invalid *)
       noisy @ if { "I don't understand '" name @ "'." }join .tell then
-    end  
+    end
     #-2 = when (* Ambiguous *)
       noisy @ if { "I don't know which '" name @ "' you mean!" }join .tell then
-    end  
+    end
     #-3 = when (* HOME *)
       nohome @ if
         noisy @ if { "I don't understand '" name @ "'." }join .tell then
@@ -103,7 +101,7 @@ $PUBDEF :
         noisy @ if { "I don't understand '" name @ "'." }join .tell then
         #-1 matchResult !
       then
-    end  
+    end
     ok? not when (* Garbage *)
       noisy @ if { "I don't understand '" name @ "'." }join .tell then
       #-1 matchResult !
@@ -119,7 +117,7 @@ $LIBDEF M-LIB-MATCH-Match
 (*                        M-LIB-MATCH-RegisterObject                         *)
 (*****************************************************************************)
 : M-LIB-MATCH-RegisterObject[ ref:object str:regname ]
-  NEEDSM3
+  .needs_mlev3
 
   object @ dbref? not if "Non-dbref argument (1)." abort then
   regname @ string? not if "Non-string argument (2)." abort then
@@ -141,7 +139,7 @@ $LIBDEF M-LIB-MATCH-RegisterObject
 .
 c
 q
-@register m-lib-match.muf=m/lib/match
-@set $m/lib/match=L
-@set $m/lib/match=M3
+!@register m-lib-match.muf=m/lib/match
+!@set $m/lib/match=L
+!@set $m/lib/match=M3
 

@@ -1,4 +1,4 @@
-@program m-cmd-@clone.muf
+!@program m-cmd-@clone.muf
 1 99999 d
 i
 $PRAGMA comment_recurse
@@ -10,7 +10,6 @@ $PRAGMA comment_recurse
 (*   GitHub: https://github.com/dbenoy/mercury-muf (See for install info)    *)
 (*                                                                           *)
 (* FEATURES:                                                                 *)
-(*   o #help argument for usage information.                                 *)
 (*   o Uses $m/lib/quota to enforce player object quotas.                    *)
 (*   o Can act as a library for other programs to create objects.            *)
 (*                                                                           *)
@@ -55,21 +54,38 @@ $DOCCMD  @list __PROG__=2-45
 
 (* End configurable options *)
 
+$INCLUDE $m/lib/program
 $INCLUDE $m/lib/quota
 $INCLUDE $m/lib/match
 $INCLUDE $m/lib/pennies
 
-$DEF NEEDSM2 trig caller = not caller mlevel 2 < and if "Requires MUCKER level 2 or above." abort then
-$DEF NEEDSM3 trig caller = not caller mlevel 3 < and if "Requires MUCKER level 3 or above." abort then
-$DEF NEEDSM4 trig caller = not caller "WIZARD" flag? not and if "Requires MUCKER level 4 or above." abort then
-
 $PUBDEF :
+
+(* ------------------------------------------------------------------------ *)
+
+: M-HELP-desc ( s -- s )
+  pop
+  "Clones a given object."
+;
+WIZCALL M-HELP-desc
+
+: M-HELP-help ( s -- a )
+  ";" split pop toupper var! action_name
+  {
+    { action_name @ " <object> [=<regname>]" }join
+    " "
+    "Clones the given object, including name, location, flags, and properties.  You must have control of the object, you may not clone rooms, exits, etc, and cloning may cost pennies.  If successful, the command prints the identifier of the new object.  Only a Builder may use this command."
+  }list
+;
+WIZCALL M-HELP-help
+
+(* ------------------------------------------------------------------------ *)
 
 (*****************************************************************************)
 (*                         M-CMD-AT_CLONE-Clone                              *)
 (*****************************************************************************)
 : M-CMD-AT_CLONE-Clone[ str:thingname -- ref:thing ]
-  NEEDSM3
+  .needs_mlev3
 
   "thing" 1 M-LIB-QUOTA-QuotaCheck not if #-1 exit then
 
@@ -125,19 +141,7 @@ $LIBDEF M-CMD-AT_CLONE-Clone
 
 (* ------------------------------------------------------------------------- *)
 
-: help (  --  )
-  "@CLONE <object> [=<regname>]" .tell
-  " " .tell
-  "Clones the given object, including name, location, flags, and properties.  You must have control of the object, you may not clone rooms, exits, etc, and cloning may cost pennies.  If successful, the command prints the identifier of the new object.  Only a Builder may use this command." .tell
-  " " .tell
-  "Example:" .tell
-  "  @clone some_object" .tell
-  "Also see: @CREATE" .tell
-;
- 
 : main ( s --  )
-  "#help" over stringpfx if pop help exit then
-
   "me" match "BUILDER" flag? "me" match "WIZARD" flag? or not if
     "Only builders are allowed to @clone." .tell
     pop exit
@@ -158,7 +162,7 @@ $LIBDEF M-CMD-AT_CLONE-Clone
 .
 c
 q
-@register m-cmd-@clone.muf=m/cmd/at_clone
-@set $m/cmd/at_clone=M3
-@set $m/cmd/at_clone=W
+!@register m-cmd-@clone.muf=m/cmd/at_clone
+!@set $m/cmd/at_clone=M3
+!@set $m/cmd/at_clone=W
 

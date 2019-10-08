@@ -1,4 +1,4 @@
-@program m-cmd-@open.muf
+!@program m-cmd-@open.muf
 1 99999 d
 i
 $PRAGMA comment_recurse
@@ -10,7 +10,6 @@ $PRAGMA comment_recurse
 (*   GitHub: https://github.com/dbenoy/mercury-muf (See for install info)    *)
 (*                                                                           *)
 (* FEATURES:                                                                 *)
-(*   o #help argument for usage information.                                 *)
 (*   o Uses $m/lib/quota to enforce player object quotas.                    *)
 (*                                                                           *)
 (* TECHNICAL NOTES:                                                          *)
@@ -61,15 +60,25 @@ $INCLUDE $m/cmd/at_link
 
 (* ------------------------------------------------------------------------- *)
 
-: help (  --  )
-  "@OPEN <exit> [=<object> [; <object2>; ... <objectn> ] [=<regname>]]" .tell
- 
-  { "  Opens an exit in the current room, optionally attempting to link it simultaneously.  If a <regname> is specified, then the _reg/<regname> property on the player is set to the dbref of the new object.  This lets players refer to the object as $<regname> (ie: $mybutton) in @locks, @sets, etc.  Opening an exit costs " "exit_cost" sysparm M-LIB-PENNIES-Pennies ", and " "link_cost" sysparm M-LIB-PENNIES-Pennies " to link it, and you must control the room where it is being opened." }join .tell
+: M-HELP-desc ( s -- s )
+  pop
+  "Creates an action/exit."
 ;
- 
-: main ( s --  )
-  "#help" over stringpfx if pop help exit then
+WIZCALL M-HELP-desc
 
+: M-HELP-help ( s -- a )
+  ";" split pop toupper var! action_name
+  {
+    { action_name @ " <exit> [=<object> [; <object2>; ... <objectn> ] [=<regname>]]" }join
+    " "
+    { "  Opens an exit in the current room, optionally attempting to link it simultaneously.  If a <regname> is specified, then the _reg/<regname> property on the player is set to the dbref of the new object.  This lets players refer to the object as $<regname> (ie: $mybutton) in @locks, @sets, etc.  Opening an exit costs " "exit_cost" sysparm M-LIB-PENNIES-Pennies ", and " "link_cost" sysparm M-LIB-PENNIES-Pennies " to link it, and you must control the room where it is being opened." }join
+  }list
+;
+WIZCALL M-HELP-help
+
+(* ------------------------------------------------------------------------ *)
+
+: main ( s --  )
   "me" match "BUILDER" flag? "me" match "WIZARD" flag? or not if
     "Only builders are allowed to @open." .tell
     pop exit
@@ -79,17 +88,17 @@ $INCLUDE $m/cmd/at_link
   strip var! regname
   strip var! destination
   strip var! exitname
-  
+
   (* Create action *)
   { "#" loc @ intostr }join exitname @ M-CMD-AT_ACTION-Action var! newAction
   newAction @ not if exit then
-  
+
   (* Perform link *)
   destination @ if
-    "Trying to link..." .tell  
+    "Trying to link..." .tell
     { "#" newAction @ intostr }join destination @ M-CMD-AT_LINK-Link not if exit then
   then
-  
+
   (* Register action *)
   regname @ if
     dup regname @ M-LIB-MATCH-RegisterObject
@@ -98,6 +107,6 @@ $INCLUDE $m/cmd/at_link
 .
 c
 q
-@register m-cmd-@open.muf=m/cmd/at_open
-@set $m/cmd/at_open=M3
+!@register m-cmd-@open.muf=m/cmd/at_open
+!@set $m/cmd/at_open=M3
 

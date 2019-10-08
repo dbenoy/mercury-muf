@@ -47,6 +47,26 @@ $def .color-category  "bold,blue"  (* Color for category titles in detailed outp
 
 $INCLUDE $m/lib/help
 
+(* ------------------------------------------------------------------------ *)
+
+: M-HELP-desc ( s -- s )
+  pop
+  "View details on global commands."
+;
+WIZCALL M-HELP-desc
+
+: M-HELP-help ( s -- a )
+  ";" split pop toupper var! action_name
+  {
+    { action_name @ " <global>" }join
+    " "
+    "Outputs detailed information on the global command <global>."
+  }list
+;
+WIZCALL M-HELP-help
+
+(* ------------------------------------------------------------------------ *)
+
 : matches_action ( s1 s2 -- b ) (* if action name s1 would be triggered by command s2 *)
   1 array_make swap ";" explode_array array_intersect not not
 ;
@@ -62,7 +82,7 @@ $INCLUDE $m/lib/help
   repeat
   swap pop
 ;
- 
+
 : linked_program ( d -- d )
   getlinks_array foreach
     nip
@@ -73,49 +93,49 @@ $INCLUDE $m/lib/help
   repeat
   #-1
 ;
- 
+
 (* Searches for dbref d2, in propdir s on object d1, and returns a string of *)
 (* every one found, followed by the number found.                            *)
 : find_dbref ( d1 s d2 -- s1..sn i )
- 
+
   var! target
- 
+
   { }list var! retval
- 
+
   over swap "/" strcat nextprop
   begin
     dup while
-    
+
     (* Check directories recursively *)
     over over propdir? if
       over over target @ find_dbref
       array_make 0 retval @ array_insertrange retval !
     then
-    
+
     (* Check if this property matches target *)
     over over getprop
-    
+
     dup dbref? if
       dup target @ = if
         over retval @ array_appenditem retval !
       then
-    then  
-    
+    then
+
     dup string? if
       dup stod target @ = if
         over retval @ array_appenditem retval !
       then
     then
- 
+
     pop
-    
+
     over swap nextprop
   repeat
   pop pop
-  
+
   retval @ array_vals
 ;
- 
+
 : main ( s --  )
   dup not if
     "Please specify a global." .color-msg-error textattr .tell exit
@@ -123,38 +143,38 @@ $INCLUDE $m/lib/help
 
   (* Find the specified global *)
   get_global
-  
+
   dup not if
     "No global by that name was found." .color-msg-error textattr .tell exit
   then
-  
+
   me @ over controls not over "D" flag? and if
     "Permission denied.  This global is set DARK." .color-msg-error textattr .tell exit
   then
-  
+
   "-------------------------------------------------------------------------------" .tell
-  
+
   dup "$nothing" match = not if (* If it's linked to $nothing, then it's probably MPI *)
     me @ over locked? if
       "Note: You don't have access to run this action!\r" .color-msg-error textattr .tell
     then
   then
-  
+
   (* Action Name *)
   dup M-LIB-HELP-command_get_name "Global Name:         " .color-category textattr swap strcat .tell
-  
+
   (* Action Description *)
   dup M-LIB-HELP-command_get_desc dup if
     "Global Description:  " .color-category textattr swap strcat .tell
   else
     pop
   then
-  
+
   " " .tell
-  
+
   (* Action Owner *)
   "Action Owner:        " .color-category textattr over owner name strcat .tell
-  
+
   (* Action Aliases *)
   dup name dup ";" instr if
     ", " ";" subst
@@ -162,40 +182,40 @@ $INCLUDE $m/lib/help
   else
     pop
   then
-  
+
   (* Output MUF information *)
   linked_program
-  
+
   dup if
     (* Program Name *)
     "Program Name:        " .color-category textattr over name strcat .tell
-    
+
     (* Program Owner *)
     dup owner #1 = not if
       "Program Owner:       " .color-category textattr over owner name strcat .tell
     then
-    
+
     (* Program Author *)
     dup "_author" getpropstr dup if
       "Program Author:      " .color-category textattr swap strcat .tell
     else
       pop
     then
-    
+
     (* Program Version *)
     dup "_version" getpropstr dup if
       "Program Version:     " .color-category textattr swap strcat .tell
     else
       pop
     then
-    
+
     (* Program Note *)
     dup "_note" getpropstr dup if
       "Program Note:        " .color-category textattr swap strcat .tell
     else
       pop
     then
-    
+
     (* Program Docs *)
     dup "L" flag? over "V" flag? or if
       dup "_docs" getpropstr if
@@ -203,15 +223,15 @@ $INCLUDE $m/lib/help
       else
         "@list #"
       then
-      
+
       over intostr strcat
-      
+
       "Program Docs:        " .color-category textattr swap strcat .tell
     then
-    
+
     (* Program Registrations *)
     #0 "_reg" 3 pick find_dbref
-    
+
     dup if
       array_make
       "Program Reg:         " .color-category textattr
@@ -220,10 +240,10 @@ $INCLUDE $m/lib/help
     else
       pop
     then
-    
+
     pop
   then
-  
+
   "-------------------------------------------------------------------------------" .tell
 ;
 .

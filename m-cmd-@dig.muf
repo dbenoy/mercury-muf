@@ -1,4 +1,4 @@
-@program m-cmd-@dig.muf
+!@program m-cmd-@dig.muf
 1 99999 d
 i
 $PRAGMA comment_recurse
@@ -10,7 +10,6 @@ $PRAGMA comment_recurse
 (*   GitHub: https://github.com/dbenoy/mercury-muf (See for install info)    *)
 (*                                                                           *)
 (* FEATURES:                                                                 *)
-(*   o #help argument for usage information.                                 *)
 (*   o Uses $m/lib/quota to enforce player object quotas.                    *)
 (*   o Can act as a library for other objects to create rooms with proper    *)
 (*     permission checks, penny charges, etc.                                *)
@@ -56,15 +55,32 @@ $DOCCMD  @list __PROG__=2-46
 
 (* End configurable options *)
 
+$INCLUDE $m/lib/program
 $INCLUDE $m/lib/quota
 $INCLUDE $m/lib/match
 $INCLUDE $m/lib/pennies
 
-$DEF NEEDSM2 trig caller = not caller mlevel 2 < and if "Requires MUCKER level 2 or above." abort then
-$DEF NEEDSM3 trig caller = not caller mlevel 3 < and if "Requires MUCKER level 3 or above." abort then
-$DEF NEEDSM4 trig caller = not caller "WIZARD" flag? not and if "Requires MUCKER level 4 or above." abort then
-
 $PUBDEF :
+
+(* ------------------------------------------------------------------------ *)
+
+: M-HELP-desc ( s -- s )
+  pop
+  "Creates a room."
+;
+WIZCALL M-HELP-desc
+
+: M-HELP-help ( s -- a )
+  ";" split pop toupper var! action_name
+  {
+    { action_name @ " <room> [=<parent> [=<regname>]]" }join
+    " "
+    { "  Creates a new room, sets its parent, and gives it a personal registered name.  If no parent is given, it defaults to the first ABODE room down the environment tree from the current room.  If it fails to find one, it sets the parent to " "default_room_parent" sysparm stod unparseobj ".  If no <regname> is given, then it doesn't register the object.  If one is given, then the object's dbref is recorded in the player's _reg/<regname> property, so that they can refer to the object later as $<regname>.  Digging a room costs " "room_cost" sysparm M-LIB-PENNIES-Pennies ", and you must be able to link to the parent room if specified.  Only a builder may use this command." }join
+  }list
+;
+WIZCALL M-HELP-help
+
+(* ------------------------------------------------------------------------ *)
 
 : doNewRoom ( d s -- d s )
   2 try
@@ -73,13 +89,13 @@ $PUBDEF :
     #-1 swap exit
   endcatch
 ;
- 
+
 (*****************************************************************************)
 (*                           M-CMD-AT_DIG-Dig                                *)
 (*****************************************************************************)
 
 : M-CMD-AT_DIG-Dig[ str:roomname str:parent -- ref:dbref ]
-  NEEDSM3
+  .needs_mlev3
 
   "room" 1 M-LIB-QUOTA-QuotaCheck not if #-1 exit then
 
@@ -87,42 +103,42 @@ $PUBDEF :
     "You must specify a name for the room." .tell
     #-1 exit
   then
-  
+
   roomname @ name-ok? not if
     "That's a silly name for a room!" .tell
     #-1 exit
   then
- 
+
   "room_cost" sysparm atoi var! cost
-  
+
   cost @ M-LIB-PENNIES-ChkPayFor not if
     { "Sorry, you don't have enough " "pennies" sysparm " to dig a room." }join .tell
     #-1 exit
   then
-  
+
   (* Find default parent and create room *)
   "me" match location begin
     dup while
-    
+
     dup "ABODE" flag? if
       break
     then
-    
+
     location
   repeat
-  
+
   dup not if
     pop "default_room_parent" sysparm stod
   then
-  
+
   roomname @ doNewRoom
   dup if .tell pop #-1 exit else pop then
   var! newroom
-  
+
   "Room " newroom @ name strcat " (#" strcat newroom @ intostr strcat ") created." strcat .tell
-  
+
   cost @ M-LIB-PENNIES-DoPayFor
-  
+
   parent @ if
     "Trying to set parent..." .tell
 
@@ -147,15 +163,7 @@ $LIBDEF M-CMD-AT_DIG-Dig
 
 (* ------------------------------------------------------------------------- *)
 
-: help (  --  )
-  "@DIG <room> [=<parent> [=<regname>]]" .tell
- 
-  { "  Creates a new room, sets its parent, and gives it a personal registered name.  If no parent is given, it defaults to the first ABODE room down the environment tree from the current room.  If it fails to find one, it sets the parent to " "default_room_parent" sysparm stod unparseobj ".  If no <regname> is given, then it doesn't register the object.  If one is given, then the object's dbref is recorded in the player's _reg/<regname> property, so that they can refer to the object later as $<regname>.  Digging a room costs " "room_cost" sysparm M-LIB-PENNIES-Pennies ", and you must be able to link to the parent room if specified.  Only a builder may use this command." }join .tell
-;
- 
 : main ( s --  )
-  "#help" over stringpfx if pop help exit then
-
   "me" match "BUILDER" flag? "me" match "WIZARD" flag? or not if
     "Only builders are allowed to @dig." .tell
     pop exit
@@ -181,8 +189,8 @@ $LIBDEF M-CMD-AT_DIG-Dig
 .
 c
 q
-@register m-cmd-@dig.muf=m/cmd/at_dig
-@set $m/cmd/at_dig=L
-@set $m/cmd/at_dig=M3
-@set $m/cmd/at_dig=W
+!@register m-cmd-@dig.muf=m/cmd/at_dig
+!@set $m/cmd/at_dig=L
+!@set $m/cmd/at_dig=M3
+!@set $m/cmd/at_dig=W
 

@@ -1,4 +1,4 @@
-@program m-cmd-@quota.muf
+!@program m-cmd-@quota.muf
 1 99999 d
 i
 $PRAGMA comment_recurse
@@ -46,19 +46,29 @@ $DOCCMD  @list __PROG__=2-34
 
 $INCLUDE $m/lib/quota
 
-(* ------------------------------------------------------------------------- *)
+(* ------------------------------------------------------------------------ *)
 
-: help (  --  )
-  "@QUOTA [<player>]" .tell
-  " " .tell
-  "Displays quota information and ownership totals." .tell
+: M-HELP-desc ( s -- s )
+  pop
+  "Displays quota information."
 ;
+WIZCALL M-HELP-desc
+
+: M-HELP-help ( s -- a )
+  ";" split pop toupper var! action_name
+  {
+    { action_name @ " [<player>]" }join
+    " "
+    "  Displays quota information and ownership totals."
+  }list
+;
+WIZCALL M-HELP-help
+
+(* ------------------------------------------------------------------------ *)
 
 $DEF QUOTA_STRING dup -1 = if pop "---" else intostr then
 
 : main ( s --  )
-  dup "#help" over stringpfx and if pop help exit then
-
   dup not if
     pop "me"
   then
@@ -90,6 +100,6 @@ $DEF QUOTA_STRING dup -1 = if pop "---" else intostr then
 .
 c
 q
-@register m-cmd-@quota.muf=m/cmd/at_quota
-@set $m/cmd/at_quota=M3
+!@register m-cmd-@quota.muf=m/cmd/at_quota
+!@set $m/cmd/at_quota=M3
 

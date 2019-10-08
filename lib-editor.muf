@@ -1,4 +1,4 @@
-@program lib-editor.muf
+!@program lib-editor.muf
 1 99999 d
 1 i
 ( This code is hereby stated as public domain, for use in any program
@@ -621,7 +621,7 @@ $libdef EDITORparse
 .
 c
 q
-@register lib-editor.muf=lib/editor
-@set $lib/editor=3
-@set $lib/editor=L
+!@register lib-editor.muf=lib/editor
+!@set $lib/editor=3
+!@set $lib/editor=L
 

@@ -1,4 +1,4 @@
-@program m-cmd-@action.muf
+!@program m-cmd-@action.muf
 1 99999 d
 i
 $PRAGMA comment_recurse
@@ -10,7 +10,6 @@ $PRAGMA comment_recurse
 (*   GitHub: https://github.com/dbenoy/mercury-muf (See for install info)    *)
 (*                                                                           *)
 (* FEATURES:                                                                 *)
-(*   o #help argument for usage information.                                 *)
 (*   o Uses $m/lib/quota to enforce player object quotas.                    *)
 (*   o Also link the exit with the same command.                             *)
 (*   o Can act as a library for other objects to create exits with proper    *)
@@ -62,16 +61,33 @@ $DOCCMD  @list __PROG__=2-52
 
 (* End configurable options *)
 
+$INCLUDE $m/lib/program
 $INCLUDE $m/lib/quota
 $INCLUDE $m/lib/match
 $INCLUDE $m/lib/pennies
 $INCLUDE $m/cmd/at_link
 
-$DEF NEEDSM2 trig caller = not caller mlevel 2 < and if "Requires MUCKER level 2 or above." abort then
-$DEF NEEDSM3 trig caller = not caller mlevel 3 < and if "Requires MUCKER level 3 or above." abort then
-$DEF NEEDSM4 trig caller = not caller "WIZARD" flag? not and if "Requires MUCKER level 4 or above." abort then
-
 $PUBDEF :
+
+(* ------------------------------------------------------------------------ *)
+
+: M-HELP-desc ( s -- s )
+  pop
+  "Creates a new action/exit."
+;
+WIZCALL M-HELP-desc
+
+: M-HELP-help ( s -- a )
+  ";" split pop toupper var! action_name
+  {
+    { action_name @ " <name>=<source>[,<destination>[; <destination2>; ... <destinationN>]] [=<regname>]" }join
+    " "
+    { "  Creates a new action and attaches it to the thing, room, or player specified. If a <regname> is specified, then the _reg/<regname> property on the player is set to the dbref of the new object. This lets players refer to the object as $<regname> (ie: $mybutton) in @locks, @sets, etc. You may only attach actions you control to things you control. Creating an action costs " "exit_cost" sysparm M-LIB-PENNIES-Pennies ". The action can then be linked with the command @LINK." }join
+  }list
+;
+WIZCALL M-HELP-help
+
+(* ------------------------------------------------------------------------ *)
 
 : doNewExit ( d s -- d s )
   2 try
@@ -80,27 +96,27 @@ $PUBDEF :
     #-1 swap exit
   endcatch
 ;
- 
+
 (*****************************************************************************)
 (*                          M-CMD-AT_ACTION-Action                           *)
 (*****************************************************************************)
 : M-CMD-AT_ACTION-Action[ str:source str:exitname -- ref:room ]
-  NEEDSM3
+  .needs_mlev3
 
   "exit" 1 M-LIB-QUOTA-QuotaCheck not if #-1 exit then
 
   "exit_cost" sysparm atoi var! cost
-  
+
   exitname @ not if
     "You must specify a direction or action name to open." .tell
     #-1 exit
   then
-  
+
   exitname @ name-ok? not if
     "That's a strange name for an exit!" .tell
     #-1 exit
   then
-  
+
   source @ not if
     "You must specify a source object." .tell
     #-1 exit
@@ -116,27 +132,27 @@ $PUBDEF :
     "Permission denied. (you don't control the attachment point)" .tell
     #-1 exit
   then
-  
+
   source @ exit? if
     "You can't attach an action to an action." .tell
     #-1 exit
   then
-  
+
   source @ program? if
     "You can't attach an action to a program." .tell
     #-1 exit
   then
-  
+
   cost @ M-LIB-PENNIES-ChkPayFor not if
     { "Sorry, you don't have enough " "pennies" sysparm " to create an action/exit." }join .tell
     #-1 exit
   then
-  
+
   source @ exitname @ doNewExit
   dup if .tell pop #-1 exit else pop then
-  
+
   cost @ M-LIB-PENNIES-DoPayFor
-  
+
   "Action " over name strcat " (#" strcat over intostr strcat ") created." strcat .tell
 ;
 PUBLIC M-CMD-AT_ACTION-Action
@@ -144,15 +160,7 @@ $LIBDEF M-CMD-AT_ACTION-Action
 
 (* ------------------------------------------------------------------------- *)
 
-: help (  --  )
-  "@ACTION <name>=<source>[,<destination>[; <destination2>; ... <destinationN>]] [=<regname>]" .tell
-  " " .tell
-  { "  Creates a new action and attaches it to the thing, room, or player specified. If a <regname> is specified, then the _reg/<regname> property on the player is set to the dbref of the new object. This lets players refer to the object as $<regname> (ie: $mybutton) in @locks, @sets, etc. You may only attach actions you control to things you control. Creating an action costs " "exit_cost" sysparm M-LIB-PENNIES-Pennies ". The action can then be linked with the command @LINK." }join .tell
-;
- 
 : main ( s --  )
-  "#help" over stringpfx if pop help exit then
-  
   "me" match "BUILDER" flag? "me" match "WIZARD" flag? or not if
     "Only builders are allowed to @action." .tell
     pop exit
@@ -164,17 +172,17 @@ $LIBDEF M-CMD-AT_ACTION-Action
   strip var! destination
   strip var! source
   strip var! exitname
-  
+
   (* Create action *)
   source @ exitname @ M-CMD-AT_ACTION-Action var! newAction
   newAction @ not if exit then
-  
+
   (* Perform link *)
   destination @ if
     "Trying to link..." .tell
     "#" newAction @ intostr strcat destination @ M-CMD-AT_LINK-Link not if exit then
   then
-  
+
   (* Register action *)
   regname @ if
     dup regname @ M-LIB-MATCH-RegisterObject
@@ -183,8 +191,8 @@ $LIBDEF M-CMD-AT_ACTION-Action
 .
 c
 q
-@register m-cmd-@action.muf=m/cmd/at_action
-@set $m/cmd/at_action=L
-@set $m/cmd/at_action=M3
-@set $m/cmd/at_action=W
+!@register m-cmd-@action.muf=m/cmd/at_action
+!@set $m/cmd/at_action=L
+!@set $m/cmd/at_action=M3
+!@set $m/cmd/at_action=W
 

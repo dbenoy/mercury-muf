@@ -1,4 +1,4 @@
-@program m-cmd-@lsedit.muf
+!@program m-cmd-@lsedit.muf
 1 99999 d
 i
 $PRAGMA comment_recurse
@@ -43,31 +43,45 @@ $VERSION 1.0
 $AUTHOR  Daniel Benoy
 $NOTE    Editor for 'list' properties.
 $DOCCMD  @list __PROG__=2-38
- 
+
 (* Begin configurable options *)
- 
+
 $DEF .chars-per-row 79
- 
+
 (* End configurable options *)
 
 $INCLUDE $lib/editor
 $INCLUDE $lib/lmgr
+$INCLUDE $m/lib/program
 $INCLUDE $m/lib/match
 
-$DEF .author prog "_author" getpropstr
-$DEF .version prog "_version" getpropstr begin dup strlen 1 - over ".0" rinstr = not while dup ".0" instr while "." ".0" subst repeat
-
-$DEF NEEDSM2 trig caller = not caller mlevel 2 < and if "Requires MUCKER level 2 or above." abort then
-$DEF NEEDSM3 trig caller = not caller mlevel 3 < and if "Requires MUCKER level 3 or above." abort then
-$DEF NEEDSM4 trig caller = not caller "WIZARD" flag? not and if "Requires MUCKER level 4 or above." abort then
-
 $PUBDEF :
+
+(* ------------------------------------------------------------------------ *)
+
+: M-HELP-desc ( s -- s )
+  pop
+  "Edits list properties."
+;
+WIZCALL M-HELP-desc
+
+: M-HELP-help ( s -- a )
+  ";" split pop toupper var! action_name
+  {
+    { action_name @ " <object>=<prop>" }join
+    " "
+    "  Runs a line editor to edit the 'list' type property named <prop> on <object>."
+  }list
+;
+WIZCALL M-HELP-help
+
+(* ------------------------------------------------------------------------ *)
 
 (*****************************************************************************)
 (*                         M-CMD-AT_LSEDIT-ListEdit                          *)
 (*****************************************************************************)
 : M-CMD-AT_LSEDIT-ListEdit[ ref:object str:propname -- bool:modified? ]
-  NEEDSM4
+  .needs_mlev4
 
   object @ dbref? not if "Non-dbref argument (1)." abort then
   propname @ string? not if "Non-string argument (2)." abort then
@@ -112,7 +126,7 @@ $LIBDEF M-CMD-AT_LSEDIT-ListEdit
 (*                          M-CMD-AT_LSEDIT-LSEdit                           *)
 (*****************************************************************************)
 : M-CMD-AT_LSEDIT-LSEdit[ str:objname str:propname -- bool:modified? ]
-  NEEDSM3
+  .needs_mlev3
 
   objname @ string? not if "Non-string argument (1)." abort then
   propname @ string? not if "Non-string argument (2)." abort then
@@ -143,15 +157,7 @@ $LIBDEF M-CMD-AT_LSEDIT-LSEdit
 
 (* ------------------------------------------------------------------------- *)
 
-: help (  --  )
-  "@LSEDIT <obj>=<prop>" .tell
-  " " .tell
-  "  Runs a line editor to edit a named 'list' type property on an object." .tell
-;
- 
 : main ( s --  )
-  "#help" over stringpfx if pop help exit then
-  
   "=" split
   strip var! propname
   strip var! objname
@@ -161,8 +167,8 @@ $LIBDEF M-CMD-AT_LSEDIT-LSEdit
 .
 c
 q
-@register cmd-@lsedit.muf=m/cmd/at_lsedit
-@set $m/cmd/at_lsedit=M3
-@set $m/cmd/at_lsedit=W
-@set $m/cmd/at_lsedit=L
+!@register cmd-@lsedit.muf=m/cmd/at_lsedit
+!@set $m/cmd/at_lsedit=M3
+!@set $m/cmd/at_lsedit=W
+!@set $m/cmd/at_lsedit=L
 
