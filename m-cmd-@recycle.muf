@@ -1,4 +1,4 @@
-@program m-cmd-@recycle.muf
+!@program m-cmd-@recycle.muf
 1 99999 d
 i
 $PRAGMA comment_recurse
@@ -80,7 +80,7 @@ $PUBDEF :
   thing @ 1 1 1 1 M-LIB-MATCH-Match thing !
 
   thing @ not if
-    #-1 exit
+    0 exit
   then
 
   "me" match thing @ owner = not if
@@ -89,37 +89,31 @@ $PUBDEF :
     else
       "Permission denied." .tell
     then
-    exit
+    0 exit
   then
   
   thing @ player? if
-    "You can't recycle a player!" .tell exit
+    "You can't recycle a player!" .tell 0 exit
   then
   
   thing @ ok? not if
-    "That's already garbage!" .tell exit
+    "That's already garbage!" .tell 0 exit
   then
     
   thing @ owner "me" match owner = not if
-    "Permission denied." .tell exit
+    "Permission denied." .tell 0 exit
   then
     
   thing @ room? if
     thing @ "player_start" sysparm stod = thing @ #0 = or if
-      "This room may not be recycled (is either player start or the global environment)." .tell exit
-    then
-  then
-  
-  thing @ exit? if
-    "me" match location thing @ location = not if
-      "You can't do that to an exit in another room." .tell exit
+      "This room may not be recycled (is either player start or the global environment)." .tell 0 exit
     then
   then
   
   confirmation @ if
     "Are you certian you want to permanently recycle " thing @ unparseobj strcat "? (Type 'YES' in full to recycle, anything else to abort.)" strcat .tell
     read "yes" stringcmp if
-      "Aborted!" .tell exit
+      "Aborted!" .tell 0 exit
     then
   then
   
@@ -177,9 +171,9 @@ $LIBDEF M-CMD-AT_RECYCLE-Recycle
 .
 c
 q
-@register m-cmd-@recycle.muf=m/cmd/at_recycle
-@set $m/cmd/at_recycle=L
-@set $m/cmd/at_recycle=M3
-@set $m/cmd/at_recycle=W
+!@register m-cmd-@recycle.muf=m/cmd/at_recycle
+!@set $m/cmd/at_recycle=L
+!@set $m/cmd/at_recycle=M3
+!@set $m/cmd/at_recycle=W
 
 
