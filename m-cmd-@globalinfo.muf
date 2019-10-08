@@ -67,6 +67,7 @@ $def .color-category  "bold,blue"  (* Color for category titles in detailed outp
     dup program? if
       exit
     then
+    pop
   repeat
   #-1
 ;
