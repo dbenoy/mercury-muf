@@ -45,6 +45,8 @@ $def .color-category  "bold,blue"  (* Color for category titles in detailed outp
 
 (* End configurable options *)
 
+$INCLUDE $m/lib/help
+
 : matches_action ( s1 s2 -- b ) (* if action name s1 would be triggered by command s2 *)
   1 array_make swap ";" explode_array array_intersect not not
 ;
@@ -139,47 +141,16 @@ $def .color-category  "bold,blue"  (* Color for category titles in detailed outp
   then
   
   (* Action Name *)
-  dup "_name" getpropstr dup if
-    "Global Name:         " .color-category textattr swap strcat .tell
-  else
-    pop
-    
-    dup name ";" split pop
-    "Global Name:         " .color-category textattr swap tolower strcat .tell
-  then
+  dup M-LIB-HELP-command_get_name "Global Name:         " .color-category textattr swap strcat .tell
   
   (* Action Description *)
-  dup "_desc" getpropstr dup if
+  dup M-LIB-HELP-command_get_desc dup if
     "Global Description:  " .color-category textattr swap strcat .tell
   else
     pop
   then
   
-  (* Action Help Command *)
-  dup "_help" getpropstr dup if
-    "Global Help Command: " .color-category textattr swap strcat .tell
-  else
-    pop
-  then
-  
   " " .tell
-  
-  dup "_desc#" getpropstr dup number? if
-    "Long Global Description:" .color-category textattr .tell
-    
-    atoi
-    0
-    begin
-      over over >= while
-      "_desc#/" over intostr strcat 4 pick swap getpropstr .tell
-      ++
-    repeat
-    pop pop
-    
-    " " .tell
-  else
-    pop
-  then
   
   (* Action Owner *)
   "Action Owner:        " .color-category textattr over owner name strcat .tell
