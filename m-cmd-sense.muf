@@ -16,13 +16,13 @@ $PRAGMA comment_recurse
 (* EXAMPLE:                                                                  *)
 (*   @act smell;sniff;@smell=#0                                              *)
 (*   @link smell=m-cmd-sense.muf                                             *)
-(*   @set smell=_senses/presverb:smell                                       *)
-(*   @set smell=_senses/pastverb:smelled                                     *)
-(*   @set smell=_senses/prespart:smelling                                    *)
-(*   @set smell=_senses/pastpart:smelled                                     *)
-(*   @set smell=_senses/noun:scent                                           *)
-(*   @set smell=_senses/overt:no                                             *)
-(*   @set smell=_senses/everyone:yes                                         *)
+(*   @set smell=_sense/presverb:smell                                        *)
+(*   @set smell=_sense/pastverb:smelled                                      *)
+(*   @set smell=_sense/prespart:smelling                                     *)
+(*   @set smell=_sense/pastpart:smelled                                      *)
+(*   @set smell=_sense/noun:scent                                            *)
+(*   @set smell=_sense/overt:no                                              *)
+(*   @set smell=_sense/everyone:yes                                          *)
 (*   @create testobject                                                      *)
 (*   smell testobject                                                        *)
 (*   > You smell testobject.                                                 *)
@@ -37,65 +37,65 @@ $PRAGMA comment_recurse
 (*   "_/<noun>"                                                              *)
 (*     On objects: This is the property you set an object its sense          *)
 (*     description, where <noun> is whatever you defined below in the        *)
-(*     "_senses/noun" property on the trigger action, or 'sense' by default. *)
+(*     "_sense/noun" property on the trigger action, or 'sense' by default.  *)
 (*                                                                           *)
 (*     In the special case where the noun is 'appearance', ththe property    *)
 (*     used is "_/de" instead.                                               *)
 (*                                                                           *)
 (*     This is parsed as MPI.                                                *)
 (*                                                                           *)
-(*   "_senses/presverb"                                                      *)
+(*   "_sense/presverb"                                                       *)
 (*     On the trigger action: The verb in present tense. (i.e. fly)          *)
 (*                                                                           *)
-(*   "_senses/pastverb"                                                      *)
+(*   "_sense/pastverb"                                                       *)
 (*     On the trigger action: The verb in past tense.    (i.e. flew)         *)
 (*                                                                           *)
-(*   "_senses/prespart"                                                      *)
+(*   "_sense/prespart"                                                       *)
 (*     On the trigger action: The present participle     (i.e. flying)       *)
 (*                                                                           *)
-(*   "_senses/pastpart"                                                      *)
+(*   "_sense/pastpart"                                                       *)
 (*     On the trigger action: The past participle        (i.e. flown)        *)
 (*                                                                           *)
-(*   "_senses/noun"                                                          *)
+(*   "_sense/noun"                                                           *)
 (*     On the trigger action: The NOUN being acted on.   (i.e. wings)        *)
 (*                                                                           *)
-(*   "_senses/overt"                                                         *)
+(*   "_sense/overt"                                                          *)
 (*     On the trigger action: If this is "yes" then the target, as well as   *)
 (*     others in the same location, will be alerted that the event has       *)
 (*     happened.  Otherwise they will not.                                   *)
 (*                                                                           *)
-(*   "_senses/everyone"                                                      *)
+(*   "_sense/everyone"                                                       *)
 (*     On the trigger action: Set this to "Yes" to make '<command> here' act *)
 (*     on everyone/everything in the room as well as getting the description *)
 (*     for the room itself. Set it to "Random" to make it get random descs   *)
 (*     from the room, (and not show their source) Leave it unset, or set it  *)
 (*     to anything else to make it only show the room description.           *)
 (*                                                                           *)
-(*   "_senses/desc"                                                          *)
+(*   "_sense/desc"                                                           *)
 (*     On the trigger action: The default description that comes up when the *)
 (*     object's description is unset.                                        *)
 (*                                                                           *)
-(*   "_senses/roomdesc"                                                      *)
+(*   "_sense/roomdesc"                                                       *)
 (*     On the trigger action: The default description that comes up when a   *)
 (*     room's description is unset.                                          *)
 (*                                                                           *)
-(*   "_senses/notice"                                                        *)
+(*   "_sense/notice"                                                         *)
 (*     On the trigger action: The message seen when someone successfully     *)
 (*     performs the command on an object. (Just before the description.)     *)
 (*                                                                           *)
-(*   "_senses/tnotice"                                                       *)
+(*   "_sense/tnotice"                                                        *)
 (*     On the trigger action: The message the target object sees when the    *)
 (*     command is performed on them.                                         *)
 (*                                                                           *)
-(*   "_senses/onotice"                                                       *)
+(*   "_sense/onotice"                                                        *)
 (*     On the trigger action: The message everyone else in the room sees     *)
 (*     when the command is performed on someone.                             *)
 (*                                                                           *)
-(*   "_senses/noticehere"                                                    *)
+(*   "_sense/noticehere"                                                     *)
 (*     On the trigger action: The message seen when someone successfully     *)
 (*     performs the command on a room.  (Just before the description.)       *)
 (*                                                                           *)
-(*   "_senses/onoticehere"                                                   *)
+(*   "_sense/onoticehere"                                                    *)
 (*     On the trigger action: The message everyone else in the room sees     *)
 (*     when the command is performed on a room.                              *)
 (*                                                                           *)
@@ -122,19 +122,19 @@ $PRAGMA comment_recurse
 (*     -"[PASTPART]" - Past Participle {i.e. eaten}                          *)
 (*     -"[NOUN]"     - Noun being acted on {i.e. food}                       *)
 (*                                                                           *)
-(*   The following substituions are made to the _senses/notice string:       *)
+(*   The following substituions are made to the _sense/notice string:        *)
 (*     -Pronoun substitutions are made with the target as the subject.       *)
 (*                                                                           *)
-(*   The following substituions are made to the _senses/onotice string:      *)
+(*   The following substituions are made to the _sense/onotice string:       *)
 (*     -The name of the person performing the action is prepended to the     *)
 (*      string.                                                              *)
 (*     -Pronoun substituions are made with the target as the subject.        *)
 (*                                                                           *)
-(*   The following subtitutions are made to the _senses/tnotice string:      *)
+(*   The following subtitutions are made to the _sense/tnotice string:       *)
 (*     -Pronoun substitutions are made with the person performing the action *)
 (*      as the subject.                                                      *)
 (*                                                                           *)
-(*   The following substitutions are made to the _senses/onoticehere string: *)
+(*   The following substitutions are made to the _sense/onoticehere string:  *)
 (*     -The name of the person performing the action is prepended to the     *)
 (*      string.                                                              *)
 (*     -Pronoun substitutions are made with the person performing the action *)
@@ -204,8 +204,8 @@ $ENDDEF
 (* End configurable options *)
 
 (* ------------------------------------------------------------------------- *)
-: get_trig_prop ( d s -- s )
-  swap "_senses/" 3 pick strcat getpropstr
+: get_conf_on_action ( d s -- s )
+  swap "_sense/" 3 pick strcat getpropstr
   dup if
     nip
   else
@@ -214,10 +214,14 @@ $ENDDEF
   then
 ;
 
+: get_conf ( s -- s )
+  trig swap get_conf_on_action
+;
+
 $def CAPS tolower 1 strcut swap toupper swap strcat
 
 : M-HELP-desc ( d -- s )
-  "presverb" get_trig_prop CAPS " something." strcat
+  "presverb" get_conf_on_action CAPS " something." strcat
 ;
 WIZCALL M-HELP-desc
 
@@ -245,28 +249,28 @@ WIZCALL M-HELP-desc
   {
     action_name @ if
       { action_name @ " [<object>]" }join
-      { "  " action @ "presverb" get_trig_prop CAPS " an object, or " action @ "presverb" get_trig_prop tolower " the room in general if you don't specify an object." }join
+      { "  " action @ "presverb" get_conf_on_action CAPS " an object, or " action @ "presverb" get_conf_on_action tolower " the room in general if you don't specify an object." }join
       " "
       { action_name @ " <container>'s <object>" }join
-      { "  " action @ "presverb" get_trig_prop CAPS " an object that is inside of another object." }join
+      { "  " action @ "presverb" get_conf_on_action CAPS " an object that is inside of another object." }join
     then
     action_name @ action_at_name @ and if
       " "
     then
     action_at_name @ if
-      { action_at_name @ " <object>=<new" action @ "noun" get_trig_prop tolower ">" }join
-      { "  Set a new " action @ "noun" get_trig_prop tolower " on an object." }join
+      { action_at_name @ " <object>=<new" action @ "noun" get_conf_on_action tolower ">" }join
+      { "  Set a new " action @ "noun" get_conf_on_action tolower " on an object." }join
     then
   }list
 ;
 WIZCALL M-HELP-help
 
-: sub_standard ( d s -- s )
-  over "presverb" get_trig_prop "[PRESVERB]" subst
-  over "pastverb" get_trig_prop "[PASTVERB]" subst
-  over "prespart" get_trig_prop "[PRESPART]" subst
-  over "pastpart" get_trig_prop "[PASTPART]" subst
-  swap "noun" get_trig_prop     "[NOUN]" subst
+: sub_standard ( s -- s )
+  "presverb" get_conf "[PRESVERB]" subst
+  "pastverb" get_conf "[PASTVERB]" subst
+  "prespart" get_conf "[PRESPART]" subst
+  "pastpart" get_conf "[PASTPART]" subst
+  "noun"     get_conf "[NOUN]" subst
 ;
 
 : sub_pronouns ( d s -- s' )
@@ -287,8 +291,8 @@ WIZCALL M-HELP-help
   then
 ;
 
-: get_sense_prop ( d -- s )
-  "noun" get_trig_prop
+: get_sense_prop ( -- s )
+  "noun" get_conf
   dup "appearance" stringcmp not if
     pop "_/de" exit
   then
@@ -300,12 +304,9 @@ WIZCALL M-HELP-help
 
 : contains? ( d1 d2 -- b ) (* If d1 is within d2, or they are identical *)
   swap
-
   begin
     dup #0 dbcmp not while
-
     over over dbcmp if pop pop 1 exit then
-
     location
   repeat
   pop pop 0
@@ -314,99 +315,67 @@ WIZCALL M-HELP-help
 (*****************************************************************************)
 (                                 cmd_sense                                   )
 (*****************************************************************************)
-: cmd_do_sense ( d --  )
-  trig "everyone" get_trig_prop
+: sense_room[ ref:object ]
+  (* Notify me *)
+  object @ "noticehere" get_conf sub_standard .tell
+  (* Output room desc *)
+  object @ get_sense_prop getpropstr if
+    object @ get_sense_prop "(@" "noun" get_conf strcat ")" strcat 1 parseprop
+  else
+    "roomdesc" get_conf sub_standard
+  then
+  .tell
+  (* Output descs of items in the room *)
+  "everyone" get_conf
   dup "random" stringcmp not if
     pop 2
   else
     "yes" stringcmp not
   then
   var! everyone
+  everyone @ if
+    object @ contents begin
+      dup while
+      dup var! room_object
+      everyone @ 2 = random 3 % and if
+        next continue
+      then
+      room_object @ room? if
+        next continue
+      then
+      me @ room_object @ controls not room_object @ "DARK" flag? and if
+        next continue
+      then
+      room_object @ get_sense_prop getpropstr not if
+        next continue
+      then
+      " " .tell
+      { " [ " room_object @ name " ] " room_object @ get_sense_prop "(@" "noun" get_conf strcat ")" strcat 1 parseprop }join .tell
+      next
+    repeat
+  then
+  (* Notify others *)
+  "overt" get_conf "yes" stringcmp not if
+    object @ me @ { me @ name " " me @ "onoticehere" get_conf sub_standard sub_pronouns }join notify_except
+  then
+;
 
-  dup room? if
-    (* Notify others *)
-    trig "overt" get_trig_prop "yes" stringcmp not if
-      dup contents begin
-        dup while
-
-        dup me @ = not if
-          dup me @ name " " strcat over trig dup "onoticehere" get_trig_prop sub_standard sub_pronouns strcat notify
-        then
-
-        next
-      repeat
-      pop
-    then
-
-    (* Notify me *)
-    trig dup "noticehere" get_trig_prop sub_standard .tell
-
-    (* Output descs *)
-    dup trig get_sense_prop getpropstr if
-      dup trig get_sense_prop "(@" trig "noun" get_trig_prop strcat ")" strcat 1 parseprop
-    else
-      trig dup "roomdesc" get_trig_prop sub_standard
-    then
-    .tell
-
-    everyone @ if
-      contents begin
-        dup while
-
-        me @ over controls not over "DARK" flag? and not over room? not and if
-          dup trig get_sense_prop "(@" trig "noun" get_trig_prop strcat ")" strcat 1 parseprop
-
-          dup if
-            everyone @ 1 = if
-              " " .tell
-              over name " [ " swap strcat " ] " strcat swap strcat .tell
-            else
-              random 3 % not if
-                " " .tell
-                .tell
-              else
-                pop
-              then
-            then
-          else
-            pop
-          then
-        then
-
-        next
-      repeat
-      pop
-    else
-      pop
-    then
+: sense_non_room[ ref:object ]
+  (* Notify me *)
+  object @ "notice" get_conf sub_standard sub_pronouns .tell
+  (* Output desc *)
+  object @ get_sense_prop getpropstr if
+    object @ get_sense_prop "(@" "noun" get_conf strcat ")" strcat 1 parseprop
   else
-    dup me @ contains? not trig "overt" get_trig_prop "yes" stringcmp not and if
-      (* Notify target *)
-      dup me @ trig dup "tnotice" get_trig_prop sub_standard sub_pronouns me @ name " " strcat swap strcat notify
-
-      (* Notify others *)
-      loc @ contents begin
-        dup while
-
-        over over = not over me @ = not and if
-          dup me @ name " " strcat 4 pick trig dup "onotice" get_trig_prop sub_standard sub_pronouns strcat " " strcat 4 pick name 5 pick exit? if ";" split pop then strcat "." strcat notify
-        then
-
-        next
-      repeat
-      pop
-    then
-
-    (* Notify me *)
-    dup trig dup "notice" get_trig_prop sub_standard sub_pronouns .tell
-
-    (* Output desc *)
-    dup trig get_sense_prop getpropstr if
-      trig get_sense_prop "(@" trig "noun" get_trig_prop strcat ")" strcat 1 parseprop
-    else
-      trig dup "desc" get_trig_prop sub_standard sub_pronouns
-    then
-    .tell
+    object @ "desc" get_conf sub_standard sub_pronouns
+  then
+  .tell
+  (* Notify others *)
+  object @ me @ contains? not "overt" get_conf "yes" stringcmp not and if
+    (* Target *)
+    object @ { me @ name " " me @ "tnotice" get_conf sub_standard sub_pronouns }join notify
+    (* In the room *)
+    object @ me @ object @ 2 { me @ name " " object @ "onotice" get_conf sub_standard sub_pronouns object @ "." }join notify_exclude
   then
 ;
 
@@ -442,7 +411,7 @@ WIZCALL M-HELP-help
   then
 
   dup exit? if
-    trig "You can't [PRESVERB] through that exit." sub_standard .tell exit
+    "You can't [PRESVERB] through that exit." sub_standard .tell exit
   then
 
   swap
@@ -457,12 +426,16 @@ WIZCALL M-HELP-help
     pop exit
   then
 
-  cmd_do_sense
+  dup room? if
+    sense_room
+  else
+    sense_non_room
+  then
 ;
 
 : cmd_sense ( s --  )
   dup not if
-    loc @ cmd_do_sense exit
+    loc @ sense_room exit
   then
 
   dup "=" instr if
@@ -499,7 +472,11 @@ WIZCALL M-HELP-help
     pop exit
   then
 
-  cmd_do_sense
+  dup room? if
+    sense_room
+  else
+    sense_non_room
+  then
 ;
 
 (*****************************************************************************)
@@ -507,7 +484,7 @@ WIZCALL M-HELP-help
 (*****************************************************************************)
 : cmd_set ( s --  )
   me @ GUEST_CHECK if
-    trig "Guests can't set their [NOUN]" sub_standard .tell exit
+    "Guests can't set their [NOUN]" sub_standard .tell exit
   then
 
   strip
@@ -517,7 +494,7 @@ WIZCALL M-HELP-help
     "You must use the format <object>=<player>" .tell exit
   then
 
-  trig "noun" get_trig_prop "@" 1 strncmp not trig "noun" get_trig_prop "~" 1 strncmp not or if
+  "noun" get_conf "@" 1 strncmp not "noun" get_conf "~" 1 strncmp not or if
     me @ "WIZARD" flag? not prog mlevel 4 >= not or if
       "Permission denied." .tell
       pop pop exit
@@ -543,11 +520,11 @@ WIZCALL M-HELP-help
   swap
 
   dup if
-    trig get_sense_prop swap setprop
-    trig "noun" get_trig_prop 1 strcut swap toupper swap strcat " set." strcat .tell
+    get_sense_prop swap setprop
+    "noun" get_conf 1 strcut swap toupper swap strcat " set." strcat .tell
   else
-    pop trig get_sense_prop remove_prop
-    trig "noun" get_trig_prop 1 strcut swap toupper swap strcat " cleared." strcat .tell
+    pop get_sense_prop remove_prop
+    "noun" get_conf 1 strcut swap toupper swap strcat " cleared." strcat .tell
   then
 ;
 
