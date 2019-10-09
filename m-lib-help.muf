@@ -143,7 +143,7 @@ $PUBDEF :
         depth 1 != if "One result expected." abort then
         dup array? not if "Array expected." abort then
         dup foreach
-          nip string? not if "Array of strings expected." then
+          nip string? not if "Array of strings expected." abort then
         repeat
       catch_detailed
         {
