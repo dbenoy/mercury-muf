@@ -47,16 +47,11 @@ $include $m/lib/emote
 WIZCALL M-HELP-desc
 
 : M-HELP-help ( s -- a )
-  ";" split pop toupper var! action_name
+  ";" split pop var! action_name
   {
-    { action_name @ " <message>" }join
-    "\"<message>"
-    " "
-    "Says <message> out loud to everyone in the room.  If your name is Igor, and you typed 'say Hello everyone!', then you and everyone in the room will see:"
-    " "
-    "Igor says, \"Hello everyone!\""
-    " "
-    "There's also an abbreviated form of the 'say' command: '\"Hello everyone!'"
+    { action_name @ toupper " <message>" }join
+    { "  Says <message> out loud to everyone in the room.  If your name is Igor, and you typed '" action_name @ " Hello everyone!', then you and everyone in the room will see:" }join
+    "    Igor says, \"Hello everyone!\""
   }list
 ;
 WIZCALL M-HELP-help

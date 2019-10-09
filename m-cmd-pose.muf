@@ -47,16 +47,11 @@ $include $m/lib/emote
 WIZCALL M-HELP-desc
 
 : M-HELP-help ( s -- a )
-  ";" split pop toupper var! action_name
+  ";" split pop var! action_name
   {
-    { action_name @ " <message>" }join
-    ":<message>"
-    " "
-    "  Poses a message to everyone in the room.  This is used for actions.  i.e.: if your name was Igor, and you typed 'pose falls down.', everyone would see:"
-    " "
+    { action_name @ toupper " <message>" }join
+    { "  Poses a message to everyone in the room.  This is used for actions.  i.e.: if your name was Igor, and you typed '" action_name @ " falls down.', everyone would see:" }join
     "    Igor falls down."
-    " "
-    "  There's also an abbreviated form of the 'pose' command: ':falls down.'"
   }list
 ;
 WIZCALL M-HELP-help

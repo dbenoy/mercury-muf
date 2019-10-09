@@ -47,14 +47,11 @@ $include $m/lib/emote
 WIZCALL M-HELP-desc
 
 : M-HELP-help ( s -- a )
-  ";" split pop toupper var! action_name
+  ";" split pop var! action_name
   {
     { action_name @ " <message>" }join
-    " "
-    "  Sends a verbatim message to the room. For example, if you type 'spoof The wind is howling.' everyone in the room will see:"
-    " "
+    { "  Sends a verbatim message to the room. For example, if you type '" action_name @ " The wind is howling.' everyone in the room will see:" }join
     "    The wind is howling."
-    " "
     "  Mesasge output, logging, and special highlighting may be used to help others identify who sent the spoof."
   }list
 ;

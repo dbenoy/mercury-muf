@@ -3,7 +3,7 @@
 i
 $PRAGMA comment_recurse
 (*****************************************************************************)
-(* m-cmd-@ooc.muf - $m/cmd/ooc                                               *)
+(* m-cmd-@ooc.muf - $m/cmd/at_ooc                                            *)
 (*   OOC command using $m/lib/emote                                          *)
 (*                                                                           *)
 (*   GitHub: https://github.com/dbenoy/mercury-muf (See for install info)    *)
@@ -47,16 +47,13 @@ $include $m/lib/emote
 WIZCALL M-HELP-desc
 
 : M-HELP-help ( s -- a )
-  ";" split pop toupper var! action_name
+  ";" split pop var! action_name
   {
-    { action_name @ " <message>" }join
+    { action_name @ toupper " <message>" }join
     " "
-    "  Send an OOC message to others in the room. If your message starts with a : it will be treated as a 'pose' style message. For example, if your name is Igor and you type 'ooc I need to log off' you and others in the room will see:"
-    " "
+    { "  Send an OOC message to others in the room. If your message starts with a : it will be treated as a 'pose' style message. For example, if your name is Igor and you type '" action_name @ " I need to log off' you and others in the room will see:" }join
     "    [OOC] Igor: I need to log off."
-    " "
-    "  Or if you type 'ooc :needs to log off':"
-    " "
+    { "  Or if you type '" action_name @ " :needs to log off':" }join
     "    [OOC] Igor needs to log off."
   }list
 ;

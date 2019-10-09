@@ -47,13 +47,11 @@ $include $m/lib/emote
 WIZCALL M-HELP-desc
 
 : M-HELP-help ( s -- a )
-  ";" split pop toupper var! action_name
+  ";" split pop var! action_name
   {
     { action_name @ " <message>" }join
-    " "
-    "Sing <message> out loud to everyone in the room.  If your name is Igor, and you typed 'sing Turn around, bright eyes.', then you and everyone in the room will see:"
-    " "
-    "Igor sings, o/` Turn around, bright eyes. o/`"
+    { "  Sing <message> out loud to everyone in the room.  If your name is Igor, and you typed '" action_name @ " Turn around, bright eyes.', then you and everyone in the room will see:" }join
+    "    Igor sings, o/` Turn around, bright eyes. o/`"
   }list
 ;
 WIZCALL M-HELP-help
