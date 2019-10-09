@@ -62,14 +62,14 @@ $PUBDEF :
 
 (* ------------------------------------------------------------------------ *)
 
-: M-HELP-desc ( s -- s )
+: M-HELP-desc ( d -- s )
   pop
-  "Remove the 'link' between one object and another."
+  "Remove the 'link' between two objects."
 ;
 WIZCALL M-HELP-desc
 
-: M-HELP-help ( s -- a )
-  ";" split pop toupper var! action_name
+: M-HELP-help ( d -- a )
+  name ";" split pop toupper var! action_name
   {
     { action_name @ " <exit>" }join
     { action_name @ " here" }join

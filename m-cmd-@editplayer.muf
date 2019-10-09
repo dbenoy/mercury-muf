@@ -40,14 +40,14 @@ $INCLUDE $m/cmd/at_editobject
 
 (* ------------------------------------------------------------------------ *)
 
-: M-HELP-desc ( s -- s )
+: M-HELP-desc ( d -- s )
   pop
-  "Opens a player editor dialog."
+  "Edit your player settings."
 ;
 WIZCALL M-HELP-desc
 
-: M-HELP-help ( s -- a )
-  ";" split pop toupper var! action_name
+: M-HELP-help ( d -- a )
+  name ";" split pop toupper var! action_name
   {
     action_name @
     " "

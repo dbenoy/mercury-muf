@@ -40,20 +40,20 @@ $include $m/lib/emote
 
 (* ------------------------------------------------------------------------ *)
 
-: M-HELP-desc ( s -- s )
+: M-HELP-desc ( d -- s )
   pop
-  "Make your character think noticibly."
+  "Think something."
 ;
 WIZCALL M-HELP-desc
 
-: M-HELP-help ( s -- a )
-  ";" split pop var! action_name
+: M-HELP-help ( d -- a )
+  name ";" split pop var! action_name
   {
     { action_name @ toupper " <message>" }join
     " "
-    { "  Send an OOC message to others in the room. If your message starts with a : it will be treated as a 'pose' style message. For example, if your name is Igor and you type '" action_name @ " I need to log off' you and others in the room will see:" }join
+    { "  Send an OOC message to others in the room. If your message starts with a : it will be treated as a 'pose' style message. For example, if your name is Igor and you type '" action_name @ tolower " I need to log off' you and others in the room will see:" }join
     "    [OOC] Igor: I need to log off."
-    { "  Or if you type '" action_name @ " :needs to log off':" }join
+    { "  Or if you type '" action_name @ tolower " :needs to log off':" }join
     "    [OOC] Igor needs to log off."
   }list
 ;

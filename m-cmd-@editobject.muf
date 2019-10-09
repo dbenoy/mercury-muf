@@ -68,14 +68,14 @@ $DEF .chars-per-row 79
 
 (* ------------------------------------------------------------------------ *)
 
-: M-HELP-desc ( s -- s )
+: M-HELP-desc ( d -- s )
   pop
-  "An editing menu system for objects."
+  "Edit an object."
 ;
 WIZCALL M-HELP-desc
 
-: M-HELP-help ( s -- a )
-  ";" split pop toupper var! action_name
+: M-HELP-help ( d -- a )
+  name ";" split pop toupper var! action_name
   {
     { action_name @ " <object>" }join
     "  Brings up an editing menu system to modify an object. You can edit players, rooms, things, exits, etc."

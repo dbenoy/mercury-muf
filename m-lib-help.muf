@@ -29,7 +29,7 @@ $PRAGMA comment_recurse
 (*     linked to a program, the program is checked for this property         *)
 (*     instead. If the program also does not have the property, the library  *)
 (*     will attempt to ask the program itself by calling the public function *)
-(*     "M-HELP-help" if it is available, passing in the name of the action   *)
+(*     "M-HELP-help" if it is available, passing in the dbref of the action  *)
 (*     and expecting a list array of strings.                                *)
 (*                                                                           *)
 (* PUBLIC ROUTINES:                                                          *)
@@ -75,7 +75,7 @@ $DOCCMD  @list __PROG__=2-30
 
 (* ------------------------------------------------------------------------ *)
 
-$def PROP_COMMAND_NAME "_help/~name"
+$def PROP_COMMAND_NAME "_help/name"
 $def PROP_COMMAND_DESC "_help/desc"
 $def PROP_COMMAND_HELP "_help/help"
 $def FUNC_COMMAND_DESC "M-HELP-desc"
@@ -110,8 +110,7 @@ $PUBDEF :
     (* No properties are set. Try asking the program itself. *)
     prog @ FUNC_COMMAND_DESC cancall? if
       0 try
-        action @ name tolower
-        prog @ "M-HELP-desc" call
+        action @ prog @ "M-HELP-desc" call
         depth 1 != if "One result expected." abort then
         dup string? not if "String expected." abort then
       catch
@@ -138,8 +137,7 @@ $PUBDEF :
     (* No properties are set. Try asking the program itself. *)
     prog @ FUNC_COMMAND_HELP cancall? if
       0 try
-        action @ name tolower
-        prog @ FUNC_COMMAND_HELP call
+        action @ prog @ FUNC_COMMAND_HELP call
         depth 1 != if "One result expected." abort then
         dup array? not if "Array expected." abort then
         dup foreach

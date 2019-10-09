@@ -64,14 +64,14 @@ $PUBDEF :
 
 (* ------------------------------------------------------------------------ *)
 
-: M-HELP-desc ( s -- s )
+: M-HELP-desc ( d -- s )
   pop
-  "Creates a room."
+  "Create a room."
 ;
 WIZCALL M-HELP-desc
 
-: M-HELP-help ( s -- a )
-  ";" split pop toupper var! action_name
+: M-HELP-help ( d -- a )
+  name ";" split pop toupper var! action_name
   {
     { action_name @ " <room> [=<parent> [=<regname>]]" }join
     " "

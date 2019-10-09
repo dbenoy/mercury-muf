@@ -60,14 +60,14 @@ $INCLUDE $m/cmd/at_link
 
 (* ------------------------------------------------------------------------- *)
 
-: M-HELP-desc ( s -- s )
+: M-HELP-desc ( d -- s )
   pop
-  "Creates an action/exit."
+  "Create an action/exit."
 ;
 WIZCALL M-HELP-desc
 
-: M-HELP-help ( s -- a )
-  ";" split pop toupper var! action_name
+: M-HELP-help ( d -- a )
+  name ";" split pop toupper var! action_name
   {
     { action_name @ " <exit> [=<object> [; <object2>; ... <objectn> ] [=<regname>]]" }join
     " "

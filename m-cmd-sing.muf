@@ -40,17 +40,17 @@ $include $m/lib/emote
 
 (* ------------------------------------------------------------------------ *)
 
-: M-HELP-desc ( s -- s )
+: M-HELP-desc ( d -- s )
   pop
-  "Make your character sing out loud."
+  "Sing something."
 ;
 WIZCALL M-HELP-desc
 
-: M-HELP-help ( s -- a )
-  ";" split pop var! action_name
+: M-HELP-help ( d -- a )
+  name ";" split pop var! action_name
   {
     { action_name @ " <message>" }join
-    { "  Sing <message> out loud to everyone in the room.  If your name is Igor, and you typed '" action_name @ " Turn around, bright eyes.', then you and everyone in the room will see:" }join
+    { "  Sing <message> out loud to everyone in the room.  If your name is Igor, and you typed '" action_name @ tolower " Turn around, bright eyes.', then you and everyone in the room will see:" }join
     "    Igor sings, o/` Turn around, bright eyes. o/`"
   }list
 ;

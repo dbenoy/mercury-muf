@@ -54,18 +54,19 @@ $INCLUDE $m/lib/color
 
 (* ------------------------------------------------------------------------ *)
 
-: M-HELP-desc ( s -- s )
+: M-HELP-desc ( d -- s )
   pop
-  "<--SHORT HELP DESC-->"
+  "See the room message log."
 ;
 WIZCALL M-HELP-desc
 
-: M-HELP-help ( s -- a )
-  ";" split pop toupper var! action_name
+: M-HELP-help ( d -- a )
+  name ";" split pop toupper var! action_name
   {
-    { action_name @ " <--ARGS-->" }join
+    action_name @
     " "
-    "  <--HELP-->"
+    "  Shows a list of recent player emotes (Such as poses and spoofs, etc.) that happened in this room."
+    "  If a message didn't start with the name of the player who sent it, then it will be shown here, so you can use this as a way to check who a spoofed message was actually from."
   }list
 ;
 WIZCALL M-HELP-help

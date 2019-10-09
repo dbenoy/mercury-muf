@@ -42,7 +42,7 @@ $include $m/lib/emote
 
 : M-HELP-desc ( s -- s )
   pop
-  "Make your character act for others to see."
+  "Do something."
 ;
 WIZCALL M-HELP-desc
 
@@ -50,7 +50,7 @@ WIZCALL M-HELP-desc
   ";" split pop var! action_name
   {
     { action_name @ toupper " <message>" }join
-    { "  Poses a message to everyone in the room.  This is used for actions.  i.e.: if your name was Igor, and you typed '" action_name @ " falls down.', everyone would see:" }join
+    { "  Poses a message to everyone in the room.  This is used for actions.  i.e.: if your name was Igor, and you typed '" action_name @ tolower " falls down.', everyone would see:" }join
     "    Igor falls down."
   }list
 ;
