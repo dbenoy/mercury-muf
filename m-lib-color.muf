@@ -1294,7 +1294,7 @@ lvar ansi_table_3bit_xterm_rgb
   6 strcut swap var! code_value
   1 strcut swap var! code_closebracket
   var! post_code
-  code_openbracket @ "[" = code_type @ CODE_TYPE_VALID .array_hasval and code_value @ .hex? and code_closebracket @ "]" = and if
+  code_openbracket @ "[" = code_type @ CODE_TYPE_VALID .array_hasval and code_value @ .hex? and code_value @ toupper code_value @ = and code_closebracket @ "]" = and if
     code_type @ code_value @ post_code @ exit
   else
     "" "" "" exit
