@@ -1627,7 +1627,19 @@ $LIBDEF M-LIB-COLOR-rgb2hsl
   source1 @ string? not if "Non-string argument (1)." abort then
   source2 @ string? not if "Non-string argument (2)." abort then
 
-  { source1 @ mcc_preprocess "[" CODE_TYPE_SPECIAL CODE_VALUE_SPECIAL_RESET "]" source2 @ mcc_preprocess }join
+  (* Use ordinary strcat if there are no color codes in either string. *)
+  source1 @ source2 @ strcat begin
+    dup mcc_tagparse pop and if
+      break
+    then
+    1 strcut swap pop
+    dup not
+  until
+  if
+    { source1 @ mcc_preprocess "[" CODE_TYPE_SPECIAL CODE_VALUE_SPECIAL_RESET "]" source2 @ mcc_preprocess }join
+  else
+    source1 @ source2 @ strcat
+  then
 ;
 PUBLIC M-LIB-COLOR-strcat
 $LIBDEF M-LIB-COLOR-strcat
