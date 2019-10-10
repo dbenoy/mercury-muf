@@ -95,7 +95,7 @@ WIZCALL M-HELP-help
 
   thing @ 1 1 1 1 M-LIB-MATCH-Match thing !
 
-  thing @ not if
+  thing @ ok? not if
     0 exit
   then
 
