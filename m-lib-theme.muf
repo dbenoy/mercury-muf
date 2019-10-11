@@ -120,11 +120,59 @@ $PRAGMA comment_recurse
 (*       OOC - I have to leave                                               *)
 (*       #OOC ( I have to leave )                                            *)
 (*                                                                           *)
-(*   M-LIB-THEME-name[ ref:object -- str:name ]                              *)
-(*     Like the NAME primitive, but using the theme.                         *)
+(*   M-LIB-THEME-name[ ref:object str:namestr bool:unparse -- str:name ]     *)
+(*     Returns a 'themed' object name. The type of the object, its flags,    *)
+(*     and properties determine how the resulting string will look. The      *)
+(*     namestr argument specifies the name itself. If it's "", then the      *)
+(*     actual name of the object will be used. The unparse argument, if true *)
+(*     will request that flag and dbref information be added to the name     *)
+(*     similar to the UNPARSEOBJ primitive.                                  *)
 (*                                                                           *)
 (*   M-LIB-THEME-unparseobj[ ref:object -- str:name ]                        *)
 (*     Like the UNPARSEOBJ primitive, but using the theme.                   *)
+(*                                                                           *)
+(* QUICK DEFINITIONS:                                                        *)
+(*   .theme_name ( d -- s )                                                  *)
+(*     Like the NAME primitive, but uses the theme.                          *)
+(*                                                                           *)
+(*   .theme_unparseobj ( d -- s )                                            *)
+(*     Like the UNPARSEOBJ primitive, but uses the theme.                    *)
+(*                                                                           *)
+(*   .err_tell ( s -- )                                                      *)
+(*     Like the TELL primitive, but it uses M-LIB-THEME-line_err.            *)
+(*                                                                           *)
+(*   .err_otell ( s -- )                                                     *)
+(*     Like the OTELL primitive, but it uses M-LIB-THEME-line_err.           *)
+(*                                                                           *)
+(*   .err_notify ( d s -- )                                                  *)
+(*     Like the NOTIFY primitive, but it uses M-LIB-THEME-line_err.          *)
+(*                                                                           *)
+(*   .err_connotify (i s -- )                                                *)
+(*     Like the CONNOTIFY primitive, but it uses M-LIB-THEME-line_err.       *)
+(*                                                                           *)
+(*   .err_notify_except ( d1 d2 s -- )                                       *)
+(*     Like the NOTIFY_EXCEPT definition, but it uses M-LIB-THEME-line_err.  *)
+(*                                                                           *)
+(*   .err_notify_exclude ( d dn ... d1 n s -- )                              *)
+(*     Like the NOTIFY_EXCLUDE primitive, but it uses M-LIB-THEME-line_err.  *)
+(*                                                                           *)
+(*   .tag_tell ( s s -- )                                                    *)
+(*     Like the TELL primitive, but it uses M-LIB-THEME-line_tag.            *)
+(*                                                                           *)
+(*   .tag_otell ( s s -- )                                                   *)
+(*     Like the OTELL primitive, but it uses M-LIB-THEME-line_tag.           *)
+(*                                                                           *)
+(*   .tag_notify ( d s s -- )                                                *)
+(*     Like the NOTIFY primitive, but it uses M-LIB-THEME-line_tag.          *)
+(*                                                                           *)
+(*   .tag_connotify (i s s -- )                                              *)
+(*     Like the CONNOTIFY primitive, but it uses M-LIB-THEME-line_tag.       *)
+(*                                                                           *)
+(*   .tag_notify_except ( d1 d2 s s -- )                                     *)
+(*     Like the NOTIFY_EXCEPT definition, but it uses M-LIB-THEME-line_tag.  *)
+(*                                                                           *)
+(*   .tag_notify_exclude ( d dn ... d1 n s s -- )                            *)
+(*     Like the NOTIFY_EXCLUDE primitive, but it uses M-LIB-THEME-line_tag.  *)
 (*                                                                           *)
 (*****************************************************************************)
 (* Revision History:                                                         *)
@@ -133,7 +181,7 @@ $PRAGMA comment_recurse
 (*****************************************************************************)
 (* Copyright Notice:                                                         *)
 (*                                                                           *)
-(* Copyright (C) <year(s)>                                                   *)
+(* Copyright (C) 2019 Daniel Benoy                                           *)
 (*                                                                           *)
 (* This program is free software; you can redistribute it and/or modify it   *)
 (* under the terms of the GNU General Public License as published by the     *)
@@ -152,9 +200,12 @@ $PRAGMA comment_recurse
 $VERSION 1.000
 $AUTHOR  Daniel Benoy
 $NOTE    Color coding and theming.
-$DOCCMD  @list __PROG__=2-148
+$DOCCMD  @list __PROG__=2-196
 
 (* Begin configurable options *)
+
+(* Comment this out to remove the dependency on $m/lib/color *)
+$DEF M_LIB_COLOR
 
 $DEFINE DEFAULT_THEME
   {
@@ -178,7 +229,15 @@ $ENDDEF
 (* End configurable options *)
 
 $INCLUDE $m/lib/program
-$INCLUDE $m/lib/color
+$IFDEF M_LIB_COLOR
+  $INCLUDE $m/lib/color
+$ENDIF
+
+$IFDEF M_LIB_COLOR
+  $DEF COLOR_STRCAT .color_strcat
+$ELSE
+  $DEF COLOR_STRCAT
+$ENDIF
 
 $PUBDEF :
 
@@ -211,8 +270,6 @@ $PUBDEF :
   result @
 ;
 
-(* ------------------------------------------------------------------------ *)
-
 : name_prop ( d -- s )
   dup exit? if
     "fmt_obj_exit" exit
@@ -220,33 +277,33 @@ $PUBDEF :
   dup player? if
     dup "WIZARD" flag? if
       dup awake? if
-        "fmt_obj_player_wawake" exit
+        pop "fmt_obj_player_wawake" exit
       else
-        "fmt_obj_player_wasleep" exit
+        pop "fmt_obj_player_wasleep" exit
       then
     else
       dup awake? if
-        "fmt_obj_player_awake" exit
+        pop "fmt_obj_player_awake" exit
       else
-        "fmt_obj_player_asleep" exit
+        pop "fmt_obj_player_asleep" exit
       then
     then
   then
   dup program? if
-    "fmt_obj_program" exit
+    pop "fmt_obj_program" exit
   then
   dup room? if
-    "fmt_obj_room" exit
+    pop "fmt_obj_room" exit
   then
   dup thing? if
     dup "ZOMBIE" flag? if
       dup awake? if
-        "fmt_obj_thing_pawake" exit
+        pop "fmt_obj_thing_pawake" exit
       else
-        "fmt_obj_thing_pasleep" exit
+        pop "fmt_obj_thing_pasleep" exit
       then
     else
-      "fmt_obj_thing" exit
+      pop "fmt_obj_thing" exit
     then
   then
 ;
@@ -439,10 +496,21 @@ $LIBDEF M-LIB-THEME-fancy_exit
 (*****************************************************************************)
 (*                             M-LIB-THEME-name                              *)
 (*****************************************************************************)
-: M-LIB-THEME-name[ ref:object -- str:name ]
+: M-LIB-THEME-name[ ref:object str:namestr bool:unparse -- str:name ]
   (* M1 OK *)
   object @ dbref? not if "Non-dbref argument (1)." abort then
-  object @ name_prop theme_get { object @ name }list arg_sub
+  namestr @ string? not if "Non-string argument (2)." abort then
+  namestr @ not if
+    object @ name namestr !
+  then
+  object @ name_prop theme_get { namestr @ }list arg_sub
+  unparse @ not if
+    exit
+  then
+  namestr !
+  object @ intostr "#" swap strcat var! refstr
+  object @ unparseobj object @ name strlen refstr @ strlen + ++ strcut nip dup strlen -- strcut pop var! flagstr
+  namestr @ "fmt_obj_flagref" theme_get { refstr @ flagstr @ }list arg_sub COLOR_STRCAT
 ;
 PUBLIC M-LIB-THEME-name
 $LIBDEF M-LIB-THEME-name
@@ -470,19 +538,20 @@ $LIBDEF M-LIB-THEME-line_err
 PUBLIC M-LIB-THEME-line_tag
 $LIBDEF M-LIB-THEME-line_tag
 
-(*****************************************************************************)
-(*                          M-LIB-THEME-unparseobj                           *)
-(*****************************************************************************)
-: M-LIB-THEME-unparseobj[ ref:object -- str:name ]
-  (* M1 OK *)
-  object @ dbref? not if "Non-dbref argument (1)." abort then
-  object @ name_prop theme_get { object @ name }list arg_sub var! namestr
-  object @ intostr "#" swap strcat var! refstr
-  object @ unparseobj object @ name strlen refstr @ strlen + ++ strcut nip dup strlen -- strcut pop var! flagstr
-  namestr @ "fmt_obj_flagref" theme_get { refstr @ flagstr @ }list arg_sub .color_strcat
-;
-PUBLIC M-LIB-THEME-unparseobj
-$LIBDEF M-LIB-THEME-unparseobj
+$PUBDEF .theme_name "" 0 M-LIB-THEME-name
+$PUBDEF .theme_unparseobj "" 1 M-LIB-THEME-name
+$PUBDEF .err_tell M-LIB-THEME-line_err \tell
+$PUBDEF .err_otell M-LIB-THEME-line_err \otell
+$PUBDEF .err_notify M-LIB-THEME-line_err \notify
+$PUBDEF .err_connotify M-LIB-THEME-line_err \connotify
+$PUBDEF .err_notify_except M-LIB-THEME-line_err 1 swap \notify_exclude
+$PUBDEF .err_notify_exclude M-LIB-THEME-line_err \notify_exclude
+$PUBDEF .tag_tell M-LIB-THEME-line_tag \tell
+$PUBDEF .tag_otell M-LIB-THEME-line_tag \otell
+$PUBDEF .tag_notify M-LIB-THEME-line_tag \notify
+$PUBDEF .tag_connotify M-LIB-THEME-line_tag \connotify
+$PUBDEF .tag_notify_except M-LIB-THEME-line_tag 1 swap \notify_exclude
+$PUBDEF .tag_notify_exclude M-LIB-THEME-line_tag \notify_exclude
 
 : main
   "Library called as command." abort
