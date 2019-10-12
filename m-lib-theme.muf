@@ -272,7 +272,7 @@ $PUBDEF :
 
 : name_prop ( d -- s )
   dup exit? if
-    "fmt_obj_exit" exit
+    pop "fmt_obj_exit" exit
   then
   dup player? if
     dup "WIZARD" flag? if
@@ -437,6 +437,140 @@ $DEF EINSTRING over swap instring dup not if pop strlen else nip -- then
   splits @
 ;
 
+: exit_highsplit_cardinal_guide[ str:alias -- arr:split_guide ]
+  alias @ "n" stringcmp not if
+    {
+      "north" { "" "n" "orth" }list
+      "northern" { "" "n" "orthern" }list
+    }dict exit
+  then
+  alias @ "e" stringcmp not if
+    {
+      "east" { "" "e" "ast" }list
+      "eastern" { "" "e" "astern" }list
+    }dict exit
+  then
+  alias @ "s" stringcmp not if
+    {
+      "south" { "" "s" "outh" }list
+      "southern" { "" "s" "outhern" }list
+    }dict exit
+  then
+  alias @ "w" stringcmp not if
+    {
+      "west" { "" "w" "est" }list
+      "westen" { "" "w" "estern" }list
+    }dict exit
+  then
+  alias @ "ne" stringcmp not if
+    {
+      "northeast" { "" "n" "orth" "e" "ast" }list
+      "north east" { "" "n" "orth " "e" "ast" }list
+      "north-east" { "" "n" "orth-" "e" "ast" }list
+      "northeastern" { "" "n" "orth" "e" "astern" }list
+      "north eastern" { "" "n" "orth " "e" "astern" }list
+      "north-eastern" { "" "n" "orth-" "e" "astern" }list
+    }dict exit
+  then
+  alias @ "se" stringcmp not if
+    {
+      "southeast" { "" "s" "outh" "e" "ast" }list
+      "south east" { "" "s" "outh " "e" "ast" }list
+      "south-east" { "" "s" "outh-" "e" "ast" }list
+      "southeastern" { "" "s" "outh" "e" "astern" }list
+      "south eastern" { "" "s" "outh " "e" "astern" }list
+      "south-eastern" { "" "s" "outh-" "e" "astern" }list
+    }dict exit
+  then
+  alias @ "sw" stringcmp not if
+    {
+      "southwest" { "" "s" "outh" "w" "est" }list
+      "south west" { "" "s" "outh " "w" "est" }list
+      "south-west" { "" "s" "outh-" "w" "est" }list
+      "southwestern" { "" "s" "outh" "w" "estern" }list
+      "south western" { "" "s" "outh " "w" "estern" }list
+      "south-western" { "" "s" "outh-" "w" "estern" }list
+    }dict exit
+  then
+  alias @ "nw" stringcmp not if
+    {
+      "northwest" { "" "n" "orth" "w" "est" }list
+      "north west" { "" "n" "orth " "w" "est" }list
+      "north-west" { "" "n" "orth-" "w" "est" }list
+      "northwestern" { "" "n" "orth" "w" "estern" }list
+      "north western" { "" "n" "orth " "w" "estern" }list
+      "north-western" { "" "n" "orth-" "w" "estern" }list
+    }dict exit
+  then
+  alias @ "u" stringcmp not if
+    {
+      "up" { "" "u" "p" }list
+    }dict exit
+  then
+  alias @ "d" stringcmp not if
+    {
+      "down" { "" "d" "own" }list
+    }dict exit
+  then
+  alias @ "i" stringcmp not if
+    {
+      "in" { "" "i" "n" }list
+      "inside" { "" "i" "nside" }list
+    }dict exit
+  then
+  alias @ "o" stringcmp not if
+    {
+      "out" { "" "o" "ut" }list
+      "outside" { "" "o" "utside" }list
+    }dict exit
+  then
+  { }dict
+;
+
+: exit_highsplit_cardinal[ str:exit_name str:alias -- arr:splits ]
+  alias @ exit_highsplit_cardinal_guide var! split_guide
+  split_guide @ not if
+    { }list exit
+  then
+  var splits
+  split_guide @ foreach
+    splits !
+    var! find_me
+    exit_name @ find_me @ instring -- var! found_at
+    (* Ensure that we found the string *)
+    found_at @ 0 < if
+      continue
+    then
+    (* Ensure that a space, or nothing, precedes it *)
+    exit_name @ found_at @ strcut pop
+    dup if
+      dup strlen -- strcut swap pop
+      " " != if
+        continue
+      then
+    else
+      pop
+    then
+    (* Ensure that a space, or nothing, follows it *)
+    exit_name @ found_at @ find_me @ strlen + strcut swap pop
+    dup if
+      1 strcut pop
+      " " != if
+        continue
+      then
+    else
+      pop
+    then
+    (* Looks like we found it. Split it up and exit *)
+    exit_name @ found_at @ strcut swap var! before
+    find_me @ strlen strcut swap pop var! after
+    splits @ 0 [] before @ strcat splits @ 0 ->[] splits !
+    splits @ splits @ array_count -- [] after @ strcat splits @ splits @ array_count -- ->[] splits !
+    splits @ exit
+  repeat
+  { }list
+;
+
 : exit_highsplit[ ref:exitobj -- arr:splits ]
   exitobj @ name ";" split pop var! exit_name
   (* Check for manually placed highlights *)
@@ -449,6 +583,9 @@ $DEF EINSTRING over swap instring dup not if pop strlen else nip -- then
   aliases @ foreach
     nip
     alias !
+    (* Specially check for cardinal-direction type aliases *)
+    exit_name @ alias @ exit_highsplit_cardinal
+    dup if exit else pop then
     (* See if this alias matches the first letter of each word, starting from the beginning. *)
     exit_name @ alias @ 1 exit_highsplit_startwords
     dup if exit else pop then
