@@ -4,13 +4,19 @@ i
 $PRAGMA comment_recurse
 (*****************************************************************************)
 (* m-lib-grammar.muf - $m/lib/grammar                                        *)
-(*   A library for generating text based on language grammar rules. It has   *)
-(*   a more advanced implementation of the built-in pronoun substitution, as *)
-(*   well as definite/indefinite article support.                            *)
+(*   A library for handling natural language strings.                        *)
 (*                                                                           *)
 (*   GitHub: https://github.com/dbenoy/mercury-muf (See for install info)    *)
 (*                                                                           *)
 (* EXAMPLES:                                                                 *)
+(*   "%N gets out of %2i and locks %2o behind %o."                           *)
+(*   { me @ vehicle @ }list { }dict M-LIB-GRAMMAR-sub                        *)
+(*   > "Mercury gets out of a time machine and locks it behind him."         *)
+(*                                                                           *)
+(*   { "Lions" "tigers" "bears" }list                                        *)
+(*   "and" M-LIB-GRAMMAR-oxford_join                                         *)
+(*   "! Oh my!" strcat M-LIB-GRAMMAR-oxford_join                             *)
+(*   > "Lions, tigers, and bears! Oh my!"                                    *)
 (*                                                                           *)
 (* PROPERTIES:                                                               *)
 (*   Note: You're free to set anything you'd like for the substitution       *)
@@ -64,11 +70,18 @@ $PRAGMA comment_recurse
 (*     On any obeject: Subjective pronoun. (he/she/it)                       *)
 (*                                                                           *)
 (* PUBLIC ROUTINES:                                                          *)
-(*   M-LIB-GRAMMAR-sub[ str:template ref:object dict:opts -- str:name ]      *)
-(*     Like the PRONOUN_SUB primitive, this takes a string, and substitutes  *)
-(*     % codes for the % properties mentioned above, with the opts argument  *)
-(*     dictionary array used to supply special options:                      *)
+(*   M-LIB-GRAMMAR-sub[ str:template array:objects dict:opts -- str:name ]   *)
+(*     This works like the PRONOUN_SUB primitive. It takes a string, a list  *)
+(*     of objects, and a dictionary list of options, and replaces "%" codes  *)
+(*     in the string with the object's pronouns or name. These codes can be  *)
+(*     overridden by setting properties on the object. See the PROPERTIES    *)
+(*     section above for a list of codes.                                    *)
 (*                                                                           *)
+(*     The string can also optionally specify a number character between the *)
+(*     % and the code character to choose which object from the list to use. *)
+(*     The count starts at 1 and if omitted, the first object is used.       *)
+(*                                                                           *)
+(*     Options:                                                              *)
 (*       "match_name"                                                        *)
 (*         If this is set to "YES" then the %d, %i, and %n values on the     *)
 (*         object must match the actual name of the object.                  *)
@@ -78,6 +91,14 @@ $PRAGMA comment_recurse
 (*           - %d must either match the base name, or start with 'the'.      *)
 (*           - Underscores can be replaced with spaces and vice versa.       *)
 (*           - $m/lib/color MCC color codes are ignored when comparing.      *)
+(*                                                                           *)
+(*   M-LIB-GRAMMAR-oxford_join ( a s -- s )                                  *)
+(*     Similar to ", " array_join, but it inserts a coordinating conjunction *)
+(*     and oxford comma as well, if applicable.                              *)
+(*                                                                           *)
+(*       { "a" } "nor" -> "a"                                                *)
+(*       { "a" "b" } "and" -> "a and b"                                      *)
+(*       { "a" "b" "c" } "or" -> "a, b, or c"                                *)
 (*                                                                           *)
 (*****************************************************************************)
 (* Revision History:                                                         *)
@@ -104,7 +125,7 @@ $PRAGMA comment_recurse
 (*****************************************************************************)
 $VERSION 1.000
 $AUTHOR  Daniel Benoy
-$NOTE    Language grammar routines.
+$NOTE    Natural language strings.
 $DOCCMD  @list __PROG__=2-92
 
 (* ====================== BEGIN CONFIGURABLE OPTIONS ====================== *)
@@ -494,7 +515,7 @@ $PUBDEF :
   substitutions @
 ;
 
-: fix_substitutions[ arr:substitutions ref:object arr:opts -- arr:substitutitons ]
+: sub_fix[ arr:substitutions ref:object arr:opts -- arr:substitutitons ]
   opts @ "match_name" [] dup not if pop "" then "yes" stringcmp not if
     object @ name "_" " " subst var! object_name
     object @ base_name "_" " " subst var! object_base_name
@@ -520,21 +541,46 @@ $PUBDEF :
   substitutions @
 ;
 
-: sub[ str:template ref:object dict:opts -- str:name ]
-  object @ get_substitutions object @ opts @ fix_substitutions var! substitutions
+: sub_code[ str:codestr arr:substitutions -- str:result ]
+  var code
+  var obj_id
+  codestr @ "[1-9][adinoprs]" smatch if
+    codestr @
+    1 strcut swap atoi obj_id ! code !
+  else codestr @ "[adinoprs]" smatch if
+    1 obj_id !
+    codestr @ code !
+  else
+    "%" codestr @ strcat exit
+  then then
+  obj_id @ substitutions @ array_count > if
+    "%" codestr @ strcat exit
+  then
+  substitutions @ obj_id @ -- [] "%" code @ strcat []
+  dup not if
+    pop
+    "%" codestr @ strcat exit
+  then
+  code @ code @ toupper = if
+     1 strcut swap toupper swap strcat
+  then
+;
+
+: sub[ str:template arr:objects dict:opts -- str:name ]
+  { }list var! substitutions
+  objects @ foreach
+    nip
+    var! object
+    object @ get_substitutions object @ opts @ sub_fix substitutions @ []<- substitutions !
+  repeat
   template @ "%" explode_array
   1 array_cut swap array_vals pop var! result
   foreach
     nip
-    dup 1 strcut pop "[adinoprs]" smatch if
-      1 strcut swap var! code
-      substitutions @ "%" code @ strcat []
-      code @ code @ toupper = if
-        1 strcut swap toupper swap strcat
-      then
-      swap strcat
+    dup 1 strcut pop number? if
+      2 strcut swap substitutions @ sub_code swap strcat
     else
-      "%" swap strcat
+      1 strcut swap substitutions @ sub_code swap strcat
     then
     result @ swap strcat result !
   repeat
@@ -542,14 +588,41 @@ $PUBDEF :
 ;
 
 (*****************************************************************************)
+(*                         M-LIB-GRAMMAR-oxford_join                         *)
+(*****************************************************************************)
+: M-LIB-GRAMMAR-oxford_join ( a s -- s )
+  (* M1 OK *)
+  "ys" checkargs
+  swap dup array_count 1 > if
+    dup array_count 2 - array_cut
+    array_vals pop
+    4 rotate " " strcat
+    4 pick if
+      ", " swap strcat
+    else
+      " " swap strcat
+    then
+    swap strcat strcat
+    swap array_appenditem
+  else
+    swap pop
+  then
+  ", " array_join
+;
+PUBLIC M-LIB-GRAMMAR-oxford_join
+$LIBDEF M-LIB-GRAMMAR-oxford_join
+
+(*****************************************************************************)
 (*                             M-LIB-GRAMMAR-sub                             *)
 (*****************************************************************************)
-: M-LIB-GRAMMAR-sub[ str:template ref:object dict:opts -- str:name ]
+: M-LIB-GRAMMAR-sub[ str:template arr:objects dict:opts -- str:name ]
   (* M1 OK *)
   template @ string? not if "Non-string argument (1)." abort then
-  object @ dbref? not if "Non-dbref argument (2)." abort then
+  objects @ array? not if "Non-array argument (2)." abort then
+  objects @ array_count not if "Empty array (2)." abort then
+  objects @ foreach nip dbref? not if "Array of dbrefs expected (2)." abort then repeat
   opts @ dictionary? not if "Non-dictionary argument (3)." abort then
-  template @ object @ opts @ sub
+  template @ objects @ opts @ sub
 ;
 PUBLIC M-LIB-GRAMMAR-sub
 $LIBDEF M-LIB-GRAMMAR-sub
