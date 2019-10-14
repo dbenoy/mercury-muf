@@ -24,8 +24,10 @@ $PRAGMA comment_recurse
 (*     On any object: Absolute posessive pronoun. (his/hers/its)             *)
 (*                                                                           *)
 (*   "%d"                                                                    *)
-(*     On any object: Like %i, but always preferring the definite article.   *)
-(*     As with %i, capitalization may be preserved, so capitalize proper     *)
+(*     On any object: Definite article name.                                 *)
+(*                                                                           *)
+(*     This is the object's name and its definite article (the), if          *)
+(*     applicable. Capitalization may be preserved, so capitalize proper     *)
 (*     nouns only.                                                           *)
 (*                                                                           *)
 (*     Example objects:                                                      *)
@@ -34,8 +36,11 @@ $PRAGMA comment_recurse
 (*       the dark cave, the evil lair, the hospital, Fluttershy's House      *)
 (*                                                                           *)
 (*   "%i"                                                                    *)
-(*     On any object: The object's name, with its most typical article.      *)
-(*     Capitalization may be preserved, so capitalize proper nouns only.     *)
+(*     On any object: Indefinite/definite article name.                      *)
+(*                                                                           *)
+(*     This is the object's name and its most typical article (a/an/the), if *)
+(*     applicable. Capitalization may be preserved, so capitalize proper     *)
+(*     nouns only.                                                           *)
 (*                                                                           *)
 (*     Example objects:                                                      *)
 (*       a golden ticket, an honarary degree, The Crown of England, C3P0.    *)
@@ -43,7 +48,8 @@ $PRAGMA comment_recurse
 (*       a dark cave, an evil lair, the hospital, Fluttershy's House         *)
 (*                                                                           *)
 (*   "%n"                                                                    *)
-(*     On any object: The object's name.                                     *)
+(*     On any object: The object's name. Like %d and %i this may have an     *)
+(*     article on it.                                                        *)
 (*                                                                           *)
 (*   "%o"                                                                    *)
 (*     On any object: Objective pronoun. (him/her/it)                        *)
@@ -65,10 +71,13 @@ $PRAGMA comment_recurse
 (*                                                                           *)
 (*       "match_name"                                                        *)
 (*         If this is set to "YES" then the %d, %i, and %n values on the     *)
-(*         object must match the actual name of the object, plus their       *)
-(*         respective definite/indefinite articles (See PROPERTIES above),   *)
-(*         excluding differences in capitalization, underscores being        *)
-(*         replaced by spaces, and $m/lib/color MCC color codes.             *)
+(*         object must match the actual name of the object.                  *)
+(*           - If the name has an article in it, it is stripped off before   *)
+(*             it's compared to %i and %d.                                   *)
+(*           - %i must either match the base name, or start with 'a/an/the'. *)
+(*           - %d must either match the base name, or start with 'the'.      *)
+(*           - Underscores can be replaced with spaces and vice versa.       *)
+(*           - $m/lib/color MCC color codes are ignored when comparing.      *)
 (*                                                                           *)
 (*****************************************************************************)
 (* Revision History:                                                         *)
@@ -292,10 +301,6 @@ $PUBDEF :
 
 (* ------------------------------------------------------------------------- *)
 
-: indefinite_article ( s -- s )
-  1 strcut pop "[aeiou]" smatch if "an " else "a " then
-;
-
 : get_gender[ ref:object -- str:result ]
   object @ "gender_prop" sysparm getpropstr var! gender
   "" var! match
@@ -308,7 +313,6 @@ $PUBDEF :
     nip
     gender_test !
     gender @ gender_test @ 0 [] smatch if
-      { "DEBUG Hit: " gender_test @ 0 [] }join .tell
       match @ if
         gender_test @ 1 [] match @ = not if
           "nonbinary" exit
@@ -324,7 +328,6 @@ $PUBDEF :
     nip
     gender_test !
     gender @ gender_test @ 0 [] smatch if
-      { "DEBUG Hit2: " gender_test @ 0 [] }join .tell
       gender_test @ 1 [] match !
       break
     then
@@ -346,80 +349,172 @@ $PUBDEF :
   "unknown_thing" exit
 ;
 
+: base_name ( d -- s )
+  dup name
+  swap exit? if ";" split pop then
+  dup "a[_ ]*" smatch if
+    2 strcut swap pop exit
+  then
+  dup "an[_ ]*" smatch if
+    3 strcut swap pop exit
+  then
+  dup "the[_ ]*" smatch if
+    4 strcut swap pop exit
+  then
+;
+
+: caps_strcat ( s s -- s )
+  dup 1 strcut pop
+  dup toupper = if 
+    swap 1 strcut swap toupper swap strcat
+  else
+    swap tolower swap
+  then
+;
+
+: strip_article ( s -- s )
+  dup "a[_ ]*" smatch if
+    2 strcut swap pop
+  else dup "an[_ ]*" smatch if
+    3 strcut swap pop
+  else dup "the[_ ]*" smatch if
+    4 strcut swap pop
+  then then then
+;
+
+(* Checks whether an object's name should be assumed a proper noun *)
+: proper_noun ( d -- i )
+  dup thing? over "ZOMBIE" flag? not and swap program? or not
+;
+
+: default_n[ ref:object -- str:result ]
+  object @ name
+  object @ exit? if ";" split pop then
+  object @ proper_noun not if
+    tolower
+  then
+;
+
+: default_d[ ref:object -- str:result ]
+  object @ name
+  object @ exit? if ";" split pop then
+  object @ proper_noun not if
+    tolower
+    strip_article
+    "the " swap strcat
+  then
+;
+
+: default_i[ ref:object -- str:result ]
+  object @ name "the[_ ]*" smatch if
+    object @ default_d exit
+  then
+  object @ name
+  object @ exit? if ";" split pop then
+  object @ proper_noun not if
+    tolower
+    strip_article
+    dup 1 strcut pop "[aeiou]" smatch if
+      "an " swap strcat
+    else
+      "a " swap strcat
+    then
+  then
+;
+
+: default_a ( d -- s )
+  default_n "'s" strcat
+;
+
+: default_o ( d -- s )
+  default_n
+;
+
+: default_p ( d -- s )
+  default_n "'s" strcat
+;
+
+: default_r ( d -- s )
+  default_n
+;
+
+: default_s ( d -- s )
+  default_n
+;
+
 : get_substitutions[ ref:object -- dict:result ]
-  object @ name var! object_name
+  (* Get the object name *)
+  object @ name object @ exit? if ";" split pop then var! object_name
+  object @ base_name var! object_base_name
   (* Grab the default values *)
   pronoun_defaults object @ get_gender [] var! substitutions
-  (* Set fallback defaults *)
-  (* %a *)
-  substitutions @ "%a" [] not if
-    object_name @ "'s" strcat substitutions @ "%a" ->[] substitutions !
-  then
-  (* %o *)
-  substitutions @ "%o" [] not if
-    object_name @ substitutions @ "%o" ->[] substitutions !
-  then
-  (* %p *)
-  substitutions @ "%p" [] not if
-    object_name @ "'s" strcat substitutions @ "%p" ->[] substitutions !
-  then
-  (* %r *)
-  substitutions @ "%r" [] not if
-    object_name @ substitutions @ "%r" ->[] substitutions !
-  then
-  (* %s *)
-  substitutions @ "%s" [] not if
-    object_name @ substitutions @ "%s" ->[] substitutions !
-  then
-  (* %d *)
-  substitutions @ "%d" [] not if
-    object @ player? if "" else "the " then
-    object_name @ strcat substitutions @ "%d" ->[] substitutions !
-  then
-  (* %i *)
-  substitutions @ "%i" [] not if
-    object @ player? if "" else object_name @ indefinite_article " " strcat then
-    object_name @ strcat substitutions @ "%i" ->[] substitutions !
-  then
-  (* %n *)
-  substitutions @ "%n" [] not if
-    object_name @ substitutions @ "%n" ->[] substitutions !
-  then
   (* Now override them with object properties, if present *)
-  substitutions @ foreach
-    pop
+  { "%a" "%o" "%p" "%r" "%s" "%d" "%i" "%n" }list foreach
+    nip
     object @ over getpropstr dup if
       swap substitutions @ swap ->[] substitutions !
     else
       pop pop
     then
   repeat
+  (* Set fallback defaults *)
+  (* %a *)
+  substitutions @ "%a" [] not if
+    object @ default_a substitutions @ "%a" ->[] substitutions !
+  then
+  (* %o *)
+  substitutions @ "%o" [] not if
+    object @ default_o substitutions @ "%o" ->[] substitutions !
+  then
+  (* %p *)
+  substitutions @ "%p" [] not if
+    object @ default_p substitutions @ "%p" ->[] substitutions !
+  then
+  (* %r *)
+  substitutions @ "%r" [] not if
+    object @ default_r substitutions @ "%r" ->[] substitutions !
+  then
+  (* %s *)
+  substitutions @ "%s" [] not if
+    object @ default_s substitutions @ "%s" ->[] substitutions !
+  then
+  (* %d *)
+  substitutions @ "%d" [] not if
+    object @ default_d substitutions @ "%d" ->[] substitutions !
+  then
+  (* %i *)
+  substitutions @ "%i" [] not if
+    object @ default_i substitutions @ "%i" ->[] substitutions !
+  then
+  (* %n *)
+  substitutions @ "%n" [] not if
+    object @ default_n substitutions @ "%n" ->[] substitutions !
+  then
   (* Return *)
   substitutions @
 ;
 
 : fix_substitutions[ arr:substitutions ref:object arr:opts -- arr:substitutitons ]
-  opts @ "match_name" [] "yes" stringcmp not if
-    object @ name var! object_name
+  opts @ "match_name" [] dup not if pop "" then "yes" stringcmp not if
+    object @ name "_" " " subst var! object_name
+    object @ base_name "_" " " subst var! object_base_name
     substitutions @ "%n" [] COLOR_STRIP "_" " " subst var! opt_n
     substitutions @ "%d" [] COLOR_STRIP "_" " " subst var! opt_d
     substitutions @ "%i" [] COLOR_STRIP "_" " " subst var! opt_i
     opt_n @ object_name @ stringcmp if
-      object_name @ substitutions @ "%n" ->[] substitutions !
+      object @ default_n substitutions @ "%n" ->[] substitutions !
     then
-    opt_d @ object_name @ stringcmp
-    opt_d @ "the_" object_name @ strcat stringcmp
+    opt_d @ object_base_name @ stringcmp
+    opt_d @ "the_" object_base_name @ strcat stringcmp
     and if
-      object @ player? if "" else "the " then
-      object_name @ strcat substitutions @ "%d" ->[] substitutions !
+      object @ default_d substitutions @ "%d" ->[] substitutions !
     then
-    opt_i @ object_name @ stringcmp
-    opt_i @ "a_" object_name @ strcat stringcmp
-    opt_i @ "an_" object_name @ strcat stringcmp
-    opt_i @ "the_" object_name @ strcat stringcmp
+    opt_i @ object_base_name @ stringcmp
+    opt_i @ "a_" object_base_name @ strcat stringcmp
+    opt_i @ "an_" object_base_name @ strcat stringcmp
+    opt_i @ "the_" object_base_name @ strcat stringcmp
     and and and if
-      object @ player? if "" else object_name @ indefinite_article " " strcat then
-      object_name @ strcat substitutions @ "%i" ->[] substitutions !
+      object @ default_i substitutions @ "%i" ->[] substitutions !
     then
   then
   substitutions @
