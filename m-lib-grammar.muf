@@ -67,7 +67,26 @@ $PRAGMA comment_recurse
 (*     On any object: Reflexive pronoun. (himself/herself/itself)            *)
 (*                                                                           *)
 (*   "%s"                                                                    *)
-(*     On any obeject: Subjective pronoun. (he/she/it)                       *)
+(*     On any object: Subjective pronoun. (he/she/it)                        *)
+(*                                                                           *)
+(*   "%v"                                                                    *)
+(*     On any object (typically an exit): This object's verb. (eat, go east) *)
+(*                                                                           *)
+(*   "%w"                                                                    *)
+(*     On any object (typically an exit): This object's verb in present      *)
+(*     indicative form. (eats, goes east)                                    *)
+(*                                                                           *)
+(*   "%x"                                                                    *)
+(*     On any object (typically an exit): This object's verb in past tense.  *)
+(*     (ate, went east)                                                      *)
+(*                                                                           *)
+(*   "%y"                                                                    *)
+(*     On any object (typically an exit): This object's particple verb.      *)
+(*     (eating, going east)                                                  *)
+(*                                                                           *)
+(*   "%z"                                                                    *)
+(*     On any object (typically an exit): This object's participle verb in   *)
+(*     past tense. (i.e. eaten, gone east)                                   *)
 (*                                                                           *)
 (* PUBLIC ROUTINES:                                                          *)
 (*   M-LIB-GRAMMAR-sub[ str:template array:objects dict:opts -- str:name ]   *)
@@ -82,7 +101,7 @@ $PRAGMA comment_recurse
 (*     The count starts at 1 and if omitted, the first object is used.       *)
 (*                                                                           *)
 (*     Options:                                                              *)
-(*       "match_name"                                                        *)
+(*       "name_match"                                                        *)
 (*         If this is set to "YES" then the %d, %i, and %n values on the     *)
 (*         object must match the actual name of the object.                  *)
 (*           - If the name has an article in it, it is stripped off before   *)
@@ -91,6 +110,11 @@ $PRAGMA comment_recurse
 (*           - %d must either match the base name, or start with 'the'.      *)
 (*           - Underscores can be replaced with spaces and vice versa.       *)
 (*           - $m/lib/color MCC color codes are ignored when comparing.      *)
+(*                                                                           *)
+(*       "name_theme"                                                        *)
+(*         If this is set to "YES" then the %d, %i, and %n substitutions     *)
+(*         will use $m/lib/theme modifications, and may be returned with     *)
+(*         additional characters and color codes.                            *)
 (*                                                                           *)
 (*   M-LIB-GRAMMAR-oxford_join ( a s -- s )                                  *)
 (*     Similar to ", " array_join, but it inserts a coordinating conjunction *)
@@ -132,6 +156,9 @@ $DOCCMD  @list __PROG__=2-92
 
 (* Comment this out to remove the dependency on $m/lib/color *)
 $DEF M_LIB_COLOR
+
+(* Comment this out to remove the dependency on $m/lib/theme *)
+$DEF M_LIB_THEME
 
 (* Default pronouns for object types and genders. Empty string for "Name's" / "Name" *)
 lvar g_pronoun_defaults
@@ -311,11 +338,15 @@ $INCLUDE $m/lib/program
 $IFDEF M_LIB_COLOR
   $INCLUDE $m/lib/color
 $ENDIF
+$IFDEF M_LIB_THEME
+  $INCLUDE $m/lib/theme
+$ENDIF
 
-$IFDEF M_LIB_COLOR
-  $DEF COLOR_STRIP .color_strip
-$ELSE
-  $DEF COLOR_STRIP
+$IFNDEF M_LIB_COLOR
+  $DEF .color_explode_array explode_array
+  $DEF .color_strcat strcut
+  $DEF .color_strcat strcat
+  $DEF .color_strip
 $ENDIF
 
 $PUBDEF :
@@ -463,14 +494,55 @@ $PUBDEF :
   default_n
 ;
 
+: default_v ( d -- s )
+  dup default_n
+  swap exit? if
+    tolower
+  then
+;
+
+: default_w ( d -- s )
+  default_v "s" strcat
+;
+
+: default_x ( d -- s )
+  default_v
+  dup strlen -- strcut
+  dup "e" stringcmp not if
+    pop
+  else
+    strcat
+  then
+  "ed" strcat
+;
+
+: default_y ( d -- s )
+  default_v
+  dup strlen -- strcut
+  dup "e" stringcmp not if
+    pop
+  else
+    strcat
+  then
+  "ing" strcat
+;
+
+: default_z ( d -- s )
+  default_v
+  dup strlen -- strcut
+  dup "e" stringcmp not if
+    pop
+  else
+    strcat
+  then
+  "ed" strcat
+;
+
 : get_substitutions[ ref:object -- dict:result ]
-  (* Get the object name *)
-  object @ name object @ exit? if ";" split pop then var! object_name
-  object @ base_name var! object_base_name
   (* Grab the default values *)
   pronoun_defaults object @ get_gender [] var! substitutions
   (* Now override them with object properties, if present *)
-  { "%a" "%o" "%p" "%r" "%s" "%d" "%i" "%n" }list foreach
+  { "%a" "%o" "%p" "%r" "%s" "%d" "%i" "%n" "%v" "%w" "%x" "%y" "%z" }list foreach
     nip
     object @ over getpropstr dup if
       swap substitutions @ swap ->[] substitutions !
@@ -511,17 +583,37 @@ $PUBDEF :
   substitutions @ "%n" [] not if
     object @ default_n substitutions @ "%n" ->[] substitutions !
   then
+  (* %v *)
+  substitutions @ "%v" [] not if
+    object @ default_v substitutions @ "%v" ->[] substitutions !
+  then
+  (* %w *)
+  substitutions @ "%w" [] not if
+    object @ default_w substitutions @ "%w" ->[] substitutions !
+  then
+  (* %x *)
+  substitutions @ "%x" [] not if
+    object @ default_x substitutions @ "%x" ->[] substitutions !
+  then
+  (* %y *)
+  substitutions @ "%y" [] not if
+    object @ default_y substitutions @ "%y" ->[] substitutions !
+  then
+  (* %z *)
+  substitutions @ "%z" [] not if
+    object @ default_z substitutions @ "%z" ->[] substitutions !
+  then
   (* Return *)
   substitutions @
 ;
 
 : sub_fix[ arr:substitutions ref:object arr:opts -- arr:substitutitons ]
-  opts @ "match_name" [] dup not if pop "" then "yes" stringcmp not if
+  opts @ "name_match" [] dup not if pop "" then "yes" stringcmp not if
     object @ name "_" " " subst var! object_name
     object @ base_name "_" " " subst var! object_base_name
-    substitutions @ "%n" [] COLOR_STRIP "_" " " subst var! opt_n
-    substitutions @ "%d" [] COLOR_STRIP "_" " " subst var! opt_d
-    substitutions @ "%i" [] COLOR_STRIP "_" " " subst var! opt_i
+    substitutions @ "%n" [] .color_strip "_" " " subst var! opt_n
+    substitutions @ "%d" [] .color_strip "_" " " subst var! opt_d
+    substitutions @ "%i" [] .color_strip "_" " " subst var! opt_i
     opt_n @ object_name @ stringcmp if
       object @ default_n substitutions @ "%n" ->[] substitutions !
     then
@@ -538,31 +630,67 @@ $PUBDEF :
       object @ default_i substitutions @ "%i" ->[] substitutions !
     then
   then
+$IFDEF M_LIB_THEME
+  opts @ "name_theme" [] dup not if pop "" then "yes" stringcmp not if
+    substitutions @ "%n" [] if
+      substitutions @ "%n" []
+      object @ swap 0 M-LIB-THEME-name
+      substitutions @ "%n" ->[] substitutions !
+    then
+    substitutions @ "%d" [] if
+      substitutions @ "%d" []
+      dup "the[_ ]*" smatch if
+        4 strcut
+      else
+        "" swap
+      then
+      object @ swap 0 M-LIB-THEME-name
+      strcat
+      substitutions @ "%d" ->[] substitutions !
+    then
+    substitutions @ "%i" [] if
+      substitutions @ "%i" []
+      dup "the[_ ]*" smatch if
+        4 strcut
+      else dup "an[_ ]*" smatch if
+        3 strcut
+      else dup "a[_ ]*" smatch if
+        2 strcut
+      else
+        "" swap
+      then then then
+      object @ swap 0 M-LIB-THEME-name
+      strcat
+      substitutions @ "%i" ->[] substitutions !
+    then
+  then
+$ENDIF
   substitutions @
 ;
 
 : sub_code[ str:codestr arr:substitutions -- str:result ]
   var code
   var obj_id
-  codestr @ "[1-9][adinoprs]" smatch if
-    codestr @
+  codestr @ .color_strip 1 strcut swap pop var! codestr_stripped
+  codestr_stripped @ "[1-9][adinoprsvwxyz]" smatch if
+    codestr_stripped @
     1 strcut swap atoi obj_id ! code !
-  else codestr @ "[adinoprs]" smatch if
+  else codestr_stripped @ "[adinoprsvwxyz]" smatch if
     1 obj_id !
-    codestr @ code !
+    codestr_stripped @ code !
   else
-    "%" codestr @ strcat exit
+    codestr @ exit
   then then
   obj_id @ substitutions @ array_count > if
-    "%" codestr @ strcat exit
+    codestr @ exit
   then
   substitutions @ obj_id @ -- [] "%" code @ strcat []
   dup not if
     pop
-    "%" codestr @ strcat exit
+    codestr @ exit
   then
   code @ code @ toupper = if
-     1 strcut swap toupper swap strcat
+     1 .color_strcut swap toupper swap strcat
   then
 ;
 
@@ -573,15 +701,16 @@ $PUBDEF :
     var! object
     object @ get_substitutions object @ opts @ sub_fix substitutions @ []<- substitutions !
   repeat
-  template @ "%" explode_array
+  template @ "%" .color_carve_array
   1 array_cut swap array_vals pop var! result
   foreach
     nip
-    dup 1 strcut pop number? if
-      2 strcut swap substitutions @ sub_code swap strcat
+    dup 1 .color_strcut swap pop 1 .color_strcut pop .color_strip number? if
+      3 .color_strcut swap substitutions @ sub_code swap .color_strcat
     else
-      1 strcut swap substitutions @ sub_code swap strcat
+      2 .color_strcut swap substitutions @ sub_code swap .color_strcat
     then
+    (* No .color_strcat here because we want the color to bleed from the template string into the beginning of the substitution *)
     result @ swap strcat result !
   repeat
   result @
