@@ -67,7 +67,7 @@ WIZCALL M-HELP-help
 : main ( s --  )
   if help exit then
 
-  "me" M-CMD-AT_EDITOBJECT-EditObject pop
+  "me" M-CMD-AT_EDITOBJECT-edit_object pop
 ;
 .
 c

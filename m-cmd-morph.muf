@@ -66,13 +66,13 @@ WIZCALL M-HELP-help
   dup not if
     "What do you want to morph into?" .tell
     pop
-    M-CMD-AT_EDITOBJECT-ListMorphs
+    M-CMD-AT_EDITOBJECT-list_morphs
     exit
   then
 
   var! morph_name
 
-  morph_name @ 1 M-CMD-AT_EDITOBJECT-LoadMorph if
+  morph_name @ 1 M-CMD-AT_EDITOBJECT-load_morph if
     "me" match "_morph_mesg" getpropstr dup if .tell else { "You morph into a " me @ "_morph" getpropstr "." }join .tell pop then
     "me" match "_morph_omesg" getpropstr dup if "me" match name " " strcat swap strcat then .otell
   then

@@ -100,29 +100,29 @@ $INCLUDE $m/cmd/at_lsedit
 
 (* Begin global variables *)
 
-  lvar ourObject (* Set to the object being edited in main *)
-  lvar ourTable  (* Set to the appropriate table in main *)
+lvar g_object (* Set to the object being edited in main *)
+lvar g_table  (* Set to the appropriate table in main *)
 
-  (* These are intialized in main. *)
-  lvar ourAttrTable
-  lvar ourPronounTable
-  lvar ourMorphTable
-  lvar ourPlayerPrefTable
-  lvar ourPlayerTable
-  lvar ourRoomFlagsTable
-  lvar ourRoomTable
-  lvar ourThingPrefTable
-  lvar ourThingFlagsTable
-  lvar ourThingTable
-  lvar ourExitTable
-  lvar ourProgramTable
+(* These are intialized in main. *)
+lvar g_table_attr
+lvar g_table_pronoun
+lvar g_table_morph
+lvar g_table_player_pref
+lvar g_table_player
+lvar g_table_room_flags
+lvar g_table_room
+lvar g_table_thing_pref
+lvar g_table_thing_flags
+lvar g_table_thing
+lvar g_table_exit
+lvar g_table_program
 
 (* End global variables *)
 
 (*****************************************************************************)
 (                             support functions                               )
 (*****************************************************************************)
-: chkPerms ( d -- b )
+: chk_perms ( d -- b )
   (* You can always edit yourself *)
   "me" match over dbcmp if
     1 exit
@@ -136,7 +136,7 @@ $INCLUDE $m/cmd/at_lsedit
   0 exit
 ;
 
-: doCopyProps[ ref:from str:fromprop ref:to str:toprop -- ]
+: copy_props[ ref:from str:fromprop ref:to str:toprop -- ]
 
   to @ toprop @ propdir? toprop @ strlen toprop @ "#" instr = and if (* If it's a list type prop and it exists, destroy it before copying contents in *)
     to @ toprop @ remove_prop
@@ -155,7 +155,7 @@ $INCLUDE $m/cmd/at_lsedit
       over     (* The curently iterated item is the new fromprop *)
       to @     (* to stays the same *)
       toprop @ 5 pick "/" rsplit "/" swap strcat swap pop strcat (* The new toprop is the old toprop, plus the relitive name of the currently iterated item. *)
-      doCopyProps
+      copy_props
 
       from @ swap nextprop
     repeat
@@ -164,7 +164,7 @@ $INCLUDE $m/cmd/at_lsedit
 ;
 
 (* For some reason, default stod returns #0 on failure.  <sigh>  Here's a replacement.  *)
-: str-to-dbref ( s -- d )
+: str_to_dbref ( s -- d )
 
   dup string? not if
     pop #-1 exit
@@ -185,53 +185,53 @@ $INCLUDE $m/cmd/at_lsedit
 (                          gets and sets for tables                           )
 (*****************************************************************************)
 (***** Change menus *****)
-: setMenu[ var:newmenu --  ]
-  newmenu @ @ ourTable !
+: set_menu[ var:newmenu --  ]
+  newmenu @ @ g_table !
 ;
 
-: setDefaultMenu[ --  ]
-  ourObject @ player? if
-    ourPlayerTable @ ourTable ! exit
+: set_menu_default[ --  ]
+  g_object @ player? if
+    g_table_player @ g_table ! exit
   then
 
-  ourObject @ room? if
-    ourRoomTable @ ourTable ! exit
+  g_object @ room? if
+    g_table_room @ g_table ! exit
   then
 
-  ourObject @ thing? if
-    ourThingTable @ ourTable ! exit
+  g_object @ thing? if
+    g_table_thing @ g_table ! exit
   then
 
-  ourObject @ exit? if
-    ourExitTable @ ourTable ! exit
+  g_object @ exit? if
+    g_table_exit @ g_table ! exit
   then
 
-  ourObject @ program? if
-    ourProgramTable @ ourTable ! exit
+  g_object @ program? if
+    g_table_program @ g_table ! exit
   then
 
   "Unknown object type!" abort
 ;
 
 (***** get/set Flag *****)
-: getFlag[ str:flag str:valueTrue str:valueFalse -- str:value ]
-  ourObject @ flag @ flag? if
+: get_flag[ str:flag str:valueTrue str:valueFalse -- str:value ]
+  g_object @ flag @ flag? if
     valueTrue @
   else
     valueFalse @
   then
 ;
 
-: setFlag[ str:flag --  ]
+: set_flag[ str:flag --  ]
   read
 
   dup "{y|ye|yes}" smatch if
-    ourObject @ flag @ set
+    g_object @ flag @ set
     pop exit
   then
 
   dup "{n|no}" smatch if
-    ourObject @ "!" flag @ strcat set
+    g_object @ "!" flag @ strcat set
     pop exit
   then
 
@@ -240,11 +240,11 @@ $INCLUDE $m/cmd/at_lsedit
 ;
 
 (***** get/set String Property *****)
-: getStr[ str:property str:unsetValue -- str:value ]
-  ourObject @ property @ getpropstr
+: get_str[ str:property str:unsetValue -- str:value ]
+  g_object @ property @ getpropstr
 
   dup not if
-    pop ourObject @ unsetValue @ pronoun_sub exit
+    pop g_object @ unsetValue @ pronoun_sub exit
   then
 
   dup "\r" instr if
@@ -253,20 +253,20 @@ $INCLUDE $m/cmd/at_lsedit
   then
 ;
 
-: setStr[ str:property --  ]
+: set_str[ str:property --  ]
   "(Enter a space, to clear.)" .tell
 
   read
 
   dup strip not if
-    ourObject @ property @ remove_prop
+    g_object @ property @ remove_prop
   else
-    ourObject @ property @ rot setprop
+    g_object @ property @ rot setprop
   then
 ;
 
 (***** set String Property From a List of Selections *****)
-: setStrPick[ str:property list:options --  ]
+: set_str_pick[ str:property list:options --  ]
 
   "Options:" .tell
   options @ "\r" array_join .tell
@@ -284,7 +284,7 @@ $INCLUDE $m/cmd/at_lsedit
 
   if
     tolower 1 strcut swap toupper swap strcat
-    ourObject @ property @ rot setprop
+    g_object @ property @ rot setprop
     "Set." .tell
   else
     "'" swap strcat "' is not one of the options." strcat .tell
@@ -292,8 +292,8 @@ $INCLUDE $m/cmd/at_lsedit
 ;
 
 (***** get/set String Boolean Property *****)
-: getStrBool[ str:property str:valueTrue str:valueFalse -- str:value ]
-  ourObject @ property @ getpropstr
+: get_str_bool[ str:property str:valueTrue str:valueFalse -- str:value ]
+  g_object @ property @ getpropstr
 
   "yes" stringcmp not if
     valueTrue @
@@ -302,8 +302,8 @@ $INCLUDE $m/cmd/at_lsedit
   then
 ;
 
-: getStrBool2[ str:property str:valueTrue str:valueFalse -- str:value ] (* this one is for defaulting to yes *)
-  ourObject @ property @ getpropstr
+: get_str_bool2[ str:property str:valueTrue str:valueFalse -- str:value ] (* this one is for defaulting to yes *)
+  g_object @ property @ getpropstr
 
   "no" stringcmp not if
     valueFalse @
@@ -312,16 +312,16 @@ $INCLUDE $m/cmd/at_lsedit
   then
 ;
 
-: setStrBool[ str:property --  ]
+: set_str_bool[ str:property --  ]
   read
 
   dup "{y|ye|yes}" smatch if
-    ourObject @ property @ "yes" setprop
+    g_object @ property @ "yes" setprop
     pop exit
   then
 
   dup "{n|no}" smatch if
-    ourObject @ property @ "no" setprop
+    g_object @ property @ "no" setprop
     pop exit
   then
 
@@ -329,16 +329,16 @@ $INCLUDE $m/cmd/at_lsedit
   pop
 ;
 
-: setStrBool2[ str:property --  ] (* This one is for clearing a prop, instead of setting no *)
+: set_str_bool2[ str:property --  ] (* This one is for clearing a prop, instead of setting no *)
   read
 
   dup "{y|ye|yes}" smatch if
-    ourObject @ property @ "yes" setprop
+    g_object @ property @ "yes" setprop
     pop exit
   then
 
   dup "{n|no}" smatch if
-    ourObject @ property @ remove_prop
+    g_object @ property @ remove_prop
     pop exit
   then
 
@@ -347,24 +347,24 @@ $INCLUDE $m/cmd/at_lsedit
 ;
 
 (***** get/set Integer Boolean Property *****)
-: getBool[ str:property str:valueTrue str:valueFalse -- str:value ]
-  ourObject @ property @ getpropval if
+: get_bool[ str:property str:valueTrue str:valueFalse -- str:value ]
+  g_object @ property @ getpropval if
     valueTrue @
   else
     valueFalse @
   then
 ;
 
-: setBool[ str:property --  ]
+: set_bool[ str:property --  ]
   read
 
   dup "{y|ye|yes}" smatch if
-    ourObject @ property @ 1 setprop
+    g_object @ property @ 1 setprop
     pop exit
   then
 
   dup "{n|no}" smatch if
-    ourObject @ property @ 0 setprop
+    g_object @ property @ 0 setprop
     pop exit
   then
 
@@ -373,8 +373,8 @@ $INCLUDE $m/cmd/at_lsedit
 ;
 
 (***** get an MPI parsed value *****)
-: getMPI[ str:property str:unsetValue -- str:value ]
-  ourObject @ property @ prog name 0 parseprop
+: get_mpi[ str:property str:unsetValue -- str:value ]
+  g_object @ property @ prog name 0 parseprop
 
   dup not if
     pop unsetValue @ exit
@@ -387,19 +387,19 @@ $INCLUDE $m/cmd/at_lsedit
 ;
 
 (***** get/set name *****)
-: getObjName[  -- str:value ]
-  ourObject @ name
+: get_obj_name[  -- str:value ]
+  g_object @ name
 ;
 
-: setObjName[  --  ]
+: set_obj_name[  --  ]
   read
-  ourObject @ swap setname
+  g_object @ swap setname
 ;
 
 (***** set a string to {eval:{list:<property list>}}, and edit the corresponding list *****)
-: setMPIList[ str:property str:listprop --  ]
+: set_mpi_list[ str:property str:listprop --  ]
   (* Use existing property if available *)
-  ourObject @ property @ getpropstr
+  g_object @ property @ getpropstr
   dup "{eval:{list:" stringpfx if
     12 strcut swap pop
     dup strlen 2 - strcut "}}" stringcmp not if
@@ -413,14 +413,14 @@ $INCLUDE $m/cmd/at_lsedit
 "< '.end' will exit and save the list.  '.abort' will abort any changes. >" .tell
 "<    To save changes to the list, and continue editing, use '.save'     >" .tell
 
-  ourObject @ listprop @ M-CMD-AT_LSEDIT-ListEdit if
-    ourObject @ property @ "{eval:{list:" listprop @ strcat "}}" strcat setprop
+  g_object @ listprop @ M-CMD-AT_LSEDIT-ListEdit if
+    g_object @ property @ "{eval:{list:" listprop @ strcat "}}" strcat setprop
   then
 ;
 
 (***** get/set Obvious Exits Output *****)
-: getObvExits[ str:valueYes str:valueNo str:valueMaybe -- str:value ]
-  ourObject @ "/_/sc" getpropstr
+: get_obv_exits[ str:valueYes str:valueNo str:valueMaybe -- str:value ]
+  g_object @ "/_/sc" getpropstr
 
   dup not if
     pop valueNo @ exit
@@ -433,39 +433,40 @@ $INCLUDE $m/cmd/at_lsedit
   then
 ;
 
-: setObvExits[ --  ]
+: set_obv_exits[ --  ]
   read
 
   dup "{y|ye|yes}" smatch if
-    ourObject @ "/_/sc" "[Exits: {obvexits}]" setprop
+    g_object @ "/_/sc" "[Exits: {obvexits}]" setprop
     pop exit
   then
 
   dup "{n|no}" smatch if
-    ourObject @ "/_/sc" remove_prop
+    g_object @ "/_/sc" remove_prop
     pop exit
   then
 
   "Cancelled." .tell
   pop
 ;
+
 (***** Get/set the current morph *****)
-: getMorph[  -- str:value ]
-  ourObject @ "/_morph" getpropstr
+: get_morph[  -- str:value ]
+  g_object @ "/_morph" getpropstr
 
   dup "\r" instr if
     pop "UNKNOWN" exit
   then
 
   dup not if
-    ourObject @ "/_morph" "Default" setprop
+    g_object @ "/_morph" "Default" setprop
     pop "Default" exit
   then
 ;
 
-lvar ourMorphPropTable
-: doMorph[ str:morph_name bool:save bool:quiet -- bool:success? ]
-  ourMorphPropTable @ not if
+lvar g_morph_prop_table
+: do_morph[ str:morph_name bool:save bool:quiet -- bool:success? ]
+  g_morph_prop_table @ not if
     {
       "Appearance" "_/de"
       "Scent" "_/scent"
@@ -488,21 +489,21 @@ lvar ourMorphPropTable
       "Say/pose configuration" "_config/say"
       "Morph 'Message'" "_morph_mesg"
       "Morph 'OMessage'" "_morph_omesg"
-    }dict ourMorphPropTable !
+    }dict g_morph_prop_table !
   then
 
   "_morph/" morph_name @ strcat var! morph_dir
 
   save @ if
-    ourObject @ morph_dir @ propdir? if
+    g_object @ morph_dir @ propdir? if
       quiet @ not if "Clearing existing morph..." .tell then
-      ourObject @ morph_dir @ remove_prop
+      g_object @ morph_dir @ remove_prop
       quiet @ not if "Saving morph..." .tell then
     else
       quiet @ not if "Creating new morph..." .tell then
     then
   else
-    ourObject @ morph_dir @ propdir? if
+    g_object @ morph_dir @ propdir? if
       quiet @ not if "Loading morph..." .tell then
     else
       { "Morph '" morph_name @ "' not found." }join "bold,red" textattr .tell
@@ -510,28 +511,28 @@ lvar ourMorphPropTable
     then
   then
 
-  ourMorphPropTable @ foreach
+  g_morph_prop_table @ foreach
     var! property
     var! name
 
     save @ if
-      ourObject @ property @ propdir? ourObject @ property @ getpropstr or if
+      g_object @ property @ propdir? g_object @ property @ getpropstr or if
         quiet @ not if { "  Saving '" name @ "'..." }join .tell then
-        ourObject @ property @ ourObject @ { morph_dir @ "/" property @ }join doCopyProps
+        g_object @ property @ g_object @ { morph_dir @ "/" property @ }join copy_props
       then
     else
-      ourObject @ { morph_dir @ "/" property @ }join propdir? ourObject @ { morph_dir @ "/" property @ }join getpropstr or if
+      g_object @ { morph_dir @ "/" property @ }join propdir? g_object @ { morph_dir @ "/" property @ }join getpropstr or if
         quiet @ not if { "  Loading '" name @ "'..." }join .tell then
-        ourObject @ { morph_dir @ "/" property @ }join ourObject @ property @ doCopyProps
+        g_object @ { morph_dir @ "/" property @ }join g_object @ property @ copy_props
       then
     then
   repeat
 
-  ourObject @ "/_morph" morph_name @ setprop
+  g_object @ "/_morph" morph_name @ setprop
   1
 ;
 
-: initialCaps ( s -- s )
+: initial_caps ( s -- s )
   strip
   ""
   swap " " explode_array foreach
@@ -543,45 +544,45 @@ lvar ourMorphPropTable
   strip
 ;
 
-: setMorph[ int:save --  ]
+: set_morph[ int:save --  ]
   read
 
-  initialCaps
+  initial_caps
   "_" " " subst
 
-  save @ 0 doMorph pop
+  save @ 0 do_morph pop
 ;
 
-: setDeleteMorph[  --  ]
+: set_morph_delete[  --  ]
   read
 
-  initialCaps
+  initial_caps
   "_" " " subst
 
   var! morph_name
 
   "_morph/" morph_name @ strcat var! morph_dir
 
-  ourObject @ morph_dir @ propdir? if
-    ourObject @ morph_dir @ remove_prop
+  g_object @ morph_dir @ propdir? if
+    g_object @ morph_dir @ remove_prop
     { "Morph '" morph_name @ "' deleted." }join .tell
   else
     { "Morph '" morph_name @ "' not found." }join "bold,red" textattr .tell
   then
 ;
 
-: setListMorph[  --  ]
-  ourObject @ "/_morph/" propdir? if
+: set_morph_list[  --  ]
+  g_object @ "/_morph/" propdir? if
     "  Saved morphs:" "dim,cyan" textattr .tell
-    ourObject @ "/_morph/" nextprop
+    g_object @ "/_morph/" nextprop
     begin
       dup while
 
-      ourObject @ over propdir? if
+      g_object @ over propdir? if
         dup "/" rsplit swap pop "    - " "dim,cyan" textattr swap "bold,blue" textattr strcat .tell
       then
 
-      ourObject @ swap nextprop
+      g_object @ swap nextprop
     repeat
     pop
   else
@@ -590,9 +591,9 @@ lvar ourMorphPropTable
 ;
 
 (***** Get source or destinations for exits *****)
-: getSource[  -- str:value ]
-  ourObject @ exit? if
-    ourObject @ location
+: get_source[  -- str:value ]
+  g_object @ exit? if
+    g_object @ location
 
     dup "me" match swap controls if
       unparseobj
@@ -604,15 +605,15 @@ lvar ourMorphPropTable
   then
 ;
 
-: setSource[  --  ]
+: set_source[  --  ]
   "(Enter a #dbref, *player_name, present object's name, 'me', 'here', or 'home')" .tell
   read
 
-  { "#" ourObject @ intostr }join swap M-CMD-AT_ATTACH-Attach
+  { "#" g_object @ intostr }join swap M-CMD-AT_ATTACH-Attach
 ;
 
-: getObjLink[ str:valueUnlinked -- str:value ]
-  ourObject @ getlink
+: get_link[ str:valueUnlinked -- str:value ]
+  g_object @ getlink
 
   dup not if
     pop valueUnlinked @ exit
@@ -625,24 +626,24 @@ lvar ourMorphPropTable
   then
 ;
 
-: setObjLink[  --  ]
+: set_link[  --  ]
   "(Enter a #dbref, *player_name, present object's name, 'me', 'here', or 'home' or '.' to unlink)" .tell
   read
 
   dup "." = if
-    { "#" ourObject @ intostr }join M-CMD-AT_UNLINK-Unlink pop
+    { "#" g_object @ intostr }join M-CMD-AT_UNLINK-Unlink pop
   else
-    { "#" ourObject @ intostr }join swap M-CMD-AT_LINK-Relink pop
+    { "#" g_object @ intostr }join swap M-CMD-AT_LINK-Relink pop
   then
 ;
 
 (***** create/switch to/delete exits *****)
-: setEditExits[  --  ]
-  ourObject @ program? ourObject @ exit? if
+: set_exits_edit[  --  ]
+  g_object @ program? g_object @ exit? if
     "Should not be called on an exit or program." abort
   then
 
-  ourObject @ exits_array var! myExits
+  g_object @ exits_array var! myExits
 
   myExits @ foreach
     swap ++ intostr "bold,cyan" textattr "] " rot name strcat "dim,cyan" textattr strcat "[" "dim,cyan" textattr swap strcat .tell
@@ -657,39 +658,39 @@ lvar ourMorphPropTable
     pop "Sorry, that's not one of the selections." .tell exit
   then
 
-  dup chkPerms not if
+  dup chk_perms not if
     pop "Permission denied.  (Try exiting the editor and running 'help @chown' for information on seizing exits.)" .tell exit
   then
 
-  ourObject !
-  setDefaultMenu
+  g_object !
+  set_menu_default
 ;
 
-: setNewExit[  --  ]
+: set_exit_new[  --  ]
 
   "Enter the name of the new exit:" .tell
 
-  "#" ourObject @ intostr strcat read M-CMD-AT_ACTION-Action
+  "#" g_object @ intostr strcat read M-CMD-AT_ACTION-Action
 
   dup if
-    dup chkPerms not if
+    dup chk_perms not if
       pop "FATAL ERROR: Permission denied editing newly created exit!" .tell pid kill
     then
 
-    ourObject !
-    setDefaultMenu
+    g_object !
+    set_menu_default
   else
     pop
   then
 ;
 
-: setRecycleExit[  --  ]
+: set_exit_recycle[  --  ]
 
-  ourObject @ program? ourObject @ exit? if
+  g_object @ program? g_object @ exit? if
     "Should not be called on an exit or program." abort
   then
 
-  ourObject @ exits_array var! myExits
+  g_object @ exits_array var! myExits
 
   myExits @ foreach
     swap ++ intostr "bold,cyan" textattr "] " rot name strcat "dim,cyan" textattr strcat "[" "dim,cyan" textattr swap strcat .tell
@@ -704,7 +705,7 @@ lvar ourMorphPropTable
     pop "Sorry, that's not one of the selections." .tell exit
   then
 
-  dup chkPerms not if
+  dup chk_perms not if
     pop "Permission denied.  (Try exiting the editor and running 'help @chown' for information on seizing exits.)" .tell exit
   then
 
@@ -712,23 +713,23 @@ lvar ourMorphPropTable
 ;
 
 (***** Change to parent objects *****)
-: setParent[  --  ]
-  ourObject @ location
+: set_parent[  --  ]
+  g_object @ location
 
   dup not if
     pop "This doesn't have a parent!" .tell exit
   then
 
-  dup chkPerms not if
+  dup chk_perms not if
     pop "Permission denied." .tell exit
   then
 
-  ourObject !
-  setDefaultMenu
+  g_object !
+  set_menu_default
 ;
 
-: getParent[ str:valueRoom str:valuePlayer str:valueOtherwise -- str:value ]
-  ourObject @ location
+: get_parent[ str:valueRoom str:valuePlayer str:valueOtherwise -- str:value ]
+  g_object @ location
 
   dup room? if
     pop valueRoom @ exit
@@ -742,13 +743,13 @@ lvar ourMorphPropTable
 ;
 
 (***** Get the type of this object *****)
-: getObject[ str:valueRoom str:valuePlayer str:valueOtherwise -- str:value ]
+: get_object_type[ str:valueRoom str:valuePlayer str:valueOtherwise -- str:value ]
 
-  ourObject @ room? if
+  g_object @ room? if
     valueRoom @ exit
   then
 
-  ourObject @ player? if
+  g_object @ player? if
     valuePlayer @ exit
   then
 
@@ -756,7 +757,7 @@ lvar ourMorphPropTable
 ;
 
 (***** force user to execute command *****)
-: setExternal[ ref:program str:newCommand --  ]
+: set_external[ ref:program str:newCommand --  ]
   command @ var! oldCommand
 
   newCommand @ command !
@@ -765,10 +766,10 @@ lvar ourMorphPropTable
 ;
 
 (***** do nothing *****)
-: setNull[  --  ]
+: set_null[  --  ]
 ;
 
-: getNull[  -- str:value ]
+: get_null[  -- str:value ]
   ""
 ;
 
@@ -776,90 +777,90 @@ lvar ourMorphPropTable
 (############################## PLAYER TABLES ################################)
 (#############################################################################)
 
-: getAttrTable (  -- a )
+: table_attr (  -- a )
   {
     "" (* Blank line after header *)
     "Attributes" 3
 
     { "A1"
       "[#00AAAA][[#55FFFF]A1[#00AAAA]] Flight:      [#5555FF]%s"
-      'getStrBool { "_attr/flight?" "Yes" "No" }list
+      'get_str_bool { "_attr/flight?" "Yes" "No" }list
 
       {
         "** Builders may access this attribute by @locking to attr/flight?:yes, or with the MPI code: {if:{eq:{prop:attr/flight?,me},yes},<code>}"
         "Can this character fly? (y/n)"
       }list "\r" array_join
-      'setStrBool { "_attr/flight?" }list
+      'set_str_bool { "_attr/flight?" }list
     }list
 
     { "A2"
       "[#00AAAA][[#55FFFF]A2[#00AAAA]] Swim:        [#5555FF]%s"
-      'getStrBool { "_attr/swim?" "Yes" "No" }list
+      'get_str_bool { "_attr/swim?" "Yes" "No" }list
 
       {
         "** Builders may access this attribute by @locking to attr/swim?:yes, or with the MPI code: {if:{eq:{prop:attr/swim?,me},yes},<code>}"
         "Can this character swim?"
       }list "\r" array_join
-      'setStrBool { "_attr/swim?" }list
+      'set_str_bool { "_attr/swim?" }list
     }list
 
     { "A3"
       "[#00AAAA][[#55FFFF]A3[#00AAAA]] Gills:        [#5555FF]%s"
-      'getStrBool { "_attr/gills?" "Yes" "No" }list
+      'get_str_bool { "_attr/gills?" "Yes" "No" }list
 
       {
         "** Builders may access this attribute by @locking to attr/gills?:yes, or with the MPI code: {if:{eq:{prop:attr/gills?,me},yes},<code>}"
         "Can this character breathe underwater?"
       }list "\r" array_join
-      'setStrBool { "_attr/gills?" }list
+      'set_str_bool { "_attr/gills?" }list
     }list
 
     { "A4"
       "[#00AAAA][[#55FFFF]A4[#00AAAA]] Size:        [#5555FF]%s"
-      'getStr     { "_attr/size" "[#FF5555][Unset][!FFFFFF]" }list
+      'get_str     { "_attr/size" "[#FF5555][Unset][!FFFFFF]" }list
 
       {
         "** Builders may access this attribute by @locking to attr/size:<value>, or with the MPI code: {if:{eq:{prop:attr/size,me},<value>},<code>}"
         "How big is this character?"
       }list "\r" array_join
-      'setStrPick { "_attr/size" { "micro" "normal" "macro" }list }list
+      'set_str_pick { "_attr/size" { "micro" "normal" "macro" }list }list
     }list
 
     { "A5"
       "[#00AAAA][[#55FFFF]A5[#00AAAA]] Can Drive:   [#5555FF]%s"
-      'getStrBool { "_attr/candrive?" "Yes" "No" }list
+      'get_str_bool { "_attr/candrive?" "Yes" "No" }list
 
       {
         "** Builders may access this attribute by @locking to attr/candrive?:yes, or with the MPI code: {if:{eq:{prop:attr/candrive?,me},yes},<code>}"
         "Can this character drive an automobile?"
       }list "\r" array_join
-      'setStrBool { "_attr/candrive?" }list
+      'set_str_bool { "_attr/candrive?" }list
     }list
 
     { "A6"
       "[#00AAAA][[#55FFFF]A6[#00AAAA]] Space Travel: [#5555FF]%s"
-      'getStrBool { "_attr/spacetravel?" "Yes" "No" }list
+      'get_str_bool { "_attr/spacetravel?" "Yes" "No" }list
 
       {
         "** Builders may access this attribute by @locking to attr/spacetravel?:yes, or with the MPI code: {if:{eq:{prop:attr/spacetravel?,me},yes},<code>}"
         "Can this character survive exposure to space or lack of oxygen?"
       }list "\r" array_join
-      'setStrBool { "_attr/spacetravel?" }list
+      'set_str_bool { "_attr/spacetravel?" }list
     }list
 
     ""
     { "B"
       "[#00AAAA][[#55FFFF]B[#00AAAA]]ack to %s Edit"
-      'getObject { "Room" "Player" "Object" }list
+      'get_object_type { "Room" "Player" "Object" }list
 
       {
       }list "\r" array_join
-      'setDefaultMenu { }list
+      'set_menu_default { }list
     }list
   }list
 ;
 
-: getPronounTable (  -- a )
+: table_pronoun (  -- a )
   {
     "" (* Blank line after header *)
 
@@ -867,7 +868,7 @@ lvar ourMorphPropTable
 
     { "N"
       "[#00AAAA][[#55FFFF]N[#00AAAA]]ame (Pronoun substitution name):    [#5555FF]%s"
-      'getStr     { "%n" "[#0000AA]%n[!FFFFFF]" }list
+      'get_str     { "%n" "[#0000AA]%n[!FFFFFF]" }list
 
       {
         "This name holds a special purpose.  The system's pronoun substitution routines also can retrieve your name, but unlike most retrievals of your name, you can set this value to whatever you want.  If this feature is abused, people will likely stop using it, so please just stick to reasonable things.  Such as: if your name is The_Great_Gazoo, entering 'The Great Gazoo' for your pronoun substition name is perfectly reasonable.  So are things like 'the grey cat' or 'a fuzzy walrus'."
@@ -875,72 +876,72 @@ lvar ourMorphPropTable
         ""
         "Enter the pronoun substition name for this character:"
       }list "\r" array_join
-      'setStr     { "%n" }list
+      'set_str     { "%n" }list
     }list
 
     { "A"
       "[#00AAAA][[#55FFFF]A[#00AAAA]]bsolute Posessive (his/hers/its):   [#5555FF]%s"
-      'getStr     { "%a" "[#0000AA]%a[!FFFFFF]" }list
+      'get_str     { "%a" "[#0000AA]%a[!FFFFFF]" }list
 
       {
         "Enter the absolute posessive pronoun (his/hers/its) of this character:"
       }list "\r" array_join
-      'setStr     { "%a" }list
+      'set_str     { "%a" }list
     }list
 
     { "S"
       "[#00AAAA][[#55FFFF]S[#00AAAA]]ubjective (he/she/it):              [#5555FF]%s"
-      'getStr     { "%s" "[#0000AA]%s[!FFFFFF]" }list
+      'get_str     { "%s" "[#0000AA]%s[!FFFFFF]" }list
 
       {
         "Enter the subjective pronoun (he/she/it) of this character:"
       }list "\r" array_join
-      'setStr     { "%s" }list
+      'set_str     { "%s" }list
     }list
 
     { "O"
       "[#00AAAA][[#55FFFF]O[#00AAAA]]bjective (him/her/it):              [#5555FF]%s"
-      'getStr     { "%o" "[#0000AA]%o[!FFFFFF]" }list
+      'get_str     { "%o" "[#0000AA]%o[!FFFFFF]" }list
 
       {
         "Enter the objective pronoun (him/her/it) of this character:"
       }list "\r" array_join
-      'setStr     { "%o" }list
+      'set_str     { "%o" }list
     }list
 
     { "P"
       "[#00AAAA][[#55FFFF]P[#00AAAA]]ossessive (his/her/its):            [#5555FF]%s"
-      'getStr     { "%p" "[#0000AA]%p[!FFFFFF]" }list
+      'get_str     { "%p" "[#0000AA]%p[!FFFFFF]" }list
 
       {
         "Enter the poessive pronoun (his/her/its) of this character:"
       }list "\r" array_join
-      'setStr     { "%p" }list
+      'set_str     { "%p" }list
     }list
 
     { "R"
       "[#00AAAA][[#55FFFF]R[#00AAAA]]eflexive (himself/herself/itself):  [#5555FF]%s"
-      'getStr     { "%r" "[#0000AA]%r[!FFFFFF]" }list
+      'get_str     { "%r" "[#0000AA]%r[!FFFFFF]" }list
 
       {
         "Enter the reflexive pronoun (himself/herself/itself) of this character:"
       }list "\r" array_join
-      'setStr     { "%r" }list
+      'set_str     { "%r" }list
     }list
 
     ""
     { "B"
       "[#00AAAA][[#55FFFF]B[#00AAAA]]ack to %s Edit"
-      'getObject { "Room" "Player" "Object" }list
+      'get_object_type { "Room" "Player" "Object" }list
 
       {
       }list "\r" array_join
-      'setDefaultMenu { }list
+      'set_menu_default { }list
     }list
   }list
 ;
 
-: getMorphTable (  -- a )
+: table_morph (  -- a )
   {
     "" (* Blank line after header *)
 
@@ -948,85 +949,85 @@ lvar ourMorphPropTable
 
     { ""
       "[#00AAAA]Species: [#5555FF]%s"
-      'getStr     { "_/species" "[#FF5555][Unset][!FFFFFF]" }list
+      'get_str     { "_/species" "[#FF5555][Unset][!FFFFFF]" }list
 
       {
       }list "\r" array_join
-      'setNull { }list
+      'set_null { }list
     }list
 
     { ""
       "[#00AAAA]Gender:  [#5555FF]%s"
-      'getStr     { "gender_prop" sysparm "[#FF5555][Unset][!FFFFFF]" }list
+      'get_str     { "gender_prop" sysparm "[#FF5555][Unset][!FFFFFF]" }list
 
       {
       }list "\r" array_join
-      'setNull { }list
+      'set_null { }list
     }list
 
     "" 1
 
     { ""
       "[#00AAAA]Description: [#5555FF]%s"
-      'getMPI     { "_/de" "[#FF5555][Unset][!FFFFFF]" }list
+      'get_mpi     { "_/de" "[#FF5555][Unset][!FFFFFF]" }list
 
       {
       }list "\r" array_join
-      'setNull { }list
+      'set_null { }list
     }list
 
     { ""
       "[#00AAAA]Scent:       [#5555FF]%s"
-      'getMPI     { "_/scent" "[#FF5555][Unset][!FFFFFF]" }list
+      'get_mpi     { "_/scent" "[#FF5555][Unset][!FFFFFF]" }list
 
       {
       }list "\r" array_join
-      'setNull { }list
+      'set_null { }list
     }list
 
     { ""
       "[#00AAAA]Texture:     [#5555FF]%s"
-      'getMPI     { "_/texture" "[#FF5555][Unset][!FFFFFF]" }list
+      'get_mpi     { "_/texture" "[#FF5555][Unset][!FFFFFF]" }list
 
       {
       }list "\r" array_join
-      'setNull { }list
+      'set_null { }list
     }list
 
     { ""
       "[#00AAAA]flavor:      [#5555FF]%s"
-      'getMPI     { "_/flavor" "[#FF5555][Unset][!FFFFFF]" }list
+      'get_mpi     { "_/flavor" "[#FF5555][Unset][!FFFFFF]" }list
 
       {
       }list "\r" array_join
-      'setNull { }list
+      'set_null { }list
     }list
 
     { ""
       "[#00AAAA]Aura:        [#5555FF]%s"
-      'getMPI     { "_/aura" "[#FF5555][Unset][!FFFFFF]" }list
+      'get_mpi     { "_/aura" "[#FF5555][Unset][!FFFFFF]" }list
 
       {
       }list "\r" array_join
-      'setNull { }list
+      'set_null { }list
     }list
 
     { ""
       "[#00AAAA]Sound:       [#5555FF]%s"
-      'getMPI { "_/sound" "[#0000AA][Unset][!FFFFFF]" }list
+      'get_mpi { "_/sound" "[#0000AA][Unset][!FFFFFF]" }list
 
       {
       }list "\r" array_join
-      'setNull { }list
+      'set_null { }list
     }list
 
     { ""
       "[#00AAAA]Writing:     [#5555FF]%s"
-      'getMPI { "_/writing" "[#0000AA][Unset][!FFFFFF]" }list
+      'get_mpi { "_/writing" "[#0000AA][Unset][!FFFFFF]" }list
 
       {
       }list "\r" array_join
-      'setNull { }list
+      'set_null { }list
     }list
 
     ""
@@ -1035,50 +1036,50 @@ lvar ourMorphPropTable
 
     { "M"
       "[#00AAAA][[#55FFFF]M[#00AAAA]]orph List"
-      'getNull { }list
+      'get_null { }list
 
       {
       }list "\r" array_join
-      'setListMorph { }list
+      'set_morph_list { }list
     }list
 
     { "S"
       "  [#00AAAA][[#55FFFF]S[#00AAAA]]ave Morph"
-      'getNull { }list
+      'get_null { }list
 
       {
         "The currently displayed descriptions and messages will be saved. If the morph does not exist, it will be created."
         ""
         "Please enter the name of the morph you wish to save."
       }list "\r" array_join
-      'setMorph { 1 }list
+      'set_morph { 1 }list
     }list
 
     { "L"
       "   [#00AAAA][[#55FFFF]L[#00AAAA]]oad Morph"
-      'getNull { }list
+      'get_null { }list
 
       {
         "Please enter the name of the morph you wish to load."
       }list "\r" array_join
-      'setMorph { 0 }list
+      'set_morph { 0 }list
     }list
 
     { "D"
       "    [#00AAAA][[#55FFFF]D[#00AAAA]]elete Morph"
-      'getNull { }list
+      'get_null { }list
 
       {
         "Enter the name of the morph you wish to delete."
       }list "\r" array_join
-      'setDeleteMorph { }list
+      'set_morph_delete { }list
     }list
 
     "" "Morph Messages" 1
 
     { "1"
       "[#00AAAA][[#55FFFF]1[#00AAAA]] Morph Message:  [#5555FF]%s"
-      'getStr     { "_morph_mesg" "[#0000AA][Unset][!FFFFFF]" }list
+      'get_str     { "_morph_mesg" "[#0000AA][Unset][!FFFFFF]" }list
 
       {
         "This message is displayed to you when you change to this morph.  (with the 'morph' command only)"
@@ -1086,12 +1087,12 @@ lvar ourMorphPropTable
         ""
         "Please enter your morph message:"
       }list "\r" array_join
-      'setStr     { "_morph_mesg" }list
+      'set_str     { "_morph_mesg" }list
     }list
 
     { "2"
       "[#00AAAA][[#55FFFF]2[#00AAAA]] Morph OMessage: [#5555FF]%s"
-      'getStr     { "_config/morph_omesg" "[#0000AA][Unset][!FFFFFF]" }list
+      'get_str     { "_config/morph_omesg" "[#0000AA][Unset][!FFFFFF]" }list
 
       {
         "This message is displayed to everyone else in your location when you change to this morph.  (with the 'morph' command only)"
@@ -1100,111 +1101,111 @@ lvar ourMorphPropTable
         ""
         "Please enter your morph omessage:"
       }list "\r" array_join
-      'setStr     { "_config/morph_omesg" }list
+      'set_str     { "_config/morph_omesg" }list
     }list
 
     ""
     { "{P|B}"
       "[#00AAAA][[#55FFFF]B[#00AAAA]]ack to Player Edit"
-      'getNull { }list
+      'get_null { }list
 
       {
       }list "\r" array_join
-      'setDefaultMenu { }list
+      'set_menu_default { }list
     }list
 
   }list
 ;
 
-: getPlayerPrefTable (  -- a )
+: table_player_pref (  -- a )
   {
     "" (* Blank line after header *)
     "Preferences" 2
     { "1"
       "[#00AAAA][[#55FFFF]1[#00AAAA]] Allowing 'hand':          [#5555FF]%s"
-      'getStrBool { "_hand/hand_ok" "Yes" "No" }list
+      'get_str_bool { "_hand/hand_ok" "Yes" "No" }list
 
       {
         "The 'hand' program by Wog is used to move an item from your inventory into someone else's.  However, it may not be preferable to allow people to hand you objects.  Use your descresion."
         ""
         "Allow 'hand'ing of objects to this character? (y/n)"
       }list "\r" array_join
-      'setStrBool { "_hand/hand_ok" }list
+      'set_str_bool { "_hand/hand_ok" }list
     }list
 
     { "2"
       "[#00AAAA][[#55FFFF]2[#00AAAA]] Showing @doing in whospe: [#5555FF]%s"
-      'getStrBool { "_prefs/wsseedoing" "Yes" "No" }list
+      'get_str_bool { "_prefs/wsseedoing" "Yes" "No" }list
 
       {
         "The whospe program displays species, gender, and status information about everyone in your current room.  If you want to optionally see a short 'Doing' string.  (The same string that's shown in the WHO command)  You may select it here."
         ""
         "Show @doing in whospe? (y/n)"
       }list "\r" array_join
-      'setStrBool { "_prefs/wsseedoing" }list
+      'set_str_bool { "_prefs/wsseedoing" }list
     }list
 
     { "3"
       "[#00AAAA][[#55FFFF]3[#00AAAA]] Hiding from whospe #far:  [#5555FF]%s"
-      'getStrBool { "_prefs/wsobject" "Yes" "No" }list
+      'get_str_bool { "_prefs/wsobject" "Yes" "No" }list
 
       {
         "The whospe program displays species, gender, and status information about everyone in your current room.  It also, however, may be used to display information about people remotely.  If you're zealous about your privacy, you can prevent people from using this command on you."
         ""
         "Hide from whospe #far? (y/n)"
       }list "\r" array_join
-      'setStrBool { "_prefs/wsobject" }list
+      'set_str_bool { "_prefs/wsobject" }list
     }list
 
     { "4"
       "[#00AAAA][[#55FFFF]4[#00AAAA]] Hiding from whereis:      [#5555FF]%s"
-      'getStrBool { "_prefs/whereis/unfindable" "Yes" "No" }list
+      'get_str_bool { "_prefs/whereis/unfindable" "Yes" "No" }list
 
       {
         "Use the 'whereis' program to find your friends by entering 'whereis <name>'.  If you're zealous about your privacy and you want to hide from this feature, select it here."
         ""
         "Hide from whereis? (y/n)"
       }list "\r" array_join
-      'setStrBool2 { "_prefs/whereis/unfindable" }list
+      'set_str_bool2 { "_prefs/whereis/unfindable" }list
     }list
 
     { "5"
       "[#00AAAA][[#55FFFF]5[#00AAAA]] Ride mode:                [#5555FF]%s"
-      'getStr { "ride/_mode" "Walk" }list
+      'get_str { "ride/_mode" "Walk" }list
 
       {
         "The 'ride' program by Riss allows you to be automatically led by another character, rather than having to follow them manually.  However, not everyone has a horse style back on which to ride.  Select your style of 'riding' from the list below."
         ""
       }list "\r" array_join
-      'setStrPick { "ride/_mode" { "Ride" "Taur" "Paw" "Walk" "Hand" }list }list
+      'set_str_pick { "ride/_mode" { "Ride" "Taur" "Paw" "Walk" "Hand" }list }list
     }list
 
     { "6"
       "[#00AAAA][[#55FFFF]6[#00AAAA]] Run 'saysetup'"
-      'getNull { }list
+      'get_null { }list
 
       {
       }list "\r" array_join
-      'setExternal { #163 "saysetup" }list
+      'set_external { #163 "saysetup" }list
     }list
 
     "" "Sweep messages" 1
 
     { "S1"
       "[#00AAAA][[#55FFFF]S1[#00AAAA]] Sweep Room Message:      [#5555FF]%s"
-      'getStr     { "_sweep/sweep" "[#0000AA][Unset][!FFFFFF]" }list
+      'get_str     { "_sweep/sweep" "[#0000AA][Unset][!FFFFFF]" }list
 
       {
         "This message is shown to everyone in the room, including yourself, when you sweep a room.  To sweep a room, simply type 'sweep', and all the sleepers in the room will be kicked out.  Your name is prefixed to this message automatically."
         ""
         "Enter this character's sweep room message:"
       }list "\r" array_join
-      'setStr     { "_sweep/sweep" }list
+      'set_str     { "_sweep/sweep" }list
     }list
 
     { "S2"
       "[#00AAAA][[#55FFFF]S2[#00AAAA]] Sweep Player Message:    [#5555FF]%s"
-      'getStr     { "_sweep/fmt/std" "[#0000AA][Unset][!FFFFFF]" }list
+      'get_str     { "_sweep/fmt/std" "[#0000AA][Unset][!FFFFFF]" }list
 
       {
         "This message is shown to everyone in the room, including yourself, when you sweep an indivisual player or object.  To sweep a player, type sweep <name>, and it'll be tossed out.  Your name is prefixed to this message automatically."
@@ -1212,12 +1213,12 @@ lvar ourMorphPropTable
         ""
         "Enter the sweep player message:"
       }list "\r" array_join
-      'setStr     { "_sweep/fmt/std" }list
+      'set_str     { "_sweep/fmt/std" }list
     }list
 
     { "S3"
       "[#00AAAA][[#55FFFF]S3[#00AAAA]] Swept Message:           [#5555FF]%s"
-      'getStr     { "_sweep/swept" "[#0000AA][Unset][!FFFFFF]" }list
+      'get_str     { "_sweep/swept" "[#0000AA][Unset][!FFFFFF]" }list
 
       {
         "This message is shown to everyone in the room, including yourself, when you get swept from a room.  Your name is prefixed to this message automatically."
@@ -1225,29 +1226,29 @@ lvar ourMorphPropTable
         "Enter this character's swept message:"
 
       }list "\r" array_join
-      'setStr     { "_sweep/swept" }list
+      'set_str     { "_sweep/swept" }list
     }list
 
     ""
     { "B"
       "[#00AAAA][[#55FFFF]B[#00AAAA]]ack to %s Edit"
-      'getObject { "Room" "Player" "Object" }list
+      'get_object_type { "Room" "Player" "Object" }list
 
       {
       }list "\r" array_join
-      'setDefaultMenu { }list
+      'set_menu_default { }list
     }list
   }list
 ;
 
-: getPlayerTable (  -- a )
+: table_player (  -- a )
   {
     1
     "" (* Blank line after header *)
 
     { "1"
       "[#00AAAA][[#55FFFF]1[#00AAAA]] Species: [#5555FF]%s"
-      'getStr     { "_/species" "[#FF5555][Unset][!FFFFFF]" }list
+      'get_str     { "_/species" "[#FF5555][Unset][!FFFFFF]" }list
 
       {
         "Your species is the type of being your character is."
@@ -1255,37 +1256,37 @@ lvar ourMorphPropTable
         ""
         "Enter the species of this character:"
       }list "\r" array_join
-      'setStr     { "_/species" }list
+      'set_str     { "_/species" }list
     }list
 
     2
 
     { "2"
       "[#00AAAA][[#55FFFF]2[#00AAAA]] Gender:  [#5555FF]%s"
-      'getStr     { "gender_prop" sysparm "[#FF5555][Unset][!FFFFFF]" }list
+      'get_str     { "gender_prop" sysparm "[#FF5555][Unset][!FFFFFF]" }list
 
       {
         "The system recognizes the values 'Male', 'Female', 'Herm', 'Hermaphrodite', and 'Neuter'.  However, you're free to enter whatever you want."
         ""
         "Enter the gender of this character:"
       }list "\r" array_join
-      'setStr     { "gender_prop" sysparm }list
+      'set_str     { "gender_prop" sysparm }list
     }list
 
     { "3"
       "[#00AAAA][[#55FFFF]3[#00AAAA]] Pronoun Substitution"
-      'getNull { }list
+      'get_null { }list
 
       {
       }list "\r" array_join
-      'setMenu { ourPronounTable }list
+      'set_menu { g_table_pronoun }list
     }list
 
     "" "Descriptions" 1
 
     { "{D1|D}"
       "[#00AAAA][[#55FFFF]D1[#00AAAA]] Description: [#5555FF]%s"
-      'getMPI     { "_/de" "[#FF5555][Unset][!FFFFFF]" }list
+      'get_mpi     { "_/de" "[#FF5555][Unset][!FFFFFF]" }list
 
       {
         "The 'Description' of a player is the description of their physical characteristics and mannerisms."
@@ -1297,12 +1298,12 @@ lvar ourMorphPropTable
         ""
         "Enter the visual description of this character:"
       }list "\r" array_join
-      'setMPIList { "_/de" "_/dl/desc" }list
+      'set_mpi_list { "_/de" "_/dl/desc" }list
     }list
 
     { "D2"
       "[#00AAAA][[#55FFFF]D2[#00AAAA]] Scent:       [#5555FF]%s"
-      'getMPI     { "_/scent" "[#FF5555][Unset][!FFFFFF]" }list
+      'get_mpi     { "_/scent" "[#FF5555][Unset][!FFFFFF]" }list
 
       {
         "This is where you enter this character's aroma."
@@ -1310,12 +1311,12 @@ lvar ourMorphPropTable
         ""
         "Enter this character's scent:"
       }list "\r" array_join
-      'setMPIList { "_/scent" "_/dl/scent" }list
+      'set_mpi_list { "_/scent" "_/dl/scent" }list
     }list
 
     { "D3"
       "[#00AAAA][[#55FFFF]D3[#00AAAA]] Texture:     [#5555FF]%s"
-      'getMPI     { "_/texture" "[#FF5555][Unset][!FFFFFF]" }list
+      'get_mpi     { "_/texture" "[#FF5555][Unset][!FFFFFF]" }list
 
       {
         "A character's 'texture' is the sensation of touching the character."
@@ -1323,12 +1324,12 @@ lvar ourMorphPropTable
         ""
         "Enter this character's texture:"
       }list "\r" array_join
-      'setMPIList { "_/texture" "_/dl/texture" }list
+      'set_mpi_list { "_/texture" "_/dl/texture" }list
     }list
 
     { "D4"
       "[#00AAAA][[#55FFFF]D4[#00AAAA]] flavor:      [#5555FF]%s"
-      'getMPI     { "_/flavor" "[#FF5555][Unset][!FFFFFF]" }list
+      'get_mpi     { "_/flavor" "[#FF5555][Unset][!FFFFFF]" }list
 
       {
         "This is where you describe the taste of this character when nibbled or licked."
@@ -1336,12 +1337,12 @@ lvar ourMorphPropTable
         ""
         "Enter this character's flavor:"
       }list "\r" array_join
-      'setMPIList { "_/flavor" "_/dl/flavor" }list
+      'set_mpi_list { "_/flavor" "_/dl/flavor" }list
     }list
 
     { "D5"
       "[#00AAAA][[#55FFFF]D5[#00AAAA]] Aura:        [#5555FF]%s"
-      'getMPI     { "_/aura" "[#FF5555][Unset][!FFFFFF]" }list
+      'get_mpi     { "_/aura" "[#FF5555][Unset][!FFFFFF]" }list
 
       {
         "Your 'aura' is the general feelings you inspire.  For example, if you look at a car salesman, his description may be 'He's smiling, happy, polite, and friendly', but his aura would be 'He's a liar and a cheat and he hates you.'"
@@ -1349,12 +1350,12 @@ lvar ourMorphPropTable
         ""
         "Enter this character's aura:"
       }list "\r" array_join
-      'setMPIList { "_/aura" "_/dl/aura" }list
+      'set_mpi_list { "_/aura" "_/dl/aura" }list
     }list
 
     { "D6"
       "[#00AAAA][[#55FFFF]D6[#00AAAA]] Sound:       [#5555FF]%s"
-      'getMPI { "_/sound" "[#0000AA][Unset][!FFFFFF]" }list
+      'get_mpi { "_/sound" "[#0000AA][Unset][!FFFFFF]" }list
 
       {
         "This property is for the sounds this character often makes.  You aren't limited to sounds which you constantly make.  You can also describe sounds you make from time to time."
@@ -1362,12 +1363,12 @@ lvar ourMorphPropTable
         ""
         "Enter this character's sound:"
       }list "\r" array_join
-      'setMPIList { "_/sound" "_/dl/sound" }list
+      'set_mpi_list { "_/sound" "_/dl/sound" }list
     }list
 
     { "D7"
       "[#00AAAA][[#55FFFF]D7[#00AAAA]] Writing:     [#5555FF]%s"
-      'getMPI { "_/writing" "[#0000AA][Unset][!FFFFFF]" }list
+      'get_mpi { "_/writing" "[#0000AA][Unset][!FFFFFF]" }list
 
       {
         "This property is for any overt writing on this character.  i.e. T-Shirts, Signs, etc."
@@ -1375,36 +1376,36 @@ lvar ourMorphPropTable
         ""
         "Enter this character's writing:"
       }list "\r" array_join
-      'setMPIList { "_/writing" "_/dl/writing" }list
+      'set_mpi_list { "_/writing" "_/dl/writing" }list
     }list
 
     "" "Flags" 3
 
     { "C"
       "[#00AAAA][[#55FFFF]C[#00AAAA]]olor: [#5555FF]%s"
-      'getFlag    { "COLOR" "          Yes" "BLACK & WHITE" }list
+      'get_flag    { "COLOR" "          Yes" "BLACK & WHITE" }list
 
       {
         "Does your client support color? (y/n)"
       }list "\r" array_join
-      'setFlag    { "COLOR" }list
+      'set_flag    { "COLOR" }list
     }list
 
     { "S"
       "[#00AAAA][[#55FFFF]S[#00AAAA]]ilent:         [#5555FF]%s"
-      'getFlag    { "SILENT" "Yes" "No" }list
+      'get_flag    { "SILENT" "Yes" "No" }list
 
       {
         "A player can set themselves \"SILENT\" and not see all the dbrefs and dark objects that they own.  They won't see objects in a dark room either.  They still control the objects though."
         ""
         "Set the SILENT flag on this character? (y/n)"
       }list "\r" array_join
-      'setFlag    { "SILENT" }list
+      'set_flag    { "SILENT" }list
     }list
 
     { "H"
       "[#00AAAA][[#55FFFF]H[#00AAAA]]aven:          [#5555FF]%s"
-      'getFlag    { "HAVEN" "Yes" "No" }list
+      'get_flag    { "HAVEN" "Yes" "No" }list
 
       {
         "If a player is set HAVEN, they cannot be paged."
@@ -1412,48 +1413,48 @@ lvar ourMorphPropTable
         ""
         "Set the HAVEN flag on this character? (y/n)"
       }list "\r" array_join
-      'setFlag    { "HAVEN" }list
+      'set_flag    { "HAVEN" }list
     }list
 
     "" "Settings" 2
 
     { "S1"
       "[#00AAAA][[#55FFFF]S1[#00AAAA]] Automatically Show Map: [#5555FF]%s"
-      'getStrBool2 { "_prefs/automap" "Yes" "No" }list
+      'get_str_bool2 { "_prefs/automap" "Yes" "No" }list
 
       {
         "This preference is used by Latitude MUCK to determine if it should display the map to you every time you enter a new area.  This makes navigation easy, but very spammy."
         ""
         "Automatically show the map? (y/n)"
       }list "\r" array_join
-      'setStrBool { "_prefs/automap" }list
+      'set_str_bool { "_prefs/automap" }list
     }list
 
     { "S3"
       "[#00AAAA][[#55FFFF]S3[#00AAAA]] Morphs"
-      'getNull { }list
+      'get_null { }list
 
       {
       }list "\r" array_join
-      'setMenu { ourMorphTable }list
+      'set_menu { g_table_morph }list
     }list
 
     { "S2"
       "[#00AAAA][[#55FFFF]S2[#00AAAA]] Preferences"
-      'getNull { }list
+      'get_null { }list
 
       {
       }list "\r" array_join
-      'setMenu { ourPlayerPrefTable }list
+      'set_menu { g_table_player_pref }list
     }list
 
     { "S4"
       "[#00AAAA][[#55FFFF]S4[#00AAAA]] Attributes"
-      'getNull { }list
+      'get_null { }list
 
       {
       }list "\r" array_join
-      'setMenu { ourAttrTable }list
+      'set_menu { g_table_attr }list
     }list
 
     "" (* Blank line before footer *)
@@ -1463,13 +1464,13 @@ lvar ourMorphPropTable
 (#############################################################################)
 (################################ ROOM TABLE #################################)
 (#############################################################################)
-: getRoomFlagsTable (  -- a )
+: table_room_flags (  -- a )
   {
     "" "Flags" 1
 
     { "A"
       "[#00AAAA][[#55FFFF]A[#00AAAA]]bode:   [#5555FF]%s"
-      'getFlag { "ABODE" "[#FF5555]YES [#555555](Object/player homes can be set here freely!)[!FFFFFF]" "No [#555555](Object/player homes can not be set here freely.)[!FFFFFF]" }list
+      'get_flag { "ABODE" "[#FF5555]YES [#555555](Object/player homes can be set here freely!)[!FFFFFF]" "No [#555555](Object/player homes can not be set here freely.)[!FFFFFF]" }list
 
       {
         "With the ABODE flag, you can allow anyone to '@link' their objects/players into your room.  When an object is swept, it will go to its 'home' which is defined by the '@link' command.  Normally, people can't set an object's home in an area they don't control unless the ABODE flag is set."
@@ -1477,12 +1478,12 @@ lvar ourMorphPropTable
         ""
         "Set the ABODE flag on this room? (y/n)"
       }list "\r" array_join
-      'setFlag { "ABODE" }list
+      'set_flag { "ABODE" }list
     }list
 
     { "D"
       "[#00AAAA][[#55FFFF]D[#00AAAA]]ark:    [#5555FF]%s"
-      'getFlag { "DARK" "[#FF5555]YES[!FFFFFF] [#555555](The contents list does not show!)[!FFFFFF]" "No [#555555](The contents list behaves normally.)[!FFFFFF]" }list
+      'get_flag { "DARK" "[#FF5555]YES[!FFFFFF] [#555555](The contents list does not show!)[!FFFFFF]" "No [#555555](The contents list behaves normally.)[!FFFFFF]" }list
 
       {
         "If you set a room DARK, then no one will be able to see the contents of your room, even while inside it.  Meaning players won't be able to detect that other players or objects are inside your area."
@@ -1490,12 +1491,12 @@ lvar ourMorphPropTable
         ""
         "Set the DARK flag on this room? (y/n)"
       }list "\r" array_join
-      'setFlag { "DARK" }list
+      'set_flag { "DARK" }list
     }list
 
     { "H"
       "[#00AAAA][[#55FFFF]H[#00AAAA]]aven:   [#5555FF]%s"
-      'getFlag { "HAVEN" "Yes [#555555](Kill and whereis are forbidden.)[!FFFFFF]" "No [#555555](Kill and whereis behave normally.)[!FFFFFF]" }list
+      'get_flag { "HAVEN" "Yes [#555555](Kill and whereis are forbidden.)[!FFFFFF]" "No [#555555](Kill and whereis behave normally.)[!FFFFFF]" }list
 
       {
         "If a room is set HAVEN, you can not use the kill command in that room."
@@ -1503,24 +1504,24 @@ lvar ourMorphPropTable
         ""
         "Set the HAVEN flag on this room? (y/n)"
       }list "\r" array_join
-      'setFlag { "HAVEN" }list
+      'set_flag { "HAVEN" }list
     }list
 
     ({ "J"
       "[#00AAAA][[#55FFFF]J[#00AAAA]]ump_OK: [#5555FF]%s"
-      'getFlag { "JUMP_OK" "Yes" "No" }list
+      'get_flag { "JUMP_OK" "Yes" "No" }list
 
       {
         "The JUMP_OK flag allows teleports to/from a room."
         ""
         "Set the JUMP_OK flag on this room? {y/n}"
       }list "\r" array_join
-      'setFlag { "JUMP_OK" }list
+      'set_flag { "JUMP_OK" }list
     }list)
 
     { "L"
       "[#00AAAA][[#55FFFF]L[#00AAAA]]ink_OK: [#5555FF]%s"
-      'getFlag { "LINK_OK" "[#FF5555]YES[!FFFFFF] [#555555](This room can be linked to freely!)[!FFFFFF]" "No [#555555](This room may not be linked to freely.)[!FFFFFF]" }list
+      'get_flag { "LINK_OK" "[#FF5555]YES[!FFFFFF] [#555555](This room can be linked to freely!)[!FFFFFF]" "No [#555555](This room may not be linked to freely.)[!FFFFFF]" }list
 
       {
         "Setting the LINK_OK flag on a room allows anyone to create an exit into your room.  If you want someone to create an exit into your area, set the area LINK_OK, then tell them it's 'dbref' number (You'll see it to the right of the name of the room in 'look', if you're not set SILENT.)  If you want a reverse exit, then you'll have to get them to set their area LINK_OK."
@@ -1528,88 +1529,88 @@ lvar ourMorphPropTable
         ""
         "Set the LINK_OK flag on this room? (y/n)"
       }list "\r" array_join
-      'setFlag    { "LINK_OK" }list
+      'set_flag    { "LINK_OK" }list
     }list
 
     { "S"
       "[#00AAAA][[#55FFFF]S[#00AAAA]]ticky:  [#5555FF]%s"
-      'getFlag { "STICKY" "Yes [#555555](Drop-to is delayed.)[!FFFFFF]" "No [#555555](Drop-to is instantaneous.)[!FFFFFF]" }list
+      'get_flag { "STICKY" "Yes [#555555](Drop-to is delayed.)[!FFFFFF]" "No [#555555](Drop-to is instantaneous.)[!FFFFFF]" }list
 
       {
         "If a room is STICKY, its drop-to is delayed until the last person leaves the room.  A drop-to is where objects go when you drop them in that room, and it's set with @link."
         ""
         "Set the STICKY flag on this room? (y/n)"
       }list "\r" array_join
-      'setFlag { "STICKY" }list
+      'set_flag { "STICKY" }list
     }list
 
     { "V"
       "[#00AAAA][[#55FFFF]V[#00AAAA]]ehicle: [#5555FF]%s"
-      'getFlag { "VEHICLE" "Yes [#555555](Vehicles may NOT use this room.)[!FFFFFF]" "No [#555555](Vehicles may use this room.)[!FFFFFF]" }list
+      'get_flag { "VEHICLE" "Yes [#555555](Vehicles may NOT use this room.)[!FFFFFF]" "No [#555555](Vehicles may use this room.)[!FFFFFF]" }list
 
       {
         "When the VEHICLE flag is set on a room it means that vehicle objects may *NOT* use the room.  This allows a way to prevent vehicles from entering areas where it would be illogical for them to be."
         ""
         "Set the VEHICLE flag on this room? (y/n)"
       }list "\r" array_join
-      'setFlag { "VEHICLE" }list
+      'set_flag { "VEHICLE" }list
     }list
 
     { "Z"
       "[#00AAAA][[#55FFFF]Z[#00AAAA]]ombie:  [#5555FF]%s"
-      'getFlag { "ZOMBIE" "Yes [#555555](Puppets may NOT use this room.)[!FFFFFF]" "No [#555555](Puppets may use this room.)[!FFFFFF]" }list
+      'get_flag { "ZOMBIE" "Yes [#555555](Puppets may NOT use this room.)[!FFFFFF]" "No [#555555](Puppets may use this room.)[!FFFFFF]" }list
 
       {
         "When the ZOMBIE flag is set on a room it means that puppet/zombie objects may *NOT* use the room.  This allows a way to prevent zombies from entering areas where they are not wanted."
         ""
         "Set the ZOMBIE flag on this room? (y/n)"
       }list "\r" array_join
-      'setFlag    { "ZOMBIE" }list
+      'set_flag    { "ZOMBIE" }list
     }list
 
     ""
     { "{P|B}"
       "[#00AAAA][[#55FFFF]B[#00AAAA]]ack to Room Edit"
-      'getNull { }list
+      'get_null { }list
 
       {
       }list "\r" array_join
-      'setMenu { ourRoomTable }list
+      'set_menu { g_table_room }list
     }list
   }list
 ;
 
-: getRoomTable (  -- a )
+: table_room (  -- a )
   {
     "" (* Blank line after header *)
     1
 
     { "N"
       "[#00AAAA][[#55FFFF]N[#00AAAA]]ame: [#5555FF]%s"
-      'getObjName { }list
+      'get_obj_name { }list
 
       {
         "Enter the room's new name:"
       }list "\r" array_join
-      'setObjName { }list
+      'set_obj_name { }list
     }list
 
     3
 
     { "F"
       "[#00AAAA][[#55FFFF]F[#00AAAA]]lags"
-      'getNull { }list
+      'get_null { }list
 
       {
       }list "\r" array_join
-      'setMenu { ourRoomFlagsTable }list
+      'set_menu { g_table_room_flags }list
     }list
 
     "" "Descriptions" 1
 
     { "{D1|D}"
       "[#00AAAA][[#55FFFF]D1[#00AAAA]] Description: [#5555FF]%s"
-      'getMPI     { "_/de" "[#FF5555][Unset][!FFFFFF]" }list
+      'get_mpi     { "_/de" "[#FF5555][Unset][!FFFFFF]" }list
 
       {
         "The 'Description' of a room is the visual description of what's noticed when entering or exploring it."
@@ -1621,12 +1622,12 @@ lvar ourMorphPropTable
         ""
         "Enter the visual description of the room:"
       }list "\r" array_join
-      'setMPIList { "_/de" "_/dl/desc" }list
+      'set_mpi_list { "_/de" "_/dl/desc" }list
     }list
 
     { "D2"
       "[#00AAAA][[#55FFFF]D2[#00AAAA]] Scent:       [#5555FF]%s"
-      'getMPI     { "_/scent" "[#FF5555][Unset][!FFFFFF]" }list
+      'get_mpi     { "_/scent" "[#FF5555][Unset][!FFFFFF]" }list
 
       {
         "This is where you enter the room's aroma."
@@ -1634,12 +1635,12 @@ lvar ourMorphPropTable
         ""
         "Enter this character's scent:"
       }list "\r" array_join
-      'setMPIList { "_/scent" "_/dl/scent" }list
+      'set_mpi_list { "_/scent" "_/dl/scent" }list
     }list
 
     { "D3"
       "[#00AAAA][[#55FFFF]D3[#00AAAA]] Texture:     [#5555FF]%s"
-      'getMPI     { "_/texture" "[#FF5555][Unset][!FFFFFF]" }list
+      'get_mpi     { "_/texture" "[#FF5555][Unset][!FFFFFF]" }list
 
       {
         "You may enter anything you want for the room's texture.  Because rooms are often large, it'd be hard to go around feeling every surface in them, so describe whatever you want.  Choose some surfaces or all of them, and describe the sensation of touching them."
@@ -1647,12 +1648,12 @@ lvar ourMorphPropTable
         ""
         "Enter this character's texture:"
       }list "\r" array_join
-      'setMPIList { "_/texture" "_/dl/texture" }list
+      'set_mpi_list { "_/texture" "_/dl/texture" }list
     }list
 
     { "D4"
       "[#00AAAA][[#55FFFF]D4[#00AAAA]] flavor:      [#5555FF]%s"
-      'getMPI     { "_/flavor" "[#FF5555][Unset][!FFFFFF]" }list
+      'get_mpi     { "_/flavor" "[#FF5555][Unset][!FFFFFF]" }list
 
       {
         "Here, describe what it's like to lick this area."
@@ -1660,12 +1661,12 @@ lvar ourMorphPropTable
         ""
         "Enter this character's flavor:"
       }list "\r" array_join
-      'setMPIList { "_/flavor" "_/dl/flavor" }list
+      'set_mpi_list { "_/flavor" "_/dl/flavor" }list
     }list
 
     { "D5"
       "[#00AAAA][[#55FFFF]D5[#00AAAA]] Aura:        [#5555FF]%s"
-      'getMPI     { "_/aura" "[#FF5555][Unset][!FFFFFF]" }list
+      'get_mpi     { "_/aura" "[#FF5555][Unset][!FFFFFF]" }list
 
       {
         "An area's 'aura' is the feeling it inspires.  For example, if you look at an old mansion, you may see 'The furnature is beautifully crafted and priclessly maintained, and the architecture is astonishing.', but its aura may be 'This place is terrifying, it's dark and creepy.'"
@@ -1673,12 +1674,12 @@ lvar ourMorphPropTable
         ""
         "Enter this character's aura:"
       }list "\r" array_join
-      'setMPIList { "_/aura" "_/dl/aura" }list
+      'set_mpi_list { "_/aura" "_/dl/aura" }list
     }list
 
     { "D6"
       "[#00AAAA][[#55FFFF]D6[#00AAAA]] Sound:       [#5555FF]%s"
-      'getMPI { "_/sound" "[#0000AA][Unset][!FFFFFF]" }list
+      'get_mpi { "_/sound" "[#0000AA][Unset][!FFFFFF]" }list
 
       {
         "This property is for the sounds most often heard in the room.  It's best to make a general description of what aural feelings the room tends to inspire."
@@ -1686,12 +1687,12 @@ lvar ourMorphPropTable
         ""
         "Enter this character's sound:"
       }list "\r" array_join
-      'setMPIList { "_/sound" "_/dl/sound" }list
+      'set_mpi_list { "_/sound" "_/dl/sound" }list
     }list
 
     { "D7"
       "[#00AAAA][[#55FFFF]D7[#00AAAA]] Writing:     [#5555FF]%s"
-      'getMPI { "_/writing" "[#0000AA][Unset][!FFFFFF]" }list
+      'get_mpi { "_/writing" "[#0000AA][Unset][!FFFFFF]" }list
 
       {
         "This property is for any overt writing in the area.  i.e. a large banner.  As for signs, it's best to create a sign object with @create and set the writing on that instead."
@@ -1699,14 +1700,14 @@ lvar ourMorphPropTable
         ""
         "Enter this character's writing:"
       }list "\r" array_join
-      'setMPIList { "_/writing" "_/dl/writing" }list
+      'set_mpi_list { "_/writing" "_/dl/writing" }list
     }list
 
     "" "Messages" 2
 
     { "M1"
       "[#00AAAA][[#55FFFF]M1[#00AAAA]] @success Message:  [#5555FF]%s"
-      'getMPI { "_/sc" "[#0000AA][Unset][!FFFFFF]" }list
+      'get_mpi { "_/sc" "[#0000AA][Unset][!FFFFFF]" }list
 
       {
         "The @success and @oscuccess messages are seen when an object is 'used'.  Using a room is done by entering it and looking around, both automatically when first entering the room, and when issuing the 'look' command."
@@ -1717,12 +1718,12 @@ lvar ourMorphPropTable
         ""
         "Enter this room's @success message:"
       }list "\r" array_join
-      'setStr { "_/sc" }list
+      'set_str { "_/sc" }list
     }list
 
     { "M2"
       "[#00AAAA][[#55FFFF]M2[#00AAAA]] @osuccess Message: [#5555FF]%s"
-      'getMPI { "_/osc" "[#0000AA][Unset][!FFFFFF]" }list
+      'get_mpi { "_/osc" "[#0000AA][Unset][!FFFFFF]" }list
 
       {
         "The @success and @osuccess messages are seen when an object is 'used'.  Using a room is done by entering it and looking around, both automatically when first entering the room, and when issuing the 'look' command."
@@ -1733,12 +1734,12 @@ lvar ourMorphPropTable
         ""
         "Enter this room's @osuccess message:"
       }list "\r" array_join
-      'setStr { "_/osc" }list
+      'set_str { "_/osc" }list
     }list
 
     { "M3"
       "[#00AAAA][[#55FFFF]M3[#00AAAA]] @fail Message:     [#5555FF]%s"
-      'getMPI { "_/fl" "[#0000AA][Unset][!FFFFFF]" }list
+      'get_mpi { "_/fl" "[#0000AA][Unset][!FFFFFF]" }list
 
       {
         "The @fail and @ofail messages are seen when an object fails to be 'used'.  Using a room is done by entering it and looking around, both automatically when first entering the room, and when issuing the 'look' command."
@@ -1749,12 +1750,12 @@ lvar ourMorphPropTable
         ""
         "Enter this room's @fail message:"
       }list "\r" array_join
-      'setStr { "_/fl" }list
+      'set_str { "_/fl" }list
     }list
 
     { "M4"
       "[#00AAAA][[#55FFFF]M4[#00AAAA]] @ofail Message:    [#5555FF]%s"
-      'getMPI { "_/ofl" "[#0000AA][Unset][!FFFFFF]" }list
+      'get_mpi { "_/ofl" "[#0000AA][Unset][!FFFFFF]" }list
 
       {
         "The @fail and @ofail messages are seen when an object fails to be 'used'.  Using a room is done by entering it and looking around, both automatically when first entering the room, and when issuing the 'look' command."
@@ -1766,12 +1767,12 @@ lvar ourMorphPropTable
         ""
         "Enter this room's @ofail message:"
       }list "\r" array_join
-      'setStr { "_/ofl" }list
+      'set_str { "_/ofl" }list
     }list
 
     { "M5"
       "[#00AAAA][[#55FFFF]M5[#00AAAA]] @drop Message:     [#5555FF]%s"
-      'getMPI { "_/dr" "[#0000AA][Unset][!FFFFFF]" }list
+      'get_mpi { "_/dr" "[#0000AA][Unset][!FFFFFF]" }list
 
       {
         "The @drop and @odrop messages, when set on a room, are triggered when someone drops a program or thing type object in this room."
@@ -1781,12 +1782,12 @@ lvar ourMorphPropTable
         ""
         "Enter this room's @drop message:"
       }list "\r" array_join
-      'setStr { "_/dr" }list
+      'set_str { "_/dr" }list
     }list
 
     { "M6"
       "[#00AAAA][[#55FFFF]M6[#00AAAA]] @odrop Message:    [#5555FF]%s"
-      'getMPI { "_/odr" "[#0000AA][Unset][!FFFFFF]" }list
+      'get_mpi { "_/odr" "[#0000AA][Unset][!FFFFFF]" }list
 
       {
         "The @drop and @odrop messages, when set on a room, are triggered when someone drops a program or thing type object in this room."
@@ -1796,46 +1797,46 @@ lvar ourMorphPropTable
         ""
         "Enter this room's @odrop message:"
       }list "\r" array_join
-      'setStr { "_/odr" }list
+      'set_str { "_/odr" }list
     }list
 
     "" "Exits" 4
 
     { "E1"
       "[#00AAAA][[#55FFFF]E1[#00AAAA]] New Exit"
-      'getNull { }list
+      'get_null { }list
 
       {
       }list "\r" array_join
-      'setNewExit { }list
+      'set_exit_new { }list
     }list
 
     { "E2"
       "[#00AAAA][[#55FFFF]E2[#00AAAA]] Recycle Exit"
-      'getNull { }list
+      'get_null { }list
 
       {
       }list "\r" array_join
-      'setRecycleExit { }list
+      'set_exit_recycle { }list
     }list
 
     { "E3"
       "[#00AAAA][[#55FFFF]E3[#00AAAA]] Edit Exit"
-      'getNull { }list
+      'get_null { }list
 
       {
       }list "\r" array_join
-      'setEditExits { }list
+      'set_exits_edit { }list
     }list
 
     { "E4"
       "[#00AAAA][[#55FFFF]E4[#00AAAA]] Shown: [#5555FF]%s"
-      'getObvExits { "Yes" "[#FF5555]NO[!FFFFFF]" "[#0000AA]Unknown[!FFFFFF]" }list
+      'get_obv_exits { "Yes" "[#FF5555]NO[!FFFFFF]" "[#0000AA]Unknown[!FFFFFF]" }list
 
       {
         "Do you want all exits without the DARK flag to be shown automatically when looking at the room? (y/n)"
       }list "\r" array_join
-      'setObvExits { }list
+      'set_obv_exits { }list
     }list
 
     "" (* Blank line before footer *)
@@ -1845,40 +1846,40 @@ lvar ourMorphPropTable
 (#############################################################################)
 (################################ EXIT TABLE #################################)
 (#############################################################################)
-: getExitTable (  -- a )
+: table_exit (  -- a )
   {
     "" (* Blank line after header *)
     1
 
     { "N"
       "[#00AAAA][[#55FFFF]N[#00AAAA]]ame: [#5555FF]%s"
-      'getObjName { }list
+      'get_obj_name { }list
 
       {
         "TIP: You can create aliases for this exit by putting semicolons in its name string.  For example, if you use '[O]ut;out;o' for the name, 'out', and 'o' will both trigger the exit, but only '[O]ut' will show in the obvious exists list."
         ""
         "Enter this exit's new name:"
       }list "\r" array_join
-      'setObjName { }list
+      'set_obj_name { }list
     }list
 
     2
 
     { "S"
       "[#00AAAA][[#55FFFF]S[#00AAAA]]ource: [#5555FF]%s"
-      'getSource { }list
+      'get_source { }list
 
       {
         "The source of an exit is the parent room to which it's attached.  If you attach an exit to an environment room, then all rooms contained within it, and the rooms within them, and so on, will be able to use the exit.  So either place the source of this exit in the environment room for your area to allow access anywhere in your area, or put it in the specific room you want an exit from."
         ""
         "Enter this exit's new source:"
       }list "\r" array_join
-      'setSource { }list
+      'set_source { }list
     }list
 
     { "T"
       "[#00AAAA][[#55FFFF]T[#00AAAA]]arget: [#5555FF]%s"
-      'getObjLink { "[#FF5555]NOTHING![!FFFFFF]" }list
+      'get_link { "[#FF5555]NOTHING![!FFFFFF]" }list
 
       {
         "The destination of an exit is its target.  It can be another room, a thing object, a program, or a player.  In the case of a room, using the exit will teleport you to that room.  In the case of a program, using the exit will execute the program.  In the case of a thing object, using the exit will teleport the objet to you.  In the case of a player, using the exit will teleport you to that player."
@@ -1886,26 +1887,26 @@ lvar ourMorphPropTable
         "Enter this exit's new target:"
         "WARNING: An unlinked exit may be claimed by anyone."
       }list "\r" array_join
-      'setObjLink { }list
+      'set_link { }list
     }list
 
     4
 
     { "A"
       "[#00AAAA][[#55FFFF]A[#00AAAA]]bate: [#5555FF]%s"
-      'getFlag { "ABATE" "Yes" "No" }list
+      'get_flag { "ABATE" "Yes" "No" }list
 
       {
         "When the ABATE flag is set on an exit, it causes the exit to run at a lower 'priority', meaning if another exit would normally be run when your exit is not present, then your exit is ignored.  Without this flag, exit priority is determined by whatever's closest to the person issuing the command.  There are also ways to set priorities even higher than normal, which are available to MUCK staff."
         ""
         "Set the ABATE flag on this exit? (y/n)"
       }list "\r" array_join
-      'setFlag { "ABATE" }list
+      'set_flag { "ABATE" }list
     }list
 
     { "D"
       "[#00AAAA][[#55FFFF]D[#00AAAA]]ark: [#5555FF]%s"
-      'getFlag { "DARK" "Yes" "No" }list
+      'get_flag { "DARK" "Yes" "No" }list
 
       {
         "If you set an exit DARK, it will not show up in the usual obvious exits output for the room it's in."
@@ -1913,124 +1914,124 @@ lvar ourMorphPropTable
         ""
         "Set the DARK flag on this exit? (y/n)"
       }list "\r" array_join
-      'setFlag { "DARK" }list
+      'set_flag { "DARK" }list
     }list
 
     { "V"
       "[#00AAAA][[#55FFFF]V[#00AAAA]]ehicle: [#5555FF]%s"
-      'getFlag { "VEHICLE" "Yes" "No" }list
+      'get_flag { "VEHICLE" "Yes" "No" }list
 
       {
         "To DISALLOW vehicles from using this exit, set the VEHICLE flag."
         ""
         "Set the VEHICLE flag on this exit? (y/n)"
       }list "\r" array_join
-      'setFlag { "VEHICLE" }list
+      'set_flag { "VEHICLE" }list
     }list
 
     { "Z"
       "[#00AAAA][[#55FFFF]Z[#00AAAA]]zombie: [#5555FF]%s"
-      'getFlag { "ZOMBIE" "Yes" "No" }list
+      'get_flag { "ZOMBIE" "Yes" "No" }list
 
       {
         "To DISALLOW zombies/puppets from using this exit, set the ZOMBIE flag."
         ""
         "Set the ZOMBIE flag on this exit? (y/n)"
       }list "\r" array_join
-      'setFlag { "ZOMBIE" }list
+      'set_flag { "ZOMBIE" }list
     }list
 
     "" "Descriptions" 1
 
     { "{D1|D}"
       "[#00AAAA][[#55FFFF]D1[#00AAAA]] Description: [#5555FF]%s"
-      'getMPI     { "_/de" "[#FF5555][Unset][!FFFFFF]" }list
+      'get_mpi     { "_/de" "[#FF5555][Unset][!FFFFFF]" }list
 
       {
         "It's most effective to alias your exits to 'door' or 'archway' or 'path' and use this field as a visual description of that entrance.  It's always best not to leave this on its defaults, if you're certian that this exit has no physical description, enter something like 'You can't see it' and possibly a description why."
         ""
         "Enter the visual description of this exit:"
       }list "\r" array_join
-      'setMPIList { "_/de" "_/dl/desc" }list
+      'set_mpi_list { "_/de" "_/dl/desc" }list
     }list
 
     { "D2"
       "[#00AAAA][[#55FFFF]D2[#00AAAA]] Scent:       [#5555FF]%s"
-      'getMPI     { "_/scent" "[#FF5555][Unset][!FFFFFF]" }list
+      'get_mpi     { "_/scent" "[#FF5555][Unset][!FFFFFF]" }list
 
       {
         "It's most effective to alias your exits to 'door' or 'archway' or 'path', etc.  and use this field as a description of that entrance's aroma."
         ""
         "Enter this exit's scent:"
       }list "\r" array_join
-      'setMPIList { "_/scent" "_/dl/scent" }list
+      'set_mpi_list { "_/scent" "_/dl/scent" }list
     }list
 
     { "D3"
       "[#00AAAA][[#55FFFF]D3[#00AAAA]] Texture:     [#5555FF]%s"
-      'getMPI     { "_/texture" "[#FF5555][Unset][!FFFFFF]" }list
+      'get_mpi     { "_/texture" "[#FF5555][Unset][!FFFFFF]" }list
 
       {
         "It's most effective to alias your exits to 'door' or 'archway' or 'path', etc.  and use this field as a description of that entrance's feeling to the touch."
         ""
         "Enter this exit's texture:"
       }list "\r" array_join
-      'setMPIList { "_/texture" "_/dl/texture" }list
+      'set_mpi_list { "_/texture" "_/dl/texture" }list
     }list
 
     { "D4"
       "[#00AAAA][[#55FFFF]D4[#00AAAA]] flavor:      [#5555FF]%s"
-      'getMPI     { "_/flavor" "[#FF5555][Unset][!FFFFFF]" }list
+      'get_mpi     { "_/flavor" "[#FF5555][Unset][!FFFFFF]" }list
 
       {
         "It's most effective to alias your exits to 'door' or 'archway' or 'path', etc.  and use this field as a description of that entrance's flavor."
         ""
         "Enter this exit's flavor:"
       }list "\r" array_join
-      'setMPIList { "_/flavor" "_/dl/flavor" }list
+      'set_mpi_list { "_/flavor" "_/dl/flavor" }list
     }list
 
     { "D5"
       "[#00AAAA][[#55FFFF]D5[#00AAAA]] Aura:        [#5555FF]%s"
-      'getMPI     { "_/aura" "[#FF5555][Unset][!FFFFFF]" }list
+      'get_mpi     { "_/aura" "[#FF5555][Unset][!FFFFFF]" }list
 
       {
         "It's most effective to alias your exits to 'door' or 'archway' or 'path', etc.  and use this field as a description of the feeling this direction gives a character.  For example, 'you think it might be a bad idea to go that way' is very useful to the observant player."
         ""
         "Enter this exit's aura:"
       }list "\r" array_join
-      'setMPIList { "_/aura" "_/dl/aura" }list
+      'set_mpi_list { "_/aura" "_/dl/aura" }list
     }list
 
     { "D6"
       "[#00AAAA][[#55FFFF]D6[#00AAAA]] Sound:       [#5555FF]%s"
-      'getMPI { "_/sound" "[#FF5555][Unset][!FFFFFF]" }list
+      'get_mpi { "_/sound" "[#FF5555][Unset][!FFFFFF]" }list
 
       {
         "Use this field to describe the sounds coming from the direction of the exit."
         ""
         "Enter this exit's sound:"
       }list "\r" array_join
-      'setMPIList { "_/sound" "_/dl/sound" }list
+      'set_mpi_list { "_/sound" "_/dl/sound" }list
     }list
 
     { "D7"
       "[#00AAAA][[#55FFFF]D7[#00AAAA]] Writing:     [#5555FF]%s"
-      'getMPI { "_/writing" "[#FF5555][Unset][!FFFFFF]" }list
+      'get_mpi { "_/writing" "[#FF5555][Unset][!FFFFFF]" }list
 
       {
         "Use this field if there's writing on your exit.  For example 'Room 101' and 'Rented by xyz' are very useful to passers by."
         ""
         "Enter this exit's writing:"
       }list "\r" array_join
-      'setMPIList { "_/writing" "_/dl/writing" }list
+      'set_mpi_list { "_/writing" "_/dl/writing" }list
     }list
 
     "" "Messages" 2
 
     { "M1"
       "[#00AAAA][[#55FFFF]M1[#00AAAA]] @success Message:  [#5555FF]%s"
-      'getMPI { "_/sc" "[#FF5555][Unset][!FFFFFF]" }list
+      'get_mpi { "_/sc" "[#FF5555][Unset][!FFFFFF]" }list
 
       {
         "This message is shown when anyone who uses this exit, to the person who uses it.  You should always set this on non-program exits."
@@ -2039,12 +2040,12 @@ lvar ourMorphPropTable
         ""
         "Enter this exit's @success message:"
       }list "\r" array_join
-      'setStr { "_/sc" }list
+      'set_str { "_/sc" }list
     }list
 
     { "M2"
       "[#00AAAA][[#55FFFF]M2[#00AAAA]] @osuccess Message: [#5555FF]%s"
-      'getMPI { "_/osc" "[#FF5555][Unset][!FFFFFF]" }list
+      'get_mpi { "_/osc" "[#FF5555][Unset][!FFFFFF]" }list
 
       {
         "This message is shown when anyone uses this exit, to everyone else in the room.  You should always set this on non-program exits."
@@ -2053,12 +2054,12 @@ lvar ourMorphPropTable
         ""
         "Enter this exit's @osuccess message:"
       }list "\r" array_join
-      'setStr { "_/osc" }list
+      'set_str { "_/osc" }list
     }list
 
     { "M3"
       "[#00AAAA][[#55FFFF]M3[#00AAAA]] @fail Message:     [#5555FF]%s"
-      'getMPI { "_/fl" "[#FF5555][Unset][!FFFFFF]" }list
+      'get_mpi { "_/fl" "[#FF5555][Unset][!FFFFFF]" }list
 
       {
         "This message is shown when someone tries to use an exit, but fails (because it's locked or otherwise), to the person who tried to use it. You should always set this on non-program exits."
@@ -2067,12 +2068,12 @@ lvar ourMorphPropTable
         ""
         "Enter this exit's @fail message:"
       }list "\r" array_join
-      'setStr { "_/fl" }list
+      'set_str { "_/fl" }list
     }list
 
     { "M4"
       "[#00AAAA][[#55FFFF]M4[#00AAAA]] @ofail Message:    [#5555FF]%s"
-      'getMPI { "_/ofl" "[#FF5555][Unset][!FFFFFF]" }list
+      'get_mpi { "_/ofl" "[#FF5555][Unset][!FFFFFF]" }list
 
       {
         "This message is shown when someone tries to use an exit, but fails (because it's locked or otherwise), to everyone else in the room. You should always set this on non-program exits."
@@ -2081,12 +2082,12 @@ lvar ourMorphPropTable
         ""
         "Enter this exit's @ofail message:"
       }list "\r" array_join
-      'setStr { "_/ofl" }list
+      'set_str { "_/ofl" }list
     }list
 
     { "M5"
       "[#00AAAA][[#55FFFF]M5[#00AAAA]] @drop Message:     [#5555FF]%s"
-      'getMPI { "_/dr" "[#0000AA][Unset][!FFFFFF]" }list
+      'get_mpi { "_/dr" "[#0000AA][Unset][!FFFFFF]" }list
 
       {
         "This message is shown to the person using the exit, when they arrive on the other side of the exit.  It's pretty much useless, as in order for this message to be sown, the @success message must have just shown as well.  There's little reason to se this."
@@ -2095,12 +2096,12 @@ lvar ourMorphPropTable
         ""
         "Enter this exit's @drop message:"
       }list "\r" array_join
-      'setStr { "_/dr" }list
+      'set_str { "_/dr" }list
     }list
 
     { "M6"
       "[#00AAAA][[#55FFFF]M6[#00AAAA]] @odrop Message:    [#5555FF]%s"
-      'getMPI { "_/odr" "[#FF5555][Unset][!FFFFFF]" }list
+      'get_mpi { "_/odr" "[#FF5555][Unset][!FFFFFF]" }list
 
       {
         "This message is essential for every exit.  It's shown when someone using your exit has arrived on the other side, to everyone else on the other side.  It is crucial in order for people to understand where someone just came from, if they join you in the room."
@@ -2109,17 +2110,17 @@ lvar ourMorphPropTable
         ""
         "Enter this exit's @odrop message:"
       }list "\r" array_join
-      'setStr { "_/odr" }list
+      'set_str { "_/odr" }list
     }list
 
     ""
     { "{P|R|O}"
       "[#00AAAA]Edit Parent %s"
-      'getParent { "[#00AAAA][[#55FFFF]R[#00AAAA]]oom" "[#00AAAA][[#55FFFF]P[#00AAAA]]layer" "[#00AAAA][[#55FFFF]O[#00AAAA]]bject" }list
+      'get_parent { "[#00AAAA][[#55FFFF]R[#00AAAA]]oom" "[#00AAAA][[#55FFFF]P[#00AAAA]]layer" "[#00AAAA][[#55FFFF]O[#00AAAA]]bject" }list
 
       {
       }list "\r" array_join
-      'setParent { }list
+      'set_parent { }list
     }list
   }list
 ;
@@ -2127,172 +2128,172 @@ lvar ourMorphPropTable
 (#############################################################################)
 (############################### THING TABLE #################################)
 (#############################################################################)
-: getThingPrefTable (  -- a )
+: table_thing_pref (  -- a )
   {
     "" (* Blank line after header *)
     "Preferences" 2
     { "1"
       "[#00AAAA][[#55FFFF]1[#00AAAA]] Allowing 'hand':          [#5555FF]%s"
-      'getStrBool { "_hand/hand_ok" "Yes" "No" }list
+      'get_str_bool { "_hand/hand_ok" "Yes" "No" }list
 
       {
         "The 'hand' program by Wog is used to move an item from your inventory into someone else's.  However, it may not be preferable to allow people to hand your puppet objects.  Use your descresion."
         ""
         "Allow 'hand'ing of objects to this character? (y/n)"
       }list "\r" array_join
-      'setStrBool { "_hand/hand_ok" }list
+      'set_str_bool { "_hand/hand_ok" }list
     }list
 
     { "2"
       "[#00AAAA][[#55FFFF]2[#00AAAA]] Showing @doing in whospe: [#5555FF]%s"
-      'getStrBool { "_prefs/wsseedoing" "Yes" "No" }list
+      'get_str_bool { "_prefs/wsseedoing" "Yes" "No" }list
 
       {
         "The whospe program displays species, gender, and status information about everyone in your current room.  If you want your puppet to optionally see a short 'Doing' string.  (The same string that's shown in the WHO command)  You may select it here."
         ""
         "Show @doing in whospe? (y/n)"
       }list "\r" array_join
-      'setStrBool { "_prefs/wsseedoing" }list
+      'set_str_bool { "_prefs/wsseedoing" }list
     }list
 
     { "3"
       "[#00AAAA][[#55FFFF]3[#00AAAA]] Ride mode:                [#5555FF]%s"
-      'getStr { "ride/_mode" "Walk" }list
+      'get_str { "ride/_mode" "Walk" }list
 
       {
         "The 'ride' program by Riss allows your puppet to be automatically led by another character or puppet, rather than having to follow them manually.  However, not everyone has a horse style back on which to ride.  Select your style of 'riding' from the list below."
         ""
       }list "\r" array_join
-      'setStrPick { "ride/_mode" { "Ride" "Taur" "Paw" "Walk" "Hand" }list }list
+      'set_str_pick { "ride/_mode" { "Ride" "Taur" "Paw" "Walk" "Hand" }list }list
     }list
 
     { "4"
       "[#00AAAA][[#55FFFF]4[#00AAAA]] Run 'saysetup'"
-      'getNull { }list
+      'get_null { }list
 
       {
       }list "\r" array_join
-      'setExternal { #163 "saysetup" }list
+      'set_external { #163 "saysetup" }list
     }list
 
     ""
     { "B"
       "[#00AAAA][[#55FFFF]B[#00AAAA]]ack to %s Edit"
-      'getObject { "Room" "Player" "Object" }list
+      'get_object_type { "Room" "Player" "Object" }list
 
       {
       }list "\r" array_join
-      'setDefaultMenu { }list
+      'set_menu_default { }list
     }list
   }list
 ;
 
-: getThingFlagsTable (  -- a )
+: table_thing_flags (  -- a )
   {
     "" "Flags" 1
 
     { "D"
       "[#00AAAA][[#55FFFF]D[#00AAAA]]ark:    [#5555FF]%s"
-      'getFlag { "DARK" "Yes [#555555](This object is hidden from 'contents' listings.)[!FFFFFF]" "No  [#555555](This object appears in 'contents' listings.)[!FFFFFF]" }list
+      'get_flag { "DARK" "Yes [#555555](This object is hidden from 'contents' listings.)[!FFFFFF]" "No  [#555555](This object appears in 'contents' listings.)[!FFFFFF]" }list
 
       {
         "Use this flag to prevent your object from being shown in a 'contents' listing when looking at its container.  For example, it makes objects appear invisible when placed in rooms."
         ""
         "Set the DARK flag on this object? (y/n)"
       }list "\r" array_join
-      'setFlag { "DARK" }list
+      'set_flag { "DARK" }list
     }list
 
     { "J"
       "[#00AAAA][[#55FFFF]J[#00AAAA]]ump_OK: [#5555FF]%s"
-      'getFlag { "JUMP_OK" "Yes [#555555](This object may be teleported freely.)[!FFFFFF]" "No  [#555555](This object may only be teleported by its controller.)[!FFFFFF]" }list
+      'get_flag { "JUMP_OK" "Yes [#555555](This object may be teleported freely.)[!FFFFFF]" "No  [#555555](This object may only be teleported by its controller.)[!FFFFFF]" }list
 
       {
         "Some programs made by lower-leveled programmers on the MUCK may wish to teleport your objects.  Setting the JUMP_OK flag on your object permits programs to teleport them."
         ""
         "Set the JUMP_OK flag on this object? (y/n)"
       }list "\r" array_join
-      'setFlag { "JUMP_OK" }list
+      'set_flag { "JUMP_OK" }list
     }list
 
     { "S"
       "[#00AAAA][[#55FFFF]S[#00AAAA]]ticky:  [#5555FF]%s"
-      'getFlag { "STICKY" "Yes [#555555](This object goes home when it's dropped.)[!FFFFFF]" "No  [#555555](This object may be dropped.)[!FFFFFF]" }list
+      'get_flag { "STICKY" "Yes [#555555](This object goes home when it's dropped.)[!FFFFFF]" "No  [#555555](This object may be dropped.)[!FFFFFF]" }list
 
       {
         "To have an object get automatically sent home when dropped, set the STICKY flag on it.  This is useful for creating objects which you don't want to become lost in the muck when their users are no longer interested in them.  If you prefer to teleport your objects home manually, investigate the @find and @tel commands."
         ""
         "Set the STICKY flag on this object? (y/n)"
       }list "\r" array_join
-      'setFlag { "STICKY" }list
+      'set_flag { "STICKY" }list
     }list
 
     { "V"
       "[#00AAAA][[#55FFFF]V[#00AAAA]]ehicle: [#5555FF]%s"
-      'getFlag { "VEHICLE" "Yes [#555555](You can climb into this object.)[!FFFFFF]" "No  [#555555](This object doesn't hold players.)[!FFFFFF]" }list
+      'get_flag { "VEHICLE" "Yes [#555555](You can climb into this object.)[!FFFFFF]" "No  [#555555](This object doesn't hold players.)[!FFFFFF]" }list
 
       {
         "When an object has the VEHICLE flag, it allows players to climb inside of the object, by using an exit placed on the vehcile, linked to the vehicle.  Also, it allows the occupents of the vehicle to hear what's going on outside.  (But not vice-versa)"
         ""
         "Set the VEHICLE flag on this object? (y/n)"
       }list "\r" array_join
-      'setFlag { "VEHICLE" }list
+      'set_flag { "VEHICLE" }list
     }list
 
     { "Z"
       "[#00AAAA][[#55FFFF]Z[#00AAAA]]ombie:  [#5555FF]%s"
-      'getFlag { "ZOMBIE" "Yes [#555555](This object simulates a player.)[!FFFFFF]" "No  [#555555](This object does not simualte a player.)[!FFFFFF]" }list
+      'get_flag { "ZOMBIE" "Yes [#555555](This object simulates a player.)[!FFFFFF]" "No  [#555555](This object does not simualte a player.)[!FFFFFF]" }list
 
       {
         "When an object has the ZOMBIE flag, it simulates a player object.  Some programs will begin to treat it as a player (such as whospe), and you can give it preferences, attributes, a sex and a gender.  Also, on MUCKs configured to allow zombies, anything the zombie hears will be automatically broadcasted to the object's owner.  Allowing you to use it as a player with the @force command.  See 'help force' for more details.  (Zombies are also known as 'puppets' or 'pets')"
         ""
         "Set the ZOMBIE flag on this object? (y/n)"
       }list "\r" array_join
-      'setFlag { "ZOMBIE" }list
+      'set_flag { "ZOMBIE" }list
     }list
 
     ""
     { "{P|B}"
       "[#00AAAA][[#55FFFF]B[#00AAAA]]ack to Object Edit"
-      'getNull { }list
+      'get_null { }list
 
       {
       }list "\r" array_join
-      'setMenu { ourThingTable }list
+      'set_menu { g_table_thing }list
     }list
   }list
 ;
 
-: getThingTable (  -- a )
+: table_thing (  -- a )
   {
     "" (* Blank line after header *)
     2
 
     { "N"
       "[#00AAAA][[#55FFFF]N[#00AAAA]]ame: [#5555FF]%s"
-      'getObjName { }list
+      'get_obj_name { }list
 
       {
         "Enter this object's new name:"
       }list "\r" array_join
-      'setObjName { }list
+      'set_obj_name { }list
     }list
 
     { "H"
       "[#00AAAA][[#55FFFF]H[#00AAAA]]ome: [#5555FF]%s"
-      'getObjLink { "[#FF5555]Nowhere?![!FFFFFF]" }list
+      'get_link { "[#FF5555]Nowhere?![!FFFFFF]" }list
 
       {
         "An object's 'home' is where it's sent when the server isn't sure where to put it.  For example, if it's contained in a room that gets recycled, or it's swept with the 'sweep' command, it will be sent to its home.  A thing's home can be a player, room, or another object."
         ""
         "Enter this object's new home:"
       }list "\r" array_join
-      'setObjLink { }list
+      'set_link { }list
     }list
 
     { "1"
       "[#00AAAA][[#55FFFF]1[#00AAAA]] Species: [#5555FF]%s"
-      'getStr     { "_/species" "[#0000AA][Unset][!FFFFFF]" }list
+      'get_str     { "_/species" "[#0000AA][Unset][!FFFFFF]" }list
 
       {
         "Your species is the type of being your puppet/object is.  This has little meaning unless this object has the ZOMBIE flag turned on."
@@ -2300,12 +2301,12 @@ lvar ourMorphPropTable
         ""
         "Enter the species of this puppet/object:"
       }list "\r" array_join
-      'setStr     { "_/species" }list
+      'set_str     { "_/species" }list
     }list
 
     { "2"
       "[#00AAAA][[#55FFFF]2[#00AAAA]] Gender: [#5555FF]%s"
-      'getStr     { "gender_prop" sysparm "[#0000AA][Unset][!FFFFFF]" }list
+      'get_str     { "gender_prop" sysparm "[#0000AA][Unset][!FFFFFF]" }list
 
       {
         "The sex flag is used for objects with the ZOMBIE flag, as well as for any other reason an object would need pronoun substitution.  For example, you may want to set this to 'Neuter' if you want its pronouns to come up as 'it/its/etc' when you use the smell command on it."
@@ -2313,100 +2314,100 @@ lvar ourMorphPropTable
         ""
         "Enter the gender of this puppet/object:"
       }list "\r" array_join
-      'setStr     { "gender_prop" sysparm }list
+      'set_str     { "gender_prop" sysparm }list
     }list
 
     "" "Descriptions" 1
 
     { "{D1|D}"
       "[#00AAAA][[#55FFFF]D1[#00AAAA]] Description: [#5555FF]%s"
-      'getMPI     { "_/de" "[#FF5555][Unset][!FFFFFF]" }list
+      'get_mpi     { "_/de" "[#FF5555][Unset][!FFFFFF]" }list
 
       {
         "If this object is a zombie, you should enter a description in the same way you would enter a player description.  Otherwise, simply give a general description of the visual appearance of this object.  Also, if this object has any exits attached, you may want to put a short description of how to access its commands here."
         ""
         "Enter the visual description of this object:"
       }list "\r" array_join
-      'setMPIList { "_/de" "_/dl/desc" }list
+      'set_mpi_list { "_/de" "_/dl/desc" }list
     }list
 
     { "D2"
       "[#00AAAA][[#55FFFF]D2[#00AAAA]] Scent:       [#5555FF]%s"
-      'getMPI     { "_/scent" "[#FF5555][Unset][!FFFFFF]" }list
+      'get_mpi     { "_/scent" "[#FF5555][Unset][!FFFFFF]" }list
 
       {
         "This is where you enter the object's aroma.  You can see an object/room/exit/player/program's scent with the 'smell' command."
         ""
         "Enter this object's scent:"
       }list "\r" array_join
-      'setMPIList { "_/scent" "_/dl/scent" }list
+      'set_mpi_list { "_/scent" "_/dl/scent" }list
     }list
 
     { "D3"
       "[#00AAAA][[#55FFFF]D3[#00AAAA]] Texture:     [#5555FF]%s"
-      'getMPI     { "_/texture" "[#FF5555][Unset][!FFFFFF]" }list
+      'get_mpi     { "_/texture" "[#FF5555][Unset][!FFFFFF]" }list
 
       {
         "This is where you enter the object's feeling to the touch.  You can see an object/room/exit/player/program's texture with the 'feel' command."
         ""
         "Enter this object's texture:"
       }list "\r" array_join
-      'setMPIList { "_/texture" "_/dl/texture" }list
+      'set_mpi_list { "_/texture" "_/dl/texture" }list
     }list
 
     { "D4"
       "[#00AAAA][[#55FFFF]D4[#00AAAA]] flavor:      [#5555FF]%s"
-      'getMPI     { "_/flavor" "[#FF5555][Unset][!FFFFFF]" }list
+      'get_mpi     { "_/flavor" "[#FF5555][Unset][!FFFFFF]" }list
 
       {
         "This is where you enter the object's sensation to the taste.  You can see an object/room/exit/player/program's flavor with the 'taste' command."
         ""
         "Enter this object's flavor:"
       }list "\r" array_join
-      'setMPIList { "_/flavor" "_/dl/flavor" }list
+      'set_mpi_list { "_/flavor" "_/dl/flavor" }list
     }list
 
     { "D5"
       "[#00AAAA][[#55FFFF]D5[#00AAAA]] Aura:        [#5555FF]%s"
-      'getMPI     { "_/aura" "[#FF5555][Unset][!FFFFFF]" }list
+      'get_mpi     { "_/aura" "[#FF5555][Unset][!FFFFFF]" }list
 
       {
         "This is where you enter the feeling which the object gives a character.  For example 'That thing looks scary!', or 'Perhaps it's not a useful as it looks' are very good aura descriptions.  You can see an object/room/exit/player/program's aura with the 'sense' command."
         ""
         "Enter this object's aura:"
       }list "\r" array_join
-      'setMPIList { "_/aura" "_/dl/aura" }list
+      'set_mpi_list { "_/aura" "_/dl/aura" }list
     }list
 
     { "D6"
       "[#00AAAA][[#55FFFF]D6[#00AAAA]] Sound:       [#5555FF]%s"
-      'getMPI { "_/sound" "[#0000AA][Unset][!FFFFFF]" }list
+      'get_mpi { "_/sound" "[#0000AA][Unset][!FFFFFF]" }list
 
       {
         "Use this field only if the object makes sounds, and enter a short description of the noises it makes.  You can see an object/room/exit/player/program's sound with the 'hear' command."
         ""
         "Enter this object's sound:"
       }list "\r" array_join
-      'setMPIList { "_/sound" "_/dl/sound" }list
+      'set_mpi_list { "_/sound" "_/dl/sound" }list
     }list
 
     { "D7"
       "[#00AAAA][[#55FFFF]D7[#00AAAA]] Writing:     [#5555FF]%s"
-      'getMPI { "_/writing" "[#0000AA][Unset][!FFFFFF]" }list
+      'get_mpi { "_/writing" "[#0000AA][Unset][!FFFFFF]" }list
 
       {
         "If anything is written on your object, enter it here.  For example 'Made in Japan', or 'Property of xyz'.  You can see an object/room/exit/player/program's writing with the 'read' command."
         ""
         "Enter this object's writing:"
       }list "\r" array_join
-      'setMPIList { "_/writing" "_/dl/writing" }list
+      'set_mpi_list { "_/writing" "_/dl/writing" }list
     }list
 
     "" "Messages" 2
 
     { "M1"
       "[#00AAAA][[#55FFFF]M1[#00AAAA]] @success Message:  [#5555FF]%s"
-      'getMPI { "_/sc" "[#FF5555][Unset][!FFFFFF]" }list
+      'get_mpi { "_/sc" "[#FF5555][Unset][!FFFFFF]" }list
 
       {
         ""
@@ -2414,12 +2415,12 @@ lvar ourMorphPropTable
         ""
         "Enter this object's @success message:"
       }list "\r" array_join
-      'setStr { "_/sc" }list
+      'set_str { "_/sc" }list
     }list
 
     { "M2"
       "[#00AAAA][[#55FFFF]M2[#00AAAA]] @osuccess Message: [#5555FF]%s"
-      'getMPI { "_/osc" "[#FF5555][Unset][!FFFFFF]" }list
+      'get_mpi { "_/osc" "[#FF5555][Unset][!FFFFFF]" }list
 
       {
         ""
@@ -2427,12 +2428,12 @@ lvar ourMorphPropTable
         ""
         "Enter this object's @osuccess message:"
       }list "\r" array_join
-      'setStr { "_/osc" }list
+      'set_str { "_/osc" }list
     }list
 
     { "M3"
       "[#00AAAA][[#55FFFF]M3[#00AAAA]] @fail Message:     [#5555FF]%s"
-      'getMPI { "_/fl" "[#FF5555][Unset][!FFFFFF]" }list
+      'get_mpi { "_/fl" "[#FF5555][Unset][!FFFFFF]" }list
 
       {
         ""
@@ -2440,12 +2441,12 @@ lvar ourMorphPropTable
         ""
         "Enter this object's @fail message:"
       }list "\r" array_join
-      'setStr { "_/fl" }list
+      'set_str { "_/fl" }list
     }list
 
     { "M4"
       "[#00AAAA][[#55FFFF]M4[#00AAAA]] @ofail Message:    [#5555FF]%s"
-      'getMPI { "_/ofl" "[#FF5555][Unset][!FFFFFF]" }list
+      'get_mpi { "_/ofl" "[#FF5555][Unset][!FFFFFF]" }list
 
       {
         ""
@@ -2453,12 +2454,12 @@ lvar ourMorphPropTable
         ""
         "Enter this object's @ofail message:"
       }list "\r" array_join
-      'setStr { "_/ofl" }list
+      'set_str { "_/ofl" }list
     }list
 
     { "M5"
       "[#00AAAA][[#55FFFF]M5[#00AAAA]] @drop Message:     [#5555FF]%s"
-      'getMPI { "_/dr" "[#FF5555][Unset][!FFFFFF]" }list
+      'get_mpi { "_/dr" "[#FF5555][Unset][!FFFFFF]" }list
 
       {
         ""
@@ -2466,12 +2467,12 @@ lvar ourMorphPropTable
         ""
         "Enter this object's @drop message:"
       }list "\r" array_join
-      'setStr { "_/dr" }list
+      'set_str { "_/dr" }list
     }list
 
     { "M6"
       "[#00AAAA][[#55FFFF]M6[#00AAAA]] @odrop Message:    [#5555FF]%s"
-      'getMPI { "_/odr" "[#FF5555][Unset][!FFFFFF]" }list
+      'get_mpi { "_/odr" "[#FF5555][Unset][!FFFFFF]" }list
 
       {
         ""
@@ -2479,36 +2480,36 @@ lvar ourMorphPropTable
         ""
         "Enter this object's @odrop message:"
       }list "\r" array_join
-      'setStr { "_/odr" }list
+      'set_str { "_/odr" }list
     }list
 
     "" "Settings" 3
 
     { "S1"
       "[#00AAAA][[#55FFFF]S1[#00AAAA]] Preferences"
-      'getNull { }list
+      'get_null { }list
 
       {
       }list "\r" array_join
-      'setMenu { ourThingPrefTable }list
+      'set_menu { g_table_thing_pref }list
     }list
 
     { "S2"
       "[#00AAAA][[#55FFFF]S2[#00AAAA]] Attributes"
-      'getNull { }list
+      'get_null { }list
 
       {
       }list "\r" array_join
-      'setMenu { ourAttrTable }list
+      'set_menu { g_table_attr }list
     }list
 
     { "{S3|F}"
       "[#00AAAA][[#55FFFF]F[#00AAAA]]lags"
-      'getNull { }list
+      'get_null { }list
 
       {
       }list "\r" array_join
-      'setMenu { ourThingFlagsTable }list
+      'set_menu { g_table_thing_flags }list
     }list
 
     "" (* Blank line before footer *)
@@ -2518,17 +2519,17 @@ lvar ourMorphPropTable
 (#############################################################################)
 (############################## PROGRAM TABLE ################################)
 (#############################################################################)
-: getProgramTable (  -- a )
+: table_program (  -- a )
   {
   }list
 ;
 
 (* ------------------------------------------------------------------------- *)
 
-: doMenuHeader (  --  )
+: do_menu_header (  --  )
 
   "[#FFFFFF]----[#0000AA][ [#FFFF55]Object Editor[#0000AA] ][#FFFFFF]" dup .color_strlen .chars-per-row swap - "-" * strcat
-  ourObject @ unparseobj
+  g_object @ unparseobj
 
   dup .color_strlen .chars-per-row 20 - <= if
     "[#0000AA][ [!FFFFFF]" swap strcat "[#0000AA] ][#FFFFFF]----" strcat
@@ -2540,7 +2541,7 @@ lvar ourMorphPropTable
   .color_tell
 ;
 
-: doMenuFooter (  --  )
+: do_menu_footer (  --  )
   "[#0000AA][ [#AAAAAA]" prog name strcat .version strcat prog "L" flag? prog "V" flag? or if " (#" strcat prog intostr strcat ")" strcat then " -- by " strcat .author strcat "[#0000AA] ][#FFFFFF]----" strcat
 
   "[#FFFFFF]" "-" .chars-per-row * strcat over .color_strlen .chars-per-row swap - .color_strcut pop swap strcat
@@ -2548,7 +2549,7 @@ lvar ourMorphPropTable
   .color_tell
 ;
 
-: drawSeparator ( s -- s )
+: draw_separator ( s -- s )
   dup not if
     pop " "
   else
@@ -2557,7 +2558,7 @@ lvar ourMorphPropTable
   then
 ;
 
-: drawItem ( a -- s )
+: draw_item ( a -- s )
   (* Get 'get' string. *)
   dup 1 [] over 2 [] rot 3 []
 
@@ -2567,14 +2568,14 @@ lvar ourMorphPropTable
   "%s" subst
 ;
 
-: doMenu (  --  )
+: do_menu (  --  )
   0  var! item_on_row   (* The current item on the row *)
   2  var! items_per_row (* The current max number of items per row *)
   "" var! row_string    (* The string data of the row *)
 
-  doMenuHeader
+  do_menu_header
 
-  ourTable @ foreach
+  g_table @ foreach
     swap pop
 
     (* Handle items_per_row changes *)
@@ -2601,7 +2602,7 @@ lvar ourMorphPropTable
       then
 
       (* Draw a separator *)
-      drawSeparator .color_tell
+      draw_separator .color_tell
 
       continue
     then
@@ -2609,7 +2610,7 @@ lvar ourMorphPropTable
     (* Handle item entries *)
     dup array? if
       (* Get the item *)
-      drawItem
+      draw_item
 
       (* Pad with required spaces *)
       .chars-per-row items_per_row @ / over .color_strlen over >= if
@@ -2650,10 +2651,10 @@ lvar ourMorphPropTable
     "" row_string !
     0 item_on_row !
   then
-  doMenuFooter
+  do_menu_footer
 ;
 
-: doSet ( a --  )
+: do_set ( a --  )
   dup 5 [] over 6 [] rot 4 []
 
   (* Display help string *)
@@ -2663,11 +2664,11 @@ lvar ourMorphPropTable
   array_vals ++ rotate execute
 ;
 
-: doEdit (  --  )
+: do_edit (  --  )
   0 var! nomatch
 
   begin
-    doMenu
+    do_menu
     nomatch @ if
       "'" swap strcat "' is invalid.  Try again, or enter 'Q' to quit." strcat .tell
     else
@@ -2695,12 +2696,12 @@ lvar ourMorphPropTable
 
     (* Match selections *)
     1 nomatch !
-    ourTable @ foreach
+    g_table @ foreach
       swap pop
 
       dup array? if
         over over 0 [] smatch if
-          doSet
+          do_set
           0 nomatch !
           pop break
         then
@@ -2713,69 +2714,69 @@ lvar ourMorphPropTable
   ">> Editor exited." .tell
 ;
 
-: initTables (  --  )
+: tables_init (  --  )
 
   (* Not very elegant I know.. *)
-  getPlayerPrefTable    ourPlayerPrefTable !
-  getAttrTable          ourAttrTable       !
-  getMorphTable         ourMorphTable      !
-  getPronounTable       ourPronounTable    !
-  getPlayerTable        ourPlayerTable     !
-  getRoomFlagsTable     ourRoomFlagsTable  !
-  getRoomTable          ourRoomTable       !
-  getThingPrefTable     ourThingPrefTable  !
-  getThingFlagsTable    ourThingFlagsTable !
-  getThingTable         ourThingTable      !
-  getExitTable          ourExitTable       !
-  getProgramTable       ourProgramTable    !
+  table_player_pref g_table_player_pref !
+  table_attr        g_table_attr        !
+  table_morph       g_table_morph       !
+  table_pronoun     g_table_pronoun     !
+  table_player      g_table_player      !
+  table_room_flags  g_table_room_flags  !
+  table_room        g_table_room        !
+  table_thing_pref  g_table_thing_pref  !
+  table_thing_flags g_table_thing_flags !
+  table_thing       g_table_thing       !
+  table_exit        g_table_exit        !
+  table_program     g_table_program     !
 
-  setDefaultMenu
+  set_menu_default
 ;
 
 (*****************************************************************************)
 (*                       M-CMD-AT_EDITOBJECT-SaveMorph                       *)
 (*****************************************************************************)
-: M-CMD-AT_EDITOBJECT-SaveMorph[ str:morph_name bool:quiet -- bool:success? ]
+: M-CMD-AT_EDITOBJECT-save_morph[ str:morph_name bool:quiet -- bool:success? ]
   .needs_mlev3
 
-  morph_name @ initialCaps "_" " " subst morph_name !
+  morph_name @ initial_caps "_" " " subst morph_name !
 
-  "me" match ourObject !
-  morph_name @ 1 quiet @ doMorph
+  "me" match g_object !
+  morph_name @ 1 quiet @ do_morph
 ;
-PUBLIC M-CMD-AT_EDITOBJECT-SaveMorph
-$LIBDEF M-CMD-AT_EDITOBJECT-SaveMorph
+PUBLIC M-CMD-AT_EDITOBJECT-save_morph
+$LIBDEF M-CMD-AT_EDITOBJECT-save_morph
 
 (*****************************************************************************)
 (*                       M-CMD-AT_EDITOBJECT-LoadMorph                       *)
 (*****************************************************************************)
-: M-CMD-AT_EDITOBJECT-LoadMorph[ str:morph_name bool:quiet -- bool:success? ]
+: M-CMD-AT_EDITOBJECT-load_morph[ str:morph_name bool:quiet -- bool:success? ]
   .needs_mlev3
 
-  morph_name @ initialCaps "_" " " subst morph_name !
+  morph_name @ initial_caps "_" " " subst morph_name !
 
-  "me" match ourObject !
-  morph_name @ 0 quiet @ doMorph
+  "me" match g_object !
+  morph_name @ 0 quiet @ do_morph
 ;
-PUBLIC M-CMD-AT_EDITOBJECT-LoadMorph
-$LIBDEF M-CMD-AT_EDITOBJECT-LoadMorph
+PUBLIC M-CMD-AT_EDITOBJECT-load_morph
+$LIBDEF M-CMD-AT_EDITOBJECT-load_morph
 
 (*****************************************************************************)
 (*                      M-CMD-AT_EDITOBJECT-ListMorphs                       *)
 (*****************************************************************************)
-: M-CMD-AT_EDITOBJECT-ListMorphs[  --  ]
+: M-CMD-AT_EDITOBJECT-list_morphs[  --  ]
   .needs_mlev2
 
-  "me" match ourObject !
-  setListMorph
+  "me" match g_object !
+  set_morph_list
 ;
-PUBLIC M-CMD-AT_EDITOBJECT-ListMorphs
-$LIBDEF M-CMD-AT_EDITOBJECT-ListMorphs
+PUBLIC M-CMD-AT_EDITOBJECT-list_morphs
+$LIBDEF M-CMD-AT_EDITOBJECT-list_morphs
 
 (*****************************************************************************)
 (*                      M-CMD-AT_EDITOBJECT-EditObject                       *)
 (*****************************************************************************)
-: M-CMD-AT_EDITOBJECT-EditObject[ str:objname -- bool:editopened? ]
+: M-CMD-AT_EDITOBJECT-edit_object[ str:objname -- bool:editopened? ]
   .needs_mlev2
 
   objname @ 1 1 1 1 M-LIB-MATCH-Match
@@ -2783,20 +2784,20 @@ $LIBDEF M-CMD-AT_EDITOBJECT-ListMorphs
     pop 0 exit
   then
 
-  dup chkPerms not if
+  dup chk_perms not if
     pop "Permission denied." .tell 0 exit
   then
 
-  ourObject !
+  g_object !
 
   (* Initialize globals *)
-  initTables
+  tables_init
 
-  doEdit
+  do_edit
   1
 ;
-PUBLIC M-CMD-AT_EDITOBJECT-EditObject
-$LIBDEF M-CMD-AT_EDITOBJECT-EditObject
+PUBLIC M-CMD-AT_EDITOBJECT-edit_object
+$LIBDEF M-CMD-AT_EDITOBJECT-edit_object
 
 (* ------------------------------------------------------------------------- *)
 
@@ -2806,7 +2807,7 @@ $LIBDEF M-CMD-AT_EDITOBJECT-EditObject
     pop exit
   then
 
-  M-CMD-AT_EDITOBJECT-EditObject pop
+  M-CMD-AT_EDITOBJECT-edit_object pop
 ;
 .
 c

@@ -59,7 +59,7 @@ WIZCALL M-HELP-help
 (* ------------------------------------------------------------------------ *)
 
 : main ( s --  )
-  "here" M-CMD-AT_EDITOBJECT-EditObject pop
+  "here" M-CMD-AT_EDITOBJECT-edit_object pop
 ;
 .
 c
