@@ -16,13 +16,14 @@ $PRAGMA comment_recurse
 (* EXAMPLE:                                                                  *)
 (*   @act smell;sniff;@smell=#0                                              *)
 (*   @link smell=m-cmd-sense.muf                                             *)
-(*   @set smell=_sense/presverb:smell                                        *)
-(*   @set smell=_sense/pastverb:smelled                                      *)
-(*   @set smell=_sense/prespart:smelling                                     *)
-(*   @set smell=_sense/pastpart:smelled                                      *)
-(*   @set smell=_sense/noun:scent                                            *)
+(*   @set smell=%v:smell                                                     *)
+(*   @set smell=%w:smells                                                    *)
+(*   @set smell=%x:smelled                                                   *)
+(*   @set smell=%y:smelling                                                  *)
+(*   @set smell=%z:smelled                                                   *)
+(*   @set smell=_sense/aspect:scent                                          *)
 (*   @set smell=_sense/overt:no                                              *)
-(*   @set smell=_sense/room_contents:random                                  *)
+(*   @set smell=_sense/contents_room:random                                  *)
 (*   @create testobject                                                      *)
 (*   smell testobject                                                        *)
 (*   > You smell testobject.                                                 *)
@@ -34,84 +35,52 @@ $PRAGMA comment_recurse
 (*   > It's like old cheese!                                                 *)
 (*                                                                           *)
 (* PROPERTIES:                                                               *)
-(*   "_/<noun>"                                                              *)
-(*     On objects: This is the property you set an object its sense          *)
-(*     description, where <noun> is whatever you defined below in the        *)
-(*     "_sense/noun" property on the trigger action, or 'sense' by default.  *)
+(*   "_/<aspect>"                                                            *)
+(*     On any object: This is the property you set an object its sense       *)
+(*     description, where <aspect> is whatever you defined below in the      *)
+(*     "_sense/aspect" property on the trigger action, 'sense' by default.   *)
 (*                                                                           *)
-(*     In the special case where the noun is 'appearance', ththe property    *)
+(*     In the special case where the aspect is 'appearance', the property    *)
 (*     used is "_/de" instead.                                               *)
 (*                                                                           *)
 (*     This is parsed as MPI.                                                *)
 (*                                                                           *)
-(*   "_sense/presverb"                                                       *)
-(*     On the trigger action: The verb in present tense. (i.e. fly)          *)
+(*   "_sense/aspect"                                                         *)
+(*     The thing that this sense acts upon. For example, for 'taste' it      *)
+(*     would be 'flavor'. This also controls which property on objects is    *)
+(*     used to store the description for this sense.                         *)
 (*                                                                           *)
-(*   "_sense/pastverb"                                                       *)
-(*     On the trigger action: The verb in past tense.    (i.e. flew)         *)
+(*   "_sense/cast_room"                                                      *)
+(*   "_sense/cast_object"                                                    *)
+(*     On the trigger action: The message everyone in the room or non-room   *)
+(*     object will see when the command is performed on it.                  *)
 (*                                                                           *)
-(*   "_sense/prespart"                                                       *)
-(*     On the trigger action: The present participle     (i.e. flying)       *)
+(*   "_sense/contents_room"                                                  *)
+(*   "_sense/contents_object"                                                *)
+(*     On the trigger action: If this is set to "yes" then when sensing a    *)
+(*     room or non-room object, the object's contents will also be listed.   *)
+(*     If set to "random" then only a portion of the object's contents will  *)
+(*     be listed.                                                            *)
 (*                                                                           *)
-(*   "_sense/pastpart"                                                       *)
-(*     On the trigger action: The past participle        (i.e. flown)        *)
+(*   "_sense/default_desc_object"                                            *)
+(*   "_sense/default_desc_room"                                              *)
+(*     On the trigger action: The default description that comes up when a   *)
+(*     room or non-room's description is unset.                              *)
 (*                                                                           *)
-(*   "_sense/noun"                                                           *)
-(*     On the trigger action: The noun being acted on.   (i.e. wing)         *)
-(*                                                                           *)
-(*   "_sense/nouns"                                                          *)
-(*     On the trigger action: The plural of the noun.   (i.e. wings)         *)
+(*   "_sense/exits_room"                                                     *)
+(*   "_sense/exits_object"                                                   *)
+(*     On the trigger action: If this is set to "yes" then when sensing a    *)
+(*     room or non-room, its actions will also be listed.                    *)
 (*                                                                           *)
 (*   "_sense/overt"                                                          *)
-(*     On the trigger action: If this is "yes" then the target, as well as   *)
-(*     others in the same location, will be alerted that the event has       *)
-(*     happened.  Otherwise they will not.                                   *)
+(*     On the trigger action: If this is "yes" then others in the same room  *)
+(*     will be alerted that the event has happened.                          *)
 (*                                                                           *)
-(*   "_sense/room_exits"                                                     *)
-(*     On the trigger action: If this is set to "yes" then when sensing a    *)
-(*     room, the exits will also be listed.                                  *)
-(*                                                                           *)
-(*   "_sense/room_contents"                                                  *)
-(*     On the trigger action: If this is set to "yes" then when sensing a    *)
-(*     room, the room's contents will also be listed. If set to "random"     *)
-(*     then only a portion of the room's contents will be listed.            *)
-(*                                                                           *)
-(*   "_sense/object_contents"                                                *)
-(*     On the trigger action: If this is set to "yes" then when sensing a    *)
-(*     non-room, the object's contents will also be listed. If set to        *)
-(*     "random" then only a portion of the object's contents will be listed. *)
-(*                                                                           *)
-(*   "_sense/object_exits"                                                   *)
-(*     On the trigger action: If this is set to "yes" then when sensing a    *)
-(*     non-room, its actions will also be listed.                            *)
-(*                                                                           *)
-(*   "_sense/desc"                                                           *)
-(*     On the trigger action: The default description that comes up when the *)
-(*     object's description is unset.                                        *)
-(*                                                                           *)
-(*   "_sense/roomdesc"                                                       *)
-(*     On the trigger action: The default description that comes up when a   *)
-(*     room's description is unset.                                          *)
-(*                                                                           *)
-(*   "_sense/notice"                                                         *)
+(*   "_sense/tell_object"                                                    *)
+(*   "_sense/tell_room"                                                      *)
 (*     On the trigger action: The message seen when someone successfully     *)
-(*     performs the command on an object. (Just before the description.)     *)
-(*                                                                           *)
-(*   "_sense/tnotice"                                                        *)
-(*     On the trigger action: The message the target object sees when the    *)
-(*     command is performed on them.                                         *)
-(*                                                                           *)
-(*   "_sense/onotice"                                                        *)
-(*     On the trigger action: The message everyone else in the room sees     *)
-(*     when the command is performed on someone.                             *)
-(*                                                                           *)
-(*   "_sense/noticehere"                                                     *)
-(*     On the trigger action: The message seen when someone successfully     *)
-(*     performs the command on a room.  (Just before the description.)       *)
-(*                                                                           *)
-(*   "_sense/onoticehere"                                                    *)
-(*     On the trigger action: The message everyone else in the room sees     *)
-(*     when the command is performed on a room.                              *)
+(*     performs the command on a room or non-room.  (Just before the         *)
+(*     description.)                                                         *)
 (*                                                                           *)
 (* USAGE:                                                                    *)
 (*   <command>                                                               *)
@@ -124,43 +93,30 @@ $PRAGMA comment_recurse
 (*   <command> <object>'s <object>                                           *)
 (*     Verbs an object inside of a container object.                         *)
 (*                                                                           *)
-(*   Also, if you supply a '@<noun>' alias to the action, when that command  *)
-(*   is used, it will allow                                                  *)
+(*   Also, if you supply a '@<aspect>' alias to the action, players can use  *)
+(*   @<aspect> object=value to set an object's aspect description for        *)
+(*   objects they control.                                                   *)
 (*                                                                           *)
 (* TECHNICAL NOTES:                                                          *)
-(*   The following subtitutions are made in all 'notice' properties, as well *)
-(*   as the 'desc' and 'roomdesc' properties.                                *)
-(*     -"[PRESVERB]" - Present Tense Verb (i.e. eat)                         *)
-(*     -"[PASTVERB]" - Past Tense (i.e. ate)                                 *)
-(*     -"[PRESPART]" - Present Participle (i.e. eating)                      *)
-(*     -"[PASTPART]" - Past Participle (i.e. eaten)                          *)
-(*     -"[NOUN]"     - Noun being acted on (i.e. food)                       *)
-(*     -"[NOUNS]"    - The plural of the noun (i.e. foods)                   *)
+(*   All 'cast', 'tell', and 'default_desc' properties on the trigger use    *)
+(*   the object substitution function from $m/lib/grammar, with these        *)
+(*   objects:                                                                *)
 (*                                                                           *)
-(*   The following substituions are made to the _sense/notice string:        *)
-(*     -Pronoun substitutions are made with the target as the subject.       *)
+(*     1 - The trigger action itself.                                        *)
+(*     2 - The object doing the action.                                      *)
+(*     3 - The target object/room.                                           *)
 (*                                                                           *)
-(*   The following subtitutions are made to the _sense/tnotice string:       *)
-(*     -Pronoun substitutions are made with the person performing the action *)
-(*      as the subject.                                                      *)
+(*   Also, prior to the grammar substitution, these strings are substituted: *)
+(*     "!1" - Aspect being acted on (_sense/aspect i.e. scent)               *)
 (*                                                                           *)
-(*   The following substituions are made to the _sense/onotice string:       *)
-(*     -The name of the person performing the action is prepended to the     *)
-(*      string.                                                              *)
-(*     -Pronoun substituions are made with the target as the subject.        *)
+(*   When listing the contents of a room, the %i property is used to get the *)
+(*   name, and it is themed for the object type with $m/lib/theme.           *)
 (*                                                                           *)
-(*   The following substitutions are made to the _sense/noticehere string:   *)
-(*     -Pronoun substitutions are made with the target as the subject.       *)
-(*                                                                           *)
-(*   The following substitutions are made to the _sense/onoticehere string:  *)
-(*     -The name of the person performing the action is prepended to the     *)
-(*      string.                                                              *)
-(*     -Pronoun substitutions are made with the person performing the action *)
-(*      as the subject.                                                      *)
-(*                                                                           *)
-(*   In the case of all pronoun substitution, %N will be replaced by the     *)
-(*   real MUCK name of the subject, rather than the customizable property    *)
-(*   name.                                                                   *)
+(*   The "match_name" option is used on all substitutions (except for exit   *)
+(*   names when listing exits). "match_name" means that you can always be    *)
+(*   sure that the name used in substitution matches the actual name of the  *)
+(*   object, even if a builder puts something strange into the object's      *)
+(*   properties.                                                             *)
 (*                                                                           *)
 (*****************************************************************************)
 (* Revision History:                                                         *)
@@ -171,6 +127,8 @@ $PRAGMA comment_recurse
 (*     - The notice messages are now defined universally on the action, and  *)
 (*       not in the environment.                                             *)
 (*     - Removed the 'sense everyone in the room at once' feature.           *)
+(*     - Removed the target notification and made it so everyone sees the    *)
+(*       room notification.                                                  *)
 (*     - Added contents and exits listing, can now be used as a 'look'       *)
 (*       program.                                                            *)
 (*   Version 1.0 -- Daniel Benoy -- April, 2004                              *)
@@ -178,7 +136,7 @@ $PRAGMA comment_recurse
 (*****************************************************************************)
 (* Copyright Notice:                                                         *)
 (*                                                                           *)
-(* Copyright (C) 2004  Daniel Benoy                                          *)
+(* Copyright (C) 2004-2019 Daniel Benoy                                      *)
 (*                                                                           *)
 (* This program is free software; you can redistribute it and/or modify      *)
 (* it under the terms of the GNU General Public License as published by      *)
@@ -203,26 +161,24 @@ $DOCCMD  @list __PROG__=2-172
 
 $DEF GUEST_CHECK ( d -- b ) "@guest" getprop (* is 'd' a guest? *)
 
+$DEF NOTICE_FORCE_NAME "yes" (* Require %d, %i, and %n properties in notices to match object name? *)
+$DEF LISTING_OBJECTS_FORCE_NAME "yes" (* Non-exit %i values must match object name? *)
+$DEF LISTING_EXITS_FORCE_NAME "no" (* Exit %i values must match exit name? *)
+
 $DEFINE DEFAULT_TRIG_PROPS
   {
-    "presverb"        "sense"
-    "pastverb"        "sensed"
-    "prespart"        "sensing"
-    "pastpart"        "sensed"
-    "noun"            "aura"
-    "nouns"           "auras"
-    "room_exits"      "no"
-    "room_contents"   "no"
-    "object_contents" "no"
-    "object_exits"    "no"
-    "overt"           "no"
-    "desc"            "%S doesn't seem to have a [NOUN]."
-    "roomdesc"        "This area has no distinct [NOUN]."
-    "notice"          "You [PRESVERB] %N."
-    "tnotice"         "just [PASTVERB] you!"
-    "onotice"         "has just [PASTPART]"
-    "noticehere"      "%N"
-    "onoticehere"     "is [PRESPART] the room [NOUN]s."
+    "aspect"              "aura"
+    "cast_object"         "%2N just %1w %3i."
+    "cast_room"           "%2N is %y the room !1s."
+    "exits_room"          "no"
+    "exits_object"        "no"
+    "contents_room"       "no"
+    "contents_object"     "no"
+    "default_desc_object" "%3S doesn't seem to have a !1."
+    "default_desc_room"   "This area has no distinct !1."
+    "overt"               "no"
+    "tell_object"         "You %1v %3i."
+    "tell_room"           "You are in %3i."
   }dict
 $ENDDEF
 
@@ -251,7 +207,8 @@ $INCLUDE $m/lib/color
 $def CAPS tolower 1 strcut swap toupper swap strcat
 
 : M-HELP-desc ( d -- s )
-  "presverb" get_conf_on_action CAPS " something." strcat
+  var! action
+  "%v" { action @ }list { }dict M-LIB-GRAMMAR-sub CAPS " something." strcat
 ;
 WIZCALL M-HELP-desc
 
@@ -279,52 +236,33 @@ WIZCALL M-HELP-desc
   {
     action_name @ if
       { action_name @ " [<object>]" }join
-      { "  " action @ "presverb" get_conf_on_action CAPS " an object, or " action @ "presverb" get_conf_on_action tolower " the room in general if you don't specify an object." }join
+      "  %V an object, or %v the room in general if you don't specify an object." { action @ }list { }dict M-LIB-GRAMMAR-sub
       " "
       { action_name @ " <container>'s <object>" }join
-      { "  " action @ "presverb" get_conf_on_action CAPS " an object that is inside of another object." }join
+      "  %V an object that is inside of another object." { action @ }list { }dict M-LIB-GRAMMAR-sub
     then
     action_name @ action_at_name @ and if
       " "
     then
     action_at_name @ if
-      { action_at_name @ " <object>=<new" action @ "noun" get_conf_on_action tolower ">" }join
-      { "  Set a new " action @ "noun" get_conf_on_action tolower " on an object." }join
+      { action_at_name @ " <object>=<new" action @ "aspect" get_conf_on_action tolower ">" }join
+      { "  Set a new " action @ "aspect" get_conf_on_action tolower " on an object." }join
     then
   }list
 ;
 WIZCALL M-HELP-help
 
 : sub_standard ( s -- s )
-  "presverb" get_conf "[PRESVERB]" subst
-  "pastverb" get_conf "[PASTVERB]" subst
-  "prespart" get_conf "[PRESPART]" subst
-  "pastpart" get_conf "[PASTPART]" subst
-  "noun"     get_conf "[NOUN]" subst
-  "nouns"    get_conf "[NOUNS]" subst
-;
-
-: articleized_name[ ref:object int:force_name -- str:name ]
-  "%i" { object @ }list { "match_name" force_name @ if "yes" else "no" then }dict M-LIB-GRAMMAR-sub
-  "" swap
-  { "a " "an " "the " }list foreach
-    nip
-    over over stringpfx if
-      strlen strcut rot pop
-    else
-      pop
-    then
-  repeat
-  object @ swap 0 M-LIB-THEME-name strcat
+  "aspect" get_conf "!1" subst
 ;
 
 : get_sense_prop ( -- s )
-  "noun" get_conf
+  "aspect" get_conf
   dup "appearance" stringcmp not if
     pop "_/de" exit
   then
   dup prop-name-ok? not over "/" instr or if
-    "Trigger noun has invalid characters!" abort
+    "Trigger aspect has invalid characters!" abort
   then
   "_/" swap strcat
 ;
@@ -355,7 +293,13 @@ WIZCALL M-HELP-help
     room_object @ room? if
       next continue
     then
-    me @ room_object @ controls not room_object @ "DARK" flag? and if
+    room_object @ exit? if
+      next continue
+    then
+    me @ room_object @ controls not me @ "SILENT" flag? or room_object @ "DARK" flag? and if
+      next continue
+    then
+    me @ room_object @ controls not me @ "SILENT" flag? or object @ "DARK" flag? and if
       next continue
     then
     (* This is a detectable object, increment the total, and add it to the list to print later, unless it randomly gets ignored *)
@@ -364,7 +308,7 @@ WIZCALL M-HELP-help
       contents_random_skipped ++
       next continue
     then
-    "name" over 1 articleized_name "[!FFFFFF]" strcat 1 array_make_dict contents_datum !
+    { "name" "%i" { room_object @ }list { "name_match" LISTING_OBJECTS_FORCE_NAME "name_theme" "yes" }dict M-LIB-GRAMMAR-sub }dict contents_datum !
     room_object @ player? if
       "A-" room_object @ name strcat contents_datum @ "index" array_setitem contents_datum !
     else room_object @ thing? room_object @ "ZOMBIE" flag? and if
@@ -383,13 +327,13 @@ WIZCALL M-HELP-help
       repeat
     }list var! contents_names
     contents_names @ if
-      { "You can " "presverb" get_conf " " contents_names @ "and" M-LIB-GRAMMAR-oxford_join }join
+      { "You can %v " { trig }list { }dict M-LIB-GRAMMAR-sub contents_names @ "and" M-LIB-GRAMMAR-oxford_join }join
       contents_random_skipped @ if
-        ", among other " "nouns" get_conf strcat strcat
+        ", among other " "aspect" get_conf "s" strcat strcat strcat
       then
       "." strcat
     else
-      { "There are other " "nouns" get_conf " " is_here @ if "here" else "there" then ", too." }join
+      { "There are other " "aspect" get_conf "s " is_here @ if "here" else "there" then ", too." }join
     then
   else
     ""
@@ -409,7 +353,7 @@ WIZCALL M-HELP-help
     then
     (* This is a detectable exit, increment the total, and add it to the list to print later. *)
     contents_total ++
-    dup 0 articleized_name "[!FFFFFF]" strcat contents_names @ []<- contents_names !
+    "%i" { room_object @ }list { "name_match" LISTING_EXITS_FORCE_NAME "name_theme" "yes" }dict M-LIB-GRAMMAR-sub contents_names @ []<- contents_names !
     next
   repeat
   contents_total @ if
@@ -424,58 +368,55 @@ WIZCALL M-HELP-help
 (                                 cmd_sense                                   )
 (*****************************************************************************)
 : sense_room[ ref:object ]
+  (* Notify others *)
+  "overt" get_conf "yes" stringcmp not if
+    "cast_room" get_conf sub_standard { trig me @ object @ }list { "name_match" "yes" }dict M-LIB-GRAMMAR-sub .color_cast
+  then
   (* Notify me *)
-  "noticehere" get_conf sub_standard { object @ }list { "match_name" "yes" }dict M-LIB-GRAMMAR-sub .color_tell
+  "tell_room" get_conf sub_standard { trig me @ object @ }list { "name_match" "yes" }dict M-LIB-GRAMMAR-sub .color_tell
   (* Output room desc *)
   object @ get_sense_prop getpropstr if
-    object @ get_sense_prop "(@" "noun" get_conf strcat ")" strcat 1 parseprop
+    object @ get_sense_prop "(@" "aspect" get_conf strcat ")" strcat 1 parseprop
   else
-    "roomdesc" get_conf sub_standard
+    "default_desc_room" get_conf sub_standard { trig me @ object @ }list { "name_match" "yes" }dict M-LIB-GRAMMAR-sub
   then
   .color_tell
   (* Output contents *)
-  "room_contents" get_conf dup "random" stringcmp not if pop 2 else "yes" stringcmp not then var! conf_room_contents
-  conf_room_contents @ if
-    object @ conf_room_contents @ 2 = line_contents .color_tell
+  "contents_room" get_conf dup "random" stringcmp not if pop 2 else "yes" stringcmp not then var! conf_contents_room
+  conf_contents_room @ if
+    object @ conf_contents_room @ 2 = line_contents .color_tell
   then
   (* Output exits *)
-  "room_exits" get_conf "yes" stringcmp not if
+  "exits_room" get_conf "yes" stringcmp not if
     object @ line_exits .color_tell
-  then
-  (* Notify others *)
-  "overt" get_conf "yes" stringcmp not if
-    object @ me @ { me @ name " " "onoticehere" get_conf sub_standard { me @ }list { "match_name" "yes" }dict M-LIB-GRAMMAR-sub }join notify_except
   then
 ;
 
 : sense_non_room[ ref:object ]
+  (* Notify others *)
+  object @ me @ contains? not "overt" get_conf "yes" stringcmp not and if
+    "cast_object" get_conf sub_standard { trig me @ object @ }list { "name_match" "yes" }dict M-LIB-GRAMMAR-sub .color_cast
+  then
   (* Notify me *)
-  "notice" get_conf sub_standard { object @ }list { "match_name" "yes" }dict M-LIB-GRAMMAR-sub .color_tell
+  "tell_object" get_conf sub_standard { trig me @ object @ }list { "name_match" "yes" }dict M-LIB-GRAMMAR-sub .color_tell
   (* Output desc *)
   object @ get_sense_prop getpropstr if
-    object @ get_sense_prop "(@" "noun" get_conf strcat ")" strcat 1 parseprop
+    object @ get_sense_prop "(@" "aspect" get_conf strcat ")" strcat 1 parseprop
   else
-    "desc" get_conf sub_standard { object @ }list { "match_name" "yes" }dict M-LIB-GRAMMAR-sub
+    "default_desc_object" get_conf sub_standard { trig me @ object @ }list { "name_match" "yes" }dict M-LIB-GRAMMAR-sub
   then
   .color_tell
   (* Output contents *)
-  "object_contents" get_conf dup "random" stringcmp not if pop 2 else "yes" stringcmp not then var! conf_object_contents
-  conf_object_contents @ if
-    object @ conf_object_contents @ 2 = line_contents .color_tell
+  "contents_object" get_conf dup "random" stringcmp not if pop 2 else "yes" stringcmp not then var! conf_contents_object
+  conf_contents_object @ if
+    object @ conf_contents_object @ 2 = line_contents .color_tell
   then
   (* Output exits *)
   (* You can more-or-less only trigger actions on 'thing' type, and 'room' type objects, so only show exits for those *)
   object @ thing? if
-    "object_exits" get_conf "yes" stringcmp not if
+    "exits_object" get_conf "yes" stringcmp not if
       object @ line_exits .color_tell
     then
-  then
-  (* Notify others *)
-  object @ me @ contains? not "overt" get_conf "yes" stringcmp not and if
-    (* Target *)
-    object @ { me @ name " " "tnotice" get_conf sub_standard { me @ }list { "match_name" "yes" }dict M-LIB-GRAMMAR-sub }join notify
-    (* In the room *)
-    object @ me @ object @ 2 { me @ name " " "onotice" get_conf sub_standard { object @ }list { "match_name" "yes" }dict M-LIB-GRAMMAR-sub object @ "." }join notify_exclude
   then
 ;
 
@@ -484,22 +425,22 @@ WIZCALL M-HELP-help
 
   match
   dup #-2 = if
-    "I don't know which one you mean!" .tell
+    "I don't know which one you mean!" .err_tell
     pop exit
   then
 
   dup ok? not if
-    "I don't see that here." .tell
+    "I don't see that here." .err_tell
     pop exit
   then
 
   dup location loc @ = not over loc @ = not and over location me @ = not and me @ "WIZARD" flag? not and if
-    "I don't see that here." .tell
+    "I don't see that here." .err_tell
     pop exit
   then
 
   dup room? me @ "WIZARD" flag? not and if (* Only allow wizards to sniff into a room *)
-    "You can't see that clearly." .tell exit
+    "You can't see that clearly." .err_tell exit
   then
 
   dup exit? if
@@ -511,18 +452,18 @@ WIZCALL M-HELP-help
   then
 
   dup exit? if
-    "You can't [PRESVERB] through that exit." sub_standard .tell exit
+    "You can't %1v through that exit." sub_standard .err_tell exit
   then
 
   swap
   rmatch
   dup #-2 = if
-    "I don't know which one you mean!" .tell
+    "I don't know which one you mean!" .err_tell
     pop exit
   then
 
   dup ok? not if
-    "I don't see that there." .tell
+    "I don't see that there." .err_tell
     pop exit
   then
 
@@ -558,17 +499,17 @@ WIZCALL M-HELP-help
 
   match
   dup #-2 = if
-    "I don't know which one you mean!" .tell
+    "I don't know which one you mean!" .err_tell
     pop exit
   then
 
   dup ok? not if
-    "I don't see that here." .tell
+    "I don't see that here." .err_tell
     pop exit
   then
 
   dup location loc @ = not over loc @ = not and over location me @ = not and me @ "WIZARD" flag? not and if
-    "I don't see that here." .tell
+    "I don't see that here." .err_tell
     pop exit
   then
 
@@ -584,36 +525,36 @@ WIZCALL M-HELP-help
 (*****************************************************************************)
 : cmd_set ( s --  )
   me @ GUEST_CHECK if
-    "Guests can't set their [NOUN]" sub_standard .tell exit
+    "Guests can't set their !1" sub_standard .err_tell exit
   then
 
   strip
   "=" split swap
 
   dup not if
-    "You must use the format <object>=<player>" .tell exit
+    "You must use the format <object>=<player>" .err_tell exit
   then
 
-  "noun" get_conf "@" 1 strncmp not "noun" get_conf "~" 1 strncmp not or if
+  "aspect" get_conf "@" 1 strncmp not "aspect" get_conf "~" 1 strncmp not or if
     me @ "WIZARD" flag? not prog mlevel 4 >= not or if
-      "Permission denied." .tell
+      "Permission denied." .err_tell
       pop pop exit
     then
   then
 
   match
   dup #-2 = if
-    "I don't know which one you mean." .tell
+    "I don't know which one you mean." .err_tell
     pop pop exit
   then
 
   dup ok? not if
-    "I don't see that here." .tell
+    "I don't see that here." .err_tell
     pop pop exit
   then
 
   me @ over controls not if
-    "Permission denied." .tell
+    "Permission denied." .err_tell
     pop pop exit
   then
 
@@ -621,10 +562,10 @@ WIZCALL M-HELP-help
 
   dup if
     get_sense_prop swap setprop
-    "noun" get_conf 1 strcut swap toupper swap strcat " set." strcat .tell
+    "aspect" get_conf 1 strcut swap toupper swap strcat " set." strcat .err_tell
   else
     pop get_sense_prop remove_prop
-    "noun" get_conf 1 strcut swap toupper swap strcat " cleared." strcat .tell
+    "aspect" get_conf 1 strcut swap toupper swap strcat " cleared." strcat .err_tell
   then
 ;
 
