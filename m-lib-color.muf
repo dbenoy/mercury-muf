@@ -37,6 +37,11 @@ $PRAGMA comment_recurse
 (*     encoding is retreived from the object's owner instead.                *)
 (*                                                                           *)
 (* PUBLIC ROUTINES:                                                          *)
+(*   M-LIB-COLOR-carve_array[ str:source str:sep -- arr:result ]             *)
+(*   .carve_array ( s1 s2 -- a )                                             *)
+(*     Like M-LIB-COLOR-explode_array but it doesn't remove the separators,  *)
+(*     it cuts just before them and keeps them in the resulting strings.     *)
+(*                                                                           *)
 (*   M-LIB-COLOR-cast_to[ str:message ref:object arr:exclude str:from_type   *)
 (*                        -- ]                                               *)
 (*     Sends a message to all players and things within object, and players  *)
@@ -70,6 +75,10 @@ $PRAGMA comment_recurse
 (*   M-LIB-COLOR-rgb2hsl[ str:rgb -- arr:hsl ]                               *)
 (*     Takes a 6-digit hexadecimal RGB string and converts it to an HSV      *)
 (*     value array of three floats.                                          *)
+(*                                                                           *)
+(*   M-LIB-COLOR-slice_array[ str:source str:sep -- arr:result ]             *)
+(*     Like M-LIB-COLOR-explode_array but it the separators are also         *)
+(*     included in the resulting array.                                      *)
 (*                                                                           *)
 (*   M-LIB-COLOR-strcat[ str:source1 str:source2 -- str:result ]             *)
 (*     Works like the STRCAT primitive for MCC strings, but unlike the       *)
@@ -1603,6 +1612,29 @@ lvar g_cast_to_transcode_cache (* Clear this variable to an empty dict before us
 ;
 
 (*****************************************************************************)
+(*                          M-LIB-COLOR-carve_array                          *)
+(*****************************************************************************)
+: M-LIB-COLOR-carve_array[ str:source str:sep -- arr:result ]
+  (* M1 OK *)
+
+  source @ string? not if "Non-string argument (1)." abort then
+  sep @ string? not if "Non-string argument (2)." abort then
+
+  (* Produce a stripped version of the string *)
+  source @ "NOCOLOR" mcc_convert var! stripped
+  (* Carve the stripped string and as we go along, use the string lengths to figure out where to mcc_strcut the source *)
+  { }list var! retval
+  stripped @ sep @ .carve_array foreach
+    nip
+    source @ swap strlen 1 mcc_strcut source !
+    retval @ array_appenditem retval !
+  repeat
+  retval @
+;
+PUBLIC M-LIB-COLOR-carve_array
+$LIBDEF M-LIB-COLOR-carve_array
+
+(*****************************************************************************)
 (*                            M-LIB-COLOR-cast_to                            *)
 (*****************************************************************************)
 : M-LIB-COLOR-cast_to[ str:message ref:object arr:exclude str:from_type -- ]
@@ -1703,6 +1735,29 @@ $LIBDEF M-LIB-COLOR-hsl2rgb
 ;
 PUBLIC M-LIB-COLOR-rgb2hsl
 $LIBDEF M-LIB-COLOR-rgb2hsl
+
+(*****************************************************************************)
+(*                          M-LIB-COLOR-slice_array                          *)
+(*****************************************************************************)
+: M-LIB-COLOR-slice_array[ str:source str:sep -- arr:result ]
+  (* M1 OK *)
+
+  source @ string? not if "Non-string argument (1)." abort then
+  sep @ string? not if "Non-string argument (2)." abort then
+
+  (* Produce a stripped version of the string *)
+  source @ "NOCOLOR" mcc_convert var! stripped
+  (* Slice the stripped string and as we go along, use the string lengths to figure out where to mcc_strcut the source *)
+  { }list var! retval
+  stripped @ sep @ .slice_array foreach
+    nip
+    source @ swap strlen 1 mcc_strcut source !
+    retval @ array_appenditem retval !
+  repeat
+  retval @
+;
+PUBLIC M-LIB-COLOR-slice_array
+$LIBDEF M-LIB-COLOR-slice_array
 
 (*****************************************************************************)
 (*                            M-LIB-COLOR-strcat                             *)
@@ -2050,6 +2105,8 @@ $PUBDEF .color_cast me @ begin location dup room? until { }list "MCC" M-LIB-COLO
 $PUBDEF .color_ocast me @ begin location dup room? until { me @ }list "MCC" M-LIB-COLOR-cast_to
 $PUBDEF .color_escape "NOCOLOR" "MCC" M-LIB-COLOR-transcode
 $PUBDEF .color_explode_array M-LIB-COLOR-explode_array
+$PUBDEF .color_slice_array M-LIB-COLOR-slice_array
+$PUBDEF .color_carve_array M-LIB-COLOR-carve_array
 $PUBDEF .color_notify "MCC" 3 pick M-LIB-COLOR-encoding_get M-LIB-COLOR-transcode notify
 $PUBDEF .color_otell loc @ contents begin over over swap "MCC" 3 pick M-LIB-COLOR-encoding_get M-LIB-COLOR-transcode notify next dup not until pop pop
 $PUBDEF .color_strip "MCC" "NOCOLOR" M-LIB-COLOR-transcode
