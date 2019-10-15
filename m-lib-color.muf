@@ -37,6 +37,13 @@ $PRAGMA comment_recurse
 (*     encoding is retreived from the object's owner instead.                *)
 (*                                                                           *)
 (* PUBLIC ROUTINES:                                                          *)
+(*   M-LIB-COLOR-cast_to[ str:message ref:object str:from_type -- ]          *)
+(*     Sends a message to all players and things within object, and players  *)
+(*     and things inside of them recursively. It converts from from_type to  *)
+(*     the same encoding that would be returned by M-LIB-COLOR-encoding_get  *)
+(*     on the target object's owner. You can cast to a room, but it will not *)
+(*     recurse through its child rooms, only objects and players.            *)
+(*                                                                           *)
 (*   M-LIB-COLOR-encoding_default[ -- str:type ]                             *)
 (*     Returns the default encoding.                                         *)
 (*                                                                           *)
@@ -1514,6 +1521,98 @@ lvar ansi_table_3bit_xterm_rgb
   retval @
 ;
 
+: encoding_get[ ref:object -- str:type ]
+  object @ player? not if
+    object @ owner encoding_get exit
+  then
+
+  object @ "COLOR" flag? not if
+    "NOCOLOR" exit
+  then
+
+  object @ ENCODING_PROP getpropstr
+
+  dup not if
+    pop ENCODING_DEFAULT exit
+  then
+
+  dup SUPPORTED_TYPES .array_hasval not if
+    pop ENCODING_DEFAULT exit
+  then
+
+  dup "ANSI-" instr 1 = not if
+    pop "NOCOLOR" exit
+  then
+;
+
+: transcode[ str:source str:from_type str:to_type -- str:result ]
+  to_type @ "AUTO" = if
+    "me" match encoding_get to_type !
+  then
+
+  from_type @ to_type @ = if
+    source @ exit
+  then
+
+  from_type @ "MCC" = if
+    to_type @ "ANSI-" instr 1 = to_type @ "NOCOLOR" = or if
+      source @ mcc_preprocess to_type @ mcc_convert exit
+    then
+  then
+
+  from_type @ "NOCOLOR" = if
+    to_type @ "MCC" = if
+      source @ { "[" CODE_TYPE_SPECIAL CODE_VALUE_SPECIAL_OPENBRACKET "]" }join "[" subst exit
+    then
+  then
+
+  from_type @ "ANSI-" instr 1 = if
+    "Decoding ANSI strings is not yet supported." abort
+  then
+
+  { "Transcoding from " from_type @ " to " to_type @ " is not yet supported." }join abort
+;
+
+lvar g_cast_to_transcode_cache (* Clear this variable to an empty dict before using cast_to! *)
+: cast_to[ str:message ref:object str:from_type -- ]
+  object @ contents begin
+    dup while
+    dup thing? over player? or if
+      dup var! to
+      to @ owner encoding_get var! to_encoding
+      g_cast_to_transcode_cache @ to_encoding @ [] if
+        g_cast_to_transcode_cache @ to_encoding @ []
+      else
+        message @ from_type @ to_encoding @ transcode
+        dup g_cast_to_transcode_cache @ to_encoding @ ->[] g_cast_to_transcode_cache !
+      then
+      var! encoded_message
+      (* Notify the child object *)
+      to @ encoded_message @ notify
+      (* Notify all the things/players inside, too *)
+      message @ to @ from_type @ cast_to
+    then
+    next
+  repeat
+  pop
+;
+
+(*****************************************************************************)
+(*                            M-LIB-COLOR-cast_to                            *)
+(*****************************************************************************)
+: M-LIB-COLOR-cast_to[ str:message ref:object str:from_type -- ]
+  ( .needs_mlev3 ) (* TODO: Could support lower MUCKER levels by prepending the name of the sender? *)
+
+  message @ string? not if "Non-string argument (1)." abort then
+  object @ dbref? not if "Non-dbref argument (2)." abort then
+  from_type @ string? not if "Non-string argument (3)." abort then
+
+  { }dict g_cast_to_transcode_cache !
+  message @ object @ from_type @ cast_to
+;
+PUBLIC M-LIB-COLOR-cast_to
+$LIBDEF M-LIB-COLOR-cast_to
+
 (*****************************************************************************)
 (*                        M-LIB-COLOR-encoding_default                       *)
 (*****************************************************************************)
@@ -1531,27 +1630,7 @@ $LIBDEF M-LIB-COLOR-encoding_default
 
   object @ dbref? not if "Non-dbref argument (1)." abort then
 
-  object @ player? not if
-    object @ owner M-LIB-COLOR-encoding_get exit
-  then
-
-  object @ "COLOR" flag? not if
-    "NOCOLOR" exit
-  then
-
-  object @ ENCODING_PROP getpropstr
-
-  dup not if
-    pop M-LIB-COLOR-encoding_default exit
-  then
-
-  dup SUPPORTED_TYPES .array_hasval not if
-    pop ENCODING_DEFAULT exit
-  then
-
-  dup "ANSI-" instr 1 = not if
-    pop "NOCOLOR" exit
-  then
+  object @ encoding_get
 ;
 PUBLIC M-LIB-COLOR-encoding_get
 $LIBDEF M-LIB-COLOR-encoding_get
@@ -1952,31 +2031,7 @@ $LIBDEF M-LIB-COLOR-testpattern
   from_type @ SUPPORTED_TYPES .array_hasval not if "from_type not recognized (2)." abort then
   to_type @ SUPPORTED_TYPES .array_hasval not to_type @ "AUTO" = not and if "to_type not recognized (3)." abort then
 
-  to_type @ "AUTO" = if
-    "me" match M-LIB-COLOR-encoding_get to_type !
-  then
-
-  from_type @ to_type @ = if
-    source @ exit
-  then
-
-  from_type @ "MCC" = if
-    to_type @ "ANSI-" instr 1 = to_type @ "NOCOLOR" = or if
-      source @ mcc_preprocess to_type @ mcc_convert exit
-    then
-  then
-
-  from_type @ "NOCOLOR" = if
-    to_type @ "MCC" = if
-      source @ { "[" CODE_TYPE_SPECIAL CODE_VALUE_SPECIAL_OPENBRACKET "]" }join "[" subst exit
-    then
-  then
-
-  from_type @ "ANSI-" instr 1 = if
-    "Decoding ANSI strings is not yet supported." abort
-  then
-
-  { "Transcoding from " from_type @ " to " to_type @ " is not yet supported." }join abort
+  source @ from_type @ to_type @ transcode
 ;
 PUBLIC M-LIB-COLOR-transcode
 $LIBDEF M-LIB-COLOR-transcode
@@ -1984,6 +2039,7 @@ $LIBDEF M-LIB-COLOR-transcode
 (*****************************************************************************)
 (*                           Convenience Routines                            *)
 (*****************************************************************************)
+$PUBDEF .color_cast me @ begin location dup room? until "MCC" M-LIB-COLOR-cast_to
 $PUBDEF .color_escape "NOCOLOR" "MCC" M-LIB-COLOR-transcode
 $PUBDEF .color_explode_array M-LIB-COLOR-explode_array
 $PUBDEF .color_notify "MCC" 3 pick M-LIB-COLOR-encoding_get M-LIB-COLOR-transcode notify
