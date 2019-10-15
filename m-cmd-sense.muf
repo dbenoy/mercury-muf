@@ -72,10 +72,6 @@ $PRAGMA comment_recurse
 (*     On the trigger action: If this is set to "yes" then when sensing a    *)
 (*     room or non-room, its actions will also be listed.                    *)
 (*                                                                           *)
-(*   "_sense/overt"                                                          *)
-(*     On the trigger action: If this is "yes" then others in the same room  *)
-(*     will be alerted that the event has happened.                          *)
-(*                                                                           *)
 (*   "_sense/tell_object"                                                    *)
 (*   "_sense/tell_room"                                                      *)
 (*     On the trigger action: The message seen when someone successfully     *)
@@ -168,17 +164,16 @@ $DEF LISTING_EXITS_FORCE_NAME "no" (* Exit %i values must match exit name? *)
 $DEFINE DEFAULT_TRIG_PROPS
   {
     "aspect"              "aura"
-    "cast_object"         "%2N just %1w %3i."
-    "cast_room"           "%2N is %y the room !1s."
+    "cast_object"         ""
+    "cast_room"           ""
     "exits_room"          "no"
     "exits_object"        "no"
     "contents_room"       "no"
     "contents_object"     "no"
     "default_desc_object" "%3S doesn't seem to have a !1."
     "default_desc_room"   "This area has no distinct !1."
-    "overt"               "no"
-    "tell_object"         "You %1v %3i."
-    "tell_room"           "You are in %3i."
+    "tell_object"         ""
+    "tell_room"           ""
   }dict
 $ENDDEF
 
@@ -369,9 +364,7 @@ WIZCALL M-HELP-help
 (*****************************************************************************)
 : sense_room[ ref:object ]
   (* Notify others *)
-  "overt" get_conf "yes" stringcmp not if
-    "cast_room" get_conf sub_standard { trig me @ object @ }list { "name_match" "yes" }dict M-LIB-GRAMMAR-sub .color_cast
-  then
+  "cast_room" get_conf sub_standard { trig me @ object @ }list { "name_match" "yes" }dict M-LIB-GRAMMAR-sub .color_cast
   (* Notify me *)
   "tell_room" get_conf sub_standard { trig me @ object @ }list { "name_match" "yes" }dict M-LIB-GRAMMAR-sub .color_tell
   (* Output room desc *)
@@ -394,9 +387,7 @@ WIZCALL M-HELP-help
 
 : sense_non_room[ ref:object ]
   (* Notify others *)
-  object @ me @ contains? not "overt" get_conf "yes" stringcmp not and if
-    "cast_object" get_conf sub_standard { trig me @ object @ }list { "name_match" "yes" }dict M-LIB-GRAMMAR-sub .color_cast
-  then
+  "cast_object" get_conf sub_standard { trig me @ object @ }list { "name_match" "yes" }dict M-LIB-GRAMMAR-sub .color_cast
   (* Notify me *)
   "tell_object" get_conf sub_standard { trig me @ object @ }list { "name_match" "yes" }dict M-LIB-GRAMMAR-sub .color_tell
   (* Output desc *)
@@ -452,7 +443,7 @@ WIZCALL M-HELP-help
   then
 
   dup exit? if
-    "You can't %1v through that exit." sub_standard .err_tell exit
+    "You can't %1v through that exit." sub_standard { trig }list { "name_match" "yes" }dict M-LIB-GRAMMAR-sub .err_tell exit
   then
 
   swap
