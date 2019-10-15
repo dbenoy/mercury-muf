@@ -37,12 +37,16 @@ $PRAGMA comment_recurse
 (*     encoding is retreived from the object's owner instead.                *)
 (*                                                                           *)
 (* PUBLIC ROUTINES:                                                          *)
-(*   M-LIB-COLOR-cast_to[ str:message ref:object str:from_type -- ]          *)
+(*   M-LIB-COLOR-cast_to[ str:message ref:object arr:exclude str:from_type   *)
+(*                        -- ]                                               *)
 (*     Sends a message to all players and things within object, and players  *)
 (*     and things inside of them recursively. It converts from from_type to  *)
 (*     the same encoding that would be returned by M-LIB-COLOR-encoding_get  *)
-(*     on the target object's owner. You can cast to a room, but it will not *)
-(*     recurse through its child rooms, only objects and players.            *)
+(*     on the target object's owner. Objects in the exclude array will not   *)
+(*     be notified.                                                          *)
+(*                                                                           *)
+(*     You can cast to a room, but it will not recurse through its child     *)
+(*     rooms, only objects and players.                                      *)
 (*                                                                           *)
 (*   M-LIB-COLOR-encoding_default[ -- str:type ]                             *)
 (*     Returns the default encoding.                                         *)
@@ -1574,23 +1578,24 @@ lvar ansi_table_3bit_xterm_rgb
 ;
 
 lvar g_cast_to_transcode_cache (* Clear this variable to an empty dict before using cast_to! *)
-: cast_to[ str:message ref:object str:from_type -- ]
+: cast_to[ str:message ref:object arr:exclude str:from_type -- ]
   object @ contents begin
     dup while
     dup thing? over player? or if
       dup var! to
-      to @ owner encoding_get var! to_encoding
-      g_cast_to_transcode_cache @ to_encoding @ [] if
-        g_cast_to_transcode_cache @ to_encoding @ []
-      else
-        message @ from_type @ to_encoding @ transcode
-        dup g_cast_to_transcode_cache @ to_encoding @ ->[] g_cast_to_transcode_cache !
-      then
-      var! encoded_message
       (* Notify the child object *)
-      to @ encoded_message @ notify
+      to @ exclude @ .array_hasval not if
+        to @ owner encoding_get var! to_encoding
+        g_cast_to_transcode_cache @ to_encoding @ [] if
+          g_cast_to_transcode_cache @ to_encoding @ []
+        else
+          message @ from_type @ to_encoding @ transcode
+          dup g_cast_to_transcode_cache @ to_encoding @ ->[] g_cast_to_transcode_cache !
+        then
+        to @ swap notify
+      then
       (* Notify all the things/players inside, too *)
-      message @ to @ from_type @ cast_to
+      message @ to @ exclude @ from_type @ cast_to
     then
     next
   repeat
@@ -1600,15 +1605,17 @@ lvar g_cast_to_transcode_cache (* Clear this variable to an empty dict before us
 (*****************************************************************************)
 (*                            M-LIB-COLOR-cast_to                            *)
 (*****************************************************************************)
-: M-LIB-COLOR-cast_to[ str:message ref:object str:from_type -- ]
+: M-LIB-COLOR-cast_to[ str:message ref:object arr:exclude str:from_type -- ]
   ( .needs_mlev3 ) (* TODO: Could support lower MUCKER levels by prepending the name of the sender? *)
 
   message @ string? not if "Non-string argument (1)." abort then
   object @ dbref? not if "Non-dbref argument (2)." abort then
-  from_type @ string? not if "Non-string argument (3)." abort then
+  exclude @ array? not if "Non-array argument (3)." abort then
+  exclude @ foreach nip dbref? not if "Array of dbrefs expected (3)." abort then repeat
+  from_type @ string? not if "Non-string argument (4)." abort then
 
   { }dict g_cast_to_transcode_cache !
-  message @ object @ from_type @ cast_to
+  message @ object @ exclude @ from_type @ cast_to
 ;
 PUBLIC M-LIB-COLOR-cast_to
 $LIBDEF M-LIB-COLOR-cast_to
@@ -2039,7 +2046,8 @@ $LIBDEF M-LIB-COLOR-transcode
 (*****************************************************************************)
 (*                           Convenience Routines                            *)
 (*****************************************************************************)
-$PUBDEF .color_cast me @ begin location dup room? until "MCC" M-LIB-COLOR-cast_to
+$PUBDEF .color_cast me @ begin location dup room? until { }list "MCC" M-LIB-COLOR-cast_to
+$PUBDEF .color_ocast me @ begin location dup room? until { me @ }list "MCC" M-LIB-COLOR-cast_to
 $PUBDEF .color_escape "NOCOLOR" "MCC" M-LIB-COLOR-transcode
 $PUBDEF .color_explode_array M-LIB-COLOR-explode_array
 $PUBDEF .color_notify "MCC" 3 pick M-LIB-COLOR-encoding_get M-LIB-COLOR-transcode notify
