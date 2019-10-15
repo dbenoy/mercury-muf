@@ -32,7 +32,7 @@ $PRAGMA comment_recurse
 (*****************************************************************************)
 (* Revision History:                                                         *)
 (*   Version 1.1 -- Daniel Benoy -- September, 2019                          *)
-(*     - Updated for inclusion in mercury-muf                                *)
+(*     - Modified slightly for inclusion in mercury-muf                      *)
 (*     - Removed "Jaffa's cmd-look" support, and other unneeded libraries.   *)
 (*   Version 1.0 -- Daniel Benoy -- April, 2004                              *)
 (*     - Original implementation for Latitude MUCK                           *)
@@ -108,6 +108,7 @@ lvar g_table_attr
 lvar g_table_pronoun
 lvar g_table_morph
 lvar g_table_player_pref
+lvar g_table_player_flags
 lvar g_table_player
 lvar g_table_room_flags
 lvar g_table_room
@@ -1117,6 +1118,92 @@ lvar g_morph_prop_table
   }list
 ;
 
+: table_player_flags (  -- a )
+  {
+    "" "Flags" 1
+
+    { "C"
+      "[#00AAAA][[#55FFFF]C[#00AAAA]]olor:      [#5555FF]%s"
+      'get_flag    { "COLOR" "Yes [#555555](Color enabled.)[!FFFFFF]" "[#FF5555]NO[!FFFFFF]  [#550000](Color is disabled!)[!FFFFFF]" }list
+
+      {
+        "Does your client support color? (y/n)"
+      }list "\r" array_join
+      'set_flag    { "COLOR" }list
+    }list
+
+    { "S"
+      "[#00AAAA][[#55FFFF]S[#00AAAA]]ilent:     [#5555FF]%s"
+      'get_flag    { "SILENT" "Yes [#555555](You won't be able to see your DARK objects.)[!FFFFFF]" "No  [#555555](You will be able to see your objects even if they're DARK.)[!FFFFFF]" }list
+
+      {
+        "A player can set themselves \"SILENT\" and not see all the dbrefs and dark objects that they own.  They won't see objects in a dark room either.  They still control the objects though."
+        ""
+        "Set the SILENT flag on this character? (y/n)"
+      }list "\r" array_join
+      'set_flag    { "SILENT" }list
+    }list
+
+    { "H"
+      "[#00AAAA][[#55FFFF]H[#00AAAA]]aven:      [#5555FF]%s"
+      'get_flag    { "HAVEN" "Yes [#555555](You're set to not be disturbed.)[!FFFFFF]" "No  [#555555](You can receive pages, etc.)[!FFFFFF]" }list
+
+      {
+        "If a player is set HAVEN, they cannot be paged."
+        "There are also other benifits to setting yourself HAVEN.  Whereis, and other intrusive programs should stop bothering you and helping others bother you."
+        ""
+        "Set the HAVEN flag on this character? (y/n)"
+      }list "\r" array_join
+      'set_flag    { "HAVEN" }list
+    }list
+
+    { "L"
+      "[#00AAAA][[#55FFFF]L[#00AAAA]]ink_OK:    [#5555FF]%s"
+      'get_flag    { "LINK_OK" "[#FF5555]YES[!FFFFFF] [#550000](Others can set their object homes on you!)[!FFFFFF]" "No  [#555555](Others can not set their object homes on you.)[!FFFFFF]" }list
+
+      {
+        "When you're set LINK_OK, people can set the 'homes' of objects on you.  This is generally dangerous, because when combined with the STICKY flag on an object, it can be real hard to get rid of if someone sets its home on you.  If you end up in this situation, try @unlink <object name>.  It's a good idea to leave this off at all times unless you want someone to link an object to you."
+        ""
+        "Set the LINK_OK flag on this character? (y/n)"
+      }list "\r" array_join
+      'set_flag    { "LINK_OK" }list
+    }list
+
+    { "X"
+      "[#00AAAA][[#55FFFF]X[#00AAAA]] Forcible: [#5555FF]%s"
+      'get_flag    { "XFORCIBLE" "[#FF5555]YES[!FFFFFF] [#550000](Others can force you to perform actions!)[!FFFFFF]" "No  [#555555](Others can't force you to perform actions.)[!FFFFFF]" }list
+
+      {
+        "When set XForcible, a player can force your character to perform an action as though it was entered directly by that character."
+        "This flag must also be used in combination with the @flock command.  See 'help @flock' for more details."
+        ""
+        "Set the XFORCIBLE flag on this character? (y/n)"
+      }list "\r" array_join
+      'set_flag    { "XFORCIBLE" }list
+    }list
+
+    { "J"
+      "[#00AAAA][[#55FFFF]J[#00AAAA]]ump_OK:    [#5555FF]%s"
+      'get_flag    { "JUMP_OK" "Yes [#555555](Teleports and thowing allowed.)[!FFFFFF]" "No  [#555555](Teleports and throwing blocked.)[!FFFFFF]" }list
+
+      {
+        "Allow teleports and throwing? (y/n)"
+      }list "\r" array_join
+      'set_flag    { "JUMP_OK" }list
+    }list
+
+    ""
+    { "{P|B}"
+      "[#00AAAA][[#55FFFF]B[#00AAAA]]ack to Player Edit"
+      'get_null { }list
+
+      {
+      }list "\r" array_join
+      'set_menu { g_table_player }list
+    }list
+  }list
+;
+
 : table_player_pref (  -- a )
   {
     "" (* Blank line after header *)
@@ -1379,43 +1466,6 @@ lvar g_morph_prop_table
       'set_mpi_list { "_/writing" "_/dl/writing" }list
     }list
 
-    "" "Flags" 3
-
-    { "C"
-      "[#00AAAA][[#55FFFF]C[#00AAAA]]olor: [#5555FF]%s"
-      'get_flag    { "COLOR" "          Yes" "BLACK & WHITE" }list
-
-      {
-        "Does your client support color? (y/n)"
-      }list "\r" array_join
-      'set_flag    { "COLOR" }list
-    }list
-
-    { "S"
-      "[#00AAAA][[#55FFFF]S[#00AAAA]]ilent:         [#5555FF]%s"
-      'get_flag    { "SILENT" "Yes" "No" }list
-
-      {
-        "A player can set themselves \"SILENT\" and not see all the dbrefs and dark objects that they own.  They won't see objects in a dark room either.  They still control the objects though."
-        ""
-        "Set the SILENT flag on this character? (y/n)"
-      }list "\r" array_join
-      'set_flag    { "SILENT" }list
-    }list
-
-    { "H"
-      "[#00AAAA][[#55FFFF]H[#00AAAA]]aven:          [#5555FF]%s"
-      'get_flag    { "HAVEN" "Yes" "No" }list
-
-      {
-        "If a player is set HAVEN, they cannot be paged."
-        "There are also other benifits to setting yourself HAVEN.  Whereis, and other intrusive programs should stop bothering you and helping others bother you."
-        ""
-        "Set the HAVEN flag on this character? (y/n)"
-      }list "\r" array_join
-      'set_flag    { "HAVEN" }list
-    }list
-
     "" "Settings" 2
 
     { "S1"
@@ -1455,6 +1505,15 @@ lvar g_morph_prop_table
       {
       }list "\r" array_join
       'set_menu { g_table_attr }list
+    }list
+
+    { "{S5|F}"
+      "[#00AAAA][[#55FFFF]F[#00AAAA]]lags"
+      'get_null { }list
+
+      {
+      }list "\r" array_join
+      'set_menu { g_table_player_flags }list
     }list
 
     "" (* Blank line before footer *)
@@ -2717,18 +2776,19 @@ lvar g_morph_prop_table
 : tables_init (  --  )
 
   (* Not very elegant I know.. *)
-  table_player_pref g_table_player_pref !
-  table_attr        g_table_attr        !
-  table_morph       g_table_morph       !
-  table_pronoun     g_table_pronoun     !
-  table_player      g_table_player      !
-  table_room_flags  g_table_room_flags  !
-  table_room        g_table_room        !
-  table_thing_pref  g_table_thing_pref  !
-  table_thing_flags g_table_thing_flags !
-  table_thing       g_table_thing       !
-  table_exit        g_table_exit        !
-  table_program     g_table_program     !
+  table_attr         g_table_attr         !
+  table_morph        g_table_morph        !
+  table_pronoun      g_table_pronoun      !
+  table_player_flags g_table_player_flags !
+  table_player_pref  g_table_player_pref  !
+  table_player       g_table_player       !
+  table_room_flags   g_table_room_flags   !
+  table_room         g_table_room         !
+  table_thing_pref   g_table_thing_pref   !
+  table_thing_flags  g_table_thing_flags  !
+  table_thing        g_table_thing        !
+  table_exit         g_table_exit         !
+  table_program      g_table_program      !
 
   set_menu_default
 ;
