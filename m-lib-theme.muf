@@ -14,81 +14,82 @@ $PRAGMA comment_recurse
 (*   GitHub: https://github.com/dbenoy/mercury-muf (See for install info)    *)
 (*                                                                           *)
 (* EXAMPLES:                                                                 *)
-(*   @set m-lib-theme.muf=_theme/fmt_obj_exit=[#AAAAAA]!%1!                  *)
+(*   @set m-lib-theme.muf=_theme/fmt_obj_exit=[#AAAAAA]!!1!                  *)
 (*   @action Test;t=here                                                     *)
 (*   @muf $INCLUDE $m/lib/theme "t" match M-LIB-THEME-name .color_tell       *)
 (*     > (In grey) !Test;t!                                                  *)
 (*                                                                           *)
-(*   @set m-lib-theme.muf=_theme/fmt_obj_exit=[#0000AA]{%1}                  *)
-(*   @set m-lib-theme.muf=_theme/fmt_obj_exit_highlight=[#FFFFFF][%1]        *)
+(*   @set m-lib-theme.muf=_theme/fmt_obj_exit=[#0000AA]{!1}                  *)
+(*   @set m-lib-theme.muf=_theme/fmt_obj_exit_highlight=[#FFFFFF][!1]        *)
 (*   @action Test;t=here                                                     *)
 (*   @muf $INCLUDE $m/lib/theme "t" match M-LIB-THEME-fancy_exit .color_tell *)
 (*     > (In blue with bright white [T]) {[T]est}                            *)
 (*                                                                           *)
-(*   @set m-lib-theme.muf=_theme/fmt_msg_tagged:[#00AA00](%1) %2             *)
+(*   @set m-lib-theme.muf=_theme/fmt_msg_tagged:[#00AA00](!1) !2             *)
 (*   @muf $INCLUDE $m/lib/theme "Does not compute." "SYSTEM" .theme_tag_tell *)
 (*     > (In green) (SYSTEM) Does not compute.                               *)
 (*                                                                           *)
 (* PROPERTIES:                                                               *)
 (*   "_theme/fmt_obj_exit"                                                   *)
-(*     On this program object: Format the names of exits. %1 is replaced by  *)
+(*     On this program object: Format the names of exits. !1 is replaced by  *)
 (*     the name itself.                                                      *)
 (*                                                                           *)
 (*   "_theme/fmt_obj_exit_highlight"                                         *)
 (*     On this progrom object. This is used by M-LIB-THEME-exit_name for     *)
-(*     when a component of the exit gets highlighted. %1 is replaced by the  *)
+(*     when a component of the exit gets highlighted. !1 is replaced by the  *)
 (*     text being highlighted.                                               *)
 (*                                                                           *)
 (*   "_theme/fmt_obj_player_awake"                                           *)
 (*     On this program object: Format the names of non-wizard players who    *)
-(*     are currently logged in. %1 is replaced by the name itself.           *)
+(*     are currently logged in. !1 is replaced by the name itself.           *)
 (*                                                                           *)
 (*   "_theme/fmt_obj_player_asleep"                                          *)
 (*     On this program object: Format the names of non-wizard players who    *)
-(*     are currently not logged in. %1 is replaced by the name itself.       *)
+(*     are currently not logged in. !1 is replaced by the name itself.       *)
 (*                                                                           *)
 (*   "_theme/fmt_obj_player_wawake"                                          *)
 (*     On this program object: Format the names of unquelled wizard players  *)
-(*     who are currently logged in. %1 is replaced by the name itself.       *)
+(*     who are currently logged in. !1 is replaced by the name itself.       *)
 (*                                                                           *)
 (*   "_theme/fmt_obj_player_wasleep"                                         *)
 (*     On this program object: Format the names of unquelled wizard players  *)
-(*     who are currently not logged in. %1 is replaced by the name           *)
+(*     who are currently not logged in. !1 is replaced by the name           *)
 (*     itself.                                                               *)
 (*                                                                           *)
 (*   "_theme/fmt_obj_program"                                                *)
-(*     On this program object: Format the names of program objects. %1 is    *)
+(*     On this program object: Format the names of program objects. !1 is    *)
 (*     replaced by the name itself.                                          *)
 (*                                                                           *)
 (*   "_theme/fmt_obj_room"                                                   *)
-(*     On this program object: Format the names of room objects. %1 is       *)
+(*     On this program object: Format the names of room objects. !1 is       *)
 (*     replaced by the name itself.                                          *)
 (*                                                                           *)
 (*   "_theme/fmt_obj_thing"                                                  *)
 (*     On this program object: Format the names of non-puppet thing objects. *)
-(*     %1 is replaced by the name itself.                                    *)
+(*     !1 is replaced by the name itself.                                    *)
 (*                                                                           *)
 (*   "_theme/fmt_obj_thing_pawake"                                           *)
 (*     On this program object: Format the names of puppet objects whose      *)
-(*     owner is currently logged in. %1 is replaced by the name itself.      *)
+(*     owner is currently logged in. !1 is replaced by the name itself.      *)
 (*                                                                           *)
 (*   "_theme/fmt_obj_thing_pasleep"                                          *)
 (*     On this program object: Format the names of puppet objects whose      *)
-(*     owner is not currently logged in. %1 is replaced by the name          *)
+(*     owner is not currently logged in. !1 is replaced by the name          *)
 (*     itself.                                                               *)
 (*                                                                           *)
 (*   "_theme/fmt_obj_flagref"                                                *)
 (*     On this program object: Format the dbref-and-flags component of the   *)
-(*     M-LIB-THEME-unparseobj call. %1 is replaced by the dbref and %2 is    *)
+(*     M-LIB-THEME-unparseobj call. !1 is replaced by the dbref and !2 is    *)
 (*     replaced by the flags.                                                *)
 (*                                                                           *)
 (*   "_theme/fmt_msg_tagged"                                                 *)
-(*     The format for 'tagged' messages used by M-LIB-THEME-tag_line. %1 is  *)
-(*     replaced by the message text, and %2 is replaced by the tag.          *)
+(*     On this program object: The format for 'tagged' messages used by      *)
+(*     M-LIB-THEME-tag_line. !1 is replaced by the message text, and !2 is   *)
+(*     replaced by the tag.                                                  *)
 (*                                                                           *)
 (*   "_theme/fmt_msg_error"                                                  *)
-(*     The format for 'error' messages used by M-LIB-THEME-err_line. %1      *)
-(*     is replaced by the message text.                                      *)
+(*     On this program object: The format for 'error' messages used by       *)
+(*     M-LIB-THEME-err_line. !1 is replaced by the message text.             *)
 (*                                                                           *)
 (* PUBLIC ROUTINES:                                                          *)
 (*   M-LIB-THEME-fancy_exit[ ref:exit -- str:name ]                          *)
@@ -127,9 +128,6 @@ $PRAGMA comment_recurse
 (*     actual name of the object will be used. The unparse argument, if true *)
 (*     will request that flag and dbref information be added to the name     *)
 (*     similar to the UNPARSEOBJ primitive.                                  *)
-(*                                                                           *)
-(*   M-LIB-THEME-unparseobj[ ref:object -- str:name ]                        *)
-(*     Like the UNPARSEOBJ primitive, but using the theme.                   *)
 (*                                                                           *)
 (* QUICK DEFINITIONS:                                                        *)
 (*   .theme_name ( d -- s )                                                  *)
@@ -209,20 +207,20 @@ $DEF M_LIB_COLOR
 
 $DEFINE DEFAULT_THEME
   {
-    "fmt_obj_exit"            "%1"
-    "fmt_obj_exit_highlight"  "(%1)"
-    "fmt_obj_program"         "%1"
-    "fmt_obj_player_awake"    "%1"
-    "fmt_obj_player_asleep"   "%1"
-    "fmt_obj_player_wawake"   "%1"
-    "fmt_obj_player_wasleep"  "%1"
-    "fmt_obj_room"            "%1"
-    "fmt_obj_thing"           "%1"
-    "fmt_obj_thing_pawake"    "%1"
-    "fmt_obj_thing_pasleep"   "%1"
-    "fmt_obj_flagref"         "(%1%2)"
-    "fmt_msg_tagged"          "%2: %1"
-    "fmt_msg_error"           "ERROR: %1"
+    "fmt_obj_exit"            "!1"
+    "fmt_obj_exit_highlight"  "(!1)"
+    "fmt_obj_program"         "!1"
+    "fmt_obj_player_awake"    "!1"
+    "fmt_obj_player_asleep"   "!1"
+    "fmt_obj_player_wawake"   "!1"
+    "fmt_obj_player_wasleep"  "!1"
+    "fmt_obj_room"            "!1"
+    "fmt_obj_thing"           "!1"
+    "fmt_obj_thing_pawake"    "!1"
+    "fmt_obj_thing_pasleep"   "!1"
+    "fmt_obj_flagref"         "(!1!2)"
+    "fmt_msg_tagged"          "!2: !1"
+    "fmt_msg_error"           "ERROR: !1"
   }dict
 $ENDDEF
 
@@ -254,7 +252,7 @@ $PUBDEF :
 ;
 
 : arg_sub[ str:source arr:args -- str:result ]
-  source @ "%" explode_array
+  source @ "!" explode_array
   1 array_cut swap array_vals pop var! result
   foreach
     nip
@@ -263,7 +261,7 @@ $PUBDEF :
       args @ swap [] dup not if pop "" then
       swap strcat
     else
-      "%" swap strcat
+      "!" swap strcat
     then
     result @ swap strcat result !
   repeat
@@ -515,6 +513,7 @@ $DEF EINSTRING over swap instring dup not if pop strlen else nip -- then
   alias @ "i" stringcmp not if
     {
       "in" { "" "i" "n" }list
+      "into" { "" "i" "nto" }list
       "inside" { "" "i" "nside" }list
     }dict exit
   then
