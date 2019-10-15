@@ -1587,7 +1587,7 @@ lvar ansi_table_3bit_xterm_rgb
 ;
 
 lvar g_cast_to_transcode_cache (* Clear this variable to an empty dict before using cast_to! *)
-: cast_to[ str:message ref:object arr:exclude str:from_type -- ]
+: cast_to[ str:message ref:object arr:exclude -- ]
   object @ contents begin
     dup while
     dup thing? over player? or if
@@ -1598,13 +1598,13 @@ lvar g_cast_to_transcode_cache (* Clear this variable to an empty dict before us
         g_cast_to_transcode_cache @ to_encoding @ [] if
           g_cast_to_transcode_cache @ to_encoding @ []
         else
-          message @ from_type @ to_encoding @ transcode
+          message @ mcc_preprocess to_encoding @ mcc_convert
           dup g_cast_to_transcode_cache @ to_encoding @ ->[] g_cast_to_transcode_cache !
         then
         to @ swap notify
       then
       (* Notify all the things/players inside, too *)
-      message @ to @ exclude @ from_type @ cast_to
+      message @ to @ exclude @ cast_to
     then
     next
   repeat
@@ -1637,17 +1637,20 @@ $LIBDEF M-LIB-COLOR-carve_array
 (*****************************************************************************)
 (*                            M-LIB-COLOR-cast_to                            *)
 (*****************************************************************************)
-: M-LIB-COLOR-cast_to[ str:message ref:object arr:exclude str:from_type -- ]
-  ( .needs_mlev3 ) (* TODO: Could support lower MUCKER levels by prepending the name of the sender? *)
+: M-LIB-COLOR-cast_to[ str:message ref:object arr:exclude -- ]
+  .needs_mlev3 (* TODO: Could support lower MUCKER levels by prepending the name of the sender? *)
 
   message @ string? not if "Non-string argument (1)." abort then
   object @ dbref? not if "Non-dbref argument (2)." abort then
   exclude @ array? not if "Non-array argument (3)." abort then
   exclude @ foreach nip dbref? not if "Array of dbrefs expected (3)." abort then repeat
-  from_type @ string? not if "Non-string argument (4)." abort then
+
+  message @ "NOCOLOR" mcc_convert not if
+    exit
+  then
 
   { }dict g_cast_to_transcode_cache !
-  message @ object @ exclude @ from_type @ cast_to
+  message @ object @ exclude @ cast_to
 ;
 PUBLIC M-LIB-COLOR-cast_to
 $LIBDEF M-LIB-COLOR-cast_to
@@ -2101,8 +2104,8 @@ $LIBDEF M-LIB-COLOR-transcode
 (*****************************************************************************)
 (*                           Convenience Routines                            *)
 (*****************************************************************************)
-$PUBDEF .color_cast me @ begin location dup room? until { }list "MCC" M-LIB-COLOR-cast_to
-$PUBDEF .color_ocast me @ begin location dup room? until { me @ }list "MCC" M-LIB-COLOR-cast_to
+$PUBDEF .color_cast me @ begin location dup room? until { }list M-LIB-COLOR-cast_to
+$PUBDEF .color_ocast me @ begin location dup room? until { me @ }list M-LIB-COLOR-cast_to
 $PUBDEF .color_escape "NOCOLOR" "MCC" M-LIB-COLOR-transcode
 $PUBDEF .color_explode_array M-LIB-COLOR-explode_array
 $PUBDEF .color_slice_array M-LIB-COLOR-slice_array
