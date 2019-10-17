@@ -98,7 +98,7 @@ WIZCALL M-HELP-help
         { owner_tag @ " - " this_entry @ "object_owner" [] }join owner_tag !
       then
     then
-    this_entry @ "message_text" [] owner_tag @ instr 1 = not if 
+    this_entry @ "message_text" [] "_" " " subst owner_tag @ instr 1 = not if 
       { this_line @ " [#0000AA](" owner_tag @ ")" }join this_line !
     then
     (* Put the completed line in the list *)
