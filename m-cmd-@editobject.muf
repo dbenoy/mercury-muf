@@ -76,6 +76,7 @@ $PUBDEF :
 $INCLUDE $m/lib/program
 $INCLUDE $m/lib/color
 $INCLUDE $m/lib/match
+$INCLUDE $m/lib/theme
 $INCLUDE $m/cmd/at_action
 $INCLUDE $m/cmd/at_attach
 $INCLUDE $m/cmd/at_link
@@ -343,7 +344,7 @@ lvar g_table_program
 
 (***** get/set name *****)
 : get_obj_name[  -- str:value ]
-  g_object @ name
+  g_object @ .theme_name
 ;
 
 : set_obj_name[  --  ]
@@ -425,9 +426,9 @@ lvar g_table_program
     g_object @ location
 
     dup "me" match swap controls if
-      unparseobj
+      .theme_unparseobj
     else
-      name
+      .theme_name
     then
   else
     "UNKNOWN"
@@ -449,9 +450,9 @@ lvar g_table_program
   then
 
   dup "me" match swap controls if
-    unparseobj
+    .theme_unparseobj
   else
-    name
+    .theme_name
   then
 ;
 
@@ -1909,7 +1910,7 @@ lvar g_table_program
 : do_menu_header (  --  )
 
   "[#FFFFFF]----[#0000AA][ [#FFFF55]Object Editor[#0000AA] ][#FFFFFF]" dup .color_strlen .chars-per-row swap - "-" * strcat
-  g_object @ unparseobj
+  g_object @ .theme_unparseobj
 
   dup .color_strlen .chars-per-row 20 - <= if
     "[#0000AA][ [!FFFFFF]" swap strcat "[#0000AA] ][#FFFFFF]----" strcat
