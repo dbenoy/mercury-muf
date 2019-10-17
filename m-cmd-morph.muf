@@ -4,7 +4,7 @@ i
 $PRAGMA comment_recurse
 (*****************************************************************************)
 (* m-cmd-morph.muf - $m/cmd/morph                                            *)
-(*   Load saved alternative description presets made inside @editobject.     *)
+(*   Loads morphs created by the @morph command.                             *)
 (*                                                                           *)
 (*   GitHub: https://github.com/dbenoy/mercury-muf (See for install info)    *)
 (*                                                                           *)
@@ -36,7 +36,10 @@ $AUTHOR  Daniel Benoy
 $NOTE    Morph loader.
 $DOCCMD  @list __PROG__=2-30
 
-$INCLUDE $m/cmd/at_editobject
+$INCLUDE $m/lib/theme
+$INCLUDE $m/lib/color
+$INCLUDE $m/lib/emote
+$INCLUDE $m/cmd/at_morph
 
 (* ------------------------------------------------------------------------ *)
 
@@ -64,17 +67,14 @@ WIZCALL M-HELP-help
 
 : main ( s --  )
   dup not if
-    "What do you want to morph into?" .tell
-    pop
-    M-CMD-AT_EDITOBJECT-list_morphs
-    exit
+    "What do you want to morph into?" .theme_err .color_tell
+    pop exit
   then
 
   var! morph_name
 
-  morph_name @ 1 M-CMD-AT_EDITOBJECT-load_morph if
-    "me" match "_morph_mesg" getpropstr dup if .tell else { "You morph into a " me @ "_morph" getpropstr "." }join .tell pop then
-    "me" match "_morph_omesg" getpropstr dup if "me" match name " " strcat swap strcat then .otell
+  me @ morph_name @ 1 M-CMD-AT_MORPH-load if
+    me @ morph_name @ 1 M-CMD-AT_MORPH-mesg_get "" "" me @ M-LIB-EMOTE-emote
   then
 ;
 .

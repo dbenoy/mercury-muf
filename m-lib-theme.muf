@@ -136,41 +136,14 @@ $PRAGMA comment_recurse
 (*   .theme_unparseobj ( d -- s )                                            *)
 (*     Like the UNPARSEOBJ primitive, but uses the theme.                    *)
 (*                                                                           *)
-(*   .err_tell ( s -- )                                                      *)
-(*     Like the TELL primitive, but it uses M-LIB-THEME-line_err.            *)
+(*   .theme_err ( s -- s )                                                   *)
+(*     M-LIB-THEME-line_err                                                  *)
 (*                                                                           *)
-(*   .err_otell ( s -- )                                                     *)
-(*     Like the OTELL primitive, but it uses M-LIB-THEME-line_err.           *)
+(*   .theme_tag ( s -- s )                                                   *)
+(*     M-LIB-THEME-line_tag                                                  *)
 (*                                                                           *)
-(*   .err_notify ( d s -- )                                                  *)
-(*     Like the NOTIFY primitive, but it uses M-LIB-THEME-line_err.          *)
-(*                                                                           *)
-(*   .err_connotify (i s -- )                                                *)
-(*     Like the CONNOTIFY primitive, but it uses M-LIB-THEME-line_err.       *)
-(*                                                                           *)
-(*   .err_notify_except ( d1 d2 s -- )                                       *)
-(*     Like the NOTIFY_EXCEPT definition, but it uses M-LIB-THEME-line_err.  *)
-(*                                                                           *)
-(*   .err_notify_exclude ( d dn ... d1 n s -- )                              *)
-(*     Like the NOTIFY_EXCLUDE primitive, but it uses M-LIB-THEME-line_err.  *)
-(*                                                                           *)
-(*   .tag_tell ( s s -- )                                                    *)
-(*     Like the TELL primitive, but it uses M-LIB-THEME-line_tag.            *)
-(*                                                                           *)
-(*   .tag_otell ( s s -- )                                                   *)
-(*     Like the OTELL primitive, but it uses M-LIB-THEME-line_tag.           *)
-(*                                                                           *)
-(*   .tag_notify ( d s s -- )                                                *)
-(*     Like the NOTIFY primitive, but it uses M-LIB-THEME-line_tag.          *)
-(*                                                                           *)
-(*   .tag_connotify (i s s -- )                                              *)
-(*     Like the CONNOTIFY primitive, but it uses M-LIB-THEME-line_tag.       *)
-(*                                                                           *)
-(*   .tag_notify_except ( d1 d2 s s -- )                                     *)
-(*     Like the NOTIFY_EXCEPT definition, but it uses M-LIB-THEME-line_tag.  *)
-(*                                                                           *)
-(*   .tag_notify_exclude ( d dn ... d1 n s s -- )                            *)
-(*     Like the NOTIFY_EXCLUDE primitive, but it uses M-LIB-THEME-line_tag.  *)
+(*   .theme_tag_err ( s -- s )                                               *)
+(*     M-LIB-THEME-line_err, and then M-LIB-THEME-line_tag                   *)
 (*                                                                           *)
 (*****************************************************************************)
 (* Revision History:                                                         *)
@@ -207,20 +180,20 @@ $DEF M_LIB_COLOR
 
 $DEFINE DEFAULT_THEME
   {
-    "fmt_obj_exit"            "!1"
-    "fmt_obj_exit_highlight"  "(!1)"
-    "fmt_obj_program"         "!1"
-    "fmt_obj_player_awake"    "!1"
-    "fmt_obj_player_asleep"   "!1"
-    "fmt_obj_player_wawake"   "!1"
-    "fmt_obj_player_wasleep"  "!1"
-    "fmt_obj_room"            "!1"
-    "fmt_obj_thing"           "!1"
-    "fmt_obj_thing_pawake"    "!1"
-    "fmt_obj_thing_pasleep"   "!1"
-    "fmt_obj_flagref"         "(!1!2)"
-    "fmt_msg_tagged"          "!2: !1"
-    "fmt_msg_error"           "ERROR: !1"
+    "fmt_obj_exit"            "@1"
+    "fmt_obj_exit_highlight"  "(@1)"
+    "fmt_obj_program"         "@1"
+    "fmt_obj_player_awake"    "@1"
+    "fmt_obj_player_asleep"   "@1"
+    "fmt_obj_player_wawake"   "@1"
+    "fmt_obj_player_wasleep"  "@1"
+    "fmt_obj_room"            "@1"
+    "fmt_obj_thing"           "@1"
+    "fmt_obj_thing_pawake"    "@1"
+    "fmt_obj_thing_pasleep"   "@1"
+    "fmt_obj_flagref"         "(@1@2)"
+    "fmt_msg_tagged"          "@2: @1"
+    "fmt_msg_error"           "ERROR: @1"
   }dict
 $ENDDEF
 
@@ -231,10 +204,12 @@ $IFDEF M_LIB_COLOR
   $INCLUDE $m/lib/color
 $ENDIF
 
-$IFDEF M_LIB_COLOR
-  $DEF COLOR_STRCAT .color_strcat
-$ELSE
-  $DEF COLOR_STRCAT
+$IFNDEF M_LIB_COLOR
+  $INCLUDE $m/lib/array
+  $DEF .color_strcat \strcat
+  $DEF .color_strcut \strcut
+  $DEF .color_strip \strip
+  $DEF .color_carve_array .carve_array
 $ENDIF
 
 $PUBDEF :
@@ -252,16 +227,14 @@ $PUBDEF :
 ;
 
 : arg_sub[ str:source arr:args -- str:result ]
-  source @ "!" explode_array
+  source @ "@" .color_carve_array
   1 array_cut swap array_vals pop var! result
   foreach
     nip
-    dup 1 strcut pop number? if
-      1 strcut swap atoi --
+    dup 2 .color_strcut pop 1 .color_strcut swap pop .color_strip number? if
+      2 .color_strcut swap 1 .color_strcut swap pop .color_strip atoi --
       args @ swap [] dup not if pop "" then
       swap strcat
-    else
-      "!" swap strcat
     then
     result @ swap strcat result !
   repeat
@@ -646,7 +619,7 @@ $LIBDEF M-LIB-THEME-fancy_exit
   namestr !
   object @ intostr "#" swap strcat var! refstr
   object @ unparseobj object @ name strlen refstr @ strlen + ++ strcut nip dup strlen -- strcut pop var! flagstr
-  namestr @ "fmt_obj_flagref" theme_get { refstr @ flagstr @ }list arg_sub COLOR_STRCAT
+  namestr @ "fmt_obj_flagref" theme_get { refstr @ flagstr @ }list arg_sub .color_strcat
 ;
 PUBLIC M-LIB-THEME-name
 $LIBDEF M-LIB-THEME-name
@@ -676,18 +649,9 @@ $LIBDEF M-LIB-THEME-line_tag
 
 $PUBDEF .theme_name "" 0 M-LIB-THEME-name
 $PUBDEF .theme_unparseobj "" 1 M-LIB-THEME-name
-$PUBDEF .err_tell M-LIB-THEME-line_err \tell
-$PUBDEF .err_otell M-LIB-THEME-line_err \otell
-$PUBDEF .err_notify M-LIB-THEME-line_err \notify
-$PUBDEF .err_connotify M-LIB-THEME-line_err \connotify
-$PUBDEF .err_notify_except M-LIB-THEME-line_err 1 swap \notify_exclude
-$PUBDEF .err_notify_exclude M-LIB-THEME-line_err \notify_exclude
-$PUBDEF .tag_tell M-LIB-THEME-line_tag \tell
-$PUBDEF .tag_otell M-LIB-THEME-line_tag \otell
-$PUBDEF .tag_notify M-LIB-THEME-line_tag \notify
-$PUBDEF .tag_connotify M-LIB-THEME-line_tag \connotify
-$PUBDEF .tag_notify_except M-LIB-THEME-line_tag 1 swap \notify_exclude
-$PUBDEF .tag_notify_exclude M-LIB-THEME-line_tag \notify_exclude
+$PUBDEF .theme_err M-LIB-THEME-line_err
+$PUBDEF .theme_tag M-LIB-THEME-line_tag
+$PUBDEF .theme_tag_err swap M-LIB-THEME-line_err swap M-LIB-THEME-line_tag
 
 : main
   "Library called as command." abort

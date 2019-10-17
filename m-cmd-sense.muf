@@ -103,7 +103,7 @@ $PRAGMA comment_recurse
 (*     3 - The target object/room.                                           *)
 (*                                                                           *)
 (*   Also, prior to the grammar substitution, these strings are substituted: *)
-(*     "!1" - Aspect being acted on (_sense/aspect i.e. scent)               *)
+(*     "@1" - Aspect being acted on (_sense/aspect i.e. scent)               *)
 (*                                                                           *)
 (*   When listing the contents of a room, the %i property is used to get the *)
 (*   name, and it is themed for the object type with $m/lib/theme.           *)
@@ -151,7 +151,7 @@ $PRAGMA comment_recurse
 $VERSION 1.0
 $AUTHOR  Daniel Benoy
 $NOTE    Customizable smell/taste/feel etc.
-$DOCCMD  @list __PROG__=2-172
+$DOCCMD  @list __PROG__=2-147
 
 (* Begin configurable options *)
 
@@ -170,8 +170,8 @@ $DEFINE DEFAULT_TRIG_PROPS
     "exits_object"        "no"
     "contents_room"       "no"
     "contents_object"     "no"
-    "default_desc_object" "%3S doesn't seem to have a !1."
-    "default_desc_room"   "This area has no distinct !1."
+    "default_desc_object" "%3S doesn't seem to have any @1."
+    "default_desc_room"   "This area has no distinct @1."
     "tell_object"         ""
     "tell_room"           ""
   }dict
@@ -248,7 +248,7 @@ WIZCALL M-HELP-desc
 WIZCALL M-HELP-help
 
 : sub_standard ( s -- s )
-  "aspect" get_conf "!1" subst
+  "aspect" get_conf "@1" subst
 ;
 
 : get_sense_prop ( -- s )
@@ -416,22 +416,22 @@ WIZCALL M-HELP-help
 
   match
   dup #-2 = if
-    "I don't know which one you mean!" .err_tell
+    "I don't know which one you mean!" .theme_err .color_tell
     pop exit
   then
 
   dup ok? not if
-    "I don't see that here." .err_tell
+    "I don't see that here." .theme_err .color_tell
     pop exit
   then
 
   dup location loc @ = not over loc @ = not and over location me @ = not and me @ "WIZARD" flag? not and if
-    "I don't see that here." .err_tell
+    "I don't see that here." .theme_err .color_tell
     pop exit
   then
 
   dup room? me @ "WIZARD" flag? not and if (* Only allow wizards to sniff into a room *)
-    "You can't see that clearly." .err_tell exit
+    "You can't see that clearly." .theme_err .color_tell exit
   then
 
   dup exit? if
@@ -443,18 +443,18 @@ WIZCALL M-HELP-help
   then
 
   dup exit? if
-    "You can't %1v through that exit." sub_standard { trig }list { "name_match" "yes" }dict M-LIB-GRAMMAR-sub .err_tell exit
+    "You can't %1v through that exit." sub_standard { trig }list { "name_match" "yes" }dict M-LIB-GRAMMAR-sub .theme_err .color_tell exit
   then
 
   swap
   rmatch
   dup #-2 = if
-    "I don't know which one you mean!" .err_tell
+    "I don't know which one you mean!" .theme_err .color_tell
     pop exit
   then
 
   dup ok? not if
-    "I don't see that there." .err_tell
+    "I don't see that there." .theme_err .color_tell
     pop exit
   then
 
@@ -490,17 +490,17 @@ WIZCALL M-HELP-help
 
   match
   dup #-2 = if
-    "I don't know which one you mean!" .err_tell
+    "I don't know which one you mean!" .theme_err .color_tell
     pop exit
   then
 
   dup ok? not if
-    "I don't see that here." .err_tell
+    "I don't see that here." .theme_err .color_tell
     pop exit
   then
 
   dup location loc @ = not over loc @ = not and over location me @ = not and me @ "WIZARD" flag? not and if
-    "I don't see that here." .err_tell
+    "I don't see that here." .theme_err .color_tell
     pop exit
   then
 
@@ -516,36 +516,36 @@ WIZCALL M-HELP-help
 (*****************************************************************************)
 : cmd_set ( s --  )
   me @ GUEST_CHECK if
-    "Guests can't set their !1" sub_standard .err_tell exit
+    "Guests can't set their @1" sub_standard .theme_err .color_tell exit
   then
 
   strip
   "=" split swap
 
   dup not if
-    "You must use the format <object>=<player>" .err_tell exit
+    "You must use the format <object>=<player>" .theme_err .color_tell exit
   then
 
   "aspect" get_conf "@" 1 strncmp not "aspect" get_conf "~" 1 strncmp not or if
     me @ "WIZARD" flag? not prog mlevel 4 >= not or if
-      "Permission denied." .err_tell
+      "Permission denied." .theme_err .color_tell
       pop pop exit
     then
   then
 
   match
   dup #-2 = if
-    "I don't know which one you mean." .err_tell
+    "I don't know which one you mean." .theme_err .color_tell
     pop pop exit
   then
 
   dup ok? not if
-    "I don't see that here." .err_tell
+    "I don't see that here." .theme_err .color_tell
     pop pop exit
   then
 
   me @ over controls not if
-    "Permission denied." .err_tell
+    "Permission denied." .theme_err .color_tell
     pop pop exit
   then
 
@@ -553,10 +553,10 @@ WIZCALL M-HELP-help
 
   dup if
     get_sense_prop swap setprop
-    "aspect" get_conf 1 strcut swap toupper swap strcat " set." strcat .err_tell
+    "aspect" get_conf 1 strcut swap toupper swap strcat " set." strcat .theme_err .color_tell
   else
     pop get_sense_prop remove_prop
-    "aspect" get_conf 1 strcut swap toupper swap strcat " cleared." strcat .err_tell
+    "aspect" get_conf 1 strcut swap toupper swap strcat " cleared." strcat .theme_err .color_tell
   then
 ;
 

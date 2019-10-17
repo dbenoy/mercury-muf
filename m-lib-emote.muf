@@ -225,10 +225,10 @@ $DEF OPTIONS_VALID_HIGHLIGHT_ALLOW_CUSTOM { "YES" "NO" "PLAIN" "NOCOLOR" }list
     { value @ }list OPTIONS_VALID_HIGHLIGHT_ALLOW_CUSTOM array_union not not exit
   then
   option @ "color_name" = if
-    value @ .color_strip object @ name stringcmp 0 = exit
+    value @ .color_strip "_" " " subst object @ name stringcmp 0 = exit
   then
   option @ "color_quoted" = option @ "color_unquoted" = or if
-    value @ "[0-9A-F][0-9A-F][0-9A-F][0-9A-F][0-9A-F][0-9A-F]" smatch exit
+    value @ toupper value @ = value @ "[0-9A-F][0-9A-F][0-9A-F][0-9A-F][0-9A-F][0-9A-F]" smatch and exit
   then
   option @ "highlight_mention_before" = option @ "highlight_mention_after" = or if
     value @ strlen 30 < exit
@@ -569,12 +569,6 @@ $DEF EINSTRING over swap instring dup not if pop strlen else nip -- then
       to @ player? to @ thing? or if
         to @ player? to @ "ZOMBIE" flag? or if
           to @ { prefix @ message @ from @ to @ style suffix @ }join .color_notify
-          (
-          to @ { prefix @ message @ from @ to @ style suffix @ }join "MCC" "ANSI-24BIT" M-LIB-COLOR-transcode notify
-          to @ { prefix @ message @ from @ to @ style suffix @ }join "MCC" "ANSI-8BIT" M-LIB-COLOR-transcode notify
-          to @ { prefix @ message @ from @ to @ style suffix @ }join "MCC" "ANSI-4BIT-VGA" M-LIB-COLOR-transcode notify
-          to @ { prefix @ message @ from @ to @ style suffix @ }join "MCC" "ANSI-4BIT-XTERM" M-LIB-COLOR-transcode notify
-          )
         then
         (* Notify all the things/players inside, too *)
         message @ prefix @ suffix @ from @ to @ emote_to_object

@@ -14,21 +14,6 @@ $PRAGMA comment_recurse
 (*     name matching. If for some reason the editor fails to open for this   *)
 (*     object, false will be returned. M2 required.                          *)
 (*                                                                           *)
-(*   M-CMD-AT_EDITOBJECT-SaveMorph[ str:morph_name bool:quiet                *)
-(*                                  -- bool:success? ]                       *)
-(*   M-CMD-AT_EDITOBJECT-LoadMorph[ str:morph_name bool:quiet                *)
-(*                                  -- bool:success? ]                       *)
-(*     Save or load a specified morph. If quiet is true, then only error     *)
-(*     messages will be displayed.                                           *)
-(*                                                                           *)
-(*   M-CMD-AT_EDITOBJECT-ListMorphs[  --  ]                                  *)
-(*     Outputs a list of available morphs to the player.                     *)
-(*                                                                           *)
-(* TECHNICAL NOTES:                                                          *)
-(*   This program is how morph information used by m-cmd-morph.muf is added  *)
-(*   to player properties. The morph command itself doesn't have any options *)
-(*   for managing morph data.                                                *)
-(*                                                                           *)
 (*****************************************************************************)
 (* Revision History:                                                         *)
 (*   Version 1.1 -- Daniel Benoy -- September, 2019                          *)
@@ -104,15 +89,11 @@ lvar g_object (* Set to the object being edited in main *)
 lvar g_table  (* Set to the appropriate table in main *)
 
 (* These are intialized in main. *)
-lvar g_table_attr
 lvar g_table_pronoun
-lvar g_table_morph
-lvar g_table_player_pref
 lvar g_table_player_flags
 lvar g_table_player
 lvar g_table_room_flags
 lvar g_table_room
-lvar g_table_thing_pref
 lvar g_table_thing_flags
 lvar g_table_thing
 lvar g_table_exit
@@ -135,33 +116,6 @@ lvar g_table_program
   then
 
   0 exit
-;
-
-: copy_props[ ref:from str:fromprop ref:to str:toprop -- ]
-
-  to @ toprop @ propdir? toprop @ strlen toprop @ "#" instr = and if (* If it's a list type prop and it exists, destroy it before copying contents in *)
-    to @ toprop @ remove_prop
-  then
-
-  to @ toprop @ from @ fromprop @ getprop setprop
-
-  (* If it's a propdir, recursively descend the tree *)
-  from @ fromprop @ propdir? if
-    fromprop @ "/" strcat fromprop !
-    from @ fromprop @ nextprop
-    begin
-      dup while
-
-      from @   (* from stays the same *)
-      over     (* The curently iterated item is the new fromprop *)
-      to @     (* to stays the same *)
-      toprop @ 5 pick "/" rsplit "/" swap strcat swap pop strcat (* The new toprop is the old toprop, plus the relitive name of the currently iterated item. *)
-      copy_props
-
-      from @ swap nextprop
-    repeat
-    pop
-  then
 ;
 
 (* For some reason, default stod returns #0 on failure.  <sigh>  Here's a replacement.  *)
@@ -465,132 +419,6 @@ lvar g_table_program
   then
 ;
 
-lvar g_morph_prop_table
-: do_morph[ str:morph_name bool:save bool:quiet -- bool:success? ]
-  g_morph_prop_table @ not if
-    {
-      "Appearance" "_/de"
-      "Scent" "_/scent"
-      "Texture" "_/texture"
-      "Flavor" "_/flavor"
-      "Aura" "_/aura"
-      "Sound" "_/sound"
-      "Writing" "_/writing"
-      "Image URL" "_/image"
-      "Description 'list data'" "_/dl"
-      "Pronoun (Name)" "%n"
-      "Pronoun (Absolute Posessive)" "%a"
-      "Pronoun (Subjective)" "%s"
-      "Pronoun (Objective)" "%o"
-      "Pronoun (Posessive)" "%p"
-      "Pronoun (Reflexive)" "%r"
-      "Species" "_/species"
-      "Sex" "gender_prop" sysparm
-      "Character attribute information" "_attr"
-      "Say/pose configuration" "_config/say"
-      "Morph 'Message'" "_morph_mesg"
-      "Morph 'OMessage'" "_morph_omesg"
-    }dict g_morph_prop_table !
-  then
-
-  "_morph/" morph_name @ strcat var! morph_dir
-
-  save @ if
-    g_object @ morph_dir @ propdir? if
-      quiet @ not if "Clearing existing morph..." .tell then
-      g_object @ morph_dir @ remove_prop
-      quiet @ not if "Saving morph..." .tell then
-    else
-      quiet @ not if "Creating new morph..." .tell then
-    then
-  else
-    g_object @ morph_dir @ propdir? if
-      quiet @ not if "Loading morph..." .tell then
-    else
-      { "Morph '" morph_name @ "' not found." }join "bold,red" textattr .tell
-      0 exit
-    then
-  then
-
-  g_morph_prop_table @ foreach
-    var! property
-    var! name
-
-    save @ if
-      g_object @ property @ propdir? g_object @ property @ getpropstr or if
-        quiet @ not if { "  Saving '" name @ "'..." }join .tell then
-        g_object @ property @ g_object @ { morph_dir @ "/" property @ }join copy_props
-      then
-    else
-      g_object @ { morph_dir @ "/" property @ }join propdir? g_object @ { morph_dir @ "/" property @ }join getpropstr or if
-        quiet @ not if { "  Loading '" name @ "'..." }join .tell then
-        g_object @ { morph_dir @ "/" property @ }join g_object @ property @ copy_props
-      then
-    then
-  repeat
-
-  g_object @ "/_morph" morph_name @ setprop
-  1
-;
-
-: initial_caps ( s -- s )
-  strip
-  ""
-  swap " " explode_array foreach
-    swap pop
-    1 strcut tolower swap toupper swap strcat
-    " " swap strcat
-    strcat
-  repeat
-  strip
-;
-
-: set_morph[ int:save --  ]
-  read
-
-  initial_caps
-  "_" " " subst
-
-  save @ 0 do_morph pop
-;
-
-: set_morph_delete[  --  ]
-  read
-
-  initial_caps
-  "_" " " subst
-
-  var! morph_name
-
-  "_morph/" morph_name @ strcat var! morph_dir
-
-  g_object @ morph_dir @ propdir? if
-    g_object @ morph_dir @ remove_prop
-    { "Morph '" morph_name @ "' deleted." }join .tell
-  else
-    { "Morph '" morph_name @ "' not found." }join "bold,red" textattr .tell
-  then
-;
-
-: set_morph_list[  --  ]
-  g_object @ "/_morph/" propdir? if
-    "  Saved morphs:" "dim,cyan" textattr .tell
-    g_object @ "/_morph/" nextprop
-    begin
-      dup while
-
-      g_object @ over propdir? if
-        dup "/" rsplit swap pop "    - " "dim,cyan" textattr swap "bold,blue" textattr strcat .tell
-      then
-
-      g_object @ swap nextprop
-    repeat
-    pop
-  else
-    "  No saved morphs." .tell
-  then
-;
-
 (***** Get source or destinations for exits *****)
 : get_source[  -- str:value ]
   g_object @ exit? if
@@ -777,90 +605,6 @@ lvar g_morph_prop_table
 (#############################################################################)
 (############################## PLAYER TABLES ################################)
 (#############################################################################)
-
-: table_attr (  -- a )
-  {
-    "" (* Blank line after header *)
-    "Attributes" 3
-
-    { "A1"
-      "[#00AAAA][[#55FFFF]A1[#00AAAA]] Flight:      [#5555FF]%s"
-      'get_str_bool { "_attr/flight?" "Yes" "No" }list
-
-      {
-        "** Builders may access this attribute by @locking to attr/flight?:yes, or with the MPI code: {if:{eq:{prop:attr/flight?,me},yes},<code>}"
-        "Can this character fly? (y/n)"
-      }list "\r" array_join
-      'set_str_bool { "_attr/flight?" }list
-    }list
-
-    { "A2"
-      "[#00AAAA][[#55FFFF]A2[#00AAAA]] Swim:        [#5555FF]%s"
-      'get_str_bool { "_attr/swim?" "Yes" "No" }list
-
-      {
-        "** Builders may access this attribute by @locking to attr/swim?:yes, or with the MPI code: {if:{eq:{prop:attr/swim?,me},yes},<code>}"
-        "Can this character swim?"
-      }list "\r" array_join
-      'set_str_bool { "_attr/swim?" }list
-    }list
-
-    { "A3"
-      "[#00AAAA][[#55FFFF]A3[#00AAAA]] Gills:        [#5555FF]%s"
-      'get_str_bool { "_attr/gills?" "Yes" "No" }list
-
-      {
-        "** Builders may access this attribute by @locking to attr/gills?:yes, or with the MPI code: {if:{eq:{prop:attr/gills?,me},yes},<code>}"
-        "Can this character breathe underwater?"
-      }list "\r" array_join
-      'set_str_bool { "_attr/gills?" }list
-    }list
-
-    { "A4"
-      "[#00AAAA][[#55FFFF]A4[#00AAAA]] Size:        [#5555FF]%s"
-      'get_str     { "_attr/size" "[#FF5555][Unset][!FFFFFF]" }list
-
-      {
-        "** Builders may access this attribute by @locking to attr/size:<value>, or with the MPI code: {if:{eq:{prop:attr/size,me},<value>},<code>}"
-        "How big is this character?"
-      }list "\r" array_join
-      'set_str_pick { "_attr/size" { "micro" "normal" "macro" }list }list
-    }list
-
-    { "A5"
-      "[#00AAAA][[#55FFFF]A5[#00AAAA]] Can Drive:   [#5555FF]%s"
-      'get_str_bool { "_attr/candrive?" "Yes" "No" }list
-
-      {
-        "** Builders may access this attribute by @locking to attr/candrive?:yes, or with the MPI code: {if:{eq:{prop:attr/candrive?,me},yes},<code>}"
-        "Can this character drive an automobile?"
-      }list "\r" array_join
-      'set_str_bool { "_attr/candrive?" }list
-    }list
-
-    { "A6"
-      "[#00AAAA][[#55FFFF]A6[#00AAAA]] Space Travel: [#5555FF]%s"
-      'get_str_bool { "_attr/spacetravel?" "Yes" "No" }list
-
-      {
-        "** Builders may access this attribute by @locking to attr/spacetravel?:yes, or with the MPI code: {if:{eq:{prop:attr/spacetravel?,me},yes},<code>}"
-        "Can this character survive exposure to space or lack of oxygen?"
-      }list "\r" array_join
-      'set_str_bool { "_attr/spacetravel?" }list
-    }list
-
-    ""
-    { "B"
-      "[#00AAAA][[#55FFFF]B[#00AAAA]]ack to %s Edit"
-      'get_object_type { "Room" "Player" "Object" }list
-
-      {
-      }list "\r" array_join
-      'set_menu_default { }list
-    }list
-  }list
-;
-
 : table_pronoun (  -- a )
   {
     "" (* Blank line after header *)
@@ -939,182 +683,6 @@ lvar g_morph_prop_table
       }list "\r" array_join
       'set_menu_default { }list
     }list
-  }list
-;
-
-: table_morph (  -- a )
-  {
-    "" (* Blank line after header *)
-
-    1
-
-    { ""
-      "[#00AAAA]Species: [#5555FF]%s"
-      'get_str     { "_/species" "[#FF5555][Unset][!FFFFFF]" }list
-
-      {
-      }list "\r" array_join
-      'set_null { }list
-    }list
-
-    { ""
-      "[#00AAAA]Gender:  [#5555FF]%s"
-      'get_str     { "gender_prop" sysparm "[#FF5555][Unset][!FFFFFF]" }list
-
-      {
-      }list "\r" array_join
-      'set_null { }list
-    }list
-
-    "" 1
-
-    { ""
-      "[#00AAAA]Description: [#5555FF]%s"
-      'get_mpi     { "_/de" "[#FF5555][Unset][!FFFFFF]" }list
-
-      {
-      }list "\r" array_join
-      'set_null { }list
-    }list
-
-    { ""
-      "[#00AAAA]Scent:       [#5555FF]%s"
-      'get_mpi     { "_/scent" "[#FF5555][Unset][!FFFFFF]" }list
-
-      {
-      }list "\r" array_join
-      'set_null { }list
-    }list
-
-    { ""
-      "[#00AAAA]Texture:     [#5555FF]%s"
-      'get_mpi     { "_/texture" "[#FF5555][Unset][!FFFFFF]" }list
-
-      {
-      }list "\r" array_join
-      'set_null { }list
-    }list
-
-    { ""
-      "[#00AAAA]flavor:      [#5555FF]%s"
-      'get_mpi     { "_/flavor" "[#FF5555][Unset][!FFFFFF]" }list
-
-      {
-      }list "\r" array_join
-      'set_null { }list
-    }list
-
-    { ""
-      "[#00AAAA]Aura:        [#5555FF]%s"
-      'get_mpi     { "_/aura" "[#FF5555][Unset][!FFFFFF]" }list
-
-      {
-      }list "\r" array_join
-      'set_null { }list
-    }list
-
-    { ""
-      "[#00AAAA]Sound:       [#5555FF]%s"
-      'get_mpi { "_/sound" "[#0000AA][Unset][!FFFFFF]" }list
-
-      {
-      }list "\r" array_join
-      'set_null { }list
-    }list
-
-    { ""
-      "[#00AAAA]Writing:     [#5555FF]%s"
-      'get_mpi { "_/writing" "[#0000AA][Unset][!FFFFFF]" }list
-
-      {
-      }list "\r" array_join
-      'set_null { }list
-    }list
-
-    ""
-
-    "Morphs" 4
-
-    { "M"
-      "[#00AAAA][[#55FFFF]M[#00AAAA]]orph List"
-      'get_null { }list
-
-      {
-      }list "\r" array_join
-      'set_morph_list { }list
-    }list
-
-    { "S"
-      "  [#00AAAA][[#55FFFF]S[#00AAAA]]ave Morph"
-      'get_null { }list
-
-      {
-        "The currently displayed descriptions and messages will be saved. If the morph does not exist, it will be created."
-        ""
-        "Please enter the name of the morph you wish to save."
-      }list "\r" array_join
-      'set_morph { 1 }list
-    }list
-
-    { "L"
-      "   [#00AAAA][[#55FFFF]L[#00AAAA]]oad Morph"
-      'get_null { }list
-
-      {
-        "Please enter the name of the morph you wish to load."
-      }list "\r" array_join
-      'set_morph { 0 }list
-    }list
-
-    { "D"
-      "    [#00AAAA][[#55FFFF]D[#00AAAA]]elete Morph"
-      'get_null { }list
-
-      {
-        "Enter the name of the morph you wish to delete."
-      }list "\r" array_join
-      'set_morph_delete { }list
-    }list
-
-    "" "Morph Messages" 1
-
-    { "1"
-      "[#00AAAA][[#55FFFF]1[#00AAAA]] Morph Message:  [#5555FF]%s"
-      'get_str     { "_morph_mesg" "[#0000AA][Unset][!FFFFFF]" }list
-
-      {
-        "This message is displayed to you when you change to this morph.  (with the 'morph' command only)"
-        "  eg.: You shift into super dragon mode!"
-        ""
-        "Please enter your morph message:"
-      }list "\r" array_join
-      'set_str     { "_morph_mesg" }list
-    }list
-
-    { "2"
-      "[#00AAAA][[#55FFFF]2[#00AAAA]] Morph OMessage: [#5555FF]%s"
-      'get_str     { "_config/morph_omesg" "[#0000AA][Unset][!FFFFFF]" }list
-
-      {
-        "This message is displayed to everyone else in your location when you change to this morph.  (with the 'morph' command only)"
-        "Your name is prepended to the message automatically when shown."
-        "  eg.: shifts into super dragon mode!"
-        ""
-        "Please enter your morph omessage:"
-      }list "\r" array_join
-      'set_str     { "_config/morph_omesg" }list
-    }list
-
-    ""
-    { "{P|B}"
-      "[#00AAAA][[#55FFFF]B[#00AAAA]]ack to Player Edit"
-      'get_null { }list
-
-      {
-      }list "\r" array_join
-      'set_menu_default { }list
-    }list
-
   }list
 ;
 
@@ -1204,133 +772,9 @@ lvar g_morph_prop_table
   }list
 ;
 
-: table_player_pref (  -- a )
-  {
-    "" (* Blank line after header *)
-    "Preferences" 2
-    { "1"
-      "[#00AAAA][[#55FFFF]1[#00AAAA]] Allowing 'hand':          [#5555FF]%s"
-      'get_str_bool { "_hand/hand_ok" "Yes" "No" }list
-
-      {
-        "The 'hand' program by Wog is used to move an item from your inventory into someone else's.  However, it may not be preferable to allow people to hand you objects.  Use your descresion."
-        ""
-        "Allow 'hand'ing of objects to this character? (y/n)"
-      }list "\r" array_join
-      'set_str_bool { "_hand/hand_ok" }list
-    }list
-
-    { "2"
-      "[#00AAAA][[#55FFFF]2[#00AAAA]] Showing @doing in whospe: [#5555FF]%s"
-      'get_str_bool { "_prefs/wsseedoing" "Yes" "No" }list
-
-      {
-        "The whospe program displays species, gender, and status information about everyone in your current room.  If you want to optionally see a short 'Doing' string.  (The same string that's shown in the WHO command)  You may select it here."
-        ""
-        "Show @doing in whospe? (y/n)"
-      }list "\r" array_join
-      'set_str_bool { "_prefs/wsseedoing" }list
-    }list
-
-    { "3"
-      "[#00AAAA][[#55FFFF]3[#00AAAA]] Hiding from whospe #far:  [#5555FF]%s"
-      'get_str_bool { "_prefs/wsobject" "Yes" "No" }list
-
-      {
-        "The whospe program displays species, gender, and status information about everyone in your current room.  It also, however, may be used to display information about people remotely.  If you're zealous about your privacy, you can prevent people from using this command on you."
-        ""
-        "Hide from whospe #far? (y/n)"
-      }list "\r" array_join
-      'set_str_bool { "_prefs/wsobject" }list
-    }list
-
-    { "4"
-      "[#00AAAA][[#55FFFF]4[#00AAAA]] Hiding from whereis:      [#5555FF]%s"
-      'get_str_bool { "_prefs/whereis/unfindable" "Yes" "No" }list
-
-      {
-        "Use the 'whereis' program to find your friends by entering 'whereis <name>'.  If you're zealous about your privacy and you want to hide from this feature, select it here."
-        ""
-        "Hide from whereis? (y/n)"
-      }list "\r" array_join
-      'set_str_bool2 { "_prefs/whereis/unfindable" }list
-    }list
-
-    { "5"
-      "[#00AAAA][[#55FFFF]5[#00AAAA]] Ride mode:                [#5555FF]%s"
-      'get_str { "ride/_mode" "Walk" }list
-
-      {
-        "The 'ride' program by Riss allows you to be automatically led by another character, rather than having to follow them manually.  However, not everyone has a horse style back on which to ride.  Select your style of 'riding' from the list below."
-        ""
-      }list "\r" array_join
-      'set_str_pick { "ride/_mode" { "Ride" "Taur" "Paw" "Walk" "Hand" }list }list
-    }list
-
-    { "6"
-      "[#00AAAA][[#55FFFF]6[#00AAAA]] Run 'saysetup'"
-      'get_null { }list
-
-      {
-      }list "\r" array_join
-      'set_external { #163 "saysetup" }list
-    }list
-
-    "" "Sweep messages" 1
-
-    { "S1"
-      "[#00AAAA][[#55FFFF]S1[#00AAAA]] Sweep Room Message:      [#5555FF]%s"
-      'get_str     { "_sweep/sweep" "[#0000AA][Unset][!FFFFFF]" }list
-
-      {
-        "This message is shown to everyone in the room, including yourself, when you sweep a room.  To sweep a room, simply type 'sweep', and all the sleepers in the room will be kicked out.  Your name is prefixed to this message automatically."
-        ""
-        "Enter this character's sweep room message:"
-      }list "\r" array_join
-      'set_str     { "_sweep/sweep" }list
-    }list
-
-    { "S2"
-      "[#00AAAA][[#55FFFF]S2[#00AAAA]] Sweep Player Message:    [#5555FF]%s"
-      'get_str     { "_sweep/fmt/std" "[#0000AA][Unset][!FFFFFF]" }list
-
-      {
-        "This message is shown to everyone in the room, including yourself, when you sweep an indivisual player or object.  To sweep a player, type sweep <name>, and it'll be tossed out.  Your name is prefixed to this message automatically."
-        "Pronoun substitution is done from the perspective of the object who gets swept.  So use %n in this message to be replaced by the name of the player who gets swept.  For example 'sweeps %n into the nap room.'"
-        ""
-        "Enter the sweep player message:"
-      }list "\r" array_join
-      'set_str     { "_sweep/fmt/std" }list
-    }list
-
-    { "S3"
-      "[#00AAAA][[#55FFFF]S3[#00AAAA]] Swept Message:           [#5555FF]%s"
-      'get_str     { "_sweep/swept" "[#0000AA][Unset][!FFFFFF]" }list
-
-      {
-        "This message is shown to everyone in the room, including yourself, when you get swept from a room.  Your name is prefixed to this message automatically."
-        ""
-        "Enter this character's swept message:"
-
-      }list "\r" array_join
-      'set_str     { "_sweep/swept" }list
-    }list
-
-    ""
-    { "B"
-      "[#00AAAA][[#55FFFF]B[#00AAAA]]ack to %s Edit"
-      'get_object_type { "Room" "Player" "Object" }list
-
-      {
-      }list "\r" array_join
-      'set_menu_default { }list
-    }list
-  }list
-;
-
 : table_player (  -- a )
   {
-    1
+    2
     "" (* Blank line after header *)
 
     { "1"
@@ -1345,8 +789,6 @@ lvar g_morph_prop_table
       }list "\r" array_join
       'set_str     { "_/species" }list
     }list
-
-    2
 
     { "2"
       "[#00AAAA][[#55FFFF]2[#00AAAA]] Gender:  [#5555FF]%s"
@@ -1369,6 +811,15 @@ lvar g_morph_prop_table
       'set_menu { g_table_pronoun }list
     }list
 
+    { "4"
+      "[#00AAAA][[#55FFFF]F[#00AAAA]]lags"
+      'get_null { }list
+
+      {
+      }list "\r" array_join
+      'set_menu { g_table_player_flags }list
+    }list
+
     "" "Descriptions" 1
 
     { "{D1|D}"
@@ -1385,7 +836,7 @@ lvar g_morph_prop_table
         ""
         "Enter the visual description of this character:"
       }list "\r" array_join
-      'set_mpi_list { "_/de" "_/dl/desc" }list
+      'set_mpi_list { "_/de" "_/dl/appearance" }list
     }list
 
     { "D2"
@@ -1464,56 +915,6 @@ lvar g_morph_prop_table
         "Enter this character's writing:"
       }list "\r" array_join
       'set_mpi_list { "_/writing" "_/dl/writing" }list
-    }list
-
-    "" "Settings" 2
-
-    { "S1"
-      "[#00AAAA][[#55FFFF]S1[#00AAAA]] Automatically Show Map: [#5555FF]%s"
-      'get_str_bool2 { "_prefs/automap" "Yes" "No" }list
-
-      {
-        "This preference is used by Latitude MUCK to determine if it should display the map to you every time you enter a new area.  This makes navigation easy, but very spammy."
-        ""
-        "Automatically show the map? (y/n)"
-      }list "\r" array_join
-      'set_str_bool { "_prefs/automap" }list
-    }list
-
-    { "S3"
-      "[#00AAAA][[#55FFFF]S3[#00AAAA]] Morphs"
-      'get_null { }list
-
-      {
-      }list "\r" array_join
-      'set_menu { g_table_morph }list
-    }list
-
-    { "S2"
-      "[#00AAAA][[#55FFFF]S2[#00AAAA]] Preferences"
-      'get_null { }list
-
-      {
-      }list "\r" array_join
-      'set_menu { g_table_player_pref }list
-    }list
-
-    { "S4"
-      "[#00AAAA][[#55FFFF]S4[#00AAAA]] Attributes"
-      'get_null { }list
-
-      {
-      }list "\r" array_join
-      'set_menu { g_table_attr }list
-    }list
-
-    { "{S5|F}"
-      "[#00AAAA][[#55FFFF]F[#00AAAA]]lags"
-      'get_null { }list
-
-      {
-      }list "\r" array_join
-      'set_menu { g_table_player_flags }list
     }list
 
     "" (* Blank line before footer *)
@@ -1681,7 +1082,7 @@ lvar g_morph_prop_table
         ""
         "Enter the visual description of the room:"
       }list "\r" array_join
-      'set_mpi_list { "_/de" "_/dl/desc" }list
+      'set_mpi_list { "_/de" "_/dl/appearance" }list
     }list
 
     { "D2"
@@ -2011,7 +1412,7 @@ lvar g_morph_prop_table
         ""
         "Enter the visual description of this exit:"
       }list "\r" array_join
-      'set_mpi_list { "_/de" "_/dl/desc" }list
+      'set_mpi_list { "_/de" "_/dl/appearance" }list
     }list
 
     { "D2"
@@ -2187,66 +1588,6 @@ lvar g_morph_prop_table
 (#############################################################################)
 (############################### THING TABLE #################################)
 (#############################################################################)
-: table_thing_pref (  -- a )
-  {
-    "" (* Blank line after header *)
-    "Preferences" 2
-    { "1"
-      "[#00AAAA][[#55FFFF]1[#00AAAA]] Allowing 'hand':          [#5555FF]%s"
-      'get_str_bool { "_hand/hand_ok" "Yes" "No" }list
-
-      {
-        "The 'hand' program by Wog is used to move an item from your inventory into someone else's.  However, it may not be preferable to allow people to hand your puppet objects.  Use your descresion."
-        ""
-        "Allow 'hand'ing of objects to this character? (y/n)"
-      }list "\r" array_join
-      'set_str_bool { "_hand/hand_ok" }list
-    }list
-
-    { "2"
-      "[#00AAAA][[#55FFFF]2[#00AAAA]] Showing @doing in whospe: [#5555FF]%s"
-      'get_str_bool { "_prefs/wsseedoing" "Yes" "No" }list
-
-      {
-        "The whospe program displays species, gender, and status information about everyone in your current room.  If you want your puppet to optionally see a short 'Doing' string.  (The same string that's shown in the WHO command)  You may select it here."
-        ""
-        "Show @doing in whospe? (y/n)"
-      }list "\r" array_join
-      'set_str_bool { "_prefs/wsseedoing" }list
-    }list
-
-    { "3"
-      "[#00AAAA][[#55FFFF]3[#00AAAA]] Ride mode:                [#5555FF]%s"
-      'get_str { "ride/_mode" "Walk" }list
-
-      {
-        "The 'ride' program by Riss allows your puppet to be automatically led by another character or puppet, rather than having to follow them manually.  However, not everyone has a horse style back on which to ride.  Select your style of 'riding' from the list below."
-        ""
-      }list "\r" array_join
-      'set_str_pick { "ride/_mode" { "Ride" "Taur" "Paw" "Walk" "Hand" }list }list
-    }list
-
-    { "4"
-      "[#00AAAA][[#55FFFF]4[#00AAAA]] Run 'saysetup'"
-      'get_null { }list
-
-      {
-      }list "\r" array_join
-      'set_external { #163 "saysetup" }list
-    }list
-
-    ""
-    { "B"
-      "[#00AAAA][[#55FFFF]B[#00AAAA]]ack to %s Edit"
-      'get_object_type { "Room" "Player" "Object" }list
-
-      {
-      }list "\r" array_join
-      'set_menu_default { }list
-    }list
-  }list
-;
-
 : table_thing_flags (  -- a )
   {
     "" "Flags" 1
@@ -2376,6 +1717,15 @@ lvar g_morph_prop_table
       'set_str     { "gender_prop" sysparm }list
     }list
 
+    { "F"
+      "[#00AAAA][[#55FFFF]F[#00AAAA]]lags"
+      'get_null { }list
+
+      {
+      }list "\r" array_join
+      'set_menu { g_table_thing_flags }list
+    }list
+
     "" "Descriptions" 1
 
     { "{D1|D}"
@@ -2387,7 +1737,7 @@ lvar g_morph_prop_table
         ""
         "Enter the visual description of this object:"
       }list "\r" array_join
-      'set_mpi_list { "_/de" "_/dl/desc" }list
+      'set_mpi_list { "_/de" "_/dl/appearance" }list
     }list
 
     { "D2"
@@ -2540,35 +1890,6 @@ lvar g_morph_prop_table
         "Enter this object's @odrop message:"
       }list "\r" array_join
       'set_str { "_/odr" }list
-    }list
-
-    "" "Settings" 3
-
-    { "S1"
-      "[#00AAAA][[#55FFFF]S1[#00AAAA]] Preferences"
-      'get_null { }list
-
-      {
-      }list "\r" array_join
-      'set_menu { g_table_thing_pref }list
-    }list
-
-    { "S2"
-      "[#00AAAA][[#55FFFF]S2[#00AAAA]] Attributes"
-      'get_null { }list
-
-      {
-      }list "\r" array_join
-      'set_menu { g_table_attr }list
-    }list
-
-    { "{S3|F}"
-      "[#00AAAA][[#55FFFF]F[#00AAAA]]lags"
-      'get_null { }list
-
-      {
-      }list "\r" array_join
-      'set_menu { g_table_thing_flags }list
     }list
 
     "" (* Blank line before footer *)
@@ -2776,15 +2097,11 @@ lvar g_morph_prop_table
 : tables_init (  --  )
 
   (* Not very elegant I know.. *)
-  table_attr         g_table_attr         !
-  table_morph        g_table_morph        !
   table_pronoun      g_table_pronoun      !
   table_player_flags g_table_player_flags !
-  table_player_pref  g_table_player_pref  !
   table_player       g_table_player       !
   table_room_flags   g_table_room_flags   !
   table_room         g_table_room         !
-  table_thing_pref   g_table_thing_pref   !
   table_thing_flags  g_table_thing_flags  !
   table_thing        g_table_thing        !
   table_exit         g_table_exit         !
@@ -2794,47 +2111,7 @@ lvar g_morph_prop_table
 ;
 
 (*****************************************************************************)
-(*                       M-CMD-AT_EDITOBJECT-SaveMorph                       *)
-(*****************************************************************************)
-: M-CMD-AT_EDITOBJECT-save_morph[ str:morph_name bool:quiet -- bool:success? ]
-  .needs_mlev3
-
-  morph_name @ initial_caps "_" " " subst morph_name !
-
-  "me" match g_object !
-  morph_name @ 1 quiet @ do_morph
-;
-PUBLIC M-CMD-AT_EDITOBJECT-save_morph
-$LIBDEF M-CMD-AT_EDITOBJECT-save_morph
-
-(*****************************************************************************)
-(*                       M-CMD-AT_EDITOBJECT-LoadMorph                       *)
-(*****************************************************************************)
-: M-CMD-AT_EDITOBJECT-load_morph[ str:morph_name bool:quiet -- bool:success? ]
-  .needs_mlev3
-
-  morph_name @ initial_caps "_" " " subst morph_name !
-
-  "me" match g_object !
-  morph_name @ 0 quiet @ do_morph
-;
-PUBLIC M-CMD-AT_EDITOBJECT-load_morph
-$LIBDEF M-CMD-AT_EDITOBJECT-load_morph
-
-(*****************************************************************************)
-(*                      M-CMD-AT_EDITOBJECT-ListMorphs                       *)
-(*****************************************************************************)
-: M-CMD-AT_EDITOBJECT-list_morphs[  --  ]
-  .needs_mlev2
-
-  "me" match g_object !
-  set_morph_list
-;
-PUBLIC M-CMD-AT_EDITOBJECT-list_morphs
-$LIBDEF M-CMD-AT_EDITOBJECT-list_morphs
-
-(*****************************************************************************)
-(*                      M-CMD-AT_EDITOBJECT-EditObject                       *)
+(*                      M-CMD-AT_EDITOBJECT-edit_object                      *)
 (*****************************************************************************)
 : M-CMD-AT_EDITOBJECT-edit_object[ str:objname -- bool:editopened? ]
   .needs_mlev2

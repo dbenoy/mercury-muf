@@ -4,7 +4,9 @@ i
 $PRAGMA comment_recurse
 (*****************************************************************************)
 (* m-lib-grammar.muf - $m/lib/grammar                                        *)
-(*   A library for handling natural language strings.                        *)
+(*   A library for handling natural language strings. This library handles   *)
+(*   MGC (Mercury Grammar Code) substitution, which is very similar to and   *)
+(*   largely backward compatible with the built in PRONOUN_SUB primitive.    *)
 (*                                                                           *)
 (*   GitHub: https://github.com/dbenoy/mercury-muf (See for install info)    *)
 (*                                                                           *)
@@ -116,6 +118,11 @@ $PRAGMA comment_recurse
 (*         will use $m/lib/theme modifications, and may be returned with     *)
 (*         additional characters and color codes.                            *)
 (*                                                                           *)
+(*       "color"                                                             *)
+(*         This determines how to handle MCC color codes in the substitution *)
+(*         properties. Valid values are "KEEP", "ESCAPE", and "STRIP". The   *)
+(*         default is "STRIP".                                               *)
+(*                                                                           *)
 (*   M-LIB-GRAMMAR-oxford_join ( a s -- s )                                  *)
 (*     Similar to ", " array_join, but it inserts a coordinating conjunction *)
 (*     and oxford comma as well, if applicable.                              *)
@@ -150,7 +157,7 @@ $PRAGMA comment_recurse
 $VERSION 1.000
 $AUTHOR  Daniel Benoy
 $NOTE    Natural language strings.
-$DOCCMD  @list __PROG__=2-92
+$DOCCMD  @list __PROG__=2-153
 
 (* ====================== BEGIN CONFIGURABLE OPTIONS ====================== *)
 
@@ -608,12 +615,25 @@ $PUBDEF :
 ;
 
 : sub_fix[ arr:substitutions ref:object arr:opts -- arr:substitutitons ]
+$IFDEF M_LIB_COLOR
+  opts @ "color" [] dup not if pop "" then "escape" stringcmp not if
+    substitutions @ foreach
+      .color_escape
+      substitutions @ rot ->[] substitutions !
+    repeat
+  else opts @ "color" [] dup not if pop "" then "keep" stringcmp if
+    substitutions @ foreach
+      .color_strip
+      substitutions @ rot ->[] substitutions !
+    repeat
+  then then
+$ENDIF
   opts @ "name_match" [] dup not if pop "" then "yes" stringcmp not if
     object @ name "_" " " subst var! object_name
     object @ base_name "_" " " subst var! object_base_name
-    substitutions @ "%n" [] .color_strip "_" " " subst var! opt_n
-    substitutions @ "%d" [] .color_strip "_" " " subst var! opt_d
-    substitutions @ "%i" [] .color_strip "_" " " subst var! opt_i
+    substitutions @ "%n" .color_strip [] "_" " " subst var! opt_n
+    substitutions @ "%d" .color_strip [] "_" " " subst var! opt_d
+    substitutions @ "%i" .color_strip [] "_" " " subst var! opt_i
     opt_n @ object_name @ stringcmp if
       object @ default_n substitutions @ "%n" ->[] substitutions !
     then
@@ -634,11 +654,13 @@ $IFDEF M_LIB_THEME
   opts @ "name_theme" [] dup not if pop "" then "yes" stringcmp not if
     substitutions @ "%n" [] if
       substitutions @ "%n" []
+      .color_strip
       object @ swap 0 M-LIB-THEME-name
       substitutions @ "%n" ->[] substitutions !
     then
     substitutions @ "%d" [] if
       substitutions @ "%d" []
+      .color_strip
       dup "the[_ ]*" smatch if
         4 strcut
       else
@@ -650,6 +672,7 @@ $IFDEF M_LIB_THEME
     then
     substitutions @ "%i" [] if
       substitutions @ "%i" []
+      .color_strip
       dup "the[_ ]*" smatch if
         4 strcut
       else dup "an[_ ]*" smatch if

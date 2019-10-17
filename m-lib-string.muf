@@ -65,7 +65,7 @@ $PRAGMA comment_recurse
 $VERSION 1.000
 $AUTHOR  Daniel Benoy
 $NOTE    String manipulation routines.
-$DOCCMD  @list __PROG__=2-30
+$DOCCMD  @list __PROG__=2-61
 
 (* ------------------------------------------------------------------------ *)
 
