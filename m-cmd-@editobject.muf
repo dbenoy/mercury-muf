@@ -7,12 +7,7 @@ $PRAGMA comment_recurse
 (*    A command for editing objects of any type, including players, rooms,   *)
 (*    things, and exits.                                                     *)
 (*                                                                           *)
-(* PUBLIC ROUTINES:                                                          *)
-(*   M-CMD-AT_EDITOBJECT-EditObject[ str:objname -- bool:editopened? ]       *)
-(*     Starts the interactive object editor as if the player ran the         *)
-(*     @editobject command, including the same permissions checks and object *)
-(*     name matching. If for some reason the editor fails to open for this   *)
-(*     object, false will be returned. M2 required.                          *)
+(*   GitHub: https://github.com/dbenoy/mercury-muf (See for install info)    *)
 (*                                                                           *)
 (*****************************************************************************)
 (* Revision History:                                                         *)
@@ -43,7 +38,7 @@ $PRAGMA comment_recurse
 $VERSION 1.001
 $AUTHOR  Daniel Benoy
 $NOTE    An interface for editing objects.
-$DOCCMD  @list __PROG__=2-54
+$DOCCMD  @list __PROG__=2-34
 
 (* Begin configurable options *)
 
@@ -107,9 +102,11 @@ lvar g_table_program
 (*****************************************************************************)
 : chk_perms ( d -- b )
   (* You can always edit yourself *)
+  (
   "me" match over dbcmp if
     1 exit
   then
+  )
 
   (* Builders can edit anything they control *)
   "me" match swap controls "me" match "BUILDER" flag? "me" match "WIZARD" flag? or and if
@@ -2111,15 +2108,15 @@ lvar g_table_program
   set_menu_default
 ;
 
-(*****************************************************************************)
-(*                      M-CMD-AT_EDITOBJECT-edit_object                      *)
-(*****************************************************************************)
-: M-CMD-AT_EDITOBJECT-edit_object[ str:objname -- bool:editopened? ]
-  .needs_mlev2
-
-  objname @ 1 1 1 1 M-LIB-MATCH-Match
+: main
   dup not if
-    pop 0 exit
+    { "Use '" command @ " <object>' to edit objects." }join .tell
+    pop exit
+  then
+
+  1 1 1 1 M-LIB-MATCH-Match
+  dup not if
+    pop exit
   then
 
   dup chk_perms not if
@@ -2132,27 +2129,11 @@ lvar g_table_program
   tables_init
 
   do_edit
-  1
-;
-PUBLIC M-CMD-AT_EDITOBJECT-edit_object
-$LIBDEF M-CMD-AT_EDITOBJECT-edit_object
-
-(* ------------------------------------------------------------------------- *)
-
-: main
-  dup not if
-    { "Use '" command @ " <object>' to edit objects." }join .tell
-    pop exit
-  then
-
-  M-CMD-AT_EDITOBJECT-edit_object pop
 ;
 .
 c
 q
 !@register m-cmd-@editobject.muf=m/cmd/at_editobject
-!@set $m/cmd/at_editobject=L
 !@set $m/cmd/at_editobject=M3
 !@set $m/cmd/at_editobject=W
-!@set $m/cmd/at_editobject=V
 
