@@ -509,7 +509,14 @@ $PUBDEF :
 ;
 
 : default_w ( d -- s )
-  default_v "s" strcat
+  default_v
+  dup strlen -- strcut
+  dup "y" stringcmp not if
+    pop "ie" strcat
+  else
+    strcat
+  then
+  "s" strcat
 ;
 
 : default_x ( d -- s )
@@ -517,9 +524,11 @@ $PUBDEF :
   dup strlen -- strcut
   dup "e" stringcmp not if
     pop
+  else dup "y" stringcmp not if
+    pop "i" strcat
   else
     strcat
-  then
+  then then
   "ed" strcat
 ;
 
@@ -539,9 +548,11 @@ $PUBDEF :
   dup strlen -- strcut
   dup "e" stringcmp not if
     pop
+  else dup "y" stringcmp not if
+    pop "i" strcat
   else
     strcat
-  then
+  then then
   "ed" strcat
 ;
 
