@@ -48,6 +48,8 @@ $PUBDEF .mlev4 trig caller = caller "WIZARD" flag? or
 $PUBDEF .needs_mlev2 .mlev2 not if "Requires MUCKER level 2 or above." abort then
 $PUBDEF .needs_mlev3 .mlev3 not if "Requires MUCKER level 3 or above." abort then
 $PUBDEF .needs_mlev4 .mlev4 not if "Requires MUCKER level 4 or above." abort then
+$PUBDEF .me "me" match
+$PUBDEF .loc "me" match location
 
 : main
   "Library called as command." abort
