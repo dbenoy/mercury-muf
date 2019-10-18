@@ -66,11 +66,11 @@ $PRAGMA comment_recurse
 (*     spaces.                                                               *)
 (*                                                                           *)
 (*   "_config/emote/color_quoted"                                            *)
-(*     When this object sends an emote, this six-digit hexadecimal RGB color *)
+(*     When this object sends an emote, this color (In MGC [#HHHHHH] format) *)
 (*     will be used for everything in the emote outside of quotes.           *)
 (*                                                                           *)
 (*   "_config/emote/color_unquoted"                                          *)
-(*     When this object sends an emote, this six-digit hexadecimal RGB color *)
+(*     When this object sends an emote, this color (In MGC [#HHHHHH] format) *)
 (*     will be used for everything in the emote inside of quotes.            *)
 (*                                                                           *)
 (* PUBLIC ROUTINES:                                                          *)
@@ -161,9 +161,9 @@ $DEF HISTORY_DEFAULT_MAX_COUNT 100
 $DEF HISTORY_DEFAULT_MAX_AGE   604800 (* One week *)
 $DEF OPTIONS_PROPDIR           "_config/emote/"
 $DEF USERLOG
-$DEF THEME_COLOR_NAME          "A8A8A8"
-$DEF THEME_COLOR_UNQUOTED      "626262"
-$DEF THEME_COLOR_QUOTED        "A8A8A8"
+$DEF THEME_COLOR_NAME          "[#A8A8A8]"
+$DEF THEME_COLOR_UNQUOTED      "[#626262]"
+$DEF THEME_COLOR_QUOTED        "[#A8A8A8]"
 
 (* End configurable options *)
 
@@ -196,18 +196,6 @@ $DEF OPTIONS_VALID_HIGHLIGHT_ALLOW_CUSTOM { "YES" "NO" "PLAIN" "NOCOLOR" }list
   r @ 256 * 256 * g @ 256 * + b @ + .itox 6 .zeropad
 ;
 
-: color_complementary[ str:color -- str:result ]
-    color_srand M-LIB-COLOR-rgb2hsl var! hsl
-    hsl @ 0 [] 0.5 + 1.0 fmod hsl @ 0 ->[] hsl !
-    hsl @ M-LIB-COLOR-hsl2rgb
-;
-
-: color_saturate[ str:color -- str:result ]
-    color_srand M-LIB-COLOR-rgb2hsl var! hsl
-    1.0 hsl @ 1 ->[] hsl !
-    hsl @ M-LIB-COLOR-hsl2rgb
-;
-
 : history_max_count ( d -- )
   (* TODO: Get it from the room properties. Also maybe have an enforced maximum? *)
   pop HISTORY_DEFAULT_MAX_COUNT
@@ -228,7 +216,12 @@ $DEF OPTIONS_VALID_HIGHLIGHT_ALLOW_CUSTOM { "YES" "NO" "PLAIN" "NOCOLOR" }list
     value @ .color_strip "_" " " subst object @ name stringcmp 0 = exit
   then
   option @ "color_quoted" = option @ "color_unquoted" = or if
-    value @ toupper value @ = value @ "[0-9A-F][0-9A-F][0-9A-F][0-9A-F][0-9A-F][0-9A-F]" smatch and exit
+    value @
+    dup dup toupper != if pop 0 exit then
+    2 strcut swap "[#" != if pop 0 exit then
+    6 strcut swap "[0-9A-F][0-9A-F][0-9A-F][0-9A-F][0-9A-F][0-9A-F]" smatch not if pop 0 exit then
+    1 strcut swap "]" != if pop 0 exit then
+    not exit
   then
   option @ "highlight_mention_before" = option @ "highlight_mention_after" = or if
     value @ strlen 30 < exit
@@ -260,6 +253,7 @@ $DEF OPTIONS_VALID_HIGHLIGHT_ALLOW_CUSTOM { "YES" "NO" "PLAIN" "NOCOLOR" }list
     option @ "color_name" = if
       { "[#" rot "]" object @ name " " "_" subst }join
     else
+      { "[#" rot "]" }join
     then
     exit
   then
@@ -432,15 +426,15 @@ $ENDIF
     color_unquoted @
   else
     color_quoted @
+(
     (* Boost the lightness by 10% for every additional quote level *)
     M-LIB-COLOR-rgb2hsl var! hsl
     hsl @ 2 [] level @ 1 - 10.0 / +
     dup 1.0 > if pop 1.0 then
     hsl @ 2 ->[] hsl !
     hsl @ M-LIB-COLOR-hsl2rgb
+)
   then
-
-  "[#" swap strcat "]" strcat
 ;
 
 : highlight_name[ ref:to ref:from -- str:result ]
@@ -451,7 +445,7 @@ $ENDIF
     from @ "color_name" option_default exit
   then
   to @ "highlight_allow_custom" option_get "PLAIN" = if
-    { "[#" THEME_COLOR_NAME "]" from @ name }join exit
+    { THEME_COLOR_NAME from @ name }join exit
   then
   from @ "color_name" option_get
 ;
