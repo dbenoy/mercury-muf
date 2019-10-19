@@ -54,7 +54,7 @@ $PRAGMA comment_recurse
 (*     this to a semicolon to disable highlighting.                          *)
 (*                                                                           *)
 (*   "_config/emote/highlight_mention_before"                                *)
-(*   "highlight_mention_after"                                               *)
+(*   "_config/emote/highlight_mention_after"                                 *)
 (*     When highlighting words from highlight_mention_names, these strings   *)
 (*     wrap around it. Color codes in these strings are allowed to affect    *)
 (*     the highlighted name. It defaults to giving the word a blue color.    *)
@@ -120,9 +120,19 @@ $PRAGMA comment_recurse
 (*     object. At present, option names are the names from PROPERTIES above, *)
 (*     without the propdir component.                                        *)
 (*                                                                           *)
-(*   M-LIB-EMOTE-style[ str:message ref:from ref:to -- str:result ]          *)
+(*   M-LIB-EMOTE-option_valid[ str:value ref:object str:option               *)
+(*                             -- bool:valid? ]                              *)
+(*     Specify a configuration option to check the validity of an emote      *)
+(*     setting on an object. At present, option names are the names from     *)
+(*     PROPERTIES above, without the propdir component.                      *)
+(*                                                                           *)
+(*   M-LIB-EMOTE-style[ str:message ref:from ref:to dict:opts -- str:result ]*)
 (*     Colors and highlights an emote as if it were sent from and to the     *)
 (*     given objects and returns the resulting string.                       *)
+(*                                                                           *)
+(*     The following options can be supplied:                                *)
+(*       "highlight_mention"                                                 *)
+(*         Set to "YES" or "NO" to enable/disable mention highlighting.      *)
 (*                                                                           *)
 (*****************************************************************************)
 (* Revision History:                                                         *)
@@ -150,7 +160,7 @@ $PRAGMA comment_recurse
 $VERSION 1.000
 $AUTHOR  Daniel Benoy
 $NOTE    Handle sending emotive messages.
-$DOCCMD  @list __PROG__=2-146
+$DOCCMD  @list __PROG__=2-156
 
 (* Begin configurable options *)
 
@@ -210,7 +220,7 @@ $DEF OPTIONS_VALID_HIGHLIGHT_ALLOW_CUSTOM { "YES" "NO" "PLAIN" "NOCOLOR" }list
   value @ not if 0 exit then
   option @ tolower option !
   option @ "highlight_allow_custom" = if
-    { value @ }list OPTIONS_VALID_HIGHLIGHT_ALLOW_CUSTOM array_union not not exit
+    { value @ }list OPTIONS_VALID_HIGHLIGHT_ALLOW_CUSTOM array_intersect not not exit
   then
   option @ "color_name" = if
     value @ .color_strip "_" " " subst object @ name stringcmp 0 = exit
@@ -258,7 +268,7 @@ $DEF OPTIONS_VALID_HIGHLIGHT_ALLOW_CUSTOM { "YES" "NO" "PLAIN" "NOCOLOR" }list
     exit
   then
   option @ "highlight_allow_custom" = if
-    "STANDARD" exit
+    "YES" exit
   then
   option @ "highlight_mention_before" = if
     "[>000069][>001063]" exit
@@ -267,7 +277,13 @@ $DEF OPTIONS_VALID_HIGHLIGHT_ALLOW_CUSTOM { "YES" "NO" "PLAIN" "NOCOLOR" }list
     "[<999063][<000069]" exit
   then
   option @ "highlight_mention_names" = if
-    { object @ name ";" object @ name " " "_" subst }join exit
+    object @ name
+    object @ name " " "_" subst over over != if
+      ";" swap strcat strcat
+    else
+      pop
+    then
+    exit
   then
 ;
 
@@ -465,7 +481,7 @@ $ENDIF
 ;
 
 $DEF EINSTRING over swap instring dup not if pop strlen else nip -- then
-: style[ str:message ref:from ref:to -- str:result ]
+: style[ str:message ref:from ref:to dict:opts -- str:result ]
   "" var! result
   (* Emotes are not colored by the message text itself *)
   message @ .color_escape message !
@@ -473,6 +489,7 @@ $DEF EINSTRING over swap instring dup not if pop strlen else nip -- then
   from @ name var! from_name
   from @ name " " "_" subst var! from_sname
   to @ "highlight_mention_names" option_get ";" explode_array var! to_names
+  opts @ "highlight_mention" [] dup not if pop "" then "no" stringcmp var! highlight_mention
   { to_names @ foreach nip dup not if pop then repeat }list to_names !
   (* Iterate through the string *)
   0 var! quote_level
@@ -504,8 +521,8 @@ $DEF EINSTRING over swap instring dup not if pop strlen else nip -- then
       then
     then
     (* Check for to object's name *)
-    from @ to @ != if
-      "" to_names @ foreach nip dup message_remain @ swap instring 1 = if break else pop then repeat var! found_name
+    highlight_mention @ if
+      "" to_names @ foreach nip dup message_remain @ swap instring 1 = if swap pop break else pop then repeat var! found_name
       found_name @ if
         message_prevchar @ "[0-9a-zA-Z]" smatch not if
           message_remain @ found_name @ strlen strcut swap pop "[0-9a-zA-Z]*" smatch not if
@@ -562,7 +579,7 @@ $DEF EINSTRING over swap instring dup not if pop strlen else nip -- then
       dup var! to
       to @ player? to @ thing? or if
         to @ player? to @ "ZOMBIE" flag? or if
-          to @ { prefix @ message @ from @ to @ style suffix @ }join .color_notify
+          to @ { prefix @ message @ from @ to @ { to @ from @ = if "highlight_mention" "no" then }dict style suffix @ }join .color_notify
         then
         (* Notify all the things/players inside, too *)
         message @ prefix @ suffix @ from @ to @ emote_to_object
@@ -643,9 +660,23 @@ PUBLIC M-LIB-EMOTE-option_get
 $LIBDEF M-LIB-EMOTE-option_get
 
 (*****************************************************************************)
+(*                         M-LIB-EMOTE-option_valid                          *)
+(*****************************************************************************)
+: M-LIB-EMOTE-option_valid[ str:value ref:object str:option -- bool:valid? ]
+  (* M1 OK *)
+
+  option @ string? not if "Non-string argument (1)." abort then
+  option @ OPTIONS_VALID .array_hasval not if "Invalid option." abort then
+
+  value @ object @ option @ option_valid
+;
+PUBLIC M-LIB-EMOTE-option_valid
+$LIBDEF M-LIB-EMOTE-option_valid
+
+(*****************************************************************************)
 (*                             M-LIB-EMOTE-style                             *)
 (*****************************************************************************)
-: M-LIB-EMOTE-style[ str:message ref:from ref:to -- str:result ]
+: M-LIB-EMOTE-style[ str:message ref:from ref:to dict:opts -- str:result ]
   (* M1 OK *)
 
   message @ string? not if "Non-string argument (1)." abort then
@@ -654,7 +685,7 @@ $LIBDEF M-LIB-EMOTE-option_get
 
   message @ "\r" instr if "Newlines are not allowed in style strings" abort then
 
-  message @ from @ to @ style
+  message @ from @ to @ opts @ style
 ;
 PUBLIC M-LIB-EMOTE-style
 $LIBDEF M-LIB-EMOTE-style
