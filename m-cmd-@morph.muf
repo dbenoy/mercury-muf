@@ -158,24 +158,24 @@ WIZCALL M-HELP-help
   object @ morph_dir @ propdir? if
     object @ morph_dir @ remove_prop
     object @ "_morph/mesg/" morph_name @ strcat remove_prop
-    quiet @ not if { "Morph '" morph_name @ "' deleted." }join "MORPH" .theme_tag .color_tell then
+    quiet @ not if { "Morph '" morph_name @ "' deleted." }join command @ toupper .theme_tag .color_tell then
   else
-    quiet @ not if { "Morph '" morph_name @ "' not found." }join "MORPH" .theme_tag_err .color_tell then
+    quiet @ not if { "Morph '" morph_name @ "' not found." }join command @ toupper .theme_tag_err .color_tell then
   then
 ;
 
 : morph_mesg_set[ str:new_mesg ref:object str:morph_name bool:quiet -- bool:success? ]
   morph_name @ fix_morph_name morph_name !
   object @ "_morph/morphs/" morph_name @ strcat propdir? not if
-    quiet @ not if { "Morph '" morph_name @ "' not found." }join "MORPH" .theme_tag_err .color_tell then
+    quiet @ not if { "Morph '" morph_name @ "' not found." }join command @ toupper .theme_tag_err .color_tell then
     0 exit
   then
   new_mesg @ if
     object @ "_morph/mesg/" morph_name @ strcat new_mesg @ setprop
-    quiet @ not if { "Morph message set for '" morph_name @ "'." }join "MORPH" .theme_tag .color_tell then
+    quiet @ not if { "Morph message set for '" morph_name @ "'." }join command @ toupper .theme_tag .color_tell then
   else
     object @ "_morph/mesg/" morph_name @ strcat remove_prop
-    quiet @ not if { "Morph message cleared for '" morph_name @ "'." }join "MORPH" .theme_tag .color_tell then
+    quiet @ not if { "Morph message cleared for '" morph_name @ "'." }join command @ toupper .theme_tag .color_tell then
   then
   1
 ;
@@ -183,7 +183,7 @@ WIZCALL M-HELP-help
 : morph_mesg_get[ ref:object str:morph_name bool:quiet -- str:mesg ]
   morph_name @ fix_morph_name morph_name !
   object @ "_morph/morphs/" morph_name @ strcat propdir? not if
-    quiet @ not if { "Morph '" morph_name @ "' not found." }join "MORPH" .theme_tag_err .color_tell then
+    quiet @ not if { "Morph '" morph_name @ "' not found." }join command @ toupper .theme_tag_err .color_tell then
     "" exit
   then
   object @ "_morph/mesg/" morph_name @ strcat getpropstr
@@ -194,18 +194,18 @@ WIZCALL M-HELP-help
 
 : morph_list[ ref:object --  ]
   object @ "/_morph/morphs" propdir? if
-    "Saved morphs:" "MORPH" .theme_tag .color_tell
+    "Saved morphs:" command @ toupper .theme_tag .color_tell
     object @ "/_morph/morphs/" nextprop
     begin
       dup while
       object @ over propdir? if
-        dup "/" rsplit swap pop "  " swap strcat "MORPH" .theme_tag .color_tell
+        dup "/" rsplit swap pop "  " swap strcat command @ toupper .theme_tag .color_tell
       then
       object @ swap nextprop
     repeat
     pop
   else
-    "No saved morphs." "MORPH" .theme_tag .color_tell
+    "No saved morphs." command @ toupper .theme_tag .color_tell
   then
 ;
 
@@ -216,17 +216,17 @@ WIZCALL M-HELP-help
 
   save @ if
     object @ morph_dir @ propdir? if
-      quiet @ not if "Clearing existing morph..." "MORPH" .theme_tag .color_tell then
+      quiet @ not if "Clearing existing morph..." command @ toupper .theme_tag .color_tell then
       object @ morph_dir @ remove_prop
-      quiet @ not if "Saving morph..." "MORPH" .theme_tag .color_tell then
+      quiet @ not if "Saving morph..." command @ toupper .theme_tag .color_tell then
     else
-      quiet @ not if "Creating new morph..." "MORPH" .theme_tag .color_tell then
+      quiet @ not if "Creating new morph..." command @ toupper .theme_tag .color_tell then
     then
   else
     object @ morph_dir @ propdir? if
-      quiet @ not if "Loading morph..." "MORPH" .theme_tag .color_tell then
+      quiet @ not if "Loading morph..." command @ toupper .theme_tag .color_tell then
     else
-      { "Morph '" morph_name @ "' not found." }join "MORPH" .theme_tag_err .color_tell
+      { "Morph '" morph_name @ "' not found." }join command @ toupper .theme_tag_err .color_tell
       0 exit
     then
   then
@@ -237,7 +237,7 @@ WIZCALL M-HELP-help
     var property
 
     save @ if
-      quiet @ not if { "  Saving '" name @ "'..." }join "MORPH" .theme_tag .color_tell then
+      quiet @ not if { "  Saving '" name @ "'..." }join command @ toupper .theme_tag .color_tell then
       properties @ foreach
         nip
         property !
@@ -246,7 +246,7 @@ WIZCALL M-HELP-help
         then
       repeat
     else
-      quiet @ not if { "  Loading '" name @ "'..." }join "MORPH" .theme_tag .color_tell then
+      quiet @ not if { "  Loading '" name @ "'..." }join command @ toupper .theme_tag .color_tell then
       properties @ foreach
         nip
         property !
@@ -352,10 +352,10 @@ $LIBDEF M-CMD-AT_MORPH-mesg_set
   strip var! operation
   strip var! morph_name
   morph_name @ not if
-    "Please specify a morph name." "MORPH" .theme_tag_err .color_tell exit
+    "Please specify a morph name." command @ toupper .theme_tag_err .color_tell exit
   then
   operation @ not if
-    "Please specify an operation." "MORPH" .theme_tag_err .color_tell exit
+    "Please specify an operation." command @ toupper .theme_tag_err .color_tell exit
   then
   operation @ "save" stringcmp not if
     me @ morph_name @ 1 0 morph
@@ -376,7 +376,7 @@ $LIBDEF M-CMD-AT_MORPH-mesg_set
     argument @ me @ morph_name @ 0 morph_mesg_set pop
     exit
   then
-  { "Invalid operation '" operation @ "'." }join "MORPH" .theme_tag_err .color_tell
+  { "Invalid operation '" operation @ "'." }join command @ toupper .theme_tag_err .color_tell
 ;
 .
 c
