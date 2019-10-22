@@ -16,7 +16,7 @@ $PRAGMA comment_recurse
 (*     permission checks, penny charges, etc.                                *)
 (*                                                                           *)
 (* PUBLIC ROUTINES:                                                          *)
-(*   M-CMD-AT_ACTION-Action[ str:source str:exitname -- ref:room ]           *)
+(*   M-CMD-AT_ACTION-action[ str:source str:exitname -- ref:room ]           *)
 (*     Attempts to create an action as though the current player ran the     *)
 (*     @action command, including all the same message output, permission    *)
 (*     checks, penny manipulation, etc. M3 required.                         *)
@@ -82,7 +82,7 @@ WIZCALL M-HELP-desc
   {
     { action_name @ " <name>=<source>[,<destination>[; <destination2>; ... <destinationN>]] [=<regname>]" }join
     " "
-    { "  Creates a new action and attaches it to the thing, room, or player specified. If a <regname> is specified, then the _reg/<regname> property on the player is set to the dbref of the new object. This lets players refer to the object as $<regname> (ie: $mybutton) in @locks, @sets, etc. You may only attach actions you control to things you control. Creating an action costs " "exit_cost" sysparm M-LIB-PENNIES-Pennies ". The action can then be linked with the command @LINK." }join
+    { "  Creates a new action and attaches it to the thing, room, or player specified. If a <regname> is specified, then the _reg/<regname> property on the player is set to the dbref of the new object. This lets players refer to the object as $<regname> (ie: $mybutton) in @locks, @sets, etc. You may only attach actions you control to things you control. Creating an action costs " "exit_cost" sysparm M-LIB-PENNIES-pennies ". The action can then be linked with the command @LINK." }join
   }list
 ;
 WIZCALL M-HELP-help
@@ -98,9 +98,9 @@ WIZCALL M-HELP-help
 ;
 
 (*****************************************************************************)
-(*                          M-CMD-AT_ACTION-Action                           *)
+(*                          M-CMD-AT_ACTION-action                           *)
 (*****************************************************************************)
-: M-CMD-AT_ACTION-Action[ str:source str:exitname -- ref:room ]
+: M-CMD-AT_ACTION-action[ str:source str:exitname -- ref:room ]
   .needs_mlev3
 
   "exit" 1 M-LIB-QUOTA-QuotaCheck not if #-1 exit then
@@ -122,9 +122,9 @@ WIZCALL M-HELP-help
     #-1 exit
   then
 
-  source @ 1 1 1 1 M-LIB-MATCH-Match source !
+  source @ { "quiet" "no" "absolute" "yes" "nohome" "yes" "nonil" "yes" }dict M-LIB-MATCH-match source !
 
-  source @ not if
+  source @ ok? not if
     #-1 exit
   then
 
@@ -143,7 +143,7 @@ WIZCALL M-HELP-help
     #-1 exit
   then
 
-  cost @ M-LIB-PENNIES-ChkPayFor not if
+  cost @ M-LIB-PENNIES-payfor_chk not if
     { "Sorry, you don't have enough " "pennies" sysparm " to create an action/exit." }join .tell
     #-1 exit
   then
@@ -151,12 +151,12 @@ WIZCALL M-HELP-help
   source @ exitname @ doNewExit
   dup if .tell pop #-1 exit else pop then
 
-  cost @ M-LIB-PENNIES-DoPayFor
+  cost @ M-LIB-PENNIES-payfor
 
   "Action " over name strcat " (#" strcat over intostr strcat ") created." strcat .tell
 ;
-PUBLIC M-CMD-AT_ACTION-Action
-$LIBDEF M-CMD-AT_ACTION-Action
+PUBLIC M-CMD-AT_ACTION-action
+$LIBDEF M-CMD-AT_ACTION-action
 
 (* ------------------------------------------------------------------------- *)
 
@@ -174,18 +174,18 @@ $LIBDEF M-CMD-AT_ACTION-Action
   strip var! exitname
 
   (* Create action *)
-  source @ exitname @ M-CMD-AT_ACTION-Action var! newAction
+  source @ exitname @ M-CMD-AT_ACTION-action var! newAction
   newAction @ not if exit then
 
   (* Perform link *)
   destination @ if
     "Trying to link..." .tell
-    "#" newAction @ intostr strcat destination @ M-CMD-AT_LINK-Link not if exit then
+    "#" newAction @ intostr strcat destination @ M-CMD-AT_LINK-link not if exit then
   then
 
   (* Register action *)
   regname @ if
-    dup regname @ M-LIB-MATCH-RegisterObject
+    dup regname @ M-LIB-MATCH-register_object
   then
 ;
 .

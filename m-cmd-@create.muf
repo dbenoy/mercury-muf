@@ -14,7 +14,7 @@ $PRAGMA comment_recurse
 (*   o Can act as a library for other programs to create objects.            *)
 (*                                                                           *)
 (* PUBLIC ROUTINES:                                                          *)
-(*   M-CMD-AT_CREATE-Create[ str:thingname str:payment -- ref:thing ]        *)
+(*   M-CMD-AT_CREATE-create[ str:thingname str:payment -- ref:thing ]        *)
 (*     Attempts to create an object as though the current player ran the     *)
 (*     @create command, including all the same message output, permission    *)
 (*     checks, penny manipulation, etc. M3 required.                         *)
@@ -74,7 +74,7 @@ WIZCALL M-HELP-desc
   {
     { action_name @ " <object> [=<cost>[=<regname>]]" }join
     " "
-    { "  Creates a new object and places it in your inventory.  This costs at least " "object_cost" sysparm M-LIB-PENNIES-Pennies ".  If <cost> is specified, you are charged that many pennies, and in return, the object is endowed with a value according to the formula: " M-LIB-PENNIES-GetEndowStr ".  The maximum value of an object is " "max_object_endowment" sysparm M-LIB-PENNIES-Pennies ", which would cost " "max_object_endowment" sysparm atoi M-LIB-PENNIES-GetCost intostr M-LIB-PENNIES-Pennies " to create. If a <regname> is specified, then the _reg/<regname> property on the player is set to the dbref of the new object.  This lets players refer to the object as $<regname> (ie: $mybutton) in @locks, @sets, et cetera.  Only a builder may use this command." }join
+    { "  Creates a new object and places it in your inventory.  This costs at least " "object_cost" sysparm M-LIB-PENNIES-pennies ".  If <cost> is specified, you are charged that many pennies, and in return, the object is endowed with a value according to the formula: " M-LIB-PENNIES-endow_str_get ".  The maximum value of an object is " "max_object_endowment" sysparm M-LIB-PENNIES-pennies ", which would cost " "max_object_endowment" sysparm atoi M-LIB-PENNIES-endow_cost_get intostr M-LIB-PENNIES-pennies " to create. If a <regname> is specified, then the _reg/<regname> property on the player is set to the dbref of the new object.  This lets players refer to the object as $<regname> (ie: $mybutton) in @locks, @sets, et cetera.  Only a builder may use this command." }join
   }list
 ;
 WIZCALL M-HELP-help
@@ -90,9 +90,9 @@ WIZCALL M-HELP-help
 ;
 
 (*****************************************************************************)
-(*                          M-CMD-AT_CREATE-Create                           *)
+(*                          M-CMD-AT_CREATE-create                           *)
 (*****************************************************************************)
-: M-CMD-AT_CREATE-Create[ str:thingname str:payment -- ref:thing ]
+: M-CMD-AT_CREATE-create[ str:thingname str:payment -- ref:thing ]
   .needs_mlev3
 
   "thing" 1 M-LIB-QUOTA-QuotaCheck not if #-1 exit then
@@ -120,7 +120,7 @@ WIZCALL M-HELP-help
     tp_object_cost @ payment !
   then
 
-  payment @ M-LIB-PENNIES-ChkPayFor not if
+  payment @ M-LIB-PENNIES-payfor_chk not if
     { "Sorry, you don't have enough " "pennies" sysparm "." }join .tell
     #-1 exit
   then
@@ -132,14 +132,14 @@ WIZCALL M-HELP-help
   "Object " over name strcat " (#" strcat over intostr strcat ") created." strcat .tell
 
   (* Endow the object *)
-  payment @ M-LIB-PENNIES-DoPayFor
-  payment @ M-LIB-PENNIES-GetEndow var! thingValue
+  payment @ M-LIB-PENNIES-payfor
+  payment @ M-LIB-PENNIES-endow_get var! thingValue
   thingValue @ tp_max_endowment @ > if tp_max_endowment @ thingValue ! then
   thingValue @ 0 < if 0 thingValue ! then
   dup thingValue @ addpennies
 ;
-PUBLIC M-CMD-AT_CREATE-Create
-$LIBDEF M-CMD-AT_CREATE-Create
+PUBLIC M-CMD-AT_CREATE-create
+$LIBDEF M-CMD-AT_CREATE-create
 
 (* ------------------------------------------------------------------------- *)
 
@@ -155,7 +155,7 @@ $LIBDEF M-CMD-AT_CREATE-Create
   strip var! thingname
 
   (* Create thing *)
-  thingname @ cost @ M-CMD-AT_CREATE-Create
+  thingname @ cost @ M-CMD-AT_CREATE-create
   dup not if
     pop
     exit
@@ -163,7 +163,7 @@ $LIBDEF M-CMD-AT_CREATE-Create
 
   (* Register thing *)
   regname @ if
-    dup regname @ M-LIB-MATCH-RegisterObject
+    dup regname @ M-LIB-MATCH-register_object
   then
 ;
 .

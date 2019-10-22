@@ -12,8 +12,10 @@ $PRAGMA comment_recurse
 (*****************************************************************************)
 (* Revision History:                                                         *)
 (*   Version 1.1 -- Daniel Benoy -- September, 2019                          *)
-(*     - Modified slightly for inclusion in mercury-muf                      *)
+(*     - Modified for inclusion in mercury-muf                               *)
 (*     - Removed "Jaffa's cmd-look" support, and other unneeded libraries.   *)
+(*     - Reduced the scope of the menus to just be a tool for builders,      *)
+(*       rather than having a bunch of options for player settings, etc.     *)
 (*   Version 1.0 -- Daniel Benoy -- April, 2004                              *)
 (*     - Original implementation for Latitude MUCK                           *)
 (*****************************************************************************)
@@ -459,9 +461,9 @@ lvar g_table_program
   read
 
   dup "." = if
-    { "#" g_object @ intostr }join M-CMD-AT_UNLINK-Unlink pop
+    { "#" g_object @ intostr }join M-CMD-AT_UNLINK-unlink pop
   else
-    { "#" g_object @ intostr }join swap M-CMD-AT_LINK-Relink pop
+    { "#" g_object @ intostr }join swap M-CMD-AT_LINK-relink pop
   then
 ;
 
@@ -2206,7 +2208,7 @@ lvar g_table_program
     pop exit
   then
 
-  1 1 1 1 M-LIB-MATCH-Match
+  { "quiet" "no" "absolute" "yes" "nohome" "yes" "nonil" "yes" }dict M-LIB-MATCH-match
   dup not if
     pop exit
   then

@@ -9,31 +9,31 @@ $PRAGMA comment_recurse
 (*   GitHub: https://github.com/dbenoy/mercury-muf (See for install info)    *)
 (*                                                                           *)
 (* PUBLIC ROUTINES:                                                          *)
-(*   M-LIB-PENNIES-GetEndowStr ( -- s )                                      *)
+(*   M-LIB-PENNIES-endow_cost_get ( i -- i )                                 *)
+(*     Given an object's penny 'value,' return the number of pennies that    *)
+(*     would need to be spent in order to create it.                         *)
+(*                                                                           *)
+(*   M-LIB-PENNIES-endow_get ( i -- i )                                      *)
+(*     Given a number of pennies spent to create an object, return the       *)
+(*     object's penny 'value.'                                               *)
+(*                                                                           *)
+(*   M-LIB-PENNIES-endow_str_get ( -- s )                                    *)
 (*     Returns a string representing the 'endowment formula' that is used to *)
 (*     calculate the penny 'value' of an object based on how many pennies    *)
 (*     are spent to create it.                                               *)
 (*                                                                           *)
-(*   M-LIB-PENNIES-GetEndow ( i -- i )                                       *)
-(*     Given a number of pennies spent to create an object, return the       *)
-(*     object's penny 'value.'                                               *)
+(*   M-LIB-PENNIES-payfor ( i --  )                                          *)
+(*     Deduct a given number of pennies from the current player. Aborts if   *)
+(*     there are insufficient pennies. M3 required.                          *)
 (*                                                                           *)
-(*   M-LIB-PENNIES-GetCost ( i -- i )                                        *)
-(*     Given an object's penny 'value,' return the number of pennies that    *)
-(*     would need to be spent in order to create it.                         *)
-(*                                                                           *)
-(*   M-LIB-PENNIES-Pennies ( ? -- s )                                        *)
-(*     Given a number in int or string form, using the system @tune name for *)
-(*     penny/pennies, return a string in the style of "1 penny", or          *)
-(*     "2 pennies"                                                           *)
-(*                                                                           *)
-(*   M-LIB-PENNIES-ChkPayFor ( i -- b )                                      *)
+(*   M-LIB-PENNIES-payfor_chk ( i -- b )                                     *)
 (*     Check if the current player can afford to spend a given number of     *)
 (*     pennies. M3 required.                                                 *)
 (*                                                                           *)
-(*   M-LIB-PENNIES-DoPayFor ( i --  )                                        *)
-(*     Deduct a given number of pennies from the current player. Aborts if   *)
-(*     there are insufficient pennies. M3 required.                          *)
+(*   M-LIB-PENNIES-pennies ( ? -- s )                                        *)
+(*     Given a number in int or string form, using the system @tune name for *)
+(*     penny/pennies, return a string in the style of "1 penny", or          *)
+(*     "2 pennies"                                                           *)
 (*                                                                           *)
 (* TECHNICAL NOTES:                                                          *)
 (*   At the endowment formula routines simply use the same hard-coded        *)
@@ -96,42 +96,82 @@ $INCLUDE $m/lib/program
 $PUBDEF :
 
 (*****************************************************************************)
-(*                         M-LIB-PENNIES-GetEndowStr                         *)
+(*                       M-LIB-PENNIES-endow_cost_get                        *)
 (*****************************************************************************)
-: M-LIB-PENNIES-GetEndowStr ( -- s )
-  (* M1 OK *)
-
-  ENDOWMENT_FORMULA_STRING
-;
-PUBLIC M-LIB-PENNIES-GetEndowStr
-$LIBDEF M-LIB-PENNIES-GetEndowStr
-
-(*****************************************************************************)
-(*                          M-LIB-PENNIES-GetEndow                           *)
-(*****************************************************************************)
-: M-LIB-PENNIES-GetEndow ( i -- i )
-  (* M1 OK *)
-
-  ENDOWMENT_FORMULA
-;
-PUBLIC M-LIB-PENNIES-GetEndow
-$LIBDEF M-LIB-PENNIES-GetEndow
-
-(*****************************************************************************)
-(*                           M-LIB-PENNIES-GetCost                           *)
-(*****************************************************************************)
-: M-LIB-PENNIES-GetCost ( i -- i )
+: M-LIB-PENNIES-endow_cost_get ( i -- i )
   (* M1 OK *)
 
   COST_FORMULA
 ;
-PUBLIC M-LIB-PENNIES-GetCost
-$LIBDEF M-LIB-PENNIES-GetCost
+PUBLIC M-LIB-PENNIES-endow_cost_get
+$LIBDEF M-LIB-PENNIES-endow_cost_get
 
 (*****************************************************************************)
-(*                           M-LIB-PENNIES-Pennies                           *)
+(*                          M-LIB-PENNIES-endow_get                          *)
 (*****************************************************************************)
-: M-LIB-PENNIES-Pennies ( ? -- s )
+: M-LIB-PENNIES-endow_get ( i -- i )
+  (* M1 OK *)
+
+  ENDOWMENT_FORMULA
+;
+PUBLIC M-LIB-PENNIES-endow_get
+$LIBDEF M-LIB-PENNIES-endow_get
+
+(*****************************************************************************)
+(*                        M-LIB-PENNIES-endow_str_get                        *)
+(*****************************************************************************)
+: M-LIB-PENNIES-endow_str_get ( -- s )
+  (* M1 OK *)
+
+  ENDOWMENT_FORMULA_STRING
+;
+PUBLIC M-LIB-PENNIES-endow_str_get
+$LIBDEF M-LIB-PENNIES-endow_str_get
+
+(*****************************************************************************)
+(*                          M-LIB-PENNIES-payfor_chk                         *)
+(*****************************************************************************)
+: M-LIB-PENNIES-payfor_chk ( i -- b )
+  .needs_mlev3
+  "i" checkargs
+
+  dup 0 < if "Negative value (1)." abort then
+
+  "me" match "WIZARD" flag? if (* Wizards have a sideways 8 in their pockets. *)
+    pop 1 exit
+  then
+
+  "me" match pennies <=
+;
+PUBLIC M-LIB-PENNIES-payfor_chk
+$LIBDEF M-LIB-PENNIES-payfor_chk
+
+(*****************************************************************************)
+(*                           M-LIB-PENNIES-payfor                            *)
+(*****************************************************************************)
+: M-LIB-PENNIES-payfor ( i --  )
+  .needs_mlev3
+  "i" checkargs
+
+  dup 0 < if "Negative value (1)." abort then
+
+  "me" match "WIZARD" flag? if (* Wizards have a sideways 8 in their pockets. *)
+    pop exit
+  then
+
+  dup M-LIB-PENNIES-payfor_chk not if
+    "Not enough pennies!" abort
+  then
+
+  "me" match owner swap -1 * addpennies
+;
+PUBLIC M-LIB-PENNIES-payfor
+$LIBDEF M-LIB-PENNIES-payfor
+
+(*****************************************************************************)
+(*                           M-LIB-PENNIES-pennies                           *)
+(*****************************************************************************)
+: M-LIB-PENNIES-pennies ( ? -- s )
   (* M1 OK *)
 
   dup string? if
@@ -144,48 +184,8 @@ $LIBDEF M-LIB-PENNIES-GetCost
 
   dup intostr " " strcat swap dup 1 = swap -1 = or if "penny" sysparm else "pennies" sysparm then strcat
 ;
-PUBLIC M-LIB-PENNIES-Pennies
-$LIBDEF M-LIB-PENNIES-Pennies
-
-(*****************************************************************************)
-(*                          M-LIB-PENNIES-ChkPayFor                          *)
-(*****************************************************************************)
-: M-LIB-PENNIES-ChkPayFor ( i -- b )
-  .needs_mlev3
-  "i" checkargs
-
-  dup 0 < if "Negative value (1)." abort then
-
-  "me" match "WIZARD" flag? if (* Wizards have a sideways 8 in their pockets. *)
-    pop 1 exit
-  then
-
-  "me" match pennies <=
-;
-PUBLIC M-LIB-PENNIES-ChkPayFor
-$LIBDEF M-LIB-PENNIES-ChkPayFor
-
-(*****************************************************************************)
-(*                          M-LIB-PENNIES-DoPayFor                           *)
-(*****************************************************************************)
-: M-LIB-PENNIES-DoPayFor ( i --  )
-  .needs_mlev3
-  "i" checkargs
-
-  dup 0 < if "Negative value (1)." abort then
-
-  "me" match "WIZARD" flag? if (* Wizards have a sideways 8 in their pockets. *)
-    pop exit
-  then
-
-  dup M-LIB-PENNIES-ChkPayFor not if
-    "Not enough pennies!" abort
-  then
-
-  "me" match owner swap -1 * addpennies
-;
-PUBLIC M-LIB-PENNIES-DoPayFor
-$LIBDEF M-LIB-PENNIES-DoPayFor
+PUBLIC M-LIB-PENNIES-pennies
+$LIBDEF M-LIB-PENNIES-pennies
 
 : main
   "Library called as command." abort

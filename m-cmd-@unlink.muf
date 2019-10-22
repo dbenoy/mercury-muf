@@ -74,7 +74,7 @@ WIZCALL M-HELP-desc
     { action_name @ " <exit>" }join
     { action_name @ " here" }join
     " "
-    { "  Removes the link on the exit in the specified direction, or removes the drop-to on the room. Unlinked exits may be picked up and dropped elsewhere. Be careful, anyone can relink an unlinked exit, becoming its new owner" "link_cost" sysparm atoi if " (but you will be reimbursed your " "link_cost" sysparm M-LIB-PENNIES-Pennies ")" then "." }join
+    { "  Removes the link on the exit in the specified direction, or removes the drop-to on the room. Unlinked exits may be picked up and dropped elsewhere. Be careful, anyone can relink an unlinked exit, becoming its new owner" "link_cost" sysparm atoi if " (but you will be reimbursed your " "link_cost" sysparm M-LIB-PENNIES-pennies ")" then "." }join
   }list
 ;
 WIZCALL M-HELP-help
@@ -102,15 +102,15 @@ WIZCALL M-HELP-help
 ;
 
 (*****************************************************************************)
-(*                          M-CMD-AT_UNLINK-Unlink                           *)
+(*                          M-CMD-AT_UNLINK-unlink                           *)
 (*****************************************************************************)
-: M-CMD-AT_UNLINK-Unlink[ str:thing -- bool:success? ]
+: M-CMD-AT_UNLINK-unlink[ str:thing -- bool:success? ]
   .needs_mlev3
 
   "link_cost" sysparm atoi var! tp_link_cost
   "player_start" sysparm match var! tp_player_start
 
-  thing @ 1 1 1 1 M-LIB-MATCH-Match thing !
+  thing @ { "quiet" "no" "absolute" "yes" "nohome" "yes" "nonil" "yes" }dict M-LIB-MATCH-match thing !
 
   thing @ not if
     0 exit
@@ -163,7 +163,7 @@ $LIBDEF M-CMD-AT_UNLINK-Unlink
   strip var! exitname
 
   (* Perform unlink *)
-  exitname @ M-CMD-AT_UNLINK-Unlink pop
+  exitname @ M-CMD-AT_UNLINK-unlink pop
 ;
 .
 c

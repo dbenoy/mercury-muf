@@ -10,19 +10,18 @@ $PRAGMA comment_recurse
 (*   GitHub: https://github.com/dbenoy/mercury-muf (See for install info)    *)
 (*                                                                           *)
 (* PUBLIC ROUTINES:                                                          *)
-(*   M-LIB-MATCH-Match[ str:name bool:noisy bool:absolute bool:nohome        *)
-(*                      bool:nonil -- ref:dbref ]                            *)
+(*   M-LIB-MATCH-match[ str:name dict:opts -- ref:dbref ]                    *)
 (*     Takes a name string and searches for an object dbref using the MATCH  *)
 (*     primitive. If nothing is found, it returns #-1. If ambiguous, it      *)
 (*     returns #-2. If HOME, it returns #-3. If NIL it returns #-4. Requires *)
 (*     M3.                                                                   *)
 (*                                                                           *)
-(*     noisy: Display failure messages to users.                             *)
+(*     quiet: Don't display failure messages to users.                       *)
 (*     absolute: Accept dbref strings in the form of #<number>               *)
 (*     nohome: Never return #-3, and notify player if noisy.                 *)
 (*     nonil: Never return #-4, and notify player if noisy.                  *)
 (*                                                                           *)
-(*   M-LIB-MATCH-RegisterObject[ ref:object str:regname ]                    *)
+(*   M-LIB-MATCH-register_object[ ref:object str:regname ]                   *)
 (*     Registers the specified object on the current player using the given  *)
 (*     name (for $ notation registered name matching).                       *)
 (*                                                                           *)
@@ -66,10 +65,15 @@ $INCLUDE $m/lib/program
 $PUBDEF :
 
 (*****************************************************************************)
-(*                             M-LIB-MATCH-Match                             *)
+(*                             M-LIB-MATCH-match                             *)
 (*****************************************************************************)
-: M-LIB-MATCH-Match[ str:name bool:noisy bool:absolute bool:nohome bool:nonil -- ref:dbref ]
+: M-LIB-MATCH-match[ str:name dict:opts -- ref:dbref ]
   .needs_mlev3
+
+  opts @ "quiet" [] "yes" stringcmp not var! quiet
+  opts @ "absolute" [] "yes" stringcmp not var! absolute
+  opts @ "nohome" [] "yes" stringcmp not var! nohome
+  opts @ "nonil" [] "yes" stringcmp not var! nonil
 
   name @ string? not if "Non-string argument (1)." abort then
 
@@ -85,38 +89,38 @@ $PUBDEF :
       "Unrecognized match result" abort
     end
     #-1 = when (* Invalid *)
-      noisy @ if { "I don't understand '" name @ "'." }join .tell then
+      quiet @ not if { "I don't understand '" name @ "'." }join .tell then
     end
     #-2 = when (* Ambiguous *)
-      noisy @ if { "I don't know which '" name @ "' you mean!" }join .tell then
+      quiet @ not if { "I don't know which '" name @ "' you mean!" }join .tell then
     end
     #-3 = when (* HOME *)
       nohome @ if
-        noisy @ if { "I don't understand '" name @ "'." }join .tell then
+        quiet @ not if { "I don't understand '" name @ "'." }join .tell then
         #-1 matchResult !
       then
     end
     #-4 = when (* NIL *)
       nonil @ if
-        noisy @ if { "I don't understand '" name @ "'." }join .tell then
+        quiet @ not if { "I don't understand '" name @ "'." }join .tell then
         #-1 matchResult !
       then
     end
     ok? not when (* Garbage *)
-      noisy @ if { "I don't understand '" name @ "'." }join .tell then
+      quiet @ not if { "I don't understand '" name @ "'." }join .tell then
       #-1 matchResult !
     end
   endcase
 
   matchResult @
 ;
-PUBLIC M-LIB-MATCH-Match
-$LIBDEF M-LIB-MATCH-Match
+PUBLIC M-LIB-MATCH-match
+$LIBDEF M-LIB-MATCH-match
 
 (*****************************************************************************)
-(*                        M-LIB-MATCH-RegisterObject                         *)
+(*                        M-LIB-MATCH-register_object                        *)
 (*****************************************************************************)
-: M-LIB-MATCH-RegisterObject[ ref:object str:regname ]
+: M-LIB-MATCH-register_object[ ref:object str:regname ]
   .needs_mlev3
 
   object @ dbref? not if "Non-dbref argument (1)." abort then
@@ -130,8 +134,8 @@ $LIBDEF M-LIB-MATCH-Match
   me @ "_reg/" regname @ strcat object @ setprop
   "Registered as $" regname @ strcat .tell
 ;
-PUBLIC M-LIB-MATCH-RegisterObject
-$LIBDEF M-LIB-MATCH-RegisterObject
+PUBLIC M-LIB-MATCH-register_object
+$LIBDEF M-LIB-MATCH-register_object
 
 : main
   "Library called as command." abort

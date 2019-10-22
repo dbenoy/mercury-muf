@@ -14,13 +14,13 @@ $PRAGMA comment_recurse
 (*     permission checks, penny charges, etc.                                *)
 (*                                                                           *)
 (* PUBLIC ROUTINES:                                                          *)
-(*   M-CMD-AT_LINK-Link[ str:thing str:links -- bool:success? ]              *)
+(*   M-CMD-AT_LINK-link[ str:thing str:links -- bool:success? ]              *)
 (*     Attempts to perform a linkas though the current player ran the @link  *)
 (*     command, including all the same message output, permission checks,    *)
 (*     penny manipulation, etc. M3 required.                                 *)
 (*                                                                           *)
-(*   M-CMD-AT_LINK-Relink[ str:thing str:links -- bool:success? ]            *)
-(*     Same as M-CMD-AT_LINK-Link, except it will skip checking if the exit  *)
+(*   M-CMD-AT_LINK-relink[ str:thing str:links -- bool:success? ]            *)
+(*     Same as M-CMD-AT_LINK-link, except it will skip checking if the exit  *)
 (*     is already linked.                                                    *)
 (*                                                                           *)
 (*****************************************************************************)
@@ -155,7 +155,7 @@ $DEF TESTLOCKPROP getprop dup lock? if testlock else pop pop 1 then
   "link_cost" sysparm atoi var! tp_link_cost
   "exit_cost" sysparm atoi var! tp_exit_cost
 
-  thing @ 1 1 1 1 M-LIB-MATCH-Match thing !
+  thing @ { "quiet" "no" "absolute" "yes" "nohome" "yes" "nonil" "yes" }dict M-LIB-MATCH-match thing !
 
   thing @ not if
     0 exit
@@ -189,7 +189,7 @@ $DEF TESTLOCKPROP getprop dup lock? if testlock else pop pop 1 then
       (* Check for sufficient pennies *)
       thing @ owner "me" match owner = if
         alreadyLinked not if
-          tp_link_cost @ M-LIB-PENNIES-ChkPayFor not if
+          tp_link_cost @ M-LIB-PENNIES-payfor_chk not if
             { "It costs " tp_link_cost @ " " "pennies" sysparm " to link this exit."  }join .tell
             0 exit
           then
@@ -199,7 +199,7 @@ $DEF TESTLOCKPROP getprop dup lock? if testlock else pop pop 1 then
           "Only authorized builders may seize exits." .tell
            0 exit
         then
-        tp_link_cost @ tp_exit_cost @ + M-LIB-PENNIES-ChkPayFor not if
+        tp_link_cost @ tp_exit_cost @ + M-LIB-PENNIES-payfor_chk not if
           { "It costs " tp_link_cost @ tp_exit_cost @ + " " "pennies" sysparm " to link this exit."  }join .tell
           0 exit
         then
@@ -209,7 +209,7 @@ $DEF TESTLOCKPROP getprop dup lock? if testlock else pop pop 1 then
       { }array var! linkRefs
       links @ foreach
         swap pop
-        1 1 0 0 M-LIB-MATCH-Match var! thisLinkRef
+        { "quiet" "no" "absolute" "yes" "nohome" "no" "nonil" "no" }dict M-LIB-MATCH-match var! thisLinkRef
 
         thisLinkRef @ not if
           continue
@@ -261,16 +261,16 @@ $DEF TESTLOCKPROP getprop dup lock? if testlock else pop pop 1 then
       (* Charge pennies and change ownership if appropriate *)
       thing @ owner "me" match owner = if
         alreadyLinked @ not if
-          "me" match tp_link_cost @ M-LIB-PENNIES-DoPayFor
+          "me" match tp_link_cost @ M-LIB-PENNIES-payfor
         then
       else
-        "me" match tp_link_cost @ tp_exit_cost @ + M-LIB-PENNIES-DoPayFor
+        "me" match tp_link_cost @ tp_exit_cost @ + M-LIB-PENNIES-payfor
         thing @ owner tp_exit_cost @ addpennies
         thing @ "me" match setown
       then
     end
     dup player? swap thing? or when (*** Players / Things ***)
-      links @ 0 [] 1 1 1 1 M-LIB-MATCH-Match var! newHome
+      links @ 0 [] { "quiet" "no" "absolute" "yes" "nohome" "yes" "nonil" "yes" }dict M-LIB-MATCH-match var! newHome
       newHome @ not if 0 exit then
 
       "me" match newHome @ controls not "me" match thing @ newHome @ canLinkTo not and if
@@ -284,7 +284,7 @@ $DEF TESTLOCKPROP getprop dup lock? if testlock else pop pop 1 then
       "Home set." .tell
     end
     room? when (*** Rooms ***)
-      links @ 0 [] 1 1 0 1 M-LIB-MATCH-Match var! newDropto
+      links @ 0 [] { "quiet" "no" "absolute" "yes" "nohome" "no" "nonil" "yes" }dict M-LIB-MATCH-match var! newDropto
       newDropto @ not if 0 exit then
 
       #-3 newDropto @ = not if
@@ -309,26 +309,26 @@ $DEF TESTLOCKPROP getprop dup lock? if testlock else pop pop 1 then
 ;
 
 (*****************************************************************************)
-(*                            M-CMD-AT_LINK-Link                             *)
+(*                            M-CMD-AT_LINK-link                             *)
 (*****************************************************************************)
-: M-CMD-AT_LINK-Link[ str:thing str:links -- bool:success? ]
+: M-CMD-AT_LINK-link[ str:thing str:links -- bool:success? ]
   .needs_mlev3
 
   thing @ links @ 0 doLink
 ;
-PUBLIC M-CMD-AT_LINK-Link
-$LIBDEF M-CMD-AT_LINK-Link
+PUBLIC M-CMD-AT_LINK-link
+$LIBDEF M-CMD-AT_LINK-link
 
 (*****************************************************************************)
-(*                           M-CMD-AT_LINK-Relink                            *)
+(*                           M-CMD-AT_LINK-relink                            *)
 (*****************************************************************************)
-: M-CMD-AT_LINK-Relink[ str:thing str:links -- bool:success? ]
+: M-CMD-AT_LINK-relink[ str:thing str:links -- bool:success? ]
   .needs_mlev3
 
   thing @ links @ 1 doLink
 ;
-PUBLIC M-CMD-AT_LINK-Relink
-$LIBDEF M-CMD-AT_LINK-Relink
+PUBLIC M-CMD-AT_LINK-relink
+$LIBDEF M-CMD-AT_LINK-relink
 
 (* ------------------------------------------------------------------------- *)
 
@@ -338,7 +338,7 @@ $LIBDEF M-CMD-AT_LINK-Relink
   strip var! exitname
 
   (* Perform link *)
-  exitname @ destination @ M-CMD-AT_LINK-Link pop
+  exitname @ destination @ M-CMD-AT_LINK-link pop
 ;
 .
 c

@@ -14,7 +14,7 @@ $PRAGMA comment_recurse
 (*     permission checks, penny refunds, etc.                                *)
 (*                                                                           *)
 (* PUBLIC ROUTINES:                                                          *)
-(*   M-CMD-AT_RECYCLE-Recycle[ str:thing int:confirmation -- bool:success? ] *)
+(*   M-CMD-AT_RECYCLE-recycle[ str:thing int:confirmation -- bool:success? ] *)
 (*     Attempts to recycle an object as though the current player ran the    *)
 (*     @recycle command, including all the same message output, permission   *)
 (*     checks, penny manipulation, etc. M3 required.                         *)
@@ -88,12 +88,12 @@ WIZCALL M-HELP-help
 (* ------------------------------------------------------------------------ *)
 
 (*****************************************************************************)
-(*                        M-CMD-AT_RECYCLE-Recycle                           *)
+(*                        M-CMD-AT_RECYCLE-recycle                           *)
 (*****************************************************************************)
-: M-CMD-AT_RECYCLE-Recycle[ str:thing int:confirmation -- bool:success? ]
+: M-CMD-AT_RECYCLE-recycle[ str:thing int:confirmation -- bool:success? ]
   .needs_mlev3
 
-  thing @ 1 1 1 1 M-LIB-MATCH-Match thing !
+  thing @ { "quiet" "no" "absolute" "yes" "nohome" "yes" "nonil" "yes" }dict M-LIB-MATCH-match thing !
 
   thing @ ok? not if
     0 exit
@@ -162,8 +162,8 @@ WIZCALL M-HELP-help
     1
   then
 ;
-PUBLIC M-CMD-AT_RECYCLE-Recycle
-$LIBDEF M-CMD-AT_RECYCLE-Recycle
+PUBLIC M-CMD-AT_RECYCLE-recycle
+$LIBDEF M-CMD-AT_RECYCLE-recycle
 
 (* ------------------------------------------------------------------------- *)
 
@@ -173,7 +173,7 @@ $LIBDEF M-CMD-AT_RECYCLE-Recycle
   strip var! objectname
 
   (* Perform unlink *)
-  objectname @ 0 M-CMD-AT_RECYCLE-Recycle pop
+  objectname @ 0 M-CMD-AT_RECYCLE-recycle pop
 ;
 
 .

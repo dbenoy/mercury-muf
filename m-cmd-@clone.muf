@@ -14,7 +14,7 @@ $PRAGMA comment_recurse
 (*   o Can act as a library for other programs to create objects.            *)
 (*                                                                           *)
 (* PUBLIC ROUTINES:                                                          *)
-(*   M-CMD-AT_CLONE-Clone[ str:thingname -- ref:thing ]                      *)
+(*   M-CMD-AT_CLONE-clone[ str:thingname -- ref:thing ]                      *)
 (*     Attempts to create an object as though the current player ran the     *)
 (*     @clone command, including all the same message output, permission     *)
 (*     checks, penny manipulation, etc. M3 required.                         *)
@@ -82,9 +82,9 @@ WIZCALL M-HELP-help
 (* ------------------------------------------------------------------------ *)
 
 (*****************************************************************************)
-(*                         M-CMD-AT_CLONE-Clone                              *)
+(*                         M-CMD-AT_CLONE-clone                              *)
 (*****************************************************************************)
-: M-CMD-AT_CLONE-Clone[ str:thingname -- ref:thing ]
+: M-CMD-AT_CLONE-clone[ str:thingname -- ref:thing ]
   .needs_mlev3
 
   "thing" 1 M-LIB-QUOTA-QuotaCheck not if #-1 exit then
@@ -97,7 +97,7 @@ WIZCALL M-HELP-help
     0 exit
   then
 
-  thingname @ 1 1 1 1 M-LIB-MATCH-Match var! thing
+  thingname @ { "quiet" "no" "absolute" "yes" "nohome" "yes" "nonil" "yes" }dict M-LIB-MATCH-match var! thing
 
   thing @ not if
     0 exit
@@ -118,13 +118,13 @@ WIZCALL M-HELP-help
     0 exit
   then
 
-  thing @ pennies M-LIB-PENNIES-GetCost var! cost
+  thing @ pennies M-LIB-PENNIES-endow_cost_get var! cost
 
   cost @ tp_object_cost @ < if
     tp_object_cost @ cost !
   then
 
-  cost @ M-LIB-PENNIES-ChkPayFor not if
+  cost @ M-LIB-PENNIES-payfor_chk not if
     { "Sorry, you don't have enough " "pennies" sysparm "." }join .tell
     #-1 exit
   then
@@ -134,10 +134,10 @@ WIZCALL M-HELP-help
   { "Object " thing @ unparseobj " cloned as " newThing @ unparseobj "." }join .tell
 
   (* Endow the object *)
-  cost @ M-LIB-PENNIES-DoPayFor
+  cost @ M-LIB-PENNIES-payfor
 ;
-PUBLIC M-CMD-AT_CLONE-Clone
-$LIBDEF M-CMD-AT_CLONE-Clone
+PUBLIC M-CMD-AT_CLONE-clone
+$LIBDEF M-CMD-AT_CLONE-clone
 
 (* ------------------------------------------------------------------------- *)
 
@@ -152,11 +152,11 @@ $LIBDEF M-CMD-AT_CLONE-Clone
   strip var! thingname
 
   (* Clone thing *)
-  thingname @ M-CMD-AT_CLONE-Clone
+  thingname @ M-CMD-AT_CLONE-clone
 
   (* Register thing *)
   regname @ if
-    dup regname @ M-LIB-MATCH-RegisterObject
+    dup regname @ M-LIB-MATCH-register_object
   then
 ;
 .

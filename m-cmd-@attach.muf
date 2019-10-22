@@ -14,7 +14,7 @@ $PRAGMA comment_recurse
 (*     permission checks, penny charges, etc.                                *)
 (*                                                                           *)
 (* PUBLIC ROUTINES:                                                          *)
-(*   M-CMD-AT_ATTACH-Attach[ str:action str:source -- bool:success? ]        *)
+(*   M-CMD-AT_ATTACH-attach[ str:action str:source -- bool:success? ]        *)
 (*     Attempts to attach an exit as though the current player ran the       *)
 (*     @attach command, including all the same message output, permission    *)
 (*     checks, etc. M3 required.                                             *)
@@ -84,9 +84,9 @@ WIZCALL M-HELP-help
   endcatch
 ;
 (*****************************************************************************)
-(*                          M-CMD-AT_ATTACH-Attach                           *)
+(*                          M-CMD-AT_ATTACH-attach                           *)
 (*****************************************************************************)
-: M-CMD-AT_ATTACH-Attach[ str:action str:source -- bool:success? ]
+: M-CMD-AT_ATTACH-attach[ str:action str:source -- bool:success? ]
   .needs_mlev3
 
   source @ not action @ not or if
@@ -94,7 +94,7 @@ WIZCALL M-HELP-help
     0 exit
   then
 
-  action @ 1 1 1 1 M-LIB-MATCH-Match action !
+  action @ { "quiet" "no" "absolute" "yes" "nohome" "yes" "nonil" "yes" }dict M-LIB-MATCH-match action !
   action @ not if
     0 exit
   then
@@ -109,7 +109,7 @@ WIZCALL M-HELP-help
     0 exit
   then
 
-  source @ 1 1 1 1 M-LIB-MATCH-Match source !
+  source @ { "quiet" "no" "absolute" "yes" "nohome" "yes" "nonil" "yes" }dict M-LIB-MATCH-match source !
   source @ not if
     0 exit
   then
@@ -141,8 +141,8 @@ WIZCALL M-HELP-help
 
   1
 ;
-PUBLIC M-CMD-AT_ATTACH-Attach
-$LIBDEF M-CMD-AT_ATTACH-Attach
+PUBLIC M-CMD-AT_ATTACH-attach
+$LIBDEF M-CMD-AT_ATTACH-attach
 
 (* ------------------------------------------------------------------------- *)
 
@@ -157,7 +157,7 @@ $LIBDEF M-CMD-AT_ATTACH-Attach
   strip var! action
 
   (* Reattach exit *)
-  action @ source @ M-CMD-AT_ATTACH-Attach pop
+  action @ source @ M-CMD-AT_ATTACH-attach pop
 ;
 .
 c

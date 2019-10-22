@@ -79,10 +79,10 @@ WIZCALL M-HELP-help
   strip var! exitname
 
   (* Unlink it, if it's an exit *)
-  exitname @ M-CMD-AT_UNLINK-Unlink not if exit then
+  exitname @ M-CMD-AT_UNLINK-unlink not if exit then
 
   (* Perform link *)
-  exitname @ destination @ M-CMD-AT_LINK-Link pop
+  exitname @ destination @ M-CMD-AT_LINK-link pop
 ;
 
 .
