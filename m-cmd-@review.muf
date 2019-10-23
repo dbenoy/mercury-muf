@@ -87,9 +87,7 @@ WIZCALL M-HELP-help
     {
       this_line @
       " "
-      this_entry @ "message_prefix" [] dup not if pop "" then .color_strip
-      this_entry @ "message_text" []
-      this_entry @ "message_suffix" [] dup not if pop "" then .color_strip
+      this_entry @ "message_format" [] dup not if pop "@1" then .color_strip this_entry @ "message_text" [] "@1" subst
     }join this_line !
     (* Append the name of the object if necessary. *)
     this_entry @ "object_name" [] var! owner_tag

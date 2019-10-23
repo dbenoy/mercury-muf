@@ -74,16 +74,14 @@ $PRAGMA comment_recurse
 (*     will be used for everything in the emote inside of quotes.            *)
 (*                                                                           *)
 (* PUBLIC ROUTINES:                                                          *)
-(*   M-LIB-EMOTE-emote[ str:message str:prefix str:suffix ref:from -- ]      *)
-(*     Send an emote from a given object. The emote is sent to every zombie  *)
-(*     and player object in the same room, no matter where the sender and    *)
-(*     the recipient are located in the room's object tree. The emote is     *)
-(*     also logged in the room's properties for a certain amount of time.    *)
-(*     The prefix and suffix are MCC coded colored strings that enclose the  *)
-(*     emote, and are not affected by the color highlighting routine. The    *)
-(*     message may not have a newline character.                             *)
+(*   M-LIB-EMOTE-emote[ str:message dict:opts -- ]                           *)
+(*     Send an emote from the "from" object in opts. The emote is sent to    *)
+(*     every zombie and player object in the same room, no matter where the  *)
+(*     sender and the recipient are located in the room's object tree. The   *)
+(*     emote is also logged in the room's properties for a certain amount of *)
+(*     time. The message may not have a newline character.                   *)
 (*                                                                           *)
-(*     See OPTIONS SETTINGS for how the various options affect the emotes.   *)
+(*     See M-LIB-EMOTE-style below for information on opts.                  *)
 (*                                                                           *)
 (*   M-LIB-EMOTE-history_clean[ ref:room -- ]                                *)
 (*     Clears out old or invalid emote history entries on a given room.      *)
@@ -102,8 +100,7 @@ $PRAGMA comment_recurse
 (*         "object_type"     - Type of the object that sent the emote:       *)
 (*                             "PLAYER" "THING" "EXIT" "ROOM" "PROGRAM"      *)
 (*         "object_owner"    - Owner of the object that sent the emote.      *)
-(*         "message_prefix"  - The prefix text.                              *)
-(*         "message_suffix"  - The suffix text.                              *)
+(*         "message_format"  - The message format text.                      *)
 (*         "message_text"    - The emote message itself.                     *)
 (*       }dict                                                               *)
 (*       ...                                                                 *)
@@ -115,26 +112,44 @@ $PRAGMA comment_recurse
 (*     be strings, except for the timestamp, which will always be an         *)
 (*     integer.                                                              *)
 (*                                                                           *)
-(*   M-LIB-EMOTE-option_get[ ref:object str:option -- str:value ]            *)
+(*   M-LIB-EMOTE-config_get[ ref:object str:option -- str:value ]            *)
 (*     Specify a configuration option to get an emote setting from an        *)
 (*     object. At present, option names are the names from PROPERTIES above, *)
 (*     without the propdir component.                                        *)
 (*                                                                           *)
-(*   M-LIB-EMOTE-option_valid[ str:value ref:object str:option               *)
+(*   M-LIB-EMOTE-config_valid[ str:value ref:object str:option               *)
 (*                             -- bool:valid? ]                              *)
 (*     Specify a configuration option to check the validity of an emote      *)
 (*     setting on an object. At present, option names are the names from     *)
 (*     PROPERTIES above, without the propdir component.                      *)
 (*                                                                           *)
-(*   M-LIB-EMOTE-style[ str:message ref:from ref:to dict:opts -- str:result ]*)
+(*   M-LIB-EMOTE-style[ str:message dict:opts -- str:result ]                *)
 (*     Colors and highlights an emote as if it were sent from and to the     *)
 (*     given objects and returns the resulting string.                       *)
 (*                                                                           *)
 (*     The following options can be supplied:                                *)
-(*       "highlight_mention"                                                 *)
-(*         Set to "YES" or "NO" to enable/disable mention highlighting.      *)
+(*       "to" (dbref)                                                        *)
+(*         When styling, treat this object as the target. The object will be *)
+(*         checked for configuration options (See PROPERTIES above), such as *)
+(*         name highlighting.                                                *)
 (*                                                                           *)
-(*       "quote_level_ooc_style"                                             *)
+(*       "from" (dbref)                                                      *)
+(*         When styling, treat this object as the sender. The object will be *)
+(*         checked for configuration options (See PROPERTIES above), such as *)
+(*         name highlighting. M-LIB-EMOTE-emote uses this option to          *)
+(*         determine which room to broadcast to.                             *)
+(*                                                                           *)
+(*       "message_format" (string)                                           *)
+(*         This can be used to encapsulate the message in an MCC color coded *)
+(*         string. @1 is replaced with the result of the styling. Example:   *)
+(*                                                                           *)
+(*         "Mercury says Hello!" + "[TEST]--- @1 ---"                        *)
+(*         -> "[TEST]--- Mercury says Hello! ---"                            *)
+(*                                                                           *)
+(*       "highlight_mention" ("yes"/"no")                                    *)
+(*         Enable mention highlighting.                                      *)
+(*                                                                           *)
+(*       "highlight_ooc_style" ("yes"/"no")                                  *)
 (*         If the emote starts with the sender's name and a colon, then      *)
 (*         treat the rest of the emote as if it's in quotes for coloring     *)
 (*         purposes.                                                         *)
@@ -221,7 +236,7 @@ $DEF OPTIONS_VALID_HIGHLIGHT_ALLOW_CUSTOM { "YES" "NO" "PLAIN" "NOCOLOR" }list
   pop HISTORY_DEFAULT_MAX_AGE
 ;
 
-: option_valid[ str:value ref:object str:option -- bool:valid? ]
+: config_valid[ str:value ref:object str:option -- bool:valid? ]
   value @ not if 0 exit then
   option @ tolower option !
   option @ "highlight_allow_custom" = if
@@ -246,7 +261,7 @@ $DEF OPTIONS_VALID_HIGHLIGHT_ALLOW_CUSTOM { "YES" "NO" "PLAIN" "NOCOLOR" }list
   then
 ;
 
-: option_default[ ref:object str:option -- str:default ]
+: config_default[ ref:object str:option -- str:default ]
   option @ tolower option !
   option @ "color_name" = option @ "color_quoted" = or option @ "color_unquoted" = or if
     (* Generate a random pastel color seeded off the option name and the object's name *)
@@ -292,10 +307,10 @@ $DEF OPTIONS_VALID_HIGHLIGHT_ALLOW_CUSTOM { "YES" "NO" "PLAIN" "NOCOLOR" }list
   then
 ;
 
-: option_get[ ref:object str:option -- str:value ]
+: config_get[ ref:object str:option -- str:value ]
   object @ OPTIONS_PROPDIR "/" strcat option @ strcat getpropstr
-  dup object @ option @ option_valid not if
-    pop object @ option @ option_default
+  dup object @ option @ config_valid not if
+    pop object @ option @ config_default
   then
   option @ "highlight_allow_custom" = if
     toupper
@@ -395,9 +410,10 @@ $ENDIF
   old_mode @ setmode
 ;
 
-: history_add[ ref:message str:prefix str:suffix str:from ref:room -- ]
+: history_add[ ref:message dict:opts ref:room -- ]
   mode var! old_mode
   preempt
+  opts @ "from" [] dup dbref? not if pop #-1 then var! from
   room @ HISTORY_PROPDIR getpropval ++ var! serial
   room @ HISTORY_PROPDIR serial @ setprop
   {
@@ -416,8 +432,7 @@ $ENDIF
         "UNKNOWN"
       1 until
     "object_owner" from @ owner name
-    "message_prefix" prefix @
-    "message_suffix" suffix @
+    "message_format" opts @ "message_format" []
     "message_text" message @
   }dict var! entry
   room @ { HISTORY_PROPDIR "/" serial @ intostr "/" }join entry @ array_put_propvals
@@ -425,22 +440,33 @@ $ENDIF
 ;
 
 : highlight_quotelevel_get[ ref:to ref:from int:level -- str:result ]
-  to @ "highlight_allow_custom" option_get "NOCOLOR" = if "" exit then
+  to @ if
+    to @ "highlight_allow_custom" config_get "NOCOLOR" = if
+      "" exit
+    then
+  then
   var color_unquoted
   var color_quoted
   begin
-    to @ "highlight_allow_custom" option_get "NO" = if
-      from @ "color_unquoted" option_default color_unquoted !
-      from @ "color_quoted" option_default color_quoted !
-      break
+    to @ if
+      to @ "highlight_allow_custom" config_get "NO" = if
+        from @ "color_unquoted" config_default color_unquoted !
+        from @ "color_quoted" config_default color_quoted !
+        break
+      then
+      to @ "highlight_allow_custom" config_get "PLAIN" = if
+        THEME_COLOR_UNQUOTED color_unquoted !
+        THEME_COLOR_QUOTED color_quoted !
+        break
+      then
     then
-    to @ "highlight_allow_custom" option_get "PLAIN" = if
+    from @ if
+      from @ "color_unquoted" config_get color_unquoted !
+      from @ "color_quoted" config_get color_quoted !
+    else
       THEME_COLOR_UNQUOTED color_unquoted !
       THEME_COLOR_QUOTED color_quoted !
-      break
     then
-    from @ "color_unquoted" option_get color_unquoted !
-    from @ "color_quoted" option_get color_quoted !
   1 until
 
   level @ 0 <= if
@@ -451,44 +477,53 @@ $ENDIF
 ;
 
 : highlight_name[ ref:to ref:from -- str:result ]
-  to @ "highlight_allow_custom" option_get "NOCOLOR" = if
+  to @ "highlight_allow_custom" config_get "NOCOLOR" = if
     from @ name exit
   then
-  to @ "highlight_allow_custom" option_get "NO" = if
-    from @ "color_name" option_default exit
+  to @ "highlight_allow_custom" config_get "NO" = if
+    from @ "color_name" config_default exit
   then
-  to @ "highlight_allow_custom" option_get "PLAIN" = if
+  to @ "highlight_allow_custom" config_get "PLAIN" = if
     { THEME_COLOR_NAME from @ name }join exit
   then
-  from @ "color_name" option_get
+  from @ "color_name" config_get
 ;
 
 : highlight_mention_before_get[ ref:to -- str:result ]
-  to @ "highlight_mention_before" option_get
-  to @ "highlight_allow_custom" option_get "NOCOLOR" = if
+  to @ "highlight_mention_before" config_get
+  to @ "highlight_allow_custom" config_get "NOCOLOR" = if
     .color_strip
   then
 ;
 
 : highlight_mention_after_get[ ref:to -- str:result ]
-  to @ "highlight_mention_after" option_get
-  to @ "highlight_allow_custom" option_get "NOCOLOR" = if
+  to @ "highlight_mention_after" config_get
+  to @ "highlight_allow_custom" config_get "NOCOLOR" = if
     .color_strip
   then
 ;
 
 $DEF EINSTRING over swap instring dup not if pop strlen else nip -- then
-: style[ str:message ref:from ref:to dict:opts -- str:result ]
+: style[ str:message dict:opts -- str:result ]
   "" var! result
   (* Emotes are not colored by the message text itself *)
   message @ .color_escape message !
   (* Store some frequently accessed information *)
-  from @ name var! from_name
-  from @ name " " "_" subst var! from_sname
-  to @ "highlight_mention_names" option_get ";" explode_array var! to_names
-  opts @ "highlight_mention" [] dup not if pop "" then "no" stringcmp var! highlight_mention
-  { to_names @ foreach nip dup not if pop then repeat }list to_names !
-  opts @ "quote_level_ooc_style" [] dup not if pop "" then "yes" stringcmp not var! quote_level_ooc_style
+  opts @ "from" [] var! from
+  opts @ "to" [] var! to
+  opts @ "highlight_mention" [] var! highlight_mention
+  opts @ "highlight_ooc_style" [] var! highlight_ooc_style
+  var from_name
+  var from_sname
+  from @ if
+    from @ name from_name !
+    from @ name " " "_" subst from_sname !
+  then
+  var to_names
+  to @ if
+    to @ "highlight_mention_names" config_get ";" explode_array to_names !
+    { to_names @ foreach nip dup not if pop then repeat }list to_names !
+  then
   (* Iterate through the string *)
   0 var! quote_level_min
   quote_level_min @ var! quote_level
@@ -507,29 +542,31 @@ $DEF EINSTRING over swap instring dup not if pop strlen else nip -- then
     var! message_remain
     var! message_prevchar
     (* Check for from object's name *)
-    message_remain @ from_name @ instring 1 = message_remain @ from_sname @ instring 1 = or if
-      message_prevchar @ "[0-9a-zA-Z]" smatch not if
-        message_remain @ from_name @ strlen strcut swap pop "[0-9a-zA-Z]*" smatch not if
-          quote_level @ quote_level_min @ <= if
-            (* We are at the from object's name, and it is on its own, and we're outside of quotes. Place the highlighted name and increment past it. *)
-            result @ to @ from @ highlight_name .color_strcat result !
-            message_pos @ from_name @ strlen + message_pos !
-            quote_level_ooc_style @ if
-              (* Is this the beginning of the string, and is it followed by a colon? *)
-              message_pos @ from_name @ strlen = message_remain @ from_name @ strlen strcut swap pop ":" instr 1 = and if
-                result @ to @ from @ quote_level @ highlight_quotelevel_get ":" strcat strcat result !
-                quote_level ++
-                quote_level @ quote_level_min !
-                message_pos ++
+    from @ if
+      message_remain @ from_name @ instring 1 = message_remain @ from_sname @ instring 1 = or if
+        message_prevchar @ "[0-9a-zA-Z]" smatch not if
+          message_remain @ from_name @ strlen strcut swap pop "[0-9a-zA-Z]*" smatch not if
+            quote_level @ quote_level_min @ <= if
+              (* We are at the from object's name, and it is on its own, and we're outside of quotes. Place the highlighted name and increment past it. *)
+              result @ to @ from @ highlight_name .color_strcat result !
+              message_pos @ from_name @ strlen + message_pos !
+              highlight_ooc_style @ if
+                (* Is this the beginning of the string, and is it followed by a colon? *)
+                message_pos @ from_name @ strlen = message_remain @ from_name @ strlen strcut swap pop ":" instr 1 = and if
+                  result @ to @ from @ quote_level @ highlight_quotelevel_get ":" strcat strcat result !
+                  quote_level ++
+                  quote_level @ quote_level_min !
+                  message_pos ++
+                then
               then
+              continue
             then
-            continue
           then
         then
       then
     then
     (* Check for to object's name *)
-    highlight_mention @ if
+    to @ highlight_mention @ and if
       "" to_names @ foreach nip dup message_remain @ swap instring 1 = if swap pop break else pop then repeat var! found_name
       found_name @ if
         message_prevchar @ "[0-9a-zA-Z]" smatch not if
@@ -564,10 +601,14 @@ $DEF EINSTRING over swap instring dup not if pop strlen else nip -- then
     (* Nothing got highlighted *)
     (* Find the next potential highlight point, cut and increment to there. *)
     {
-      message_remain @ from_name @ EINSTRING
-      message_remain @ from_sname @ EINSTRING
-      to_names @ foreach nip message_remain @ swap EINSTRING repeat
       message_remain @ "\"" EINSTRING
+      from @ if
+        message_remain @ from_name @ EINSTRING
+        message_remain @ from_sname @ EINSTRING
+      then
+      to @ if
+        to_names @ foreach nip message_remain @ swap EINSTRING repeat
+      then
     }list .array_min
     dup 1 < if
       pop 1
@@ -576,11 +617,13 @@ $DEF EINSTRING over swap instring dup not if pop strlen else nip -- then
     message_pos @ swap + message_pos !
     message_pos @ message @ strlen >=
   until
-
+  (* Apply the 'format' *)
+  opts @ "message_format" [] result @ "@1" subst result !
+  (* Return the result *)
   result @
 ;
 
-: emote_to_object[ str:message str:prefix str:suffix ref:from ref:parent -- ]
+: emote_to_object[ str:message dict:opts ref:parent -- ]
   (* TODO: Sort out how 'listeners' work and make sure they're notified too? *)
   parent @ contents begin
     dup while
@@ -588,10 +631,15 @@ $DEF EINSTRING over swap instring dup not if pop strlen else nip -- then
       dup var! to
       to @ player? to @ thing? or if
         to @ player? to @ "ZOMBIE" flag? or if
-          to @ { prefix @ message @ from @ to @ { to @ from @ = if "highlight_mention" "no" then }dict style suffix @ }join .color_notify
+          opts @
+          to @ swap "to" ->[]
+          opts @ "from" [] to @ = if
+            0 swap "highlight_mention" ->[]
+          then
+          to @ message @ rot style .color_notify
         then
         (* Notify all the things/players inside, too *)
-        message @ prefix @ suffix @ from @ to @ emote_to_object
+        message @ opts @ to @ emote_to_object
       then
     then
     next
@@ -599,29 +647,76 @@ $DEF EINSTRING over swap instring dup not if pop strlen else nip -- then
   pop
 ;
 
-(* ------------------------------------------------------------------------ *)
+(* Take style options in user supplied format and clean them up into the format expected by the internal code *)
+: style_opts_process[ dict:opts_in -- dict:opts_out ]
+  var opt
+  (* Set defaults *)
+  {
+    "from" #-1
+    "to" #-1
+    "message_format" "@1"
+    "highlight_mention" "yes"
+    "highlight_ooc_style" "no"
+  }dict var! opts_out
+  (* Handle dbrefs *)
+  { "from" "to" }list foreach
+    nip
+    opt !
+    opts_in @ opt @ []
+    dup string? if
+      stod
+    then
+    dup dbref? if
+      opts_out @ opt @ ->[] opts_out !
+    else
+      pop
+    then
+  repeat
+  (* Handle strings *)
+  { "message_format" }list foreach
+    nip
+    opt !
+    opts_in @ opt @ [] string? not if continue then
+    opts_in @ opt @ [] opts_out @ opt @ ->[] opts_out !
+  repeat
+  (* Handle yes/no options *)
+  { "highlight_mention" "highlight_ooc_style" }list foreach
+    nip
+    opt !
+    opts_in @ opt @ [] string? not if continue then
+    opts_in @ opt @ [] "{yes|no}" smatch not if continue then
+    opts_in @ opt @ [] "yes" stringcmp not opts_out @ opt @ ->[] opts_out !
+  repeat
+  (* Return result *)
+  opts_out @
+;
+
+(* ------------------------------------------------------------------------- *)
 
 (*****************************************************************************)
 (*                             M-LIB-EMOTE-emote                             *)
 (*****************************************************************************)
-: M-LIB-EMOTE-emote[ str:message str:prefix str:suffix ref:from -- ]
-  from @ dbref? not if "Non-dbref argument (4)." abort then
+: M-LIB-EMOTE-emote[ str:message dict:opts -- ]
+  message @ string? not if "Non-string argument (1)." abort then
+  opts @ array? not if "Non-array argument (2)." abort then
+  opts @ style_opts_process opts !
+  opts @ "from" [] var! from
+  from @ ok? not if "Valid object required for 'from' option." abort then
+  opts @ "to" [] if "Emote with 'to' option specified." abort then
   "me" match from @ = not if
     "force_mlev1_name_notify" sysparm if
       .mlev2 not if "Requires MUCKER level 2 or above to send as other players." abort then
     then
   then
-  message @ string? not if "Non-string argument (1)." abort then
-  prefix @ string? not if "Non-string argument (2)." abort then
-  suffix @ string? not if "Non-string argument (3)." abort then
   message @ not if "Empty emote." abort then
+  message @ "\r" instr if "Newlines are not allowed in emote message strings" abort then
   (* Ascend the object tree until a room is found *)
   from @ begin location dup room? until var! room
   (* Store the emote in the room history *)
   room @ room @ history_max_count -- history_clean
-  message @ prefix @ suffix @ from @ room @ history_add
+  message @ opts @ room @ history_add
   (* Construct styled messages and send out notifies *)
-  message @ prefix @ suffix @ from @ room @ emote_to_object
+  message @ opts @ room @ emote_to_object
 ;
 PUBLIC M-LIB-EMOTE-emote
 $LIBDEF M-LIB-EMOTE-emote
@@ -655,46 +750,43 @@ PUBLIC M-LIB-EMOTE-history_get
 $LIBDEF M-LIB-EMOTE-history_get
 
 (*****************************************************************************)
-(*                          M-LIB-EMOTE-option_get                           *)
+(*                          M-LIB-EMOTE-config_get                           *)
 (*****************************************************************************)
-: M-LIB-EMOTE-option_get[ ref:object str:option -- str:value ]
+: M-LIB-EMOTE-config_get[ ref:object str:option -- str:value ]
   (* M1 OK *)
 
   option @ string? not if "Non-string argument (1)." abort then
   option @ OPTIONS_VALID .array_hasval not if "Invalid option." abort then
 
-  object @ option @ option_get
+  object @ option @ config_get
 ;
-PUBLIC M-LIB-EMOTE-option_get
-$LIBDEF M-LIB-EMOTE-option_get
+PUBLIC M-LIB-EMOTE-config_get
+$LIBDEF M-LIB-EMOTE-config_get
 
 (*****************************************************************************)
-(*                         M-LIB-EMOTE-option_valid                          *)
+(*                         M-LIB-EMOTE-config_valid                          *)
 (*****************************************************************************)
-: M-LIB-EMOTE-option_valid[ str:value ref:object str:option -- bool:valid? ]
+: M-LIB-EMOTE-config_valid[ str:value ref:object str:option -- bool:valid? ]
   (* M1 OK *)
 
   option @ string? not if "Non-string argument (1)." abort then
   option @ OPTIONS_VALID .array_hasval not if "Invalid option." abort then
 
-  value @ object @ option @ option_valid
+  value @ object @ option @ config_valid
 ;
-PUBLIC M-LIB-EMOTE-option_valid
-$LIBDEF M-LIB-EMOTE-option_valid
+PUBLIC M-LIB-EMOTE-config_valid
+$LIBDEF M-LIB-EMOTE-config_valid
 
 (*****************************************************************************)
 (*                             M-LIB-EMOTE-style                             *)
 (*****************************************************************************)
-: M-LIB-EMOTE-style[ str:message ref:from ref:to dict:opts -- str:result ]
+: M-LIB-EMOTE-style[ str:message dict:opts -- str:result ]
   (* M1 OK *)
-
   message @ string? not if "Non-string argument (1)." abort then
-  from @ dbref? not if "Non-dbref argument (2)." abort then
-  to @ dbref? not if "Non-dbref argument (3)." abort then
-
-  message @ "\r" instr if "Newlines are not allowed in style strings" abort then
-
-  message @ from @ to @ opts @ style
+  opts @ array? not if "Non-array argument (2)." abort then
+  opts @ style_opts_process opts !
+  message @ "\r" instr if "Newlines are not allowed in style message strings" abort then
+  message @ opts @ style
 ;
 PUBLIC M-LIB-EMOTE-style
 $LIBDEF M-LIB-EMOTE-style

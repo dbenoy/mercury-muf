@@ -40,7 +40,6 @@ $INCLUDE $m/lib/array
 $INCLUDE $m/lib/grammar
 $INCLUDE $m/lib/theme
 $INCLUDE $m/lib/color
-$INCLUDE $m/lib/emote
 $INCLUDE $m/cmd/at_map
 
 (* ------------------------------------------------------------------------ *)

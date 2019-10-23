@@ -69,7 +69,7 @@ WIZCALL M-HELP-help
     " " strcat
   then
   swap strcat
-  "" "" me @ M-LIB-EMOTE-emote
+  { "from" me @ }dict M-LIB-EMOTE-emote
 ;
 .
 c

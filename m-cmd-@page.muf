@@ -73,7 +73,7 @@ WIZCALL M-HELP-help
     "Please specify a message." command @ toupper .theme_tag_err .color_tell
     exit
   then
-  var quote_level_ooc_style
+  var highlight_ooc_style
   dup ":" instr 1 = if
     1 strcut swap pop
     me @ name
@@ -81,18 +81,32 @@ WIZCALL M-HELP-help
       " " strcat
     then
     swap strcat
-    "no" quote_level_ooc_style !
+    "no" highlight_ooc_style !
   else
     me @ name ": " strcat swap strcat
-    "yes" quote_level_ooc_style !
+    "yes" highlight_ooc_style !
   then
   var! message
   { "quiet" "no" "tag" command @ toupper "match_start" "online" }dict M-LIB-MATCH-pmatch
   dup 0 < if pop exit then
   var! to
   to @ awake? if
-    to @ message @ me @ to @ { "highlight_mention" "no" "quote_level_ooc_style" quote_level_ooc_style @ }dict M-LIB-EMOTE-style command @ toupper .theme_tag .color_notify
-    message @ me @ me @ { "highlight_mention" "no" "quote_level_ooc_style" quote_level_ooc_style @ }dict M-LIB-EMOTE-style { "[#0000AA] (to " to @ name ")" }join .color_strcat command @ toupper .theme_tag .color_tell
+    to @
+    message @ {
+      "from" me @
+      "to" to @
+      "highlight_mention" "no"
+      "highlight_ooc_style" highlight_ooc_style @
+    }dict M-LIB-EMOTE-style
+    "PAGE" .theme_tag .color_notify
+    message @ {
+      "from" me @
+      "to" me @
+      "highlight_mention" "no"
+      "highlight_ooc_style"
+      highlight_ooc_style @
+    }dict M-LIB-EMOTE-style { "[#0000AA] (to " to @ name ")" }join .color_strcat
+    "PAGE" .theme_tag .color_tell
   else
     { to @ name " is offline." }join command @ toupper .theme_tag .color_tell
   then

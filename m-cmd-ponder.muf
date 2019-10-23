@@ -67,7 +67,7 @@ WIZCALL M-HELP-help
     exit
   then
   { me @ name " . o O ( "}join swap " )" strcat strcat
-  "" "" me @ M-LIB-EMOTE-emote
+  { "from" me @ }dict M-LIB-EMOTE-emote
 ;
 .
 c

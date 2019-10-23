@@ -37,6 +37,7 @@ $NOTE    OOC message command.
 $DOCCMD  @list __PROG__=2-30
 
 $include $m/lib/emote
+$include $m/lib/theme
 
 (* ------------------------------------------------------------------------ *)
 
@@ -67,17 +68,20 @@ WIZCALL M-HELP-help
     "Please specify a message." .tell
     exit
   then
+  var highlight_ooc_style
   dup ":" instr 1 = if
     1 strcut swap pop
     me @ name
-    over 1 strcut pop dup "-" = swap "," = or not if
+    over 1 strcut pop dup "-" = over ":" = or swap "," = or not if
       " " strcat
     then
-    swap strcat 
+    swap strcat
+    "no" highlight_ooc_style !
   else
     me @ name ": " strcat swap strcat
+    "yes" highlight_ooc_style !
   then
-  "[#005FFF][OOC] " "" me @ M-LIB-EMOTE-emote
+  { "from" me @ "message_format" "@1" "OOC" .theme_tag "highlight_ooc_style" highlight_ooc_style @ }dict M-LIB-EMOTE-emote
 ;
 .
 c

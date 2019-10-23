@@ -65,7 +65,7 @@ WIZCALL M-HELP-help
     "What do you want to happen?" .tell
     exit
   then
-  "" "" me @ M-LIB-EMOTE-emote
+  { "from" me @ }dict M-LIB-EMOTE-emote
 ;
 .
 c

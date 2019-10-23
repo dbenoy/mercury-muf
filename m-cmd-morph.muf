@@ -74,7 +74,7 @@ WIZCALL M-HELP-help
   var! morph_name
 
   me @ morph_name @ 1 M-CMD-AT_MORPH-load if
-    me @ morph_name @ 1 M-CMD-AT_MORPH-mesg_get "" "" me @ M-LIB-EMOTE-emote
+    me @ morph_name @ 1 M-CMD-AT_MORPH-mesg_get { "from" me @ }dict M-LIB-EMOTE-emote
   then
 ;
 .
