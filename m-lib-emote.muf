@@ -298,6 +298,8 @@ $DEF OPTIONS_VALID_HIGHLIGHT_ALLOW_CUSTOM { "YES" "NO" "PLAIN" "NOCOLOR" }list
 ;
 
 : history_clean[ ref:room int:max_count -- ]
+  mode var! old_mode
+  preempt
   systime var! now
   (* Verify the validity of the entries and nuke invalid ones *)
   0 var! max_serial (* Also find the highest serial *)
@@ -385,15 +387,12 @@ $ENDIF
       room @ swap remove_prop
     repeat
   then
+  old_mode @ setmode
 ;
 
 : history_add[ ref:message str:prefix str:suffix str:from ref:room -- ]
-  (* I don't know if this is concurrency-safe or not. I'm not sure how MUF  *)
-  (* parsels out its time. Accidental perfect simulteneity is probably a    *)
-  (* silly thing to worry about in a chat server but I might as well drop   *)
-  (* this comment here. Maybe it is possible for this to run at the exact   *)
-  (* same instant twice? Better increment the serial the instant we get     *)
-  (* here. Maybe the daemon will have threads in the future...              *)
+  mode var! old_mode
+  preempt
   room @ HISTORY_PROPDIR getpropval ++ var! serial
   room @ HISTORY_PROPDIR serial @ setprop
   {
@@ -417,6 +416,7 @@ $ENDIF
     "message_text" message @
   }dict var! entry
   room @ { HISTORY_PROPDIR "/" serial @ intostr "/" }join entry @ array_put_propvals
+  old_mode @ setmode
 ;
 
 : highlight_quotelevel_get[ ref:to ref:from int:level -- str:result ]
