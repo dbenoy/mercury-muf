@@ -122,7 +122,7 @@ WIZCALL M-HELP-help
     #-1 exit
   then
 
-  source @ { "quiet" "no" "absolute" "yes" "nohome" "yes" "nonil" "yes" }dict M-LIB-MATCH-match source !
+  source @ { "quiet" "no" "match_absolute" "yes" "match_home" "no" "match_nil" "no" }dict M-LIB-MATCH-match source !
 
   source @ ok? not if
     #-1 exit

@@ -131,7 +131,7 @@ $LIBDEF M-CMD-AT_LSEDIT-ListEdit
   objname @ string? not if "Non-string argument (1)." abort then
   propname @ string? not if "Non-string argument (2)." abort then
 
-  objname @ { "quiet" "no" "absolute" "yes" "nohome" "yes" "nonil" "yes" }dict M-LIB-MATCH-match var! object
+  objname @ { "quiet" "no" "match_absolute" "yes" "match_home" "no" "match_nil" "no" }dict M-LIB-MATCH-match var! object
   object @ not if 0 exit then
 
   "me" match object @ controls not if

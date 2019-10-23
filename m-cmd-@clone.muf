@@ -97,7 +97,7 @@ WIZCALL M-HELP-help
     0 exit
   then
 
-  thingname @ { "quiet" "no" "absolute" "yes" "nohome" "yes" "nonil" "yes" }dict M-LIB-MATCH-match var! thing
+  thingname @ { "quiet" "no" "match_absolute" "yes" "match_home" "no" "match_nil" "no" }dict M-LIB-MATCH-match var! thing
 
   thing @ not if
     0 exit

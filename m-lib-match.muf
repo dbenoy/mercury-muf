@@ -13,13 +13,57 @@ $PRAGMA comment_recurse
 (*   M-LIB-MATCH-match[ str:name dict:opts -- ref:dbref ]                    *)
 (*     Takes a name string and searches for an object dbref using the MATCH  *)
 (*     primitive. If nothing is found, it returns #-1. If ambiguous, it      *)
-(*     returns #-2. If HOME, it returns #-3. If NIL it returns #-4. Requires *)
-(*     M3.                                                                   *)
+(*     returns #-2. If HOME, it returns #-3. If NIL it returns #-4.          *)
 (*                                                                           *)
-(*     quiet: Don't display failure messages to users.                       *)
-(*     absolute: Accept dbref strings in the form of #<number>               *)
-(*     nohome: Never return #-3, and notify player if noisy.                 *)
-(*     nonil: Never return #-4, and notify player if noisy.                  *)
+(*     opts:                                                                 *)
+(*       "quiet" ("yes"/"no")                                                *)
+(*         Don't display failure messages to the player.                     *)
+(*                                                                           *)
+(*       "tag"                                                               *)
+(*         Tag any output with this string.                                  *)
+(*                                                                           *)
+(*       "match_absolute" ("yes"/"no"/"builders"/"wizards")                  *)
+(*         Allow #dbref matching.                                            *)
+(*                                                                           *)
+(*       "match_player" ("yes"/"no"/"builders"/"wizards")                    *)
+(*         Allow *player matching.                                           *)
+(*                                                                           *)
+(*       "match_registered" ("yes"/"no"/"builders"/"wizards")                *)
+(*         Allow $name registered object matching.                           *)
+(*                                                                           *)
+(*       "match_me" ("yes"/"no"/"builders"/"wizards")                        *)
+(*         Allow "ME" matching.                                              *)
+(*                                                                           *)
+(*       "match_here" ("yes"/"no"/"builders"/"wizards")                      *)
+(*         Allow "HERE" matching.                                            *)
+(*                                                                           *)
+(*       "match_home" ("yes"/"no"/"builders"/"wizards")                      *)
+(*         Allow "HOME" matching.                                            *)
+(*                                                                           *)
+(*       "match_nil" ("yes"/"no"/"builders"/"wizards")                       *)
+(*         Allow "NIL" matching.                                             *)
+(*                                                                           *)
+(*   M-LIB-MATCH-pmatch[ str:name dict:opts -- ref:dbref ]                   *)
+(*     Searches for a player object by name. If nothing is found, it returns *)
+(*     #-1. If ambiguous, it returns #-2.                                    *)
+(*                                                                           *)
+(*     opts:                                                                 *)
+(*       "quiet" ("yes"/"no")                                                *)
+(*         Don't display failure messages to the player.                     *)
+(*                                                                           *)
+(*       "tag"                                                               *)
+(*         Tag any output with this string.                                  *)
+(*                                                                           *)
+(*       "match_me" ("yes"/"no")                                             *)
+(*         Allow "ME" matching.                                              *)
+(*                                                                           *)
+(*       "match_start" ("no"/"online")                                       *)
+(*         If this is set to "online" then it will check for an exact player *)
+(*         match first, and if there are no matches, it will check the       *)
+(*         list of connected players and try matching the beginning of       *)
+(*         player names.                                                     *)
+(*                                                                           *)
+(*         Exact matches never return #-2                                    *)
 (*                                                                           *)
 (*   M-LIB-MATCH-register_object[ ref:object str:regname ]                   *)
 (*     Registers the specified object on the current player using the given  *)
@@ -58,64 +102,223 @@ $DOCCMD  @list __PROG__=2-51
 
 (* Begin configurable options *)
 
+(* Comment out to remove dependency on $m/lib/theme and $m/lib/color *)
+( $DEF M_LIB_THEME )
+
 (* End configurable options *)
 
 $INCLUDE $m/lib/program
 
+$IFDEF M_LIB_THEME
+  $INCLUDE $m/lib/theme
+  $INCLUDE $m/lib/color
+$ELSE
+  $DEF .theme_err
+  $DEF .theme_tag_err ": " strcat swap strcat
+  $DEF .color_tell tell
+$ENDIF
+
 $PUBDEF :
+
+: match_opts_process[ dict:opts_in -- dict:opts_out ]
+  var opt
+  (* Set defaults *)
+  {
+    "quiet"            "yes"
+    "tag"              ""
+    "match_absolute"   "wizards"
+    "match_player"     "wizards"
+    "match_registered" "yes"
+    "match_me"         "yes"
+    "match_here"       "yes"
+    "match_home"       "yes"
+    "match_nil"        "yes"
+  }dict var! opts_out
+  (* Handle strings *)
+  { "tag" }list foreach
+    nip
+    opt !
+    opts_in @ opt @ [] string? not if continue then
+    opts_in @ opt @ [] opts_out @ opt @ ->[] opts_out !
+  repeat
+  (* Handle yes/no options *)
+  { "quiet" }list foreach
+    nip
+    opt !
+    opts_in @ opt @ [] string? not if continue then
+    opts_in @ opt @ [] "{yes|no}" smatch not if continue then
+    opts_in @ opt @ [] "yes" stringcmp not opts_out @ opt @ ->[] opts_out !
+  repeat
+  (* Handle yes/no/builders/wizards options *)
+  { "match_absolute" "match_player" "match_registered" "match_me" "match_here" "match_home" "match_nil" }list foreach
+    nip
+    opt !
+    opts_in @ opt @ [] string? not if continue then
+    opts_in @ opt @ [] "{yes|no|builders|wizards}" smatch not if continue then
+    opts_in @ opt @ []
+    dup "wizards" stringcmp not if
+      pop .me "WIZARD" flag?
+    else dup "builders" stringcmp not if
+      pop .me "WIZARD" flag? .me "BUILDER" flag? or
+    else
+      "yes" stringcmp not
+    then then
+    opts_out @ opt @ ->[] opts_out !
+  repeat
+  (* Return result *)
+  opts_out @
+;
+
+: pmatch_opts_process[ dict:opts_in -- dict:opts_out ]
+  var opt
+  (* Set defaults *)
+  {
+    "quiet"            "yes"
+    "tag"              ""
+    "match_start"      "no"
+    "match_me"         "no"
+  }dict var! opts_out
+  (* Handle strings *)
+  { "tag" }list foreach
+    nip
+    opt !
+    opts_in @ opt @ [] string? not if continue then
+    opts_in @ opt @ [] opts_out @ opt @ ->[] opts_out !
+  repeat
+  (* Handle yes/no options *)
+  { "quiet" "match_me" }list foreach
+    nip
+    opt !
+    opts_in @ opt @ [] string? not if continue then
+    opts_in @ opt @ [] "{yes|no}" smatch not if continue then
+    opts_in @ opt @ [] "yes" stringcmp not opts_out @ opt @ ->[] opts_out !
+  repeat
+  (* Handle "match_start" *)
+  { "match_start" }list foreach
+    nip
+    opt !
+    opts_in @ opt @ [] string? not if continue then
+    opts_in @ opt @ [] "{no|online}" smatch not if continue then
+    opts_in @ opt @ []
+    dup "online" stringcmp not if
+      pop 2
+    else
+      "yes" stringcmp not
+    then
+    opts_out @ opt @ ->[] opts_out !
+  repeat
+  (* Return result *)
+  opts_out @
+;
 
 (*****************************************************************************)
 (*                             M-LIB-MATCH-match                             *)
 (*****************************************************************************)
 : M-LIB-MATCH-match[ str:name dict:opts -- ref:dbref ]
-  .needs_mlev3
-
-  opts @ "quiet" [] "yes" stringcmp not var! quiet
-  opts @ "absolute" [] "yes" stringcmp not var! absolute
-  opts @ "nohome" [] "yes" stringcmp not var! nohome
-  opts @ "nonil" [] "yes" stringcmp not var! nonil
-
+  (* M1 OK *)
   name @ string? not if "Non-string argument (1)." abort then
-
-  name @ 1 strcut number? swap "#" = and absolute @ and if
-    name @ 1 strcut swap pop stod
+  opts @ array? not if "Non-array argument (2)." abort then
+  opts @ match_opts_process opts !
+  (* Perform the search *)
+  name @ "#" instr 1 = if
+    opts @ "match_absolute" [] if
+      name @ 1 strcut swap pop stod
+    else
+      #-1
+    then
+  else name @ "*" instr 1 = if
+    opts @ "match_player" [] if
+      name @ 1 strcut swap pop pmatch
+    else
+      #-1
+    then
+  else name @ "$" instr 1 = opts @ "match_registered" [] not and if
+    #-1
+  else name @ "me" stringcmp not opts @ "match_me" [] not and if
+    #-1
+  else name @ "here" stringcmp not opts @ "match_here" [] not and if
+    #-1
+  else name @ "home" stringcmp not opts @ "match_home" [] not and if
+    #-1
+  else name @ "nil" stringcmp not opts @ "match_nil" [] not and if
+    #-1
   else
     name @ match
+  then then then then then then then
+  var! match_result
+  (* In case any more special dbrefs are created *)
+  match_result @ -4 < if
+    "Unrecognized match result" abort
   then
-  var! matchResult
-
-  matchResult @ case
-    -4 < when (* In case any more special dbrefs are created *)
-      "Unrecognized match result" abort
-    end
-    #-1 = when (* Invalid *)
-      quiet @ not if { "I don't understand '" name @ "'." }join .tell then
-    end
-    #-2 = when (* Ambiguous *)
-      quiet @ not if { "I don't know which '" name @ "' you mean!" }join .tell then
-    end
-    #-3 = when (* HOME *)
-      nohome @ if
-        quiet @ not if { "I don't understand '" name @ "'." }join .tell then
-        #-1 matchResult !
+  (* Output to user *)
+  opts @ "quiet" [] not if
+    match_result @ #-1 = if (* Invalid *)
+      { "'" name @ "' not found." }join
+    else match_result @ #-2 = if (* Ambiguous *)
+      { "Which '" name @ "'?" }join
+    else
+      ""
+    then then
+    dup if
+      opts @ "tag" [] dup if
+        .theme_tag_err
+      else
+        pop .theme_err
       then
-    end
-    #-4 = when (* NIL *)
-      nonil @ if
-        quiet @ not if { "I don't understand '" name @ "'." }join .tell then
-        #-1 matchResult !
-      then
-    end
-    ok? not when (* Garbage *)
-      quiet @ not if { "I don't understand '" name @ "'." }join .tell then
-      #-1 matchResult !
-    end
-  endcase
-
-  matchResult @
+      .color_tell
+    else
+      pop
+    then
+  then
+  (* Return match *)
+  match_result @
 ;
 PUBLIC M-LIB-MATCH-match
 $LIBDEF M-LIB-MATCH-match
+
+(*****************************************************************************)
+(*                            M-LIB-MATCH-pmatch                             *)
+(*****************************************************************************)
+: M-LIB-MATCH-pmatch[ str:name dict:opts -- ref:dbref ]
+  (* M1 OK *)
+  name @ string? not if "Non-string argument (1)." abort then
+  opts @ array? not if "Non-array argument (2)." abort then
+  opts @ pmatch_opts_process opts !
+  (* Perform the search *)
+  name @ "me" stringcmp not opts @ "match_me" [] not and if
+    #-1
+  else
+    name @ pmatch
+  then
+  dup not opts @ "match_start" [] 2 = and if
+    pop name @ part_pmatch
+  then
+  var! match_result
+  (* Output to user *)
+  opts @ "quiet" [] not if
+    match_result @ #-1 = if (* Invalid *)
+      { "Player '" name @ "' not found." }join
+    else match_result @ #-2 = if (* Ambiguous *)
+      { "Which '" name @ "'?" }join
+    else
+      ""
+    then then
+    dup if
+      opts @ "tag" [] dup if
+        .theme_tag_err
+      else
+        pop .theme_err
+      then
+      .color_tell
+    else
+      pop
+    then
+  then
+  (* Return match *)
+  match_result @
+;
+PUBLIC M-LIB-MATCH-pmatch
+$LIBDEF M-LIB-MATCH-pmatch
 
 (*****************************************************************************)
 (*                        M-LIB-MATCH-register_object                        *)

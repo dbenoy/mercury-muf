@@ -2208,7 +2208,7 @@ lvar g_table_program
     pop exit
   then
 
-  { "quiet" "no" "absolute" "yes" "nohome" "yes" "nonil" "yes" }dict M-LIB-MATCH-match
+  { "quiet" "no" "match_absolute" "yes" "match_home" "no" "match_nil" "no" }dict M-LIB-MATCH-match
   dup not if
     pop exit
   then

@@ -155,7 +155,7 @@ $DEF TESTLOCKPROP getprop dup lock? if testlock else pop pop 1 then
   "link_cost" sysparm atoi var! tp_link_cost
   "exit_cost" sysparm atoi var! tp_exit_cost
 
-  thing @ { "quiet" "no" "absolute" "yes" "nohome" "yes" "nonil" "yes" }dict M-LIB-MATCH-match thing !
+  thing @ { "quiet" "no" "match_absolute" "yes" "match_home" "no" "match_nil" "no" }dict M-LIB-MATCH-match thing !
 
   thing @ not if
     0 exit
@@ -209,7 +209,7 @@ $DEF TESTLOCKPROP getprop dup lock? if testlock else pop pop 1 then
       { }array var! linkRefs
       links @ foreach
         swap pop
-        { "quiet" "no" "absolute" "yes" "nohome" "no" "nonil" "no" }dict M-LIB-MATCH-match var! thisLinkRef
+        { "quiet" "no" "match_absolute" "yes" "match_home" "yes" "match_nil" "yes" }dict M-LIB-MATCH-match var! thisLinkRef
 
         thisLinkRef @ not if
           continue
@@ -270,7 +270,7 @@ $DEF TESTLOCKPROP getprop dup lock? if testlock else pop pop 1 then
       then
     end
     dup player? swap thing? or when (*** Players / Things ***)
-      links @ 0 [] { "quiet" "no" "absolute" "yes" "nohome" "yes" "nonil" "yes" }dict M-LIB-MATCH-match var! newHome
+      links @ 0 [] { "quiet" "no" "match_absolute" "yes" "match_home" "no" "match_nil" "no" }dict M-LIB-MATCH-match var! newHome
       newHome @ not if 0 exit then
 
       "me" match newHome @ controls not "me" match thing @ newHome @ canLinkTo not and if
@@ -284,7 +284,7 @@ $DEF TESTLOCKPROP getprop dup lock? if testlock else pop pop 1 then
       "Home set." .tell
     end
     room? when (*** Rooms ***)
-      links @ 0 [] { "quiet" "no" "absolute" "yes" "nohome" "no" "nonil" "yes" }dict M-LIB-MATCH-match var! newDropto
+      links @ 0 [] { "quiet" "no" "match_absolute" "yes" "match_home" "yes" "match_nil" "no" }dict M-LIB-MATCH-match var! newDropto
       newDropto @ not if 0 exit then
 
       #-3 newDropto @ = not if

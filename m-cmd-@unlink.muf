@@ -110,7 +110,7 @@ WIZCALL M-HELP-help
   "link_cost" sysparm atoi var! tp_link_cost
   "player_start" sysparm match var! tp_player_start
 
-  thing @ { "quiet" "no" "absolute" "yes" "nohome" "yes" "nonil" "yes" }dict M-LIB-MATCH-match thing !
+  thing @ { "quiet" "no" "match_absolute" "yes" "match_home" "no" "match_nil" "no" }dict M-LIB-MATCH-match thing !
 
   thing @ not if
     0 exit

@@ -94,7 +94,7 @@ WIZCALL M-HELP-help
     0 exit
   then
 
-  action @ { "quiet" "no" "absolute" "yes" "nohome" "yes" "nonil" "yes" }dict M-LIB-MATCH-match action !
+  action @ { "quiet" "no" "match_absolute" "yes" "match_home" "no" "match_nil" "no" }dict M-LIB-MATCH-match action !
   action @ not if
     0 exit
   then
@@ -109,7 +109,7 @@ WIZCALL M-HELP-help
     0 exit
   then
 
-  source @ { "quiet" "no" "absolute" "yes" "nohome" "yes" "nonil" "yes" }dict M-LIB-MATCH-match source !
+  source @ { "quiet" "no" "match_absolute" "yes" "match_home" "no" "match_nil" "no" }dict M-LIB-MATCH-match source !
   source @ not if
     0 exit
   then

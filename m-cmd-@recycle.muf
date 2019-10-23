@@ -93,7 +93,7 @@ WIZCALL M-HELP-help
 : M-CMD-AT_RECYCLE-recycle[ str:thing int:confirmation -- bool:success? ]
   .needs_mlev3
 
-  thing @ { "quiet" "no" "absolute" "yes" "nohome" "yes" "nonil" "yes" }dict M-LIB-MATCH-match thing !
+  thing @ { "quiet" "no" "match_absolute" "yes" "match_home" "no" "match_nil" "no" }dict M-LIB-MATCH-match thing !
 
   thing @ ok? not if
     0 exit

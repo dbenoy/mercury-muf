@@ -142,7 +142,7 @@ WIZCALL M-HELP-help
   parent @ if
     "Trying to set parent..." .tell
 
-    parent @ { "quiet" "no" "absolute" "yes" "nohome" "yes" "nonil" "yes" }dict M-LIB-MATCH-match parent !
+    parent @ { "quiet" "no" "match_absolute" "yes" "match_home" "no" "match_nil" "no" }dict M-LIB-MATCH-match parent !
 
     parent @ ok? parent @ #-3 = or not if
       "Parent set to default." .tell
