@@ -103,7 +103,7 @@ $DOCCMD  @list __PROG__=2-51
 (* Begin configurable options *)
 
 (* Comment out to remove dependency on $m/lib/theme and $m/lib/color *)
-( $DEF M_LIB_THEME )
+$DEF M_LIB_THEME
 
 (* End configurable options *)
 

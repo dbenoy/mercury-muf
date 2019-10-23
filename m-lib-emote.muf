@@ -134,6 +134,11 @@ $PRAGMA comment_recurse
 (*       "highlight_mention"                                                 *)
 (*         Set to "YES" or "NO" to enable/disable mention highlighting.      *)
 (*                                                                           *)
+(*       "quote_level_ooc_style"                                             *)
+(*         If the emote starts with the sender's name and a colon, then      *)
+(*         treat the rest of the emote as if it's in quotes for coloring     *)
+(*         purposes.                                                         *)
+(*                                                                           *)
 (*****************************************************************************)
 (* Revision History:                                                         *)
 (*   Version 1.0 -- Daniel Benoy -- October, 2019                            *)
@@ -442,14 +447,6 @@ $ENDIF
     color_unquoted @
   else
     color_quoted @
-(
-    (* Boost the lightness by 10% for every additional quote level *)
-    M-LIB-COLOR-rgb2hsl var! hsl
-    hsl @ 2 [] level @ 1 - 10.0 / +
-    dup 1.0 > if pop 1.0 then
-    hsl @ 2 ->[] hsl !
-    hsl @ M-LIB-COLOR-hsl2rgb
-)
   then
 ;
 
@@ -491,8 +488,10 @@ $DEF EINSTRING over swap instring dup not if pop strlen else nip -- then
   to @ "highlight_mention_names" option_get ";" explode_array var! to_names
   opts @ "highlight_mention" [] dup not if pop "" then "no" stringcmp var! highlight_mention
   { to_names @ foreach nip dup not if pop then repeat }list to_names !
+  opts @ "quote_level_ooc_style" [] dup not if pop "" then "yes" stringcmp not var! quote_level_ooc_style
   (* Iterate through the string *)
-  0 var! quote_level
+  0 var! quote_level_min
+  quote_level_min @ var! quote_level
   1 var! quoting_up
   0 var! message_pos
   begin
@@ -511,10 +510,19 @@ $DEF EINSTRING over swap instring dup not if pop strlen else nip -- then
     message_remain @ from_name @ instring 1 = message_remain @ from_sname @ instring 1 = or if
       message_prevchar @ "[0-9a-zA-Z]" smatch not if
         message_remain @ from_name @ strlen strcut swap pop "[0-9a-zA-Z]*" smatch not if
-          quote_level @ not if
+          quote_level @ quote_level_min @ <= if
             (* We are at the from object's name, and it is on its own, and we're outside of quotes. Place the highlighted name and increment past it. *)
             result @ to @ from @ highlight_name .color_strcat result !
             message_pos @ from_name @ strlen + message_pos !
+            quote_level_ooc_style @ if
+              (* Is this the beginning of the string, and is it followed by a colon? *)
+              message_pos @ from_name @ strlen = message_remain @ from_name @ strlen strcut swap pop ":" instr 1 = and if
+                result @ to @ from @ quote_level @ highlight_quotelevel_get ":" strcat strcat result !
+                quote_level ++
+                quote_level @ quote_level_min !
+                message_pos ++
+              then
+            then
             continue
           then
         then
@@ -549,6 +557,7 @@ $DEF EINSTRING over swap instring dup not if pop strlen else nip -- then
         message_pos ++
         0 quoting_up !
         quote_level --
+        quote_level @ quote_level_min @ <= if quote_level_min @ quote_level ! then
         continue
       then
     then
