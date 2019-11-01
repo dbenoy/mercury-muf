@@ -1409,6 +1409,8 @@ lvar ansi_table_3bit_xterm_rgb
 
 (* Convert an entire MCC sequence to another encoding *)
 : mcc_convert[ str:source str:to_type -- str:result ]
+  mode var! old_mode
+  preempt (* Workaround for issue #475 https://github.com/fuzzball-muck/fuzzball/issues/475 *)
   source @ "\r" explode_array 1 array_cut swap array_vals pop to_type @ mcc_convert_line var! retval
   foreach
     nip
@@ -1416,6 +1418,7 @@ lvar ansi_table_3bit_xterm_rgb
     retval @ "\r" strcat swap strcat retval !
   repeat
   retval @
+  old_mode @ setmode
 ;
 
 (* Preprocess an MCC line for 'modify something elsewhere on the line' codes *)
@@ -1512,6 +1515,8 @@ lvar ansi_table_3bit_xterm_rgb
 
 (* Convert an entire MCC sequence to another encoding *)
 : mcc_preprocess[ str:source -- str:result ]
+  mode var! old_mode
+  preempt (* Workaround for issue #475 https://github.com/fuzzball-muck/fuzzball/issues/475 *)
   source @ "\r" explode_array 1 array_cut swap array_vals pop mcc_preprocess_line var! retval
   foreach
     nip
@@ -1519,6 +1524,7 @@ lvar ansi_table_3bit_xterm_rgb
     retval @ "\r" strcat swap strcat retval !
   repeat
   retval @
+  old_mode @ setmode
 ;
 
 : mcc_explode_array[ str:source str:sep -- arr:result ]
@@ -2129,8 +2135,6 @@ $PUBDEF .color_transcode "MCC" "AUTO" M-LIB-COLOR-transcode
 c
 q
 !@register m-lib-color.muf=m/lib/color
-!@set $m/lib/color=M2
+!@set $m/lib/color=W
 !@set $m/lib/color=L
-!@set $m/lib/color=S
-!@set $m/lib/color=H
 
