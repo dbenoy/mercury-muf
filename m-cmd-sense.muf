@@ -262,6 +262,15 @@ WIZCALL M-HELP-help
   "_/" swap strcat
 ;
 
+: get_sense_prop_mpi_how ( -- s )
+  "aspect" get_conf
+  dup "appearance" stringcmp not if
+    pop "(@Desc)"
+  else
+    "(@" swap 1 strcut swap toupper swap strcat strcat ")" strcat
+  then
+;
+
 : contains? ( d1 d2 -- b ) (* If d1 is within d2, or they are identical *)
   swap
   begin
@@ -369,7 +378,8 @@ WIZCALL M-HELP-help
   "tell_room" get_conf sub_standard { trig me @ object @ }list { "name_match" "yes" }dict M-LIB-GRAMMAR-sub .color_tell
   (* Output room desc *)
   object @ get_sense_prop getpropstr if
-    object @ get_sense_prop "(@" "aspect" get_conf strcat ")" strcat 1 parseprop
+    
+    object @ get_sense_prop get_sense_prop_mpi_how 1 parseprop
   else
     "default_desc_room" get_conf sub_standard { trig me @ object @ }list { "name_match" "yes" }dict M-LIB-GRAMMAR-sub
   then
@@ -392,7 +402,7 @@ WIZCALL M-HELP-help
   "tell_object" get_conf sub_standard { trig me @ object @ }list { "name_match" "yes" }dict M-LIB-GRAMMAR-sub .color_tell
   (* Output desc *)
   object @ get_sense_prop getpropstr if
-    object @ get_sense_prop "(@" "aspect" get_conf strcat ")" strcat 1 parseprop
+    object @ get_sense_prop get_sense_prop_mpi_how 1 parseprop
   else
     "default_desc_object" get_conf sub_standard { trig me @ object @ }list { "name_match" "yes" }dict M-LIB-GRAMMAR-sub
   then
