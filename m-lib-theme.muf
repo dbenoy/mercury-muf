@@ -35,9 +35,15 @@ $PRAGMA comment_recurse
 (*     the name itself.                                                      *)
 (*                                                                           *)
 (*   "_theme/fmt_obj_exit_highlight"                                         *)
-(*     On this progrom object. This is used by M-LIB-THEME-exit_name for     *)
+(*     On this progrom object. This is used by M-LIB-THEME-fancy_exit for    *)
 (*     when a component of the exit gets highlighted. @1 is replaced by the  *)
 (*     text being highlighted.                                               *)
+(*                                                                           *)
+(*   "_theme/fmt_obj_exit_nohighlight"                                       *)
+(*     On this progrom object. This is used by M-LIB-THEME-fancy_exit for    *)
+(*     when a component of the exit is not highlighted (the parts of the     *)
+(*     name that appear between the highlighted parts) @1 is replaced by the *)
+(*     text not being highlighted.                                           *)
 (*                                                                           *)
 (*   "_theme/fmt_obj_player_awake"                                           *)
 (*     On this program object: Format the names of non-wizard players who    *)
@@ -180,20 +186,21 @@ $DEF M_LIB_COLOR
 
 $DEFINE DEFAULT_THEME
   {
-    "fmt_obj_exit"            "@1"
-    "fmt_obj_exit_highlight"  "(@1)"
-    "fmt_obj_program"         "@1"
-    "fmt_obj_player_awake"    "@1"
-    "fmt_obj_player_asleep"   "@1"
-    "fmt_obj_player_wawake"   "@1"
-    "fmt_obj_player_wasleep"  "@1"
-    "fmt_obj_room"            "@1"
-    "fmt_obj_thing"           "@1"
-    "fmt_obj_thing_pawake"    "@1"
-    "fmt_obj_thing_pasleep"   "@1"
-    "fmt_obj_flagref"         "(@1@2)"
-    "fmt_msg_tagged"          "@2: @1"
-    "fmt_msg_error"           "ERROR: @1"
+    "fmt_obj_exit"             "@1"
+    "fmt_obj_exit_highlight"   "(@1)"
+    "fmt_obj_exit_nohighlight" "@1"
+    "fmt_obj_program"          "@1"
+    "fmt_obj_player_awake"     "@1"
+    "fmt_obj_player_asleep"    "@1"
+    "fmt_obj_player_wawake"    "@1"
+    "fmt_obj_player_wasleep"   "@1"
+    "fmt_obj_room"             "@1"
+    "fmt_obj_thing"            "@1"
+    "fmt_obj_thing_pawake"     "@1"
+    "fmt_obj_thing_pasleep"    "@1"
+    "fmt_obj_flagref"          "(@1@2)"
+    "fmt_msg_tagged"           "@2: @1"
+    "fmt_msg_error"            "ERROR: @1"
   }dict
 $ENDDEF
 
@@ -583,9 +590,12 @@ $DEF EINSTRING over swap instring dup not if pop strlen else nip -- then
   exitobj @ exit_highsplit foreach
     nip
     highlight_me @ if
-      "fmt_obj_exit_highlight" theme_get swap 1 array_make arg_sub
+      "fmt_obj_exit_highlight" theme_get
+    else
+      "fmt_obj_exit_nohighlight" theme_get
     then
-    result @ swap strcat result !
+    swap 1 array_make arg_sub
+    result @ swap .color_strcat result !
     highlight_me @ not highlight_me !
   repeat
   result @
