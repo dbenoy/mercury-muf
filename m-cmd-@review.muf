@@ -87,7 +87,18 @@ WIZCALL M-HELP-help
     {
       this_line @
       " "
-      this_entry @ "message_format" [] dup not if pop "@1" then .color_strip this_entry @ "message_text" [] "@1" subst
+      this_entry @ "message" []
+      {
+        "to" me @
+        this_entry @ "object_name" [] me @ name = if
+          "highlight_mention" "no"
+        then
+        "message_format" this_entry @ "message_format" [] dup not if pop "" then
+        "color_name"     this_entry @ "color_name"     [] dup not if pop "" then
+        "color_unquoted" this_entry @ "color_unquoted" [] dup not if pop "" then
+        "color_quoted"   this_entry @ "color_quoted"   [] dup not if pop "" then
+      }dict
+      M-LIB-EMOTE-style
     }join this_line !
     (* Append the name of the object if necessary. *)
     this_entry @ "object_name" [] var! owner_tag
@@ -96,7 +107,7 @@ WIZCALL M-HELP-help
         { owner_tag @ " - " this_entry @ "object_owner" [] }join owner_tag !
       then
     then
-    this_entry @ "message_text" [] "_" " " subst owner_tag @ instr 1 = not if 
+    this_entry @ "message" [] "_" " " subst owner_tag @ instr 1 = not if
       { this_line @ " [#0000AA](" owner_tag @ ")" }join this_line !
     then
     (* Put the completed line in the list *)

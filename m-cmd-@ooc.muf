@@ -43,7 +43,7 @@ $include $m/lib/theme
 
 : M-HELP-desc ( d -- s )
   pop
-  "Think something."
+  "Communicate out-of-character."
 ;
 WIZCALL M-HELP-desc
 

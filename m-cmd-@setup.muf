@@ -316,7 +316,7 @@ lvar g_table_emote
 
 (***** get/set Emote setting *****)
 : get_emote_option[ str:option str:prefix_default -- str:value ]
-  .me option @ M-LIB-EMOTE-option_get
+  .me option @ M-LIB-EMOTE-config_get
   .color_escape
   .me "_config/emote/" option @ strcat getpropstr not if
     prefix_default @ swap strcat
@@ -331,7 +331,7 @@ lvar g_table_emote
   dup strip not if
     .me "_config/emote/" option @ strcat remove_prop
   else
-    dup .me option @ M-LIB-EMOTE-option_valid not if
+    dup .me option @ M-LIB-EMOTE-config_valid not if
       "That is not a valid value for this setting." .theme_err .color_tell
       pop exit
     then
@@ -340,10 +340,10 @@ lvar g_table_emote
 ;
 
 (***** Test emote style *****)
-: get_emote_style[ ref:from str:test_string -- str:value ]
-  test_string @ .me "highlight_mention_names" M-LIB-EMOTE-option_get ";" split pop "@1" subst
+: get_emote_style[ ref:from bool:force_allow_custom str:test_string -- str:value ]
+  test_string @ .me "highlight_mention_names" M-LIB-EMOTE-config_get ";" split pop "@1" subst
   { from @ }list { "name_match" "yes" "name_theme" "no" "color" "strip" }dict M-LIB-GRAMMAR-sub
-  from @ .me { }dict M-LIB-EMOTE-style
+  { "from" from @ "to" me @ }dict force_allow_custom @ if "yes" swap "highlight_allow_custom" ->[] then M-LIB-EMOTE-style
 ;
 
 (***** force user to execute command *****)
@@ -574,7 +574,7 @@ lvar g_table_emote
 
     { ""
       "  @1"
-      'get_emote_style { .me "%N waves. \"Hello there!\" %s says." }list
+      'get_emote_style { .me 1 "%N waves. \"Hello there!\" %s says." }list
       {
       }list "\r" array_join
       'set_null { }list
@@ -582,7 +582,7 @@ lvar g_table_emote
 
     { ""
       "  @1"
-      'get_emote_style { EMOTE_TEST_FROM "%N says, \"Hi, @1!\"" }list
+      'get_emote_style { EMOTE_TEST_FROM 0 "%N says, \"Hi, @1!\"" }list
       {
       }list "\r" array_join
       'set_null { }list
@@ -648,23 +648,13 @@ lvar g_table_emote
     }list
 
     { "S3"
-      "[#00AAAA][[#55FFFF]S3[#00AAAA]] 'Mention Highlight' Before: [#5555FF]@1[!FFFFFF]"
-      'get_emote_option { "highlight_mention_before" "[#0000AA]" }list
+      "[#00AAAA][[#55FFFF]S3[#00AAAA]] Mention Highlight:          [#5555FF]@1[!FFFFFF]"
+      'get_emote_option { "highlight_mention_format" "[#0000AA]" }list
       {
-        "When you see your name (or any name in the 'Mention Highlight' Names setting), this is placed before it. This can be text, color codes, or a combination."
+        "When you see your name (or any name in the 'Mention Highlight' Names setting), this performs the highlight. Set text, color codes, etc, and place @1 where you want the highlighted text to go. For example: \"[#0000FF]@1\" to make it bright blue, or \"[@1]\" to surround it with brackets."
         ""
       }list "\r" array_join
-      'set_emote_option { "highlight_mention_before" }list
-    }list
-
-    { "S4"
-      "[#00AAAA][[#55FFFF]S4[#00AAAA]] 'Mention Highlight' After:  [#5555FF]@1[!FFFFFF]"
-      'get_emote_option { "highlight_mention_after" "[#0000AA]" }list
-      {
-        "When you see your name (or any name in the 'Mention Highlight' Names setting), this is placed after it. This can be text, color codes, or a combination."
-        ""
-      }list "\r" array_join
-      'set_emote_option { "highlight_mention_after" }list
+      'set_emote_option { "highlight_mention_format" }list
     }list
 
     ""
