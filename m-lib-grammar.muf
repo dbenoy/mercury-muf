@@ -103,7 +103,7 @@ $PRAGMA comment_recurse
 (*     The count starts at 1 and if omitted, the first object is used.       *)
 (*                                                                           *)
 (*     Options:                                                              *)
-(*       "name_match"                                                        *)
+(*       "name_match" ( Default "YES" )                                      *)
 (*         If this is set to "YES" then the %d, %i, and %n values on the     *)
 (*         object must match the actual name of the object.                  *)
 (*           - If the name has an article in it, it is stripped off before   *)
@@ -113,15 +113,14 @@ $PRAGMA comment_recurse
 (*           - Underscores can be replaced with spaces and vice versa.       *)
 (*           - $m/lib/color MCC color codes are ignored when comparing.      *)
 (*                                                                           *)
-(*       "name_theme"                                                        *)
+(*       "name_theme" ( Default "NO" )                                       *)
 (*         If this is set to "YES" then the %d, %i, and %n substitutions     *)
 (*         will use $m/lib/theme modifications, and may be returned with     *)
 (*         additional characters and color codes.                            *)
 (*                                                                           *)
-(*       "color"                                                             *)
+(*       "color" ( Default "STRIP" )                                         *)
 (*         This determines how to handle MCC color codes in the substitution *)
-(*         properties. Valid values are "KEEP", "ESCAPE", and "STRIP". The   *)
-(*         default is "STRIP".                                               *)
+(*         properties. Valid values are "KEEP", "ESCAPE", and "STRIP".       *)
 (*                                                                           *)
 (*   M-LIB-GRAMMAR-oxford_join ( a s -- s )                                  *)
 (*     Similar to ", " array_join, but it inserts a coordinating conjunction *)
@@ -157,7 +156,7 @@ $PRAGMA comment_recurse
 $VERSION 1.000
 $AUTHOR  Daniel Benoy
 $NOTE    Natural language strings.
-$DOCCMD  @list __PROG__=2-153
+$DOCCMD  @list __PROG__=2-152
 
 (* ====================== BEGIN CONFIGURABLE OPTIONS ====================== *)
 
@@ -342,6 +341,8 @@ lvar g_gender_table3
 (* ======================= END CONFIGURABLE OPTIONS ======================= *)
 
 $INCLUDE $m/lib/program
+$INCLUDE $m/lib/array
+
 $IFDEF M_LIB_COLOR
   $INCLUDE $m/lib/color
 $ENDIF
@@ -408,18 +409,32 @@ $PUBDEF :
   "unknown_thing" exit
 ;
 
-: base_name ( d -- s )
+: base_names ( d -- a )
   dup name
-  swap exit? if ";" split pop then
-  dup "a[_ ]*" smatch if
-    2 strcut swap pop exit
+  swap exit? if
+    ";" explode_array
+  else
+    1 array_make
   then
-  dup "an[_ ]*" smatch if
-    3 strcut swap pop exit
-  then
-  dup "the[_ ]*" smatch if
-    4 strcut swap pop exit
-  then
+  {
+    swap
+    foreach
+      nip
+      dup "a[_ ]*" smatch if
+        2 strcut swap pop continue
+      then
+      dup "an[_ ]*" smatch if
+        3 strcut swap pop continue
+      then
+      dup "the[_ ]*" smatch if
+        4 strcut swap pop continue
+      then
+    repeat
+  }list
+;
+
+: base_name ( d -- s )
+  base_names 0 []
 ;
 
 : caps_strcat ( s s -- s )
@@ -639,24 +654,24 @@ $IFDEF M_LIB_COLOR
     repeat
   then then
 $ENDIF
-  opts @ "name_match" [] dup not if pop "" then "yes" stringcmp not if
-    object @ name "_" " " subst var! object_name
-    object @ base_name "_" " " subst var! object_base_name
-    substitutions @ "%n" .color_strip [] "_" " " subst var! opt_n
-    substitutions @ "%d" .color_strip [] "_" " " subst var! opt_d
-    substitutions @ "%i" .color_strip [] "_" " " subst var! opt_i
+  opts @ "name_match" [] dup not if pop "" then "no" stringcmp if
+    object @ name "_" " " subst tolower var! object_name
+    object @ base_names { swap foreach nip "_" " " subst tolower repeat }list var! object_base_names
+    substitutions @ "%n" .color_strip [] "_" " " subst tolower var! opt_n
+    substitutions @ "%d" .color_strip [] "_" " " subst tolower var! opt_d
+    substitutions @ "%i" .color_strip [] "_" " " subst tolower var! opt_i
     opt_n @ object_name @ stringcmp if
       object @ default_n substitutions @ "%n" ->[] substitutions !
     then
-    opt_d @ object_base_name @ stringcmp
-    opt_d @ "the_" object_base_name @ strcat stringcmp
+    opt_d @ object_base_names @ .array_hasval not
+    opt_d @ object_base_names @ { swap foreach nip "the_" swap strcat repeat }list .array_hasval not
     and if
       object @ default_d substitutions @ "%d" ->[] substitutions !
     then
-    opt_i @ object_base_name @ stringcmp
-    opt_i @ "a_" object_base_name @ strcat stringcmp
-    opt_i @ "an_" object_base_name @ strcat stringcmp
-    opt_i @ "the_" object_base_name @ strcat stringcmp
+    opt_i @ object_base_names @ .array_hasval not
+    opt_i @ object_base_names @ { swap foreach nip "a_" swap strcat repeat }list .array_hasval not
+    opt_i @ object_base_names @ { swap foreach nip "an_" swap strcat repeat }list .array_hasval not
+    opt_i @ object_base_names @ { swap foreach nip "the_" swap strcat repeat }list .array_hasval not
     and and and if
       object @ default_i substitutions @ "%i" ->[] substitutions !
     then

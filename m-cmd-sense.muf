@@ -159,7 +159,7 @@ $DEF GUEST_CHECK ( d -- b ) "@guest" getprop (* is 'd' a guest? *)
 
 $DEF NOTICE_FORCE_NAME "yes" (* Require %d, %i, and %n properties in notices to match object name? *)
 $DEF LISTING_OBJECTS_FORCE_NAME "yes" (* Non-exit %i values must match object name? *)
-$DEF LISTING_EXITS_FORCE_NAME "no" (* Exit %i values must match exit name? *)
+$DEF LISTING_EXITS_FORCE_NAME "yes" (* Exit %i values must match exit name? *)
 
 $DEFINE DEFAULT_TRIG_PROPS
   {
