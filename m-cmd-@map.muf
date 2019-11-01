@@ -172,8 +172,6 @@ WIZCALL M-HELP-desc
     action_name @ toupper
     "  A utility for creating and displaying area maps."
     " "
-    { "  " action_name @ tolower " ......................... Display map of current area" }join
-    { "  " action_name @ tolower " <map> ................... Display <map>" }join
     { "  " action_name @ tolower " #list ................... Display list of available maps" }join
     { "  " action_name @ tolower " #create <env room>....... Create a map in the given environment room" }join
     { "  " action_name @ tolower " #wizcreate <env room>.... Same as #create, but also add to the list of maps" }join
@@ -295,14 +293,10 @@ WIZCALL M-HELP-help
 
   mark_room @ if
     (* Get the location of map_room on the map *)
-    mark_room @ "_mapx/" map_room @ intostr strcat envpropstr atoi my_x !
-    mark_room @ "_mapy/" map_room @ intostr strcat envpropstr atoi my_y ! and if
+    mark_room @ "_mapx/" map_room @ intostr strcat envpropstr atoi my_x ! pop
+    mark_room @ "_mapy/" map_room @ intostr strcat envpropstr atoi my_y ! pop
+    my_x @ my_y @ and if
       1 my_is_marked !
-    else
-      mark_room @ "_mapy" getpropstr dup my_y !
-      mark_room @ "_mapx" getpropstr dup my_x ! and if
-        1 my_is_marked !
-      then
     then
   then
 
@@ -403,13 +397,12 @@ $LIBDEF M-CMD-AT_MAP-edit
       "Sorry, that's not a number." command @ toupper .theme_tag .color_tell
       pop continue
     then
-
-    atoi dup 0 <= swap max_x @ > or if
+    atoi
+    dup 0 <= over max_x @ > or if
       "Invalid entry: the column number must be between 1 and " max_x @ intostr strcat "." strcat command @ toupper .theme_tag .color_tell
       pop continue
     then
-
-    mark_room @ "_mapx/" env_room @ intostr strcat rot setprop break
+    mark_room @ "_mapx/" env_room @ intostr strcat rot intostr setprop break
   repeat
 
   begin
@@ -421,13 +414,12 @@ $LIBDEF M-CMD-AT_MAP-edit
       "Sorry, that's not a number." command @ toupper .theme_tag .color_tell
       pop continue
     then
-
-    atoi dup 0 <= swap max_y @ > or if
+    atoi
+    dup 0 <= over max_y @ > or if
       "Invalid entry: the column number must be between 1 and " max_y @ intostr strcat "." strcat command @ toupper .theme_tag .color_tell
       pop continue
     then
-
-    mark_room @ "_mapy/" env_room @ intostr strcat rot setprop break
+    mark_room @ "_mapy/" env_room @ intostr strcat rot intostr setprop break
   repeat
 
   "Set." command @ toupper .theme_tag .color_tell
@@ -612,7 +604,9 @@ $LIBDEF M-CMD-AT_MAP-remove
     pop .loc
   then
 
-  dup map_env_get not if
+  map_env_get
+
+  dup not if
     "Area unmapped." command @ toupper .theme_tag .color_tell exit
   then
 
@@ -796,7 +790,6 @@ $LIBDEF M-CMD-AT_MAP-remove
 ;
 
 : cmd_edit ( s --  )
-
   dup if
     M-CMD-AT_MAP-match
 

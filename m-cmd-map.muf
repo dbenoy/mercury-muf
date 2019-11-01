@@ -79,18 +79,18 @@ WIZCALL M-HELP-help
   else
     pop loc @
   then
-  M-CMD-AT_MAP-env_get var! env_room
+  var! map_room
 
-  env_room @ not if
-    "This seems to be uncharted territory." .tell exit
+  map_room @ M-CMD-AT_MAP-env_get not if
+    "It seems to be uncharted territory." .tell exit
   then
 
-  env_room @
+  map_room @
   dup room? if
     (* If you're asking for the map of a room, show your position on that room's map *)
     loc @
   else
-    (* Otherwise, show the position object on its own map. *)
+    (* Otherwise, show the position of the object on its own map. *)
     dup
   then
   M-CMD-AT_MAP-display
@@ -99,7 +99,7 @@ WIZCALL M-HELP-help
     {
       me @ begin
         dup location
-        over env_room @ = if
+        over map_room @ = if
           swap pop
         then
         dup while
