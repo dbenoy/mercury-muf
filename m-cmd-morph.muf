@@ -37,7 +37,7 @@ $NOTE    Morph loader.
 $DOCCMD  @list __PROG__=2-30
 
 $INCLUDE $m/lib/theme
-$INCLUDE $m/lib/color
+$INCLUDE $m/lib/notify
 $INCLUDE $m/lib/emote
 $INCLUDE $m/cmd/at_morph
 

@@ -2110,20 +2110,15 @@ $LIBDEF M-LIB-COLOR-transcode
 (*****************************************************************************)
 (*                           Convenience Routines                            *)
 (*****************************************************************************)
-$PUBDEF .color_cast me @ begin location dup room? until { }list M-LIB-COLOR-cast_to
 $PUBDEF .color_escape "NOCOLOR" "MCC" M-LIB-COLOR-transcode
 $PUBDEF .color_explode_array M-LIB-COLOR-explode_array
 $PUBDEF .color_slice_array M-LIB-COLOR-slice_array
 $PUBDEF .color_carve_array M-LIB-COLOR-carve_array
-$PUBDEF .color_notify "MCC" 3 pick M-LIB-COLOR-encoding_get M-LIB-COLOR-transcode notify
-$PUBDEF .color_ocast me @ begin location dup room? until { me @ }list M-LIB-COLOR-cast_to
-$PUBDEF .color_otell loc @ contents begin over over swap "MCC" 3 pick M-LIB-COLOR-encoding_get M-LIB-COLOR-transcode notify next dup not until pop pop
 $PUBDEF .color_strip "MCC" "NOCOLOR" M-LIB-COLOR-transcode
 $PUBDEF .color_strlen "MCC" "NOCOLOR" M-LIB-COLOR-transcode strlen
 $PUBDEF .color_strcut M-LIB-COLOR-strcut
 $PUBDEF .color_strcat M-LIB-COLOR-strcat
 $PUBDEF .color_subst M-LIB-COLOR-subst
-$PUBDEF .color_tell me @ swap "MCC" "AUTO" M-LIB-COLOR-transcode notify
 $PUBDEF .color_transcode "MCC" "AUTO" M-LIB-COLOR-transcode
 
 (* ------------------------------------------------------------------------ *)

@@ -44,6 +44,7 @@ $def ENCODING_PROP "_config/color/type"
 
 (* ------------------------------------------------------------------------ *)
 
+$INCLUDE $m/lib/notify
 $INCLUDE $m/lib/color
 $INCLUDE $m/lib/string
 
@@ -107,15 +108,15 @@ WIZCALL M-HELP-help
 
 : info ( -- )
   {
-    { "Current Color Encoding: " 85 85 255 0 15 0 0 text_gradient "[#BBBBBB]" me @ M-LIB-COLOR-encoding_get }join .color_transcode
+    { "Current Color Encoding: " 85 85 255 0 15 0 0 text_gradient "[#BBBBBB]" me @ M-LIB-COLOR-encoding_get }join
     " "
-    "Available Encodings: " 85 85 255 0 15 0 0 text_gradient .color_transcode
+    "Available Encodings: " 85 85 255 0 15 0 0 text_gradient
     M-LIB-COLOR-encoding_player_valid foreach
       nip
-      { "  [#BBBBBB]" rot }join .color_transcode
+      { "  [#BBBBBB]" rot }join
     repeat
-    "  [#BBBBBB]NOCOLOR" .color_transcode
-  }tell
+    "  [#BBBBBB]NOCOLOR"
+  }list { me @ }list M-LIB-NOTIFY-color_array_notify
 ;
 
 : cmd_echo ( s -- )
@@ -137,7 +138,7 @@ WIZCALL M-HELP-help
   dup 1 array_make M-LIB-COLOR-encoding_player_valid array_intersect not if
     " " .tell
     dup if
-      "[#BBBBBB]" swap strcat "Encoding '' unknown." 255 85 85 0 0 15 0 text_gradient 10 .color_strcut rot swap strcat strcat .color_tell
+      "[#BBBBBB]" swap strcat "Encoding '' unknown." 255 85 85 0 0 15 0 text_gradient 10 M-LIB-COLOR-strcut rot swap strcat strcat .color_tell
     else
       pop "Please specify an encoding." 255 85 85 0 0 15 0 text_gradient .color_tell
     then
@@ -182,11 +183,17 @@ WIZCALL M-HELP-help
   "Color disabled." .tell
 ;
 
+: cmd_help ( s -- )
+  pop
+  trig M-HELP-help { me @ }list array_notify
+;
+
 : main ( s --  )
   " " split
   strip var! args
   strip var! option
   option @ if
+    "#HELP" option @ stringcmp not if args @ cmd_help exit then
     "#ECHO" option @ stringcmp not if args @ cmd_echo exit then
     "#SET"  option @ stringcmp not if args @ cmd_set exit then
     "#SETUP" option @ stringcmp not if args @ cmd_setup exit then

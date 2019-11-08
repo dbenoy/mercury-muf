@@ -50,6 +50,7 @@ $INCLUDE $m/lib/match
 $INCLUDE $m/lib/grammar
 $INCLUDE $m/lib/emote
 $INCLUDE $m/lib/theme
+$INCLUDE $m/lib/notify
 $INCLUDE $m/lib/color
 
 : M-HELP-desc ( d -- s )

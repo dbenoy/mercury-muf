@@ -111,6 +111,7 @@ $INCLUDE $m/lib/program
 
 $IFDEF M_LIB_THEME
   $INCLUDE $m/lib/theme
+  $INCLUDE $m/lib/notify
   $INCLUDE $m/lib/color
 $ELSE
   $DEF .theme_err

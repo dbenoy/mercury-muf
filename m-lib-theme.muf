@@ -209,9 +209,7 @@ $ENDDEF
 $INCLUDE $m/lib/program
 $IFDEF M_LIB_COLOR
   $INCLUDE $m/lib/color
-$ENDIF
-
-$IFNDEF M_LIB_COLOR
+$ELSE
   $INCLUDE $m/lib/array
   $DEF .color_strcat \strcat
   $DEF .color_strcut \strcut

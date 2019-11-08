@@ -209,6 +209,7 @@ $PUBDEF :
 $INCLUDE $m/lib/program
 $INCLUDE $m/lib/array
 $INCLUDE $m/lib/string
+$INCLUDE $m/lib/notify
 $INCLUDE $m/lib/color
 
 $DEF OPTIONS_VALID { "highlight_allow_custom" "highlight_mention_format" "highlight_mention_names" "color_name" "color_quoted" "color_unquoted" }list
@@ -621,28 +622,17 @@ $DEF EINSTRING over swap instring dup not if pop strlen else nip -- then
   result @
 ;
 
-: emote_to_object[ str:message dict:opts ref:parent -- ]
-  (* TODO: Sort out how 'listeners' work and make sure they're notified too? *)
-  parent @ contents begin
-    dup while
-    dup thing? over player? or if
-      dup var! to
-      to @ player? to @ thing? or if
-        to @ player? to @ "ZOMBIE" flag? or if
-          opts @
-          to @ swap "to" ->[]
-          opts @ "from" [] to @ = if
-            0 swap "highlight_mention" ->[]
-          then
-          to @ message @ rot style .color_notify
-        then
-        (* Notify all the things/players inside, too *)
-        message @ opts @ to @ emote_to_object
-      then
+: emote_cast[ str:message dict:opts ref:parent -- ]
+  parent @ M-LIB-NOTIFY-cast_targets foreach
+    nip
+    var! to
+    opts @
+    to @ swap "to" ->[]
+    opts @ "from" [] to @ = if
+      0 swap "highlight_mention" ->[]
     then
-    next
+    to @ message @ rot style .color_notify
   repeat
-  pop
 ;
 
 (* Take style options in user supplied format and clean them up into the format expected by the internal code *)
@@ -728,7 +718,7 @@ $DEF EINSTRING over swap instring dup not if pop strlen else nip -- then
   room @ room @ history_max_count -- history_clean
   message @ opts @ room @ history_add
   (* Construct styled messages and send out notifies *)
-  message @ opts @ room @ emote_to_object
+  message @ opts @ room @ emote_cast
 ;
 PUBLIC M-LIB-EMOTE-emote
 $LIBDEF M-LIB-EMOTE-emote

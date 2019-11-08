@@ -22,7 +22,6 @@ $PRAGMA comment_recurse
 (*   @set smell=%y:smelling                                                  *)
 (*   @set smell=%z:smelled                                                   *)
 (*   @set smell=_sense/aspect:scent                                          *)
-(*   @set smell=_sense/overt:no                                              *)
 (*   @set smell=_sense/contents_room:random                                  *)
 (*   @create testobject                                                      *)
 (*   smell testobject                                                        *)
@@ -182,6 +181,7 @@ $ENDDEF
 $INCLUDE $m/lib/grammar
 $INCLUDE $m/lib/theme
 $INCLUDE $m/lib/color
+$INCLUDE $m/lib/notify
 
 (* ------------------------------------------------------------------------- *)
 : get_conf_on_action ( d s -- s )

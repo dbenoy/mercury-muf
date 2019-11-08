@@ -71,6 +71,7 @@ $PUBDEF :
 
 $INCLUDE $m/lib/program
 $INCLUDE $m/lib/color
+$INCLUDE $m/lib/notify
 $INCLUDE $m/lib/theme
 $INCLUDE $m/lib/grammar
 $INCLUDE $m/lib/emote

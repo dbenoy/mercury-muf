@@ -71,6 +71,7 @@ WIZCALL M-HELP-help
 $PUBDEF :
 
 $INCLUDE $m/lib/program
+$INCLUDE $m/lib/notify
 $INCLUDE $m/lib/color
 $INCLUDE $m/lib/match
 $INCLUDE $m/lib/theme

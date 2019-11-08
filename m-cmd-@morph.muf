@@ -73,7 +73,7 @@ lvar g_morph_props
 $INCLUDE $m/lib/program
 $INCLUDE $m/lib/string
 $INCLUDE $m/lib/theme
-$INCLUDE $m/lib/color
+$INCLUDE $m/lib/notify
 
 (* ------------------------------------------------------------------------ *)
 

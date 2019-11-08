@@ -50,7 +50,7 @@ $NOTE    Read emote history.
 $DOCCMD  @list __PROG__=2-<last header line>
 
 $INCLUDE $m/lib/emote
-$INCLUDE $m/lib/color
+$INCLUDE $m/lib/notify
 
 (* ------------------------------------------------------------------------ *)
 
@@ -111,9 +111,9 @@ WIZCALL M-HELP-help
       { this_line @ " [#0000AA](" owner_tag @ ")" }join this_line !
     then
     (* Put the completed line in the list *)
-    this_line @ .color_transcode output_lines @ array_appenditem output_lines !
+    this_line @ output_lines @ array_appenditem output_lines !
   repeat
-  output_lines @ { me @ }list array_notify
+  output_lines @ { me @ }list M-LIB-NOTIFY-color_array_notify
 ;
 .
 c

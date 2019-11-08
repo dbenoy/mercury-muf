@@ -154,6 +154,7 @@ $NOTE    Area map displaying program.
 
 $INCLUDE $m/lib/program
 $INCLUDE $m/lib/string
+$INCLUDE $m/lib/notify
 $INCLUDE $m/lib/color
 $INCLUDE $m/lib/theme
 $INCLUDE $m/cmd/at_lsedit
