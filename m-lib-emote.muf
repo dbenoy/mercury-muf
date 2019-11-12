@@ -155,6 +155,10 @@ $PRAGMA comment_recurse
 (*         treat the rest of the emote as if it's in quotes for coloring     *)
 (*         purposes.                                                         *)
 (*                                                                           *)
+(*       "highlight_quote_level_min" (number)                                *)
+(*         The lowest quote level (0 being 'not in quotes') that is allowed  *)
+(*         when doing quote level highlighting.                              *)
+(*                                                                           *)
 (*****************************************************************************)
 (* Revision History:                                                         *)
 (*   Version 1.0 -- Daniel Benoy -- October, 2019                            *)
@@ -515,6 +519,7 @@ $DEF EINSTRING over swap instring dup not if pop strlen else nip -- then
   opts @ "to" [] var! to
   opts @ "highlight_mention" [] var! highlight_mention
   opts @ "highlight_ooc_style" [] var! highlight_ooc_style
+  opts @ "highlight_quote_level_min" [] var! highlight_quote_level_min
   var from_uname
   var from_sname
   to @ from @ opts @ highlight_name var! from_hname
@@ -524,8 +529,7 @@ $DEF EINSTRING over swap instring dup not if pop strlen else nip -- then
   to @ "highlight_mention_names" opts @ config_get ";" explode_array to_names !
   { to_names @ foreach nip dup not if pop then repeat }list to_names !
   (* Iterate through the string *)
-  0 var! quote_level_min
-  quote_level_min @ var! quote_level
+  highlight_quote_level_min @ var! quote_level
   1 var! quoting_up
   0 var! message_pos
   begin
@@ -545,7 +549,7 @@ $DEF EINSTRING over swap instring dup not if pop strlen else nip -- then
       message_remain @ from_uname @ instring 1 = message_remain @ from_sname @ instring 1 = or if
         message_prevchar @ "[0-9a-zA-Z]" smatch not if
           message_remain @ from_uname @ strlen strcut swap pop "[0-9a-zA-Z]*" smatch not if
-            quote_level @ quote_level_min @ <= if
+            quote_level @ highlight_quote_level_min @ <= if
               (* We are at the from object's name, and it is on its own, and we're outside of quotes. Place the highlighted name and increment past it. *)
               result @ from_hname @ .color_strcat result !
               message_pos @ from_uname @ strlen + message_pos !
@@ -554,7 +558,7 @@ $DEF EINSTRING over swap instring dup not if pop strlen else nip -- then
                 message_pos @ from_uname @ strlen = message_remain @ from_uname @ strlen strcut swap pop ":" instr 1 = and if
                   result @ to @ from @ quote_level @ opts @ highlight_quotelevel_get ":" strcat strcat result !
                   quote_level ++
-                  quote_level @ quote_level_min !
+                  quote_level @ highlight_quote_level_min !
                   message_pos ++
                 then
               then
@@ -593,7 +597,7 @@ $DEF EINSTRING over swap instring dup not if pop strlen else nip -- then
         message_pos ++
         0 quoting_up !
         quote_level --
-        quote_level @ quote_level_min @ <= if quote_level_min @ quote_level ! then
+        quote_level @ highlight_quote_level_min @ <= if highlight_quote_level_min @ quote_level ! then
         continue
       then
     then
@@ -648,6 +652,7 @@ $DEF EINSTRING over swap instring dup not if pop strlen else nip -- then
     "highlight_allow_custom" ""
     "highlight_mention_format" ""
     "highlight_mention_names" ""
+    "highlight_quote_level_min" 0
     "color_name" ""
     "color_unquoted" ""
     "color_quoted" ""
@@ -688,6 +693,13 @@ $DEF EINSTRING over swap instring dup not if pop strlen else nip -- then
     opts_in @ opt @ [] string? not if continue then
     opts_in @ opt @ [] "{yes|no}" smatch not if continue then
     opts_in @ opt @ [] "yes" stringcmp not opts_out @ opt @ ->[] opts_out !
+  repeat
+  (* Handle numbers *)
+  { "highlight_quote_level_min" }list foreach
+    nip
+    opt !
+    opts_in @ opt @ [] string? not opts_in @ opt @ [] int? not and if continue then
+    opts_in @ opt @ [] dup string? if atoi then opts_out @ opt @ ->[] opts_out !
   repeat
   (* Return result *)
   opts_out @
