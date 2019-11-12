@@ -71,6 +71,11 @@ $PRAGMA comment_recurse
 (*   "%s"                                                                    *)
 (*     On any object: Subjective pronoun. (he/she/it)                        *)
 (*                                                                           *)
+(*   "%t"                                                                    *)
+(*     On any object: (typically a room): The object's prepositional phrase, *)
+(*     when treated as a location. (in the king's house, behind the          *)
+(*     waterfall, beyond the rainbow, somewhere in the forest, etc.)         *)
+(*                                                                           *)
 (*   "%v"                                                                    *)
 (*     On any object (typically an exit): This object's verb. (eat, go east) *)
 (*                                                                           *)
@@ -571,11 +576,19 @@ $PUBDEF :
   "ed" strcat
 ;
 
+: default_t ( d -- s )
+  dup player? if
+    "in " swap default_n strcat "'s pocket" strcat 
+  else
+    "in " swap default_i strcat
+  then
+;
+
 : get_substitutions[ ref:object -- dict:result ]
   (* Grab the default values *)
   pronoun_defaults object @ get_gender [] var! substitutions
   (* Now override them with object properties, if present *)
-  { "%a" "%o" "%p" "%r" "%s" "%d" "%i" "%n" "%v" "%w" "%x" "%y" "%z" }list foreach
+  { "%a" "%o" "%p" "%r" "%s" "%d" "%i" "%n" "%v" "%w" "%x" "%y" "%z" "%t" }list foreach
     nip
     object @ over getpropstr dup if
       swap substitutions @ swap ->[] substitutions !
@@ -635,6 +648,10 @@ $PUBDEF :
   (* %z *)
   substitutions @ "%z" [] not if
     object @ default_z substitutions @ "%z" ->[] substitutions !
+  then
+  (* %t *)
+  substitutions @ "%t" [] not if
+    object @ default_t substitutions @ "%t" ->[] substitutions !
   then
   (* Return *)
   substitutions @
@@ -721,10 +738,10 @@ $ENDIF
   var code
   var obj_id
   codestr @ .color_strip 1 strcut swap pop var! codestr_stripped
-  codestr_stripped @ "[1-9][adinoprsvwxyz]" smatch if
+  codestr_stripped @ "[1-9][adinoprstvwxyz]" smatch if
     codestr_stripped @
     1 strcut swap atoi obj_id ! code !
-  else codestr_stripped @ "[adinoprsvwxyz]" smatch if
+  else codestr_stripped @ "[adinoprstvwxyz]" smatch if
     1 obj_id !
     codestr_stripped @ code !
   else
