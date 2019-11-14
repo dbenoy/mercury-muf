@@ -49,6 +49,10 @@ $PRAGMA comment_recurse
 (*     On this program object: Format the names of non-wizard players who    *)
 (*     are currently logged in. @1 is replaced by the name itself.           *)
 (*                                                                           *)
+(*   "_theme/fmt_obj_player_idle"                                            *)
+(*     On this program object: Format the names of non-wizard players who    *)
+(*     are currently idle. @1 is replaced by the name itself.                *)
+(*                                                                           *)
 (*   "_theme/fmt_obj_player_asleep"                                          *)
 (*     On this program object: Format the names of non-wizard players who    *)
 (*     are currently not logged in. @1 is replaced by the name itself.       *)
@@ -56,6 +60,10 @@ $PRAGMA comment_recurse
 (*   "_theme/fmt_obj_player_wawake"                                          *)
 (*     On this program object: Format the names of unquelled wizard players  *)
 (*     who are currently logged in. @1 is replaced by the name itself.       *)
+(*                                                                           *)
+(*   "_theme/fmt_obj_player_widle"                                           *)
+(*     On this program object: Format the names of unquelled wizard players  *)
+(*     who are currently idle. @1 is replaced by the name itself.            *)
 (*                                                                           *)
 (*   "_theme/fmt_obj_player_wasleep"                                         *)
 (*     On this program object: Format the names of unquelled wizard players  *)
@@ -108,6 +116,11 @@ $PRAGMA comment_recurse
 (*     change in future versions, but if you have any () or [] tags entered  *)
 (*     into the first alias, then the function will treat this as a manual   *)
 (*     override and highlight those characters only, replacing the brackets. *)
+(*                                                                           *)
+(*   M-LIB-THEME-idle?[ ref:object -- bool:idle? ]                           *)
+(*     Returns true if the puppet/player object is asleep, or is idle in     *)
+(*     in excess of the configured theme idle threshold. If the object is    *)
+(*     not a player or puppet, true is always returned.                      *)
 (*                                                                           *)
 (*   M-LIB-THEME-line_err[ str:msg -- str:line ]                             *)
 (*     Creates an error message from the given string using the theme.       *)
@@ -191,9 +204,11 @@ $DEFINE DEFAULT_THEME
     "fmt_obj_exit_nohighlight" "@1"
     "fmt_obj_program"          "@1"
     "fmt_obj_player_awake"     "@1"
-    "fmt_obj_player_asleep"    "@1"
+    "fmt_obj_player_asleep"    "@1(asleep)"
+    "fmt_obj_player_idle"      "@1(idle)"
     "fmt_obj_player_wawake"    "@1"
-    "fmt_obj_player_wasleep"   "@1"
+    "fmt_obj_player_wasleep"   "@1(asleep)"
+    "fmt_obj_player_widle"     "@1(idle)"
     "fmt_obj_room"             "@1"
     "fmt_obj_thing"            "@1"
     "fmt_obj_thing_pawake"     "@1"
@@ -201,6 +216,7 @@ $DEFINE DEFAULT_THEME
     "fmt_obj_flagref"          "(@1@2)"
     "fmt_msg_tagged"           "@2: @1"
     "fmt_msg_error"            "ERROR: @1"
+    "idle_threshold"           "600"
   }dict
 $ENDDEF
 
@@ -253,13 +269,21 @@ $PUBDEF :
   dup player? if
     dup "WIZARD" flag? if
       dup awake? if
-        pop "fmt_obj_player_wawake" exit
+        dup descrleastidle descridle "idle_threshold" theme_get atoi <= if
+          pop "fmt_obj_player_wawake" exit
+        else
+          pop "fmt_obj_player_widle" exit
+        then
       else
         pop "fmt_obj_player_wasleep" exit
       then
     else
       dup awake? if
-        pop "fmt_obj_player_awake" exit
+        dup descrleastidle descridle "idle_threshold" theme_get atoi <= if
+          pop "fmt_obj_player_awake" exit
+        else
+          pop "fmt_obj_player_idle" exit
+        then
       else
         pop "fmt_obj_player_asleep" exit
       then
@@ -609,6 +633,23 @@ $DEF EINSTRING over swap instring dup not if pop strlen else nip -- then
 ;
 PUBLIC M-LIB-THEME-fancy_exit
 $LIBDEF M-LIB-THEME-fancy_exit
+
+(*****************************************************************************)
+(*                             M-LIB-THEME-idle?                             *)
+(*****************************************************************************)
+: M-LIB-THEME-idle?[ ref:object -- bool:idle? ]
+  (* M1 OK *)
+  object @ dbref? not if "Non-dbref argument (1)." abort then
+  object @ thing? object @ "ZOMBIE" flag? and not object @ player? not and if
+    1 exit
+  then
+  object @ owner awake? not if
+    1 exit
+  then
+  object @ owner descrleastidle descridle "idle_threshold" theme_get atoi >
+;
+PUBLIC M-LIB-THEME-idle?
+$LIBDEF M-LIB-THEME-idle?
 
 (*****************************************************************************)
 (*                             M-LIB-THEME-name                              *)

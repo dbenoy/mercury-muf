@@ -10,8 +10,8 @@ $PRAGMA comment_recurse
 (*   GitHub: https://github.com/dbenoy/mercury-muf (See for install info)    *)
 (*                                                                           *)
 (* PROPERTIES:                                                               *)
-(*   "_shortdesc"                                                            *)
-(*     On locations: The description shown if you have enabled the option    *)
+(*   "_room/short_desc"                                                      *)
+(*     On rooms: The description shown if you have enabled the option        *)
 (*     "_config/autolook/location_shortdesc". Strings longer than 80         *)
 (*     characters are ignored.                                               *)
 (*                                                                           *)
@@ -25,7 +25,7 @@ $PRAGMA comment_recurse
 (*     On the object using @autolook: Display the full description of the    *)
 (*     location.                                                             *)
 (*                                                                           *)
-(*   "_config/autolook/location_shortdesc"                                   *)
+(*   "_config/autolook/location_short_desc"                                  *)
 (*     On the object using @autolook: Display the _shotrdesc of the          *)
 (*     location.                                                             *)
 (*                                                                           *)
@@ -77,13 +77,13 @@ lvar g_config_defaults
 : config_defaults
   g_config_defaults @ if g_config_defaults @ exit then
   {
-    "map"                "yes"
-    "location_name"      "yes"
-    "location_desc"      "no"
-    "location_shortdesc" "yes"
-    "location_exits"     "yes"
-    "location_players"   "yes"
-    "location_things"    "no"
+    "map"                 "yes"
+    "location_name"       "yes"
+    "location_desc"       "no"
+    "location_short_desc" "yes"
+    "location_exits"      "yes"
+    "location_players"    "yes"
+    "location_things"     "no"
   }dict dup g_config_defaults !
 ;
 
@@ -110,7 +110,7 @@ WIZCALL M-HELP-desc
   {
     action_name @
     " "
-    "  Shows information on your current location. This command is meant to be run automatically when you first arrive in a room."
+    "  Shows information on your current location. This command is meant to be run automatically when you first arrive in a room. Some rooms may not be shown based on privacy settings."
   }list
 ;
 WIZCALL M-HELP-help
@@ -167,12 +167,14 @@ WIZCALL M-HELP-help
     me @ loc @ .theme_name .color_notify
   then
   (* Show room short description *)
-  0 var! shortdesc_shown
-  "location_shortdesc" enabled if
-    loc @ "_shortdesc" getpropstr
-    dup over strlen 80 <= and if
-      notify_me @ swap notify
-      1 shortdesc_shown !
+  0 var! short_desc_shown
+  loc @ room? if
+    "location_short_desc" enabled if
+      loc @ "_room/short_desc" getpropstr
+      dup over strlen 80 <= and if
+        notify_me @ swap notify
+        1 short_desc_shown !
+      then
     then
   then
   (* Show room description *)
@@ -180,7 +182,7 @@ WIZCALL M-HELP-help
     loc @ "_/de" "(@Desc)" 1 parseprop
     dup if
       (* Add a blank line if both types of descs are shown *)
-      shortdesc_shown @ if notify_me @ " " notify then
+      short_desc_shown @ if notify_me @ " " notify then
       notify_me @ swap notify
     then
   then
