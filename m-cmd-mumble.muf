@@ -1,16 +1,16 @@
-!@program m-cmd-whisper.muf
+!@program m-cmd-mumble.muf
 1 99999 d
 i
 $PRAGMA comment_recurse
 (*****************************************************************************)
-(* m-cmd-whisper.muf - $m/cmd/whisper                                        *)
-(*   Private communication command using $m/lib/emote                        *)
+(* m-cmd-mumble.muf - $m/cmd/mumble                                          *)
+(*   Semi-private communication command using $m/lib/emote                   *)
 (*                                                                           *)
 (*   GitHub: https://github.com/dbenoy/mercury-muf (See for install info)    *)
 (*                                                                           *)
 (*****************************************************************************)
 (* Revision History:                                                         *)
-(*   Version 1.0 -- Daniel Benoy -- October 2019                             *)
+(*   Version 1.0 -- Daniel Benoy -- November 2019                            *)
 (*      - Original implementation                                            *)
 (*****************************************************************************)
 (* Copyright Notice:                                                         *)
@@ -33,10 +33,12 @@ $PRAGMA comment_recurse
 (*****************************************************************************)
 $VERSION 1.000
 $AUTHOR  Daniel Benoy
-$NOTE    Private message command.
+$NOTE    Semi-private message command.
 $DOCCMD  @list __PROG__=2-30
 
 (* Begin configurable options *)
+
+$DEF OVERHEAR_REDACT_FACTOR 0.5 (* This fraction of the message will be redacted for overhearing targets *)
 
 (* End configurable options *)
 
@@ -48,6 +50,7 @@ $INCLUDE $m/lib/emote
 $INCLUDE $m/lib/theme
 $INCLUDE $m/lib/notify
 $INCLUDE $m/lib/color
+$INCLUDE $m/lib/array
 
 : M-HELP-desc ( d -- s )
   pop
@@ -58,14 +61,66 @@ WIZCALL M-HELP-desc
 : M-HELP-help ( d -- a )
   name ";" split pop var! action_name
   {
-    { action_name @ toupper " <player>=[:]<message>" }join
+    { action_name @ toupper " <player>=<message>" }join
     " "
-    "Send a private message to a player or object in your location. If the message starts with a colon it acts as a 'pose style' message."
+    "Send a semi-private message to a player or object in your location. All other listeners in the same room will see a portion of the message. Some of it will be redacted, but maybe they might be able to piece together what you said!"
+    " "
+    "For example, if your name is Igor, and you type 'mumble Sara=I want to give you a present!' then Sara will see the message clearly, but others in the room might see:"
+    "  Igor mumbles, \"I want ... ... you ... ...\" to Sara."
   }list
 ;
 WIZCALL M-HELP-help
 
 (* ------------------------------------------------------------------------ *)
+
+: redact[ str:message float:redact_factor ]
+  (* Split message on quotes and spaces *)
+  {
+    message @ " " .slice_array foreach
+      nip
+      "\"" .slice_array array_vals pop
+    repeat
+  }list var! message_parts
+  (* Remove empty elements *)
+  { message_parts @ foreach nip dup not if pop then repeat }list message_parts !
+  (* Anything between the quotes and spaces is up for redaction. Count how many we have *)
+  0 var! redact_count_eligible
+  message_parts @ foreach
+    nip
+    dup "\"" != swap " " != and if
+      redact_count_eligible ++
+    then
+  repeat
+  (* Produce a target number of elements we want to redact based on the redact_factor *)
+  redact_count_eligible @ redact_factor @ * ceil int var! redact_count_target
+  redact_count_target @ redact_count_eligible @ > if redact_count_eligible @ redact_count_target ! then
+  (* Produce the random selection of indexes *)
+  { }list var! redact_points
+  begin
+    redact_points @ array_count redact_count_target @ >= if break then
+    random redact_count_eligible @ %
+    dup redact_points @ .array_hasval if
+      pop continue
+    then
+    redact_points @ []<- redact_points !
+  repeat
+  (* Produce the redacted message using the selected indexes *)
+  0 var! this_point
+  {
+    message_parts @ foreach
+      nip
+      dup "\"" = over " " = or if
+        continue
+      then
+      this_point @ redact_points @ .array_hasval if
+        pop "..."
+      then
+      this_point ++
+    repeat
+  }list "" array_join var! redact_message
+  (* Return the result *)
+  redact_message @
+;
 
 : main ( s --  )
   "=" split
@@ -73,16 +128,6 @@ WIZCALL M-HELP-help
     pop
     "What do you want to whisper?" .tell
     exit
-  then
-  1 var! highlight_quote_level_min
-  dup ":" instr 1 = if
-    1 strcut swap pop
-    me @ name
-    over 1 strcut pop dup "-" = over ":" = or swap "," = or not if
-      " " strcat
-    then
-    swap strcat
-    0 highlight_quote_level_min !
   then
   var! message
   {
@@ -107,9 +152,9 @@ WIZCALL M-HELP-help
   message @ {
     "from" me @
     "to" to @
-    "message_format" "[!FFFFFF]%I whispers \"@1[!FFFFFF]\" to you." { me @ }list { "name_match" "yes" }dict M-LIB-GRAMMAR-sub 
+    "message_format" "[!FFFFFF]%I mumbles \"@1[!FFFFFF]\" to you." { me @ }list { "name_match" "yes" }dict M-LIB-GRAMMAR-sub
     "highlight_mention" "no"
-    "highlight_quote_level_min" highlight_quote_level_min @
+    "highlight_quote_level_min" 1
   }dict M-LIB-EMOTE-style
   .color_notify
   (* Notify self with a copy *)
@@ -117,15 +162,31 @@ WIZCALL M-HELP-help
   message @ {
     "from" me @
     "to" me @
-    "message_format" "[!FFFFFF]You whisper \"@1[!FFFFFF]\" to %i." { to @ }list { "name_match" "yes" }dict M-LIB-GRAMMAR-sub 
+    "message_format" "[!FFFFFF]You mumble \"@1[!FFFFFF]\" to %i." { to @ }list { "name_match" "yes" }dict M-LIB-GRAMMAR-sub
     "highlight_mention" "no"
-    "highlight_quote_level_min" highlight_quote_level_min @
+    "highlight_quote_level_min" 1
   }dict M-LIB-EMOTE-style
   .color_notify
+  (* Notify everyone else in the room *)
+  loc @ begin dup room? if break then location repeat M-LIB-NOTIFY-cast_targets foreach
+    nip
+    var! cast_to
+    cast_to @ to @ = if continue then
+    cast_to @ me @ = if continue then
+    cast_to @
+    message @ OVERHEAR_REDACT_FACTOR redact {
+      "from" me @
+      "to" cast_to @
+      "message_format" "[!FFFFFF]%1I mumbles \"@1[!FFFFFF]\" to %2i." { me @ to @ }list { "name_match" "yes" }dict M-LIB-GRAMMAR-sub
+      "highlight_mention" "no"
+      "highlight_quote_level_min" 1
+    }dict M-LIB-EMOTE-style
+    .color_notify
+  repeat
 ;
 .
 c
 q
-!@register m-cmd-whisper.muf=m/cmd/whisper
-!@set $m/cmd/whisper=M3
+!@register m-cmd-mumble.muf=m/cmd/mumble
+!@set $m/cmd/mumble=M3
 
