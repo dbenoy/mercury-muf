@@ -96,6 +96,16 @@ $PRAGMA comment_recurse
 (*     past tense. (i.e. eaten, gone east)                                   *)
 (*                                                                           *)
 (* PUBLIC ROUTINES:                                                          *)
+(*   M-LIB-GRAMMAR-sex_category[ str:sex -- str:category ]                   *)
+(*     Take a given sex string, and return the closest matching value from   *)
+(*     the following list:                                                   *)
+(*       "female"                                                            *)
+(*       "hermaphrodite"                                                     *)
+(*       "male"                                                              *)
+(*       "neuter"                                                            *)
+(*       "nonbinary"                                                         *)
+(*       "unknown"                                                           *)
+(*                                                                           *)
 (*   M-LIB-GRAMMAR-sub[ str:template array:objects dict:opts -- str:name ]   *)
 (*     This works like the PRONOUN_SUB primitive. It takes a string, a list  *)
 (*     of objects, and a dictionary list of options, and replaces "%" codes  *)
@@ -161,7 +171,7 @@ $PRAGMA comment_recurse
 $VERSION 1.000
 $AUTHOR  Daniel Benoy
 $NOTE    Natural language strings.
-$DOCCMD  @list __PROG__=2-152
+$DOCCMD  @list __PROG__=2-167
 
 (* ====================== BEGIN CONFIGURABLE OPTIONS ====================== *)
 
@@ -171,7 +181,7 @@ $DEF M_LIB_COLOR
 (* Comment this out to remove the dependency on $m/lib/theme *)
 $DEF M_LIB_THEME
 
-(* Default pronouns for object types and genders. Empty string for "Name's" / "Name" *)
+(* Default pronouns for object types and sexes. Empty string for "Name's" / "Name" *)
 lvar g_pronoun_defaults
 : pronoun_defaults
   g_pronoun_defaults @ if g_pronoun_defaults @ exit then
@@ -189,10 +199,10 @@ lvar g_pronoun_defaults
   }dict dup g_pronoun_defaults !
 ;
 
-(* Direct mappings from the gender property values on object into their recognized gender *)
-lvar g_gender_table
-: gender_table
-  g_gender_table @ if g_gender_table @ exit then
+(* Direct mappings from the sex property values on object into their recognized sex *)
+lvar g_sex_table
+: sex_table
+  g_sex_table @ if g_sex_table @ exit then
   {
     (* Basic *)
     "female"        "female"
@@ -301,14 +311,14 @@ lvar g_gender_table
     "tod"           "male"
     "renard"        "male"
     "reynard"       "male"
-  }dict dup g_gender_table !
+  }dict dup g_sex_table !
 ;
 
-(* These tests apply if the gender is not in the above table. They use smatch syntax. *)
+(* These tests apply if the sex is not in the above table. They use smatch syntax. *)
 (* If it generates contradictory results, 'nonbinary' will be used. *)
-lvar g_gender_table2
-: gender_table2
-  g_gender_table2 @ if g_gender_table2 @ exit then
+lvar g_sex_table2
+: sex_table2
+  g_sex_table2 @ if g_sex_table2 @ exit then
   {
     { "she[ -]*"     "female"    }list
     { "he[ -]*"      "male"      }list
@@ -326,21 +336,21 @@ lvar g_gender_table2
     { "*fem"         "female"    }list
     { "*ess"         "female"    }list
     { "*ette"        "female"    }list
-  }list dup g_gender_table2 !
+  }list dup g_sex_table2 !
 ;
 
-(* And finally, if the gender is not in any of the above tables, smatch through this table. *)
+(* And finally, if the sex is not in any of the above tables, smatch through this table. *)
 (* This table takes the first hit from top to bottom. *)
-lvar g_gender_table3
-: gender_table3
-  g_gender_table2 @ if g_gender_table2 @ exit then
+lvar g_sex_table3
+: sex_table3
+  g_sex_table2 @ if g_sex_table2 @ exit then
   {
     { "*ish"         "nonbinary" }list
     { "*[ -]like"    "nonbinary" }list
     { "gender*"      "nonbinary" }list
     { "*gender"      "nonbinary" }list
     { "*gendered"    "nonbinary" }list
-  }list dup g_gender_table3 !
+  }list dup g_sex_table3 !
 ;
 
 (* ======================= END CONFIGURABLE OPTIONS ======================= *)
@@ -366,38 +376,45 @@ $PUBDEF :
 
 (* ------------------------------------------------------------------------- *)
 
-: get_gender[ ref:object -- str:result ]
-  object @ "gender_prop" sysparm getpropstr var! gender
-  "" var! match
-  var gender_test
+: sex_category[ str:sex -- str:category ]
+  "" var! category
+  var sex_test
   (* Table 1, direct matches *)
-  gender_table gender @ [] match !
-  match @ if match @ exit then
+  sex_table sex @ [] category !
+  category @ if category @ exit then
   (* Table 2, smatch with 'nonbinary' for ambiguous *)
-  gender_table2 foreach
+  sex_table2 foreach
     nip
-    gender_test !
-    gender @ gender_test @ 0 [] smatch if
-      match @ if
-        gender_test @ 1 [] match @ = not if
+    sex_test !
+    sex @ sex_test @ 0 [] smatch if
+      category @ if
+        sex_test @ 1 [] category @ = not if
           "nonbinary" exit
         then
       else
-        gender_test @ 1 [] match !
+        sex_test @ 1 [] category !
       then
     then
   repeat
-  match @ if match @ exit then
+  category @ if category @ exit then
   (* Table 3, smatch, taking the first hit *)
-  gender_table3 foreach
+  sex_table3 foreach
     nip
-    gender_test !
-    gender @ gender_test @ 0 [] smatch if
-      gender_test @ 1 [] match !
+    sex_test !
+    sex @ sex_test @ 0 [] smatch if
+      sex_test @ 1 [] category !
       break
     then
   repeat
-  match @ if match @ exit then
+  category @ if category @ exit then
+  (* No match *)
+  ""
+;
+
+: get_sex[ ref:object -- str:result ]
+  object @ "gender_prop" sysparm getpropstr var! sex
+  sex @ sex_category
+  dup if exit else pop then
   (* No matches, use the 'unknown' defaults *)
   object @ exit? if
     "unknown_exit" exit
@@ -586,7 +603,7 @@ $PUBDEF :
 
 : get_substitutions[ ref:object -- dict:result ]
   (* Grab the default values *)
-  pronoun_defaults object @ get_gender [] var! substitutions
+  pronoun_defaults object @ get_sex [] var! substitutions
   (* Now override them with object properties, if present *)
   { "%a" "%o" "%p" "%r" "%s" "%d" "%i" "%n" "%v" "%w" "%x" "%y" "%z" "%t" }list foreach
     nip
@@ -781,6 +798,19 @@ $ENDIF
   repeat
   result @
 ;
+
+(*****************************************************************************)
+(*                        M-LIB-GRAMMAR-sex_category                         *)
+(*****************************************************************************)
+: M-LIB-GRAMMAR-sex_category[ str:sex -- str:category ]
+  (* M1 OK *)
+  sex @ string? not if "Non-string argument (1)." abort then
+  sex_category
+  dup if exit else pop then
+  "unknown"
+;
+PUBLIC M-LIB-GRAMMAR-sex_category
+$LIBDEF M-LIB-GRAMMAR-sex_category
 
 (*****************************************************************************)
 (*                         M-LIB-GRAMMAR-oxford_join                         *)
