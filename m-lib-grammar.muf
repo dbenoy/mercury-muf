@@ -805,7 +805,7 @@ $ENDIF
 : M-LIB-GRAMMAR-sex_category[ str:sex -- str:category ]
   (* M1 OK *)
   sex @ string? not if "Non-string argument (1)." abort then
-  sex_category
+  sex @ sex_category
   dup if exit else pop then
   "unknown"
 ;
