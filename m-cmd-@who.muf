@@ -43,6 +43,7 @@ $INCLUDE $m/lib/theme
 $INCLUDE $m/lib/notify
 $INCLUDE $m/lib/color
 $INCLUDE $m/lib/grammar
+$INCLUDE $m/lib/room
 
 (* ------------------------------------------------------------------------- *)
 
@@ -282,13 +283,14 @@ $DEF FOOTER_BRACKET_CLOSE "[#FFFFFF] )-[#AAAAAA]-[#555555]-"
         then
       else
         {
-          "name"       player_dbref @ name
-          "on_time"    player_descr @ descrtime
-          "idle_time"  player_descr @ descridle
-          "theme_name" player_dbref @ .theme_name
-          "sex"        player_dbref @ "gender_prop" sysparm getpropstr sex_color_chr
-          "species"    player_dbref @ "_/species" getpropstr
-          "location"   player_dbref @ location .theme_name
+          "name"           player_dbref @ name
+          "on_time"        player_descr @ descrtime
+          "idle_time"      player_descr @ descridle
+          "theme_name"     player_dbref @ .theme_name
+          "sex"            player_dbref @ "gender_prop" sysparm getpropstr sex_color_chr
+          "species"        player_dbref @ "_/species" getpropstr
+          "theme_location" player_dbref @ location dup M-LIB-ROOM-public? if .theme_name else pop "[#555555](Private)" then
+          "location"       player_dbref @ location dup M-LIB-ROOM-public? if name else pop "(Private)" then
         }dict player_entry !
       then
       player_entry @ "idle_time" [] short_time player_entry @ "idle_time_str" ->[] player_entry !
@@ -298,7 +300,7 @@ $DEF FOOTER_BRACKET_CLOSE "[#FFFFFF] )-[#AAAAAA]-[#555555]-"
     (* Convert all_players into a 2D list array, and render it as a table *)
     {
       { "Name" "S" "Species" "Time" "Idle" "Location" }list
-      { all_players @ foreach nip repeat }list SORTTYPE_CASE_ASCEND "name" array_sort_indexed foreach
+      { all_players @ foreach nip repeat }list SORTTYPE_CASE_ASCEND "name" array_sort_indexed SORTTYPE_CASE_ASCEND "location" array_sort_indexed foreach
         nip
         var! room_player_entry
         {
@@ -307,7 +309,7 @@ $DEF FOOTER_BRACKET_CLOSE "[#FFFFFF] )-[#AAAAAA]-[#555555]-"
           room_player_entry @ "species" []
           room_player_entry @ "on_time_str" []
           room_player_entry @ "idle_time_str" []
-          room_player_entry @ "location" []
+          room_player_entry @ "theme_location" []
         }list
       repeat
     }list {
