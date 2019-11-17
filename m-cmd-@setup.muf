@@ -85,6 +85,7 @@ lvar g_table  (* Set to the appropriate table in main *)
 lvar g_table_main
 lvar g_table_pronoun
 lvar g_table_emote
+lvar g_table_autolook
 
 (* End global variables *)
 
@@ -187,6 +188,21 @@ lvar g_table_emote
 
 : get_str_bool2[ str:property str:valueTrue str:valueFalse -- str:value ] (* this one is for defaulting to yes *)
   .me property @ getpropstr
+
+  "no" stringcmp not if
+    valueFalse @
+  else
+    valueTrue @
+  then
+;
+
+: get_str_bool3[ str:property str:valueTrue str:valueFalse str:valueUnset -- str:value ] (* this one has a separate value for unset *)
+  .me property @ getpropstr
+
+  dup not if
+    pop
+    valueUnset @ exit
+  then
 
   "no" stringcmp not if
     valueFalse @
@@ -501,6 +517,14 @@ lvar g_table_emote
       'set_menu { g_table_emote }list
     }list
 
+    { "S2"
+      "[#00AAAA][[#55FFFF]S2[#00AAAA]] Auto-look Settings"
+      'get_null { }list
+      {
+      }list "\r" array_join
+      'set_menu { g_table_autolook }list
+    }list
+
 
     "" (* Blank line before footer *)
   }list
@@ -656,6 +680,94 @@ lvar g_table_emote
         ""
       }list "\r" array_join
       'set_emote_option { "highlight_mention_format" }list
+    }list
+
+    ""
+
+    { "B"
+      "[#00AAAA][[#55FFFF]B[#00AAAA]]ack to Main"
+      'get_null { }list
+      {
+      }list "\r" array_join
+      'set_menu { g_table_main }list
+    }list
+  }list
+;
+
+: table_autolook (  -- a )
+  {
+    "" 1
+
+    "" "Auto-look Settings" 1
+
+    { "1"
+      "[#00AAAA][[#55FFFF]1[#00AAAA]] Show Map:               [#5555FF]@1[!FFFFFF]"
+      'get_str_bool3 { "_config/autolook/map" "[#5555FF]Yes" "[#5555FF]No" "[#0000AA][Default]" }list
+      {
+        "When entering a new location, should that location's map be automatically displayed?"
+        "Enter 'yes' or 'no'."
+      }list "\r" array_join
+      'set_str_bool { "_config/autolook/map" }list
+    }list
+
+    { "2"
+      "[#00AAAA][[#55FFFF]2[#00AAAA]] Show Location Name:     [#5555FF]@1[!FFFFFF]"
+      'get_str_bool3 { "_config/autolook/location_name" "[#5555FF]Yes" "[#5555FF]No" "[#0000AA][Default]" }list
+      {
+        "When entering a new location, should the location name be displayed?"
+        "Enter 'yes' or 'no'."
+      }list "\r" array_join
+      'set_str_bool { "_config/autolook/location_name" }list
+    }list
+
+    { "3"
+      "[#00AAAA][[#55FFFF]3[#00AAAA]] Show Full Description:  [#5555FF]@1[!FFFFFF]"
+      'get_str_bool3 { "_config/autolook/location_desc" "[#5555FF]Yes" "[#5555FF]No" "[#0000AA][Default]" }list
+      {
+        "When entering a new location, should the location's full description be displayed, if available?"
+        "Enter 'yes' or 'no'."
+      }list "\r" array_join
+      'set_str_bool { "_config/autolook/location_desc" }list
+    }list
+
+    { "4"
+      "[#00AAAA][[#55FFFF]4[#00AAAA]] Show Short Description: [#5555FF]@1[!FFFFFF]"
+      'get_str_bool3 { "_config/autolook/location_short_desc" "[#5555FF]Yes" "[#5555FF]No" "[#0000AA][Default]" }list
+      {
+        "When entering a new location, should the location's short description be displayed, if available?"
+        "Enter 'yes' or 'no'."
+      }list "\r" array_join
+      'set_str_bool { "_config/autolook/location_short_desc" }list
+    }list
+
+    { "5"
+      "[#00AAAA][[#55FFFF]5[#00AAAA]] Show Exits:             [#5555FF]@1[!FFFFFF]"
+      'get_str_bool3 { "_config/autolook/location_exits" "[#5555FF]Yes" "[#5555FF]No" "[#0000AA][Default]" }list
+      {
+        "When entering a new location, should the available exits be displayed, if present?"
+        "Enter 'yes' or 'no'."
+      }list "\r" array_join
+      'set_str_bool { "_config/autolook/location_exits" }list
+    }list
+
+    { "6"
+      "[#00AAAA][[#55FFFF]6[#00AAAA]] Show Players:           [#5555FF]@1[!FFFFFF]"
+      'get_str_bool3 { "_config/autolook/location_players" "[#5555FF]Yes" "[#5555FF]No" "[#0000AA][Default]" }list
+      {
+        "When entering a new location, should a list of present players be displayed?"
+        "Enter 'yes' or 'no'."
+      }list "\r" array_join
+      'set_str_bool { "_config/autolook/location_players" }list
+    }list
+
+    { "7"
+      "[#00AAAA][[#55FFFF]7[#00AAAA]] Show Things:            [#5555FF]@1[!FFFFFF]"
+      'get_str_bool3 { "_config/autolook/location_things" "[#5555FF]Yes" "[#5555FF]No" "[#0000AA][Default]" }list
+      {
+        "When entering a new location, should a list of thing objects, if any are present, be displayed?"
+        "Enter 'yes' or 'no'."
+      }list "\r" array_join
+      'set_str_bool { "_config/autolook/location_things" }list
     }list
 
     ""
@@ -856,6 +968,7 @@ lvar g_table_emote
   table_main         g_table_main         !
   table_pronoun      g_table_pronoun      !
   table_emote        g_table_emote        !
+  table_autolook     g_table_autolook     !
 
   g_table_main set_menu
 ;
