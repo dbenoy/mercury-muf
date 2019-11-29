@@ -4,16 +4,34 @@ i
 $PRAGMA comment_recurse
 (*****************************************************************************)
 (* m-cmd-@help.muf - $m/cmd/at_help                                          *)
-(*   Provides user help and command usage information. It automatically      *)
-(*   grabs information on installed globals and gets help text from its      *)
-(*   properties.                                                             *)
+(*   Provides user help and command usage information. In addition to other  *)
+(*   help topics, it will attempt to automatically grab information from     *)
+(*   installed globals and use it to generate help text. See m-lib-help.muf  *)
+(*   for more information on generating help text from commands.             *)
 (*                                                                           *)
 (*   GitHub: https://github.com/dbenoy/mercury-muf (See for install info)    *)
 (*                                                                           *)
-(*   TODO: Custom help articles.                                             *)
-(*                                                                           *)
 (*   PROPERTIES:                                                             *)
-(*     See m-lib-help.muf for information on properties.                     *)
+(*     See m-lib-help.muf for information on how to put help properties on   *)
+(*     commands/programs.                                                    *)
+(*                                                                           *)
+(*     "_at_help/entries/<topic>/listed"                                     *)
+(*     "_at_help/entries/<topic>/aliases"                                    *)
+(*     "_at_help/entries/<topic>/help"                                       *)
+(*       On this program object: Use these properties to add a custom help   *)
+(*       entry. If 'listed' is set to 'no', this entry will not appear in    *)
+(*       topic listings. 'aliases' is a semicolon-separated list of alias    *)
+(*       names that can also be used to pull up this help entry. 'help' is a *)
+(*       list-type property for the help text itself. If available, MCC      *)
+(*       color codes can be used in the help text.                           *)
+(*                                                                           *)
+(*  TECHNICAL NOTES:                                                         *)
+(*    If two entries are generated with the same name, then to avoid         *)
+(*    collisions, some entries may be renamed so that they're suffixed with  *)
+(*    a '2', '3', '4', etc.                                                  *)
+(*                                                                           *)
+(*    Manually added topics take first priority over commands, but not       *)
+(*    necessarily over built-in topics like 'alpha' or 'globals'.            *)
 (*                                                                           *)
 (*****************************************************************************)
 (* Revision History:                                                         *)
@@ -43,28 +61,24 @@ $PRAGMA comment_recurse
 $VERSION 1.000
 $AUTHOR  Daniel Benoy
 $NOTE    A help command for users.
-$DOCCMD  @list __PROG__=2-<last header line>
+$DOCCMD  @list __PROG__=2-57
 
 (* Begin configurable options *)
-  $def .color-body-cmd    "bold,blue"   (* Color of commands shown in the listing *)
-  $def .color-body-desc   "bold,cyan"   (* Color of short descriptions shown in the listing *)
-  $def .color-body-help   "bold,white" (* Color of the help commands shown in the listing *)
-  $def .color-body-nohelp "dim,red" (* Color of the help commands shown in the listing *)
 
-  $def .color-head-cmd  "dim,blue"   (* Color of 'Global' shown above the listing *)
-  $def .color-head-desc "dim,cyan"   (* Color of 'Description' shown above the listing *)
-  $def .color-head-help "dim,white" (* Color of 'Help Info' shown above the listing *)
-
-  $def .color-msg-error "bold,red"   (* Color for error messages. *)
-
-  $def .color-category  "bold,blue"  (* Color for category titles in detailed output *)
+$DEF OUTPUT_TAG "HELP"
+$DEF OUTPUT_WRAP 72
 
 (* End configurable options *)
 
-$include $m/lib/string
-$include $m/lib/help
+$INCLUDE $m/lib/string
+$INCLUDE $m/lib/help
+$INCLUDE $m/lib/theme
+$INCLUDE $m/lib/notify
+$INCLUDE $m/lib/color
 
-$def .ldisplay begin dup 0 > while dup 1 + rotate .tell 1 - repeat pop
+$DEF .tell M-LIB-NOTIFY-tell_color
+$DEF .err M-LIB-THEME-err
+$DEF .tag M-LIB-THEME-tag
 
 (* ------------------------------------------------------------------------ *)
 
@@ -87,117 +101,281 @@ WIZCALL M-HELP-help
 
 (* ------------------------------------------------------------------------ *)
 
-: matches_action ( s1 s2 -- b ) (* if action name s1 would be triggered by command s2 *)
-  1 array_make swap ";" explode_array array_intersect not not
+: string_cb_strcat M-LIB-COLOR-strcat ;
+: string_cb_strcut M-LIB-COLOR-strcut ;
+: string_cb_strstrip M-LIB-COLOR-strip ;
+: string_cb ( -- a ) { "strcat" 'string_cb_strcat "strcut" 'string_cb_strcut "strstrip" 'string_cb_strstrip }dict ;
+
+: help_page_main[ list:topics -- list:lines ]
+  {
+    { "Welcome to " "muckname" sysparm "! To get help, try the following commands:" }join
+    { "  " command @ " alpha .... Get an alphabetical listing of all help topics." }join
+    { "  " command @ " globals .. List information on available commands." }join
+  }list
 ;
 
-: get_global ( s -- d )
-  #0 exits
+: globals_get[  -- arr:globals ]
+  {
+    #0 exits_array foreach
+      nip
+      dup getlink not if (* Unlinked global exit! *)
+        me @ "TRUEWIZARD" flag? if
+          { "WARNING: Unlinked global exit: " 3 pick unparseobj }join .err .tell
+        then
+        pop continue
+      then
+      (* Test if this user can access this command *)
+      dup "$nothing" match = over #-4 = or not if (* If it's linked to $nothing or NIL, then it's probably MPI, so always show it *)
+        me @ over locked? if
+          pop continue (* Users don't need to see what they can't access. *)
+        then
+      then
+      (* Don't show dark actions *)
+      dup "DARK" flag? if
+        pop continue
+      then
+    repeat
+  }list
+;
+
+$DEF .color_fillfield rot M-LIB-COLOR-strlen - dup 1 < if pop pop "" else * then
+: help_page_globals[ arr:topics -- arr:lines ]
+  { }list var! lines
+  { }list var! entries
+  globals_get foreach
+    nip
+    var! global_exit
+    {
+      "   "
+      (* Name *)
+      { "[#5555FF]" global_exit @ M-LIB-HELP-command_get_name }join dup " " 21 .color_fillfield M-LIB-COLOR-strcat
+      (* Short Description *)
+      { "[#55FFFF]" global_exit @ M-LIB-HELP-command_get_desc }join dup " " 51 .color_fillfield M-LIB-COLOR-strcat
+      "[!FFFFFF]   "
+    }join
+    entries @ array_appenditem entries !
+  repeat
+  {
+    "   [#0000AA]Global               [#00AAAA]Description                                        [!FFFFFF]   "
+    "-" OUTPUT_WRAP *
+    entries @ SORTTYPE_CASEINSENS array_sort array_vals pop
+  }list
+;
+
+: help_page_command[ arr:topics ref:command_exit -- arr:lines ]
+  command_exit @ M-LIB-HELP-command_get_help
+;
+
+: help_page_listing[ list:topics -- arr:lines ]
+  { }list var! lines
+  "" var! line
+  "" var! prev_letter
+  {
+    topics @ foreach
+      "listed" [] not if
+        pop
+      else
+        tolower
+      then
+    repeat
+  }list SORTTYPE_CASE_ASCEND array_sort foreach
+    nip
+    var! topic
+    "" var! this_letter
+    topic @ begin
+      dup not if
+        pop break
+      then
+      1 strcut swap
+      this_letter @ over strcat this_letter !
+      "[0-9a-z]" smatch if
+        pop break
+      then
+    repeat
+    this_letter @ prev_letter @ stringcmp if
+      line @ if
+        line @ lines @ []<- lines ! "" line !
+      then
+      lines @ if
+        " " lines @ []<- lines !
+      then
+      this_letter @ toupper lines @ []<- lines !
+      this_letter @ prev_letter !
+    then
+    line @ { "  " topic @ }join strcat line !
+  repeat
+  line @ if
+    line @ lines @ []<- lines !
+  then
+  lines @
+;
+
+: help_page_custom[ list:topics str:custom_topic_name ]
+  prog { "_at_help/entries/" custom_topic_name @ "/help" }join array_get_proplist
+;
+
+(* Like array_setitem but if there's already an entry with that key it will add it under a different key. *)
+: array_setitem_redundant ( ? a @ -- a )
   begin
-    dup while
-    over over name swap matches_action if
+    over over [] if
+      (* Strip off any number that may be on the end *)
+      "" var! key_end_number
+      begin
+        dup strlen -- strcut
+        dup number? if
+          key_end_number @ strcat key_end_number !
+        else
+          strcat break
+        then
+      repeat
+      (* Increment the number and add it back on *)
+      key_end_number @ atoi ++ dup 2 < if pop 2 then intostr strcat
+    else
       break
     then
-    next
   repeat
-  swap pop
+  array_setitem
 ;
 
-: topic_info ( s -- )
-  (* Find the specified global *)
-  get_global
-
-  dup not if
-    "No global by that name was found." .color-msg-error textattr .tell exit
+(* Like array_setitem but won't override something that exists with that key *)
+: array_setitem_unless_exists ( ? a @ -- a )
+  over over [] if
+    pop swap pop exit
   then
-
-  me @ over controls not over "D" flag? and if
-    "Permission denied.  This global is set DARK." .color-msg-error textattr .tell exit
-  then
-
-  M-LIB-HELP-command_get_help { me @ }list array_notify
+  array_setitem
 ;
 
-: topic_list ( s --  )
-  pop
-
-  { }list
-  var! entries
-
-  #0 exits
-  begin
-    dup while
-
-    dup getlink not if (* Unlinked global exit! *)
-      me @ "TRUEWIZARD" flag? not if
-        next continue (* Don't show users this stuff *)
-      else
-        "WARNING: Unlinked global exit: " over name strcat .color-msg-error textattr .tell
-      then
-    then
-
-    (* Test if this user can access this command *)
-    dup "$nothing" match = not if (* If it's linked to $nothing, then it's probably MPI *)
-      me @ over locked? if
-        next continue (* Users don't need to see what they can't access. *)
-      then
-    then
-
-    (* Don't show dark actions *)
-    dup "D" flag? if
-      next continue
-    then
-
-    (* We made it this far.  Add it to the list of globals to display. *)
-
-    (* Short Description *)
-    dup M-LIB-HELP-command_get_desc 50 strcut pop .color-body-desc textattr
-
-    (* Name *)
-    over M-LIB-HELP-command_get_name .color-body-cmd textattr
-
-    "|  %- 21s%- 51s  |" fmtstring
-
-    entries @ array_appenditem entries !
-
-    next
+: topics_get[  -- list:topic_list ]
+  { }dict var! topic_list
+  globals_get var! global_exits
+  (* 'alpha' *)
+  { "listed" 1 "args" { }list "func" 'help_page_listing }dict topic_list @ "alpha" array_setitem_redundant topic_list !
+  { "listed" 0 "args" { }list "func" 'help_page_listing }dict topic_list @ "alphabetical" array_setitem_redundant topic_list !
+  (* 'globals' *)
+  { "listed" 1 "args" { }list "func" 'help_page_globals }dict topic_list @ "globals" array_setitem_redundant topic_list !
+  { "listed" 0 "args" { }list "func" 'help_page_globals }dict topic_list @ "commands" array_setitem_redundant topic_list !
+  (* Manual topics from properties, primary name *)
+  prog "_at_help/entries/" array_get_propdirs foreach
+    nip
+    var! custom_topic_name
+    prog { "_at_help/entries/" custom_topic_name @ "/listed" }join getpropstr "no" stringcmp not not var! custom_topic_listed
+    { "listed" custom_topic_listed @ "args" { custom_topic_name @ }list "func" 'help_page_custom }dict topic_list @ custom_topic_name @ array_setitem_redundant topic_list !
   repeat
-  pop
+  (* TODO: Some built-in help topics, especially ones that benefit from being auto-generated like describing penny costs for things *)
+  (* Global command entries, friendly names *)
+  global_exits @ foreach
+    nip
+    var! global_exit
+    (* Add entries for each alias *)
+    { "listed" 1 "func" 'help_page_command "args" { global_exit @ }list }dict topic_list @ global_exit @ M-LIB-HELP-command_get_name array_setitem_redundant topic_list !
+  repeat
+  (* Manual topics from properties, aliases *)
+  prog "_at_help/entries/" array_get_propdirs foreach
+    nip
+    var! custom_topic_name
+    prog { "_at_help/entries/" custom_topic_name @ "/aliases" }join getpropstr
+    dup not if pop continue then
+    ";" explode_array foreach
+      nip
+      var! custom_topic_alias
+      { "listed" 0 "args" { custom_topic_name @ }list "func" 'help_page_custom }dict topic_list @ custom_topic_alias @ array_setitem_unless_exists topic_list !
+    repeat
+  repeat
+  (* Global command entries, all aliases *)
+  global_exits @ foreach
+    nip
+    var! global_exit
+    { "listed" 0 "func" 'help_page_command "args" { global_exit @ }list }dict
+    global_exit @ name ";" explode_array foreach
+      nip
+      over swap topic_list @ swap array_setitem_unless_exists topic_list !
+    repeat
+    pop
+  repeat
+  (* Return list *)
+  topic_list @
+;
 
-  (* Show header *)
-
-  {
-    "------------------------------------------------------------------------------"
-    "Description" .color-head-desc textattr
-    "Global" .color-head-cmd textattr
-    "|  %- 21s%- 51s  |" fmtstring
-    "|----------------------------------------------------------------------------|"
-    entries @ SORTTYPE_CASEINSENS array_sort array_vals pop
-    "------------------------------------------------------------------------------"
-    { "Use '" command @ " <name>' for more information" }join
-  }tell
+: array_getitem_partial ( a @ -- ? )
+  over over array_getitem dup if
+    exit
+  else
+    pop
+    (* Search for a partial match *)
+    var! requested_key
+    {
+      over
+      foreach
+        pop
+        dup requested_key @ stringpfx not if
+          pop
+        then
+      repeat
+    }list
+    dup array_count 1 = if
+      0 [] [] exit
+    then
+    pop pop 0 exit
+  then
 ;
 
 (*****************************************************************************)
 (                                   main                                      )
 (*****************************************************************************)
 : main
-  dup if topic_info exit then
-  topic_list
-
-  ( Get a list of help topics and their associated function pointer )
-
-  ( Manually add 'globals' )
-
-  ( Manually add a topic that reveals MUCK settings like penny costs? )
-
-  ( List all the #0 globals and throw them in )
-
-  ( Grab all the manually added topics )
-
-  ( Find the closest match for the requested topic and call its function )
-
-  ( If nothing was specified just print out the list of topics )
+  var! requested_topic
+  (* Produce a list-of-strings object for this help page *)
+  var entry
+  topics_get var! topics
+  requested_topic @ if
+    topics @ requested_topic @ array_getitem_partial
+    dup if
+      entry !
+      topics @ entry @ "args" [] array_vals pop entry @ "func" [] execute
+    else
+      pop
+      {
+        { "There is no entry for '" requested_topic @ "'. See '" command @ " alpha' for a listing of available help topics." }join .err
+      }list
+    then
+  else
+    topics @ help_page_main
+  then
+  (* Handle empty help entries *)
+  dup not if
+    pop
+    {
+      "Help topic data missing." .err
+    }list
+  then
+  (* Word wrap the result *)
+  {
+    over foreach
+      nip
+      OUTPUT_WRAP string_cb M-LIB-STRING-wordwrap array_vals pop
+    repeat
+  }list
+  (* Determine the maximum width in order to draw decorations *)
+  0 var! width_max
+  dup foreach
+    nip
+    M-LIB-COLOR-strlen
+    dup width_max @ > if
+      dup width_max !
+    then
+    pop
+  repeat
+  (* Draw decorations, and apply theme tags *)
+  {
+    "-" width_max @ * OUTPUT_TAG .tag
+    rot foreach
+      nip
+      OUTPUT_TAG .tag
+    repeat
+    "-" width_max @ * OUTPUT_TAG .tag
+  }list
+  (* Output processed lines *)
+  { me @ }list M-LIB-NOTIFY-array_notify_color
 ;
 .
 c

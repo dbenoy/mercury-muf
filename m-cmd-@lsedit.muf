@@ -81,7 +81,7 @@ WIZCALL M-HELP-help
 (*                         M-CMD-AT_LSEDIT-ListEdit                          *)
 (*****************************************************************************)
 : M-CMD-AT_LSEDIT-ListEdit[ ref:object str:propname -- bool:modified? ]
-  .needs_mlev4
+  M-LIB-PROGRAM-needs_mlev4
 
   object @ dbref? not if "Non-dbref argument (1)." abort then
   propname @ string? not if "Non-string argument (2)." abort then
@@ -126,7 +126,7 @@ $LIBDEF M-CMD-AT_LSEDIT-ListEdit
 (*                          M-CMD-AT_LSEDIT-LSEdit                           *)
 (*****************************************************************************)
 : M-CMD-AT_LSEDIT-LSEdit[ str:objname str:propname -- bool:modified? ]
-  .needs_mlev3
+  M-LIB-PROGRAM-needs_mlev3
 
   objname @ string? not if "Non-string argument (1)." abort then
   propname @ string? not if "Non-string argument (2)." abort then

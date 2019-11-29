@@ -87,7 +87,7 @@ WIZCALL M-HELP-help
 (*                          M-CMD-AT_ATTACH-attach                           *)
 (*****************************************************************************)
 : M-CMD-AT_ATTACH-attach[ str:action str:source -- bool:success? ]
-  .needs_mlev3
+  M-LIB-PROGRAM-needs_mlev3
 
   source @ not action @ not or if
     "You must specify an action name and a source object." .tell

@@ -43,6 +43,9 @@ $INCLUDE $m/lib/color
 $INCLUDE $m/lib/notify
 $INCLUDE $m/cmd/at_map
 
+$DEF .tell M-LIB-NOTIFY-tell_color
+$DEF .err M-LIB-THEME-err
+
 (* ------------------------------------------------------------------------ *)
 
 : M-HELP-desc ( d -- s )
@@ -71,11 +74,11 @@ WIZCALL M-HELP-help
     M-CMD-AT_MAP-match
 
     dup #-2 = if
-      pop "I don't know which one you mean!" .theme_err .color_tell exit
+      pop "I don't know which one you mean!" .err .tell exit
     then
 
     dup ok? not if
-      pop "I can't find that map." .theme_err .color_tell exit
+      pop "I can't find that map." .err .tell exit
     then
   else
     pop loc @
@@ -109,11 +112,11 @@ WIZCALL M-HELP-help
     }list var! other_env
     {
       other_maps @ foreach
-        swap stod other_env @ .array_hasval not if pop then
+        swap stod other_env @ M-LIB-ARRAY-hasval not if pop then
       repeat
     }list other_maps !
     other_maps @ if
-      { "The " other_maps @ "and" M-LIB-GRAMMAR-oxford_join " map" other_maps @ array_count 1 > if "s are " else " is " then "available here, too." }join .tell
+      { "The " other_maps @ "and" M-LIB-GRAMMAR-oxford_join M-LIB-COLOR-escape " map" other_maps @ array_count 1 > if "s are " else " is " then "available here, too." }join .tell
     then
   then
 ;

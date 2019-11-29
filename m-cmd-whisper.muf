@@ -49,6 +49,10 @@ $INCLUDE $m/lib/theme
 $INCLUDE $m/lib/notify
 $INCLUDE $m/lib/color
 
+$DEF .notify M-LIB-NOTIFY-notify_color
+
+(* ------------------------------------------------------------------------- *)
+
 : M-HELP-desc ( d -- s )
   pop
   "Private message a player or object."
@@ -111,7 +115,7 @@ WIZCALL M-HELP-help
     "highlight_mention" "no"
     "highlight_quote_level_min" highlight_quote_level_min @
   }dict M-LIB-EMOTE-style
-  .color_notify
+  .notify
   (* Notify self with a copy *)
   me @
   message @ {
@@ -121,7 +125,7 @@ WIZCALL M-HELP-help
     "highlight_mention" "no"
     "highlight_quote_level_min" highlight_quote_level_min @
   }dict M-LIB-EMOTE-style
-  .color_notify
+  .notify
 ;
 .
 c

@@ -113,10 +113,13 @@ $IFDEF M_LIB_THEME
   $INCLUDE $m/lib/theme
   $INCLUDE $m/lib/notify
   $INCLUDE $m/lib/color
+  $DEF .tell M-LIB-NOTIFY-tell_color
+  $DEF .err M-LIB-THEME-err
+  $DEF .tag_err M-LIB-THEME-tag_err
 $ELSE
-  $DEF .theme_err
-  $DEF .theme_tag_err ": " strcat swap strcat
-  $DEF .color_tell tell
+  $DEF .tell tell
+  $DEF .err
+  $DEF .tag_err ": " strcat swap strcat
 $ENDIF
 
 $PUBDEF :
@@ -158,9 +161,9 @@ $PUBDEF :
     opts_in @ opt @ [] "{yes|no|builders|wizards}" smatch not if continue then
     opts_in @ opt @ []
     dup "wizards" stringcmp not if
-      pop .me "WIZARD" flag?
+      pop "me" match "WIZARD" flag?
     else dup "builders" stringcmp not if
-      pop .me "WIZARD" flag? .me "BUILDER" flag? or
+      pop "me" match "WIZARD" flag? "me" match "BUILDER" flag? or
     else
       "yes" stringcmp not
     then then
@@ -262,11 +265,11 @@ $PUBDEF :
     then then
     dup if
       opts @ "tag" [] dup if
-        .theme_tag_err
+        .tag_err
       else
-        pop .theme_err
+        pop .err
       then
-      .color_tell
+      .tell
     else
       pop
     then
@@ -306,11 +309,11 @@ $LIBDEF M-LIB-MATCH-match
     then then
     dup if
       opts @ "tag" [] dup if
-        .theme_tag_err
+        .tag_err
       else
-        pop .theme_err
+        pop .err
       then
-      .color_tell
+      .tell
     else
       pop
     then
@@ -325,7 +328,7 @@ $LIBDEF M-LIB-MATCH-pmatch
 (*                        M-LIB-MATCH-register_object                        *)
 (*****************************************************************************)
 : M-LIB-MATCH-register_object[ ref:object str:regname ]
-  .needs_mlev3
+  M-LIB-PROGRAM-needs_mlev3
 
   object @ dbref? not if "Non-dbref argument (1)." abort then
   regname @ string? not if "Non-string argument (2)." abort then

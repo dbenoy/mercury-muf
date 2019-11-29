@@ -15,14 +15,13 @@ $PRAGMA comment_recurse
 (*   "[#7FFF00]Charclose!" "MCC" "ANSI-8BIT" M-LIB-COLOR-transcode .tell     *)
 (*   "[#7FFF00]Green :/" "MCC" "ANSI-4BIT-VGA" M-LIB-COLOR-transcode .tell   *)
 (*                                                                           *)
-(*   "[#7FFF00]Chartreuse?" .color_tell (Uses player color setting prop)     *)
+(*   "[#7FFF00]Chartreuse?" "MCC" "AUTO" M-LIB-COLOR-transcode .tell         *)
 (*                                                                           *)
 (* TIPS:                                                                     *)
-(*   If you are displaying any player entered text, either escape the color  *)
-(*   codes by converting the string to NOCOLOR, or ANSIfy the text FIRST,    *)
-(*   and THEN concatenate them with other elements on the same line. This is *)
-(*   because there are codes that allow you to modify the colors on other    *)
-(*   parts of the line.                                                      *)
+(*   If you're handling user-supplied text, either escape the text with      *)
+(*   M-LIB-COLOR-escape, or always ensure that you use M-LIB-COLOR-strcat,   *)
+(*   rather than the standard strcat primitive. This is because there are    *)
+(*   codes that allow you to modify the colors on other parts of the line.   *)
 (*                                                                           *)
 (*   These special codes exist so you can draw complex ASCII artwork in a    *)
 (*   text editor, and keep all the color information off the side at the end *)
@@ -37,22 +36,6 @@ $PRAGMA comment_recurse
 (*     encoding is retreived from the object's owner instead.                *)
 (*                                                                           *)
 (* PUBLIC ROUTINES:                                                          *)
-(*   M-LIB-COLOR-carve_array[ str:source str:sep -- arr:result ]             *)
-(*   .carve_array ( s1 s2 -- a )                                             *)
-(*     Like M-LIB-COLOR-explode_array but it doesn't remove the separators,  *)
-(*     it cuts just before them and keeps them in the resulting strings.     *)
-(*                                                                           *)
-(*   M-LIB-COLOR-cast_to[ str:message ref:object arr:exclude str:from_type   *)
-(*                        -- ]                                               *)
-(*     Sends a message to all players and things within object, and players  *)
-(*     and things inside of them recursively. It converts from from_type to  *)
-(*     the same encoding that would be returned by M-LIB-COLOR-encoding_get  *)
-(*     on the target object's owner. Objects in the exclude array will not   *)
-(*     be notified.                                                          *)
-(*                                                                           *)
-(*     You can cast to a room, but it will not recurse through its child     *)
-(*     rooms, only objects and players.                                      *)
-(*                                                                           *)
 (*   M-LIB-COLOR-encoding_default[ -- str:type ]                             *)
 (*     Returns the default encoding.                                         *)
 (*                                                                           *)
@@ -64,9 +47,8 @@ $PRAGMA comment_recurse
 (*     Returns a list of valid encodings that players can set in their       *)
 (*     properties in order of quality from best to worst.                    *)
 (*                                                                           *)
-(*   M-LIB-COLOR-explode_array[ str:source str:sep -- arr:result ]           *)
-(*     Acts like the EXPLODE_ARRAY primitive, but it works for strings with  *)
-(*     MMC color codes and will operate as if on the colorized string.       *)
+(*   M-LIB-COLOR-escape[ str:source -- str:result ]                          *)
+(*     Escapes all MCC color codes in a string.                              *)
 (*                                                                           *)
 (*   M-LIB-COLOR-hsl2rgb[ arr:hsl -- str:rgb ]                               *)
 (*     Takes an HSV value array of three floats and converts it to a 6-digit *)
@@ -75,10 +57,6 @@ $PRAGMA comment_recurse
 (*   M-LIB-COLOR-rgb2hsl[ str:rgb -- arr:hsl ]                               *)
 (*     Takes a 6-digit hexadecimal RGB string and converts it to an HSV      *)
 (*     value array of three floats.                                          *)
-(*                                                                           *)
-(*   M-LIB-COLOR-slice_array[ str:source str:sep -- arr:result ]             *)
-(*     Like M-LIB-COLOR-explode_array but it the separators are also         *)
-(*     included in the resulting array.                                      *)
 (*                                                                           *)
 (*   M-LIB-COLOR-strcat[ str:source1 str:source2 -- str:result ]             *)
 (*     Works like the STRCAT primitive for MCC strings, but unlike the       *)
@@ -91,10 +69,12 @@ $PRAGMA comment_recurse
 (*     Works like the STRCUT primitive, but it works for strings with MCC    *)
 (*     color codes and will operate as if on the colorized string.           *)
 (*                                                                           *)
-(*   M-LIB-COLOR-subst[ str:source int:replace_to str:replace_from           *)
-(*                      -- str:result ]                                      *)
-(*     Works like the SUBST primitive, but it works for strings with MCC     *)
-(*     color codes and will operate as if on the colorized string.           *)
+(*   M-LIB-COLOR-strlen[ str:source -- int:result ]                          *)
+(*     Returns the length of a string, ignoring valid MCC color codes.       *)
+(*                                                                           *)
+(*   M-LIB-COLOR-strip[ str:source -- str:result ]                           *)
+(*     Removes all MCC color codes from a string, and returns its colorless  *)
+(*     equivalent.                                                           *)
 (*                                                                           *)
 (*   M-LIB-COLOR-testpattern[ str:ansi_type -- arr:strings ]                 *)
 (*     Returns an array of strings formatted for the given ANSI encoding     *)
@@ -103,10 +83,10 @@ $PRAGMA comment_recurse
 (*                                                                           *)
 (*   M-LIB-COLOR-transcode[ str:source str:from_type str:to_type             *)
 (*                          -- str:result ]                                  *)
-(*     Converts from one encoding type to another. At present, you can only  *)
-(*     convert from MCC to ANSI or NOCOLOR. If a color can't be precicely    *)
-(*     produced for a given type, it will be approximated by trying to pick  *)
-(*     the closest available color. See ENCODING TYPES for more details.     *)
+(*     Converts from one encoding type to another. If a color can't be       *)
+(*     precicely produced for a given type, it will be approximated by       *)
+(*     trying to pick the closest available color. See ENCODING TYPES for    *)
+(*     more details.                                                         *)
 (*                                                                           *)
 (*     Use 'AUTO' for to_type to use the value from M-LIB-COLOR-encoding_get *)
 (*     on the current player.                                                *)
@@ -141,12 +121,9 @@ $PRAGMA comment_recurse
 (*   NOCOLOR                                                                 *)
 (*     This encoding has no color information.                               *)
 (*                                                                           *)
-(*     Convert a string from another encoding into NOCOLOR to 'strip' out    *)
-(*     all color codes (Except 'escape' codes that produce string literals,  *)
-(*     and error messages. Those still convert an usual.)                    *)
-(*                                                                           *)
-(*     Convert a string from NOCOLOR into another encoding to 'escape' all   *)
-(*     special charcters in a string for that type of encoding.              *)
+(*     Converting a string from MCC to NOCOLOR is the equivalent of calling  *)
+(*     M-LIB-COLOR-strip. Converting a string from NOCOLOR into MCC is the   *)
+(*     equivalent of calling M-LIB-COLOR-escape.                             *)
 (*                                                                           *)
 (*   ANSI-3BIT-VGA                                                           *)
 (*   ANSI-3BIT-XTERM                                                         *)
@@ -892,8 +869,8 @@ lvar g_ansi_table_4bit_xterm_rgb
   255.0 / var! b
   255.0 / var! g
   255.0 / var! r
-  { r @ g @ b @ }list .array_max var! max
-  { r @ g @ b @ }list .array_min var! min
+  { r @ g @ b @ }list M-LIB-ARRAY-max var! max
+  { r @ g @ b @ }list M-LIB-ARRAY-min var! min
   max @ min @ + 2.0 / var! l
   var h
   var s
@@ -982,8 +959,8 @@ lvar g_ansi_table_4bit_xterm_rgb
   255.0 / var! b
   255.0 / var! g
   255.0 / var! r
-  { r @ g @ b @ }list .array_max var! max
-  { r @ g @ b @ }list .array_min var! min
+  { r @ g @ b @ }list M-LIB-ARRAY-max var! max
+  { r @ g @ b @ }list M-LIB-ARRAY-min var! min
   max @ min @ -
 ;
 
@@ -1031,9 +1008,9 @@ lvar g_ansi_table_4bit_xterm_rgb
 : closest_color[ str:target_rgb dict:color_table_rgb -- int:closest_key ]
   (* Convert target_rgb into a list of integer components *)
   target_rgb @
-  2 strcut swap .xtoi var! r
-  2 strcut swap .xtoi var! g
-  2 strcut swap .xtoi var! b
+  2 strcut swap M-LIB-STRING-xtoi var! r
+  2 strcut swap M-LIB-STRING-xtoi var! g
+  2 strcut swap M-LIB-STRING-xtoi var! b
   pop
   { r @ g @ b @ }list target_rgb !
   (* Look for exact matches *)
@@ -1078,9 +1055,9 @@ lvar ansi8_nearest_cache
 
 : ansi4_nearest_vga[ str:target_rgb -- int:color4 ]
   target_rgb @
-  2 strcut swap .xtoi var! r
-  2 strcut swap .xtoi var! g
-  2 strcut swap .xtoi var! b
+  2 strcut swap M-LIB-STRING-xtoi var! r
+  2 strcut swap M-LIB-STRING-xtoi var! g
+  2 strcut swap M-LIB-STRING-xtoi var! b
   { r @ g @ b @ }list
   dup chroma var! c
   rgb2hsl var! target_hsl
@@ -1123,9 +1100,9 @@ lvar ansi8_nearest_cache
 
 : ansi4_nearest_xterm[ str:target_rgb -- int:color4 ]
   target_rgb @
-  2 strcut swap .xtoi var! r
-  2 strcut swap .xtoi var! g
-  2 strcut swap .xtoi var! b
+  2 strcut swap M-LIB-STRING-xtoi var! r
+  2 strcut swap M-LIB-STRING-xtoi var! g
+  2 strcut swap M-LIB-STRING-xtoi var! b
   { r @ g @ b @ }list
   dup chroma var! c
   rgb2hsl var! target_hsl
@@ -1169,9 +1146,9 @@ lvar ansi8_nearest_cache
 lvar ansi_table_3bit_vga_rgb
 : ansi3_nearest_vga[ str:target_rgb -- int:color4 ]
   target_rgb @
-  2 strcut swap .xtoi var! r
-  2 strcut swap .xtoi var! g
-  2 strcut swap .xtoi var! b
+  2 strcut swap M-LIB-STRING-xtoi var! r
+  2 strcut swap M-LIB-STRING-xtoi var! g
+  2 strcut swap M-LIB-STRING-xtoi var! b
   { r @ g @ b @ }list
   dup chroma var! c
   rgb2hsl var! target_hsl
@@ -1201,9 +1178,9 @@ lvar ansi_table_3bit_vga_rgb
 lvar ansi_table_3bit_xterm_rgb
 : ansi3_nearest_xterm[ str:target_rgb -- int:color4 ]
   target_rgb @
-  2 strcut swap .xtoi var! r
-  2 strcut swap .xtoi var! g
-  2 strcut swap .xtoi var! b
+  2 strcut swap M-LIB-STRING-xtoi var! r
+  2 strcut swap M-LIB-STRING-xtoi var! g
+  2 strcut swap M-LIB-STRING-xtoi var! b
   { r @ g @ b @ }list
   dup chroma var! c
   rgb2hsl var! target_hsl
@@ -1236,9 +1213,6 @@ lvar ansi_table_3bit_xterm_rgb
 : mcc_seq[ str:to_type str:code_type int:code_value -- str:ansi_seq ]
   code_type @ CODE_TYPE_BACKGROUND = code_type @ CODE_TYPE_FOREGROUND = or if
     "" var! retval
-    to_type @ "NOCOLOR" = if
-      "" exit
-    then
     to_type @ "ANSI-3BIT-VGA" = if
       { "\[[" code_value @ ansi3_nearest_vga code_type @ CODE_TYPE_BACKGROUND = if 10 + then intostr "m" }join exit
     then
@@ -1264,9 +1238,9 @@ lvar ansi_table_3bit_xterm_rgb
     then
     to_type @ "ANSI-24BIT" = if
       code_value @
-      2 strcut swap .xtoi var! r
-      2 strcut swap .xtoi var! g
-      2 strcut swap .xtoi var! b
+      2 strcut swap M-LIB-STRING-xtoi var! r
+      2 strcut swap M-LIB-STRING-xtoi var! g
+      2 strcut swap M-LIB-STRING-xtoi var! b
       pop
       { code_type @ CODE_TYPE_FOREGROUND = if "\[[38;2;" else "\[[48;2;" then r @ intostr ";" g @ intostr ";" b @ intostr "m" }join exit
     then
@@ -1278,9 +1252,6 @@ lvar ansi_table_3bit_xterm_rgb
   then
   code_type @ CODE_TYPE_SPECIAL = if
     code_value @ CODE_VALUE_SPECIAL_RESET = if
-      to_type @ "NOCOLOR" = if
-        "" exit
-      then
       to_type @ "ANSI-3BIT-VGA" = to_type @ "ANSI-3BIT-XTERM" = or to_type @ "ANSI-4BIT-VGA" = or to_type @ "ANSI-4BIT-XTERM" = or if
         "\[[37;40;0m" exit
       then
@@ -1301,9 +1272,9 @@ lvar ansi_table_3bit_xterm_rgb
     code_value @ CODE_VALUE_SPECIAL_CLOSEBRACKET = if
       "]" exit
     then
-    { "[MCC-v" .version " " code_type @ " BADVAL]" }join exit
+    { "[MCC-v" M-LIB-PROGRAM-version " " code_type @ " BADVAL]" }join exit
   then
-  { "[MCC-v" .version " " code_type @ " BADTYP]" }join
+  { "[MCC-v" M-LIB-PROGRAM-version " " code_type @ " BADTYP]" }join
 ;
 
 (* Take an MCC code sequence tag at the start of a string and parse it. *)
@@ -1314,7 +1285,7 @@ lvar ansi_table_3bit_xterm_rgb
   6 strcut swap var! code_value
   1 strcut swap var! code_closebracket
   var! post_code
-  code_openbracket @ "[" = code_type @ CODE_TYPE_VALID .array_hasval and code_value @ .hex? and code_value @ toupper code_value @ = and code_closebracket @ "]" = and if
+  code_openbracket @ "[" = code_type @ CODE_TYPE_VALID M-LIB-ARRAY-hasval and code_value @ M-LIB-STRING-hex? and code_value @ toupper code_value @ = and code_closebracket @ "]" = and if
     code_type @ code_value @ post_code @ exit
   else
     "" "" "" exit
@@ -1421,13 +1392,50 @@ lvar ansi_table_3bit_xterm_rgb
   old_mode @ setmode
 ;
 
-(* Preprocess an MCC line for 'modify something elsewhere on the line' codes *)
-: mcc_preprocess_line[ str: source -- str:result ]
+(* Convert MCC color codes to its colorless equivalent. *)
+: mcc_strip[ str:source -- str:result ]
   source @ "[" instr not if
     source @ exit
   then
 
-  source @ "NOCOLOR" mcc_convert strlen var! source_length
+  (* Strip all codes *)
+  source @ "[" split swap var! retval
+  "[" explode_array foreach
+    nip
+    "[" swap strcat
+    dup mcc_tagparse var! post_code var! code_value var! code_type
+    code_type @ code_value @ and if
+      pop
+      retval @
+      code_type @ CODE_TYPE_SPECIAL = if
+        code_value @ CODE_VALUE_SPECIAL_OPENBRACKET = if
+          "[" strcat
+        else code_value @ CODE_VALUE_SPECIAL_CLOSEBRACKET = if
+          "]" strcat
+        then then
+      then
+      post_code @ strcat
+      retval !
+    else
+      retval @ swap strcat retval !
+    then
+  repeat
+
+  (* Return the results *)
+  retval @
+;
+
+(* Preprocess an MCC line for 'modify something elsewhere on the line' codes *)
+: mcc_preprocess_line[ str: source -- str:result ]
+  source @ "[" CODE_TYPE_FOREGROUND_AT strcat instr not
+  source @ "[" CODE_TYPE_BACKGROUND_AT strcat instr not
+  source @ "[" CODE_TYPE_FOREGROUND_RAT strcat instr not
+  source @ "[" CODE_TYPE_BACKGROUND_RAT strcat instr not
+  and and and if
+    source @ exit
+  then
+
+  source @ mcc_strip strlen var! source_length
 
   0 var! errors
   var pre_insert_pos
@@ -1445,7 +1453,7 @@ lvar ansi_table_3bit_xterm_rgb
       pre_insert_pos !
       (* Parse the insert position *)
       pre_insert_pos @ number? not if
-        { retval @ "[MCC-v" .version " " code_type @ " BADPOS]" post_code @ }join retval !
+        { retval @ "[MCC-v" M-LIB-PROGRAM-version " " code_type @ " BADPOS]" post_code @ }join retval !
         errors ++
         continue
       then
@@ -1457,12 +1465,12 @@ lvar ansi_table_3bit_xterm_rgb
       (* Parse the insert color *)
       pre_insert_color @ atoi pre_insert_color !
       pre_insert_color @ 16 < pre_insert_color @ 255 > or if
-        { retval @ "[MCC-v" .version " " code_type @ " BADCLR]" post_code @ }join retval !
+        { retval @ "[MCC-v" M-LIB-PROGRAM-version " " code_type @ " BADCLR]" post_code @ }join retval !
         errors ++
         continue
       then
         ansi_table_8bit_rgb pre_insert_color @ array_getitem pre_insert_color !
-        { pre_insert_color @ 0 [] .itox 2 .zeropad pre_insert_color @ 1 [] .itox 2 .zeropad pre_insert_color @ 2 [] .itox 2 .zeropad }join pre_insert_color !
+        { pre_insert_color @ 0 [] M-LIB-STRING-itox 2 M-LIB-STRING-zeropad pre_insert_color @ 1 [] M-LIB-STRING-itox 2 M-LIB-STRING-zeropad pre_insert_color @ 2 [] M-LIB-STRING-itox 2 M-LIB-STRING-zeropad }join pre_insert_color !
       (* Store the insert for later *)
       code_type @ CODE_TYPE_FOREGROUND_AT = code_type @ CODE_TYPE_FOREGROUND_RAT = or if
         { "[#" pre_insert_color @ "]" }join
@@ -1527,17 +1535,8 @@ lvar ansi_table_3bit_xterm_rgb
   old_mode @ setmode
 ;
 
-: mcc_explode_array[ str:source str:sep -- arr:result ]
-  (* Produce a stripped version of the string *)
-  source @ "NOCOLOR" mcc_convert var! stripped
-  (* Explode the stripped string and as we go along, use the string lengths to figure out where to mcc_strcut the source *)
-  { }list var! retval
-  stripped @ sep @ explode_array foreach
-    nip
-    source @ swap strlen 1 mcc_strcut sep @ strlen 1 mcc_strcut swap pop source !
-    retval @ array_appenditem retval !
-  repeat
-  retval @
+: mcc_escape ( s -- s )
+  { "[" CODE_TYPE_SPECIAL CODE_VALUE_SPECIAL_OPENBRACKET "]" }join "[" subst
 ;
 
 : encoding_get[ ref:object -- str:type ]
@@ -1555,7 +1554,7 @@ lvar ansi_table_3bit_xterm_rgb
     pop ENCODING_DEFAULT exit
   then
 
-  dup SUPPORTED_TYPES .array_hasval not if
+  dup SUPPORTED_TYPES M-LIB-ARRAY-hasval not if
     pop ENCODING_DEFAULT exit
   then
 
@@ -1574,14 +1573,16 @@ lvar ansi_table_3bit_xterm_rgb
   then
 
   from_type @ "MCC" = if
-    to_type @ "ANSI-" instr 1 = to_type @ "NOCOLOR" = or if
+    to_type @ "NOCOLOR" = if
+      source @ mcc_strip exit
+    else to_type @ "ANSI-" instr 1 = if
       source @ mcc_preprocess to_type @ mcc_convert exit
-    then
+    then then
   then
 
   from_type @ "NOCOLOR" = if
     to_type @ "MCC" = if
-      source @ { "[" CODE_TYPE_SPECIAL CODE_VALUE_SPECIAL_OPENBRACKET "]" }join "[" subst exit
+      source @ mcc_escape exit
     then
   then
 
@@ -1591,75 +1592,6 @@ lvar ansi_table_3bit_xterm_rgb
 
   { "Transcoding from " from_type @ " to " to_type @ " is not yet supported." }join abort
 ;
-
-lvar g_cast_to_transcode_cache (* Clear this variable to an empty dict before using cast_to! *)
-: cast_to[ str:message ref:object arr:exclude -- ]
-  object @ contents begin
-    dup while
-    dup thing? over player? or if
-      dup var! to
-      (* Notify the child object *)
-      to @ exclude @ .array_hasval not if
-        to @ owner encoding_get var! to_encoding
-        g_cast_to_transcode_cache @ to_encoding @ [] if
-          g_cast_to_transcode_cache @ to_encoding @ []
-        else
-          message @ mcc_preprocess to_encoding @ mcc_convert
-          dup g_cast_to_transcode_cache @ to_encoding @ ->[] g_cast_to_transcode_cache !
-        then
-        to @ swap notify
-      then
-      (* Notify all the things/players inside, too *)
-      message @ to @ exclude @ cast_to
-    then
-    next
-  repeat
-  pop
-;
-
-(*****************************************************************************)
-(*                          M-LIB-COLOR-carve_array                          *)
-(*****************************************************************************)
-: M-LIB-COLOR-carve_array[ str:source str:sep -- arr:result ]
-  (* M1 OK *)
-
-  source @ string? not if "Non-string argument (1)." abort then
-  sep @ string? not if "Non-string argument (2)." abort then
-
-  (* Produce a stripped version of the string *)
-  source @ "NOCOLOR" mcc_convert var! stripped
-  (* Carve the stripped string and as we go along, use the string lengths to figure out where to mcc_strcut the source *)
-  { }list var! retval
-  stripped @ sep @ .carve_array foreach
-    nip
-    source @ swap strlen 1 mcc_strcut source !
-    retval @ array_appenditem retval !
-  repeat
-  retval @
-;
-PUBLIC M-LIB-COLOR-carve_array
-$LIBDEF M-LIB-COLOR-carve_array
-
-(*****************************************************************************)
-(*                            M-LIB-COLOR-cast_to                            *)
-(*****************************************************************************)
-: M-LIB-COLOR-cast_to[ str:message ref:object arr:exclude -- ]
-  .needs_mlev3 (* TODO: Could support lower MUCKER levels by prepending the name of the sender? *)
-
-  message @ string? not if "Non-string argument (1)." abort then
-  object @ dbref? not if "Non-dbref argument (2)." abort then
-  exclude @ array? not if "Non-array argument (3)." abort then
-  exclude @ foreach nip dbref? not if "Array of dbrefs expected (3)." abort then repeat
-
-  message @ "NOCOLOR" mcc_convert not if
-    exit
-  then
-
-  { }dict g_cast_to_transcode_cache !
-  message @ object @ exclude @ cast_to
-;
-PUBLIC M-LIB-COLOR-cast_to
-$LIBDEF M-LIB-COLOR-cast_to
 
 (*****************************************************************************)
 (*                        M-LIB-COLOR-encoding_default                       *)
@@ -1695,18 +1627,17 @@ PUBLIC M-LIB-COLOR-encoding_player_valid
 $LIBDEF M-LIB-COLOR-encoding_player_valid
 
 (*****************************************************************************)
-(*                         M-LIB-COLOR-explode_array                         *)
+(*                            M-LIB-COLOR-escape                             *)
 (*****************************************************************************)
-: M-LIB-COLOR-explode_array[ str:source str:sep -- arr:result ]
+: M-LIB-COLOR-escape[ str:source -- str:result ]
   (* M1 OK *)
 
   source @ string? not if "Non-string argument (1)." abort then
-  sep @ string? not if "Non-string argument (2)." abort then
 
-  source @ mcc_preprocess sep @ mcc_explode_array
+  source @ mcc_escape
 ;
-PUBLIC M-LIB-COLOR-explode_array
-$LIBDEF M-LIB-COLOR-explode_array
+PUBLIC M-LIB-COLOR-escape
+$LIBDEF M-LIB-COLOR-escape
 
 (*****************************************************************************)
 (*                            M-LIB-COLOR-hsl2rgb                            *)
@@ -1721,7 +1652,7 @@ $LIBDEF M-LIB-COLOR-explode_array
   var! b
   var! g
   var! r
-  { r @ .itox 2 .zeropad g @ .itox 2 .zeropad b @ .itox 2 .zeropad }join
+  { r @ M-LIB-STRING-itox 2 M-LIB-STRING-zeropad g @ M-LIB-STRING-itox 2 M-LIB-STRING-zeropad b @ M-LIB-STRING-itox 2 M-LIB-STRING-zeropad }join
 ;
 PUBLIC M-LIB-COLOR-hsl2rgb
 $LIBDEF M-LIB-COLOR-hsl2rgb
@@ -1732,41 +1663,18 @@ $LIBDEF M-LIB-COLOR-hsl2rgb
 : M-LIB-COLOR-rgb2hsl[ str:rgb -- arr:hsl ]
   (* M1 OK *)
   rgb @ string? not if "Non-string argument (1)." abort then
-  rgb @ strlen 6 = rgb @ .hex? and not if "Invalid RGB string" abort then
+  rgb @ strlen 6 = rgb @ M-LIB-STRING-hex? and not if "Invalid RGB string" abort then
 
   rgb @
-  2 strcut swap .xtoi var! r
-  2 strcut swap .xtoi var! g
-  2 strcut swap .xtoi var! b
+  2 strcut swap M-LIB-STRING-xtoi var! r
+  2 strcut swap M-LIB-STRING-xtoi var! g
+  2 strcut swap M-LIB-STRING-xtoi var! b
   pop
 
   { r @ g @ b @ }list rgb2hsl
 ;
 PUBLIC M-LIB-COLOR-rgb2hsl
 $LIBDEF M-LIB-COLOR-rgb2hsl
-
-(*****************************************************************************)
-(*                          M-LIB-COLOR-slice_array                          *)
-(*****************************************************************************)
-: M-LIB-COLOR-slice_array[ str:source str:sep -- arr:result ]
-  (* M1 OK *)
-
-  source @ string? not if "Non-string argument (1)." abort then
-  sep @ string? not if "Non-string argument (2)." abort then
-
-  (* Produce a stripped version of the string *)
-  source @ "NOCOLOR" mcc_convert var! stripped
-  (* Slice the stripped string and as we go along, use the string lengths to figure out where to mcc_strcut the source *)
-  { }list var! retval
-  stripped @ sep @ .slice_array foreach
-    nip
-    source @ swap strlen 1 mcc_strcut source !
-    retval @ array_appenditem retval !
-  repeat
-  retval @
-;
-PUBLIC M-LIB-COLOR-slice_array
-$LIBDEF M-LIB-COLOR-slice_array
 
 (*****************************************************************************)
 (*                            M-LIB-COLOR-strcat                             *)
@@ -1810,29 +1718,31 @@ PUBLIC M-LIB-COLOR-strcut
 $LIBDEF M-LIB-COLOR-strcut
 
 (*****************************************************************************)
-(*                             M-LIB-COLOR-subst                             *)
+(*                            M-LIB-COLOR-strlen                             *)
 (*****************************************************************************)
-: M-LIB-COLOR-subst[ str:source int:replace_to str:replace_from -- str:result ]
+: M-LIB-COLOR-strlen[ str:source -- int:result ]
   (* M1 OK *)
 
   source @ string? not if "Non-string argument (1)." abort then
-  replace_from @ string? not if "Non-string argument (2)." abort then
-  replace_to @ string? not if "Non-string argument (3)." abort then
 
-  source @ mcc_preprocess source !
-  { "[" CODE_TYPE_SPECIAL CODE_VALUE_SPECIAL_RESET "]" }join replace_to @ strcat replace_to !
-  source @ replace_from @ mcc_explode_array
-  1 array_cut swap array_vals pop var! result
-  foreach
-    nip
-    result @ replace_to @ strcat swap strcat result !
-  repeat
-  result @
+  source @ mcc_strip strlen
 ;
-PUBLIC M-LIB-COLOR-subst
-$LIBDEF M-LIB-COLOR-subst
+PUBLIC M-LIB-COLOR-strlen
+$LIBDEF M-LIB-COLOR-strlen
 
-(* TODO: Produce test string output for users to look at to see if they support a given ANSI type *)
+(*****************************************************************************)
+(*                             M-LIB-COLOR-strip                             *)
+(*****************************************************************************)
+: M-LIB-COLOR-strip[ str:source -- str:result ]
+  (* M1 OK *)
+
+  source @ string? not if "Non-string argument (1)." abort then
+
+  source @ mcc_strip
+;
+PUBLIC M-LIB-COLOR-strip
+$LIBDEF M-LIB-COLOR-strip
+
 (*****************************************************************************)
 (*                          M-LIB-COLOR-testpattern                          *)
 (*****************************************************************************)
@@ -2099,27 +2009,13 @@ $LIBDEF M-LIB-COLOR-testpattern
   from_type @ string? not if "Non-string argument (1)." abort then
   to_type @ string? not if "Non-string argument (2)." abort then
   source @ string? not if "Non-string argument (3)." abort then
-  from_type @ SUPPORTED_TYPES .array_hasval not if "from_type not recognized (2)." abort then
-  to_type @ SUPPORTED_TYPES .array_hasval not to_type @ "AUTO" = not and if "to_type not recognized (3)." abort then
+  from_type @ SUPPORTED_TYPES M-LIB-ARRAY-hasval not if "from_type not recognized (2)." abort then
+  to_type @ SUPPORTED_TYPES M-LIB-ARRAY-hasval not to_type @ "AUTO" = not and if "to_type not recognized (3)." abort then
 
   source @ from_type @ to_type @ transcode
 ;
 PUBLIC M-LIB-COLOR-transcode
 $LIBDEF M-LIB-COLOR-transcode
-
-(*****************************************************************************)
-(*                           Convenience Routines                            *)
-(*****************************************************************************)
-$PUBDEF .color_escape "NOCOLOR" "MCC" M-LIB-COLOR-transcode
-$PUBDEF .color_explode_array M-LIB-COLOR-explode_array
-$PUBDEF .color_slice_array M-LIB-COLOR-slice_array
-$PUBDEF .color_carve_array M-LIB-COLOR-carve_array
-$PUBDEF .color_strip "MCC" "NOCOLOR" M-LIB-COLOR-transcode
-$PUBDEF .color_strlen "MCC" "NOCOLOR" M-LIB-COLOR-transcode strlen
-$PUBDEF .color_strcut M-LIB-COLOR-strcut
-$PUBDEF .color_strcat M-LIB-COLOR-strcat
-$PUBDEF .color_subst M-LIB-COLOR-subst
-$PUBDEF .color_transcode "MCC" "AUTO" M-LIB-COLOR-transcode
 
 (* ------------------------------------------------------------------------ *)
 

@@ -45,6 +45,9 @@ $INCLUDE $m/lib/color
 $INCLUDE $m/lib/grammar
 $INCLUDE $m/lib/room
 
+$DEF .tell M-LIB-NOTIFY-tell_color
+$DEF .err M-LIB-THEME-err
+
 (* ------------------------------------------------------------------------- *)
 
 : M-HELP-desc ( s -- s )
@@ -72,13 +75,13 @@ WIZCALL M-HELP-help
     source @ not if break then
     source @ strlen float source_length @ float / bright @ dim @ - * int dim @ + var! brightness
     source @ 1 strcut source !
-    { "[#" brightness @ .itox dup dup "]" }join swap strcat
+    { "[#" brightness @ M-LIB-STRING-itox dup dup "]" }join swap strcat
     result @ swap strcat result !
   repeat
   result @
 ;
 
-$DEF .color_fillfield rot .color_strlen - dup 1 < if pop pop "" else * then
+$DEF .color_fillfield rot M-LIB-COLOR-strlen - dup 1 < if pop pop "" else * then
 
 : table_column_widths[ arr:data -- arr:widths ]
   { }list var! widths
@@ -88,7 +91,7 @@ $DEF .color_fillfield rot .color_strlen - dup 1 < if pop pop "" else * then
     row @ foreach
       var! cell
       var! column_num
-      cell @ .color_strlen var! cell_width
+      cell @ M-LIB-COLOR-strlen var! cell_width
       widths @ column_num @ [] var! column_width
       cell_width @ column_width @ > if
         begin
@@ -110,12 +113,12 @@ $DEF .color_fillfield rot .color_strlen - dup 1 < if pop pop "" else * then
     widths @ column_num @ [] var! column_width
     "[#FFFFFF]" cell @ strcat
     column_num @ row @ array_count -- < if
-      dup "_" column_width @ 2 - .color_fillfield 255 85 gradient .color_strcat
-      dup " " column_width @ .color_fillfield .color_strcat
+      dup "_" column_width @ 2 - .color_fillfield 255 85 gradient M-LIB-COLOR-strcat
+      dup " " column_width @ .color_fillfield M-LIB-COLOR-strcat
     else
-      dup "_" column_width @ .color_fillfield 255 85 gradient .color_strcat
+      dup "_" column_width @ .color_fillfield 255 85 gradient M-LIB-COLOR-strcat
     then
-    line @ swap .color_strcat line !
+    line @ swap M-LIB-COLOR-strcat line !
   repeat
   line @
 ;
@@ -153,8 +156,8 @@ $DEF FOOTER_BRACKET_CLOSE "[#FFFFFF] )-[#AAAAAA]-[#555555]-"
       cell !
       column_num !
       widths @ column_num @ [] column_width !
-      cell @ .color_strlen column_width @ > if cell @ column_width @ .color_strcut pop cell ! then
-      line @ cell @ dup " " column_width @ .color_fillfield .color_strcat .color_strcat line !
+      cell @ M-LIB-COLOR-strlen column_width @ > if cell @ column_width @ M-LIB-COLOR-strcut pop cell ! then
+      line @ cell @ dup " " column_width @ .color_fillfield M-LIB-COLOR-strcat M-LIB-COLOR-strcat line !
     repeat
     line @ lines @ []<- lines !
   repeat
@@ -219,7 +222,7 @@ $DEF FOOTER_BRACKET_CLOSE "[#FFFFFF] )-[#AAAAAA]-[#555555]-"
     "#room" stringcmp not if
       1
     else
-      "Unrecognized #option." .theme_err .color_tell
+      "Unrecognized #option." .err .tell
       exit
     then
   else
@@ -239,7 +242,7 @@ $DEF FOOTER_BRACKET_CLOSE "[#FFFFFF] )-[#AAAAAA]-[#555555]-"
       room_player @ "DARK" flag? if continue then
       {
         "name"       room_player @ name
-        "theme_name" room_player @ .theme_name
+        "theme_name" room_player @ M-LIB-THEME-name
         "sex"        room_player @ "gender_prop" sysparm getpropstr sex_color
         "species"    room_player @ "_/species" getpropstr
       }dict room_players @ []<- room_players !
@@ -261,7 +264,7 @@ $DEF FOOTER_BRACKET_CLOSE "[#FFFFFF] )-[#AAAAAA]-[#555555]-"
           room_player_entry @ "species" []
         }list
       repeat
-    }list { "widths" { 33 16 30 }list "footer_right" { room_awake @ "/" room_asleep @ " " room @ name }join }dict table_render { me @ }list M-LIB-NOTIFY-color_array_notify
+    }list { "widths" { 33 16 30 }list "footer_right" { room_awake @ "/" room_asleep @ " " room @ name }join }dict table_render { me @ }list M-LIB-NOTIFY-array_notify_color
   else
     (* Construct a all_players data structure with information on connected players *)
     { }dict var! all_players
@@ -286,10 +289,10 @@ $DEF FOOTER_BRACKET_CLOSE "[#FFFFFF] )-[#AAAAAA]-[#555555]-"
           "name"           player_dbref @ name
           "on_time"        player_descr @ descrtime
           "idle_time"      player_descr @ descridle
-          "theme_name"     player_dbref @ .theme_name
+          "theme_name"     player_dbref @ M-LIB-THEME-name
           "sex"            player_dbref @ "gender_prop" sysparm getpropstr sex_color_chr
           "species"        player_dbref @ "_/species" getpropstr
-          "theme_location" player_dbref @ location dup M-LIB-ROOM-public? if .theme_name else pop "[#555555](Private)" then
+          "theme_location" player_dbref @ location dup M-LIB-ROOM-public? if M-LIB-THEME-name else pop "[#555555](Private)" then
           "location"       player_dbref @ location dup M-LIB-ROOM-public? if name else pop "(Private)" then
         }dict player_entry !
       then
@@ -316,7 +319,7 @@ $DEF FOOTER_BRACKET_CLOSE "[#FFFFFF] )-[#AAAAAA]-[#555555]-"
       "widths" { 24 3 17 5 5 25 }list
       "footer_left" { all_players @ array_count intostr " Players Online" }join
       "footer_right" { "%H:%M - %F" systime timefmt }join
-    }dict table_render { me @ }list M-LIB-NOTIFY-color_array_notify
+    }dict table_render { me @ }list M-LIB-NOTIFY-array_notify_color
   then
 ;
 .

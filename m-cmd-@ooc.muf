@@ -39,6 +39,8 @@ $DOCCMD  @list __PROG__=2-30
 $include $m/lib/emote
 $include $m/lib/theme
 
+$DEF .tag M-LIB-THEME-tag
+
 (* ------------------------------------------------------------------------ *)
 
 : M-HELP-desc ( d -- s )
@@ -81,7 +83,7 @@ WIZCALL M-HELP-help
     me @ name ": " strcat swap strcat
     "yes" highlight_ooc_style !
   then
-  { "from" me @ "message_format" "@1" "OOC" .theme_tag "highlight_ooc_style" highlight_ooc_style @ }dict M-LIB-EMOTE-emote
+  { "from" me @ "message_format" "@1" "OOC" .tag "highlight_ooc_style" highlight_ooc_style @ }dict M-LIB-EMOTE-emote
 ;
 .
 c

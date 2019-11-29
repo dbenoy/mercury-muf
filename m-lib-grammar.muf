@@ -355,26 +355,34 @@ lvar g_sex_table3
 
 (* ======================= END CONFIGURABLE OPTIONS ======================= *)
 
-$INCLUDE $m/lib/program
 $INCLUDE $m/lib/array
+$INCLUDE $m/lib/string
 
 $IFDEF M_LIB_COLOR
   $INCLUDE $m/lib/color
-$ENDIF
-$IFDEF M_LIB_THEME
-  $INCLUDE $m/lib/theme
+  $DEF .color_escape M-LIB-COLOR-escape
+  $DEF .color_strcut M-LIB-COLOR-strcut
+  $DEF .color_strcat M-LIB-COLOR-strcat
+  $DEF .color_strip M-LIB-COLOR-strip
+$ELSE
+  $DEF .color_escape
+  $DEF .color_strcat \strcut
+  $DEF .color_strcat \strcat
+  $DEF .color_strip
 $ENDIF
 
-$IFNDEF M_LIB_COLOR
-  $DEF .color_explode_array explode_array
-  $DEF .color_strcat strcut
-  $DEF .color_strcat strcat
-  $DEF .color_strip
+$IFDEF M_LIB_THEME
+  $INCLUDE $m/lib/theme
 $ENDIF
 
 $PUBDEF :
 
 (* ------------------------------------------------------------------------- *)
+
+: string_cb_strcat .color_strcat ;
+: string_cb_strcut .color_strcut ;
+: string_cb_strstrip .color_strip ;
+: string_cb ( -- a ) { "strcat" 'string_cb_strcat "strcut" 'string_cb_strcut "strstrip" 'string_cb_strstrip }dict ;
 
 : sex_category[ str:sex -- str:category ]
   "" var! category
@@ -697,15 +705,15 @@ $ENDIF
     opt_n @ object_name @ stringcmp if
       object @ default_n substitutions @ "%n" ->[] substitutions !
     then
-    opt_d @ object_base_names @ .array_hasval not
-    opt_d @ object_base_names @ { swap foreach nip "the_" swap strcat repeat }list .array_hasval not
+    opt_d @ object_base_names @ M-LIB-ARRAY-hasval not
+    opt_d @ object_base_names @ { swap foreach nip "the_" swap strcat repeat }list M-LIB-ARRAY-hasval not
     and if
       object @ default_d substitutions @ "%d" ->[] substitutions !
     then
-    opt_i @ object_base_names @ .array_hasval not
-    opt_i @ object_base_names @ { swap foreach nip "a_" swap strcat repeat }list .array_hasval not
-    opt_i @ object_base_names @ { swap foreach nip "an_" swap strcat repeat }list .array_hasval not
-    opt_i @ object_base_names @ { swap foreach nip "the_" swap strcat repeat }list .array_hasval not
+    opt_i @ object_base_names @ M-LIB-ARRAY-hasval not
+    opt_i @ object_base_names @ { swap foreach nip "a_" swap strcat repeat }list M-LIB-ARRAY-hasval not
+    opt_i @ object_base_names @ { swap foreach nip "an_" swap strcat repeat }list M-LIB-ARRAY-hasval not
+    opt_i @ object_base_names @ { swap foreach nip "the_" swap strcat repeat }list M-LIB-ARRAY-hasval not
     and and and if
       object @ default_i substitutions @ "%i" ->[] substitutions !
     then
@@ -715,7 +723,7 @@ $IFDEF M_LIB_THEME
     substitutions @ "%n" [] if
       substitutions @ "%n" []
       .color_strip
-      object @ swap 0 M-LIB-THEME-name
+      1 array_make object @ M-LIB-THEME-format_obj_type M-LIB-THEME-format
       substitutions @ "%n" ->[] substitutions !
     then
     substitutions @ "%d" [] if
@@ -726,7 +734,7 @@ $IFDEF M_LIB_THEME
       else
         "" swap
       then
-      object @ swap 0 M-LIB-THEME-name
+      1 array_make object @ M-LIB-THEME-format_obj_type M-LIB-THEME-format
       strcat
       substitutions @ "%d" ->[] substitutions !
     then
@@ -742,7 +750,7 @@ $IFDEF M_LIB_THEME
       else
         "" swap
       then then then
-      object @ swap 0 M-LIB-THEME-name
+      1 array_make object @ M-LIB-THEME-format_obj_type M-LIB-THEME-format
       strcat
       substitutions @ "%i" ->[] substitutions !
     then
@@ -784,7 +792,7 @@ $ENDIF
     var! object
     object @ get_substitutions object @ opts @ sub_fix substitutions @ []<- substitutions !
   repeat
-  template @ "%" .color_carve_array
+  template @ "%" string_cb M-LIB-STRING-carve_array
   1 array_cut swap array_vals pop var! result
   foreach
     nip

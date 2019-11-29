@@ -87,7 +87,7 @@ $PUBDEF :
 (*                           M-LIB-QUOTA-GetQuota                            *)
 (*****************************************************************************)
 : M-LIB-QUOTA-GetQuota[ ref:player str:type -- int:quota ]
-  .needs_mlev3
+  M-LIB-PROGRAM-needs_mlev3
 
   player @ dbref? not if "Non-dbref argument (1)." abort then
   type @ string? not if "Non-string argument (2)." abort then
@@ -115,7 +115,7 @@ $LIBDEF M-LIB-QUOTA-GetQuota
 (*                           M-LIB-QUOTA-GetUsage                            *)
 (*****************************************************************************)
 : M-LIB-QUOTA-GetUsage[ ref:player str:type -- int:usage ]
-  .needs_mlev3
+  M-LIB-PROGRAM-needs_mlev3
 
   player @ dbref? not if "Non-dbref argument (1)." abort then
   type @ string? not if "Non-string argument (2)." abort then

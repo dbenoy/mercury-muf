@@ -9,28 +9,30 @@ $PRAGMA comment_recurse
 (*   GitHub: https://github.com/dbenoy/mercury-muf (See for install info)    *)
 (*                                                                           *)
 (* PROPERTIES:                                                               *)
-(*   "_help/~name"                                                           *)
-(*     Place this property on an action to set the friendly name for the     *)
-(*     command. Defaults to the first semicolon-alias for the command. Only  *)
-(*     the first 20 characters are used.                                     *)
+(*   "_help/name"                                                            *)
+(*     On any command exit object: Place this property on an action to set   *)
+(*     the friendly name for the command. Defaults to the first              *)
+(*     semicolon-alias for the command. Only the first 20 characters are     *)
+(*     used.                                                                 *)
 (*                                                                           *)
 (*   "_help/desc"                                                            *)
-(*     Place this property on an action to give a general description of the *)
-(*     command. Only the first 50 characters are used. If this is not        *)
-(*     present on the action, and the action is linked to a program, the     *)
-(*     program is checked for this property instead. If the program also     *)
-(*     does not have the property, the library will attepmt to ask the       *)
-(*     program itself by calling the public function "M-HELP-desc" if it is  *)
-(*     available, passing in the name of the action and expecting a string.  *)
-(*                                                                           *)
-(*   "_help/help"                                                            *)
-(*     Place this 'list' type property on an action to set help and usage    *)
-(*     information. If this is not present on the action, and the action is  *)
+(*     On any command exit object: Place this property on an action to give  *)
+(*     a general description of the command. Only the first 50 characters    *)
+(*     are used. If this is not present on the action, and the action is     *)
 (*     linked to a program, the program is checked for this property         *)
 (*     instead. If the program also does not have the property, the library  *)
-(*     will attempt to ask the program itself by calling the public function *)
-(*     "M-HELP-help" if it is available, passing in the dbref of the action  *)
-(*     and expecting a list array of strings.                                *)
+(*     will attepmt to ask the program itself by calling the public function *)
+(*     "M-HELP-desc" if it is available, passing in the name of the action   *)
+(*     and expecting a string.                                               *)
+(*                                                                           *)
+(*   "_help/help"                                                            *)
+(*     On any command exit object: Place this 'list' type property on an     *)
+(*     action to set help and usage information. If this is not present on   *)
+(*     the action, and the action is linked to a program, the program is     *)
+(*     checked for this property instead. If the program also does not have  *)
+(*     the property, the library will attempt to ask the program itself by   *)
+(*     calling the public function "M-HELP-help" if it is available, passing *)
+(*     in the dbref of the action and expecting a list array of strings.     *)
 (*                                                                           *)
 (* PUBLIC ROUTINES:                                                          *)
 (*   M-LIB-HELP-command_get_name[ ref:action -- str:result ]                 *)
@@ -157,7 +159,11 @@ $PUBDEF :
     then
   then
   (* No luck. Return a default. *)
-  { "No detailed help available." }list
+  {
+    action @ name ";" split pop toupper
+    " "
+    "  No detailed help available."
+  }list
 ;
 
 (*****************************************************************************)

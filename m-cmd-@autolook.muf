@@ -97,6 +97,8 @@ $INCLUDE $m/lib/notify
 $INCLUDE $m/lib/grammar
 $INCLUDE $m/cmd/at_map
 
+$DEF .notify M-LIB-NOTIFY-notify_color
+
 (* ------------------------------------------------------------------------ *)
 
 : M-HELP-desc ( s -- s )
@@ -136,7 +138,7 @@ WIZCALL M-HELP-help
       dup exit? if
         M-LIB-THEME-fancy_exit
       else
-        .theme_name
+        M-LIB-THEME-name
       then
       "[!FFFFFF]" strcat
     repeat
@@ -144,15 +146,15 @@ WIZCALL M-HELP-help
   0 var! objects_total_length
   objects @ foreach
     nip
-    objects_total_length @ swap .color_strlen + objects_total_length !
+    objects_total_length @ swap M-LIB-COLOR-strlen + objects_total_length !
   repeat
   objects_total_length @ 150 < if
-    notify_me @ { "[ [#FFFFFF]" title @ ":" " " 8 title @ strlen - * }join objects @ "and" M-LIB-GRAMMAR-oxford_join .color_strcat "[!FFFFFF] ]" .color_strcat .color_notify
+    notify_me @ { "[ [#FFFFFF]" title @ ":" " " 8 title @ strlen - * }join objects @ "and" M-LIB-GRAMMAR-oxford_join M-LIB-COLOR-strcat "[!FFFFFF] ]" M-LIB-COLOR-strcat .notify
   else
-    notify_me @ { "[#FFFFFF]" title @ ":" }join .color_notify
+    notify_me @ { "[#FFFFFF]" title @ ":" }join .notify
     objects @ foreach
       nip
-      me @ "  " rot strcat .color_notify
+      me @ "  " rot strcat .notify
     repeat
   then
 ;
@@ -164,7 +166,7 @@ WIZCALL M-HELP-help
   then
   (* Show room name *)
   "location_name" enabled if
-    me @ loc @ .theme_name .color_notify
+    me @ loc @ M-LIB-THEME-name .notify
   then
   (* Show room short description *)
   0 var! short_desc_shown

@@ -53,6 +53,13 @@ $INCLUDE $m/lib/theme
 $INCLUDE $m/lib/notify
 $INCLUDE $m/lib/color
 
+$DEF .tell M-LIB-NOTIFY-tell_color
+$DEF .notify M-LIB-NOTIFY-notify_color
+$DEF .tag M-LIB-THEME-tag
+$DEF .tag_err M-LIB-THEME-tag_err
+
+(* ------------------------------------------------------------------------- *)
+
 : M-HELP-desc ( d -- s )
   pop
   "Private message."
@@ -79,7 +86,7 @@ WIZCALL M-HELP-help
     mail_total ++
   repeat
   mail_total @ MAIL_MAX >= if
-    "%N's mailbox is full." { to @ }list { "name_match" "yes" }dict M-LIB-GRAMMAR-sub command @ toupper .theme_tag_err .color_tell
+    "%N's mailbox is full." { to @ }list { "name_match" "yes" }dict M-LIB-GRAMMAR-sub command @ toupper .tag_err .tell
     0 exit
   then
   mode var! old_mode
@@ -88,9 +95,9 @@ WIZCALL M-HELP-help
   to @ MAIL_PROPDIR serial @ setprop
   {
     "timestamp" systime
-    "color_name" .me "color_name" M-LIB-EMOTE-config_get
-    "color_quoted" .me "color_quoted" M-LIB-EMOTE-config_get
-    "color_unquoted" .me "color_unquoted" M-LIB-EMOTE-config_get
+    "color_name" "me" match "color_name" M-LIB-EMOTE-config_get
+    "color_quoted" "me" match "color_quoted" M-LIB-EMOTE-config_get
+    "color_unquoted" "me" match "color_unquoted" M-LIB-EMOTE-config_get
     "highlight_ooc_style" highlight_ooc_style @
     "message" message @
   }dict var! entry
@@ -104,9 +111,9 @@ WIZCALL M-HELP-help
   preempt
   {
     MAIL_PROPDIR "/" strcat begin
-      .me swap nextprop
+      "me" match swap nextprop
       dup not if pop break then
-      .me over array_get_propvals swap
+      "me" match over array_get_propvals swap
     repeat
   }list
   old_mode @ setmode
@@ -116,16 +123,16 @@ WIZCALL M-HELP-help
       mail_entry @ "message" []
       dup string? not if pop continue then
       {
-        "to"                  .me
+        "to"                  "me" match
         "highlight_mention"   "no"
         "color_name"          mail_entry @ "color_name"          [] dup string? not if pop "" then
         "color_unquoted"      mail_entry @ "color_unquoted"      [] dup string? not if pop "" then
         "color_quoted"        mail_entry @ "color_quoted"        [] dup string? not if pop "" then
         "highlight_ooc_style" mail_entry @ "highlight_ooc_style" [] dup string? not if pop "" then
-      }dict M-LIB-EMOTE-style { "[#008080] (Sent " "%F %T" mail_entry @ "timestamp" [] timefmt ")" }join .color_strcat
-      "PAGE" .theme_tag .color_tell
+      }dict M-LIB-EMOTE-style { "[#008080] (Sent " "%F %T" mail_entry @ "timestamp" [] timefmt ")" }join M-LIB-COLOR-strcat
+      "PAGE" .tag .tell
   repeat
-  .me MAIL_PROPDIR remove_prop
+  "me" match MAIL_PROPDIR remove_prop
 ;
 
 : main ( s --  )
@@ -136,39 +143,39 @@ WIZCALL M-HELP-help
       mail_read
       exit
     then
-    "Unsupported queued invocation '" swap strcat "'." strcat prog name toupper .theme_tag_err .color_tell
+    "Unsupported queued invocation '" swap strcat "'." strcat prog name toupper .tag_err .tell
     exit
   then
   (* Check mail just in case *)
   mail_read
   (* Handle page *)
-  .me player? not if
+  "me" match player? not if
     pop
-    "Only players can page." command @ toupper .theme_tag_err .color_tell
+    "Only players can page." command @ toupper .tag_err .tell
     exit
   then
   dup not if
     pop
-    "Please specify a player, and a message." command @ toupper .theme_tag_err .color_tell
+    "Please specify a player, and a message." command @ toupper .tag_err .tell
     exit
   then
   "=" split
   dup not if
     pop
-    "Please specify a message." command @ toupper .theme_tag_err .color_tell
+    "Please specify a message." command @ toupper .tag_err .tell
     exit
   then
   var highlight_ooc_style
   dup ":" instr 1 = if
     1 strcut swap pop
-    .me name
+    "me" match name
     over 1 strcut pop dup "-" = over ":" = or swap "," = or not if
       " " strcat
     then
     swap strcat
     "no" highlight_ooc_style !
   else
-    .me name ": " strcat swap strcat
+    "me" match name ": " strcat swap strcat
     "yes" highlight_ooc_style !
   then
   var! message
@@ -180,12 +187,12 @@ WIZCALL M-HELP-help
   to @ awake? if
     to @
     message @ {
-      "from" .me
+      "from" "me" match
       "to" to @
       "highlight_mention" "no"
       "highlight_ooc_style" highlight_ooc_style @
     }dict M-LIB-EMOTE-style
-    "PAGE" .theme_tag .color_notify
+    "PAGE" .tag .notify
     "[#0000AA] (to %n)" { to @ }list { "name_match" "yes" }dict M-LIB-GRAMMAR-sub note !
   else
     message @ highlight_ooc_style @ to @ mail_add not if
@@ -195,13 +202,13 @@ WIZCALL M-HELP-help
   then
   (* Notify self with a copy *)
   message @ {
-    "from" .me
-    "to" .me
+    "from" "me" match
+    "to" "me" match
     "highlight_mention" "no"
     "highlight_ooc_style"
     highlight_ooc_style @
-  }dict M-LIB-EMOTE-style note @ .color_strcat
-  "PAGE" .theme_tag .color_tell
+  }dict M-LIB-EMOTE-style note @ M-LIB-COLOR-strcat
+  "PAGE" .tag .tell
 ;
 .
 c

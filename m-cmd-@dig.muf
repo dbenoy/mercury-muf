@@ -95,7 +95,7 @@ WIZCALL M-HELP-help
 (*****************************************************************************)
 
 : M-CMD-AT_DIG-dig[ str:roomname str:parent -- ref:dbref ]
-  .needs_mlev3
+  M-LIB-PROGRAM-needs_mlev3
 
   "room" 1 M-LIB-QUOTA-QuotaCheck not if #-1 exit then
 

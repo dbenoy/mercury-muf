@@ -93,7 +93,7 @@ WIZCALL M-HELP-help
 (*                          M-CMD-AT_CREATE-create                           *)
 (*****************************************************************************)
 : M-CMD-AT_CREATE-create[ str:thingname str:payment -- ref:thing ]
-  .needs_mlev3
+  M-LIB-PROGRAM-needs_mlev3
 
   "thing" 1 M-LIB-QUOTA-QuotaCheck not if #-1 exit then
 

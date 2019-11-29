@@ -46,6 +46,10 @@ $INCLUDE $m/lib/color
 $INCLUDE $m/lib/theme
 $INCLUDE $m/lib/grammar
 
+$DEF .tell M-LIB-NOTIFY-tell_color
+$DEF .tag M-LIB-THEME-tag
+$DEF .tag_err M-LIB-THEME-tag_err
+
 (* ------------------------------------------------------------------------- *)
 
 : M-HELP-desc ( s -- s )
@@ -162,7 +166,7 @@ $DEF TRUNCATE_LENGTH 80
   var! result
   begin
     join_me @ not if break then
-    result @ .color_strlen TRUNCATE_LENGTH >= if break then
+    result @ M-LIB-COLOR-strlen TRUNCATE_LENGTH >= if break then
     join_me @ 1 array_cut join_me ! 0 []
     result @ "[!FFFFFF], " strcat swap strcat result !
   repeat
@@ -206,7 +210,7 @@ $DEF TRUNCATE_LENGTH 80
       var! player_this
       {
         "name" player_this @ name
-        "theme_name" player_this @ .theme_name
+        "theme_name" player_this @ M-LIB-THEME-name
       }dict
       player_this @ M-LIB-THEME-idle? if
         players_idle @ []<- players_idle !
@@ -221,7 +225,7 @@ $DEF TRUNCATE_LENGTH 80
     room_dbref @ M-LIB-ROOM-directions var! room_directions
     (* Add lines to list *)
     lines @
-    { room_dbref @ .theme_name }join
+    { room_dbref @ M-LIB-THEME-name }join
     room_directions @ if { "[!FFFFFF] ([#AA5500]" room_directions @ "[!FFFFFF])" }join strcat then
     swap []<-
     players_active @ if  { "  [#FFFFFF]Awake:[!FFFFFF]  " players_active @ truncated_join }join swap []<- then
@@ -235,24 +239,24 @@ $DEF TRUNCATE_LENGTH 80
   dup not if pop "1" then
   var! threshold
   threshold @ number? not if
-    "Invalid threshold value." command @ toupper .theme_tag_err .color_tell exit
+    "Invalid threshold value." command @ toupper .tag_err .tell exit
   then
   threshold @ atoi threshold !
   threshold @ 0 <= if
-    "Invalid threshold value." command @ toupper .theme_tag_err .color_tell exit
+    "Invalid threshold value." command @ toupper .tag_err .tell exit
   then
   threshold @ room_info_get
   dup not if
     pop 
-    { "No locations found with " threshold @ intostr " or more players." }join command @ toupper .theme_tag_err .color_tell
+    { "No locations found with " threshold @ intostr " or more players." }join command @ toupper .tag_err .tell
     exit
   then
-  "/----" command @ toupper .theme_tag .color_tell
+  "/----" command @ toupper .tag .tell
   0 room_info_render foreach
     nip
-    command @ toupper .theme_tag .color_tell
+    command @ toupper .tag .tell
   repeat
-  "\\----" command @ toupper .theme_tag .color_tell
+  "\\----" command @ toupper .tag .tell
 ;
 .
 c

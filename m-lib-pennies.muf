@@ -132,7 +132,7 @@ $LIBDEF M-LIB-PENNIES-endow_str_get
 (*                          M-LIB-PENNIES-payfor_chk                         *)
 (*****************************************************************************)
 : M-LIB-PENNIES-payfor_chk ( i -- b )
-  .needs_mlev3
+  M-LIB-PROGRAM-needs_mlev3
   "i" checkargs
 
   dup 0 < if "Negative value (1)." abort then
@@ -150,7 +150,7 @@ $LIBDEF M-LIB-PENNIES-payfor_chk
 (*                           M-LIB-PENNIES-payfor                            *)
 (*****************************************************************************)
 : M-LIB-PENNIES-payfor ( i --  )
-  .needs_mlev3
+  M-LIB-PROGRAM-needs_mlev3
   "i" checkargs
 
   dup 0 < if "Negative value (1)." abort then

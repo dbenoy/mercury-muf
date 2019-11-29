@@ -40,7 +40,7 @@ $PRAGMA comment_recurse
 $VERSION 1.001
 $AUTHOR  Daniel Benoy
 $NOTE    An interface for editing objects.
-$DOCCMD  @list __PROG__=2-34
+$DOCCMD  @list __PROG__=2-36
 
 (* Begin configurable options *)
 
@@ -82,6 +82,8 @@ $INCLUDE $m/cmd/at_link
 $INCLUDE $m/cmd/at_unlink
 $INCLUDE $m/cmd/at_recycle
 $INCLUDE $m/cmd/at_lsedit
+
+$DEF .tell M-LIB-NOTIFY-tell_color
 
 (* Begin global variables *)
 
@@ -226,7 +228,7 @@ lvar g_table_program
 : set_str_pick[ str:property list:options --  ]
 
   "Options:" .tell
-  options @ "\r" array_join .tell
+  options @ "\r" array_join M-LIB-COLOR-escape .tell
   " " .tell
 
   read
@@ -244,7 +246,7 @@ lvar g_table_program
     g_object @ property @ rot setprop
     "Set." .tell
   else
-    "'" swap strcat "' is not one of the options." strcat .tell
+    "'" swap M-LIB-COLOR-escape strcat "' is not one of the options." strcat .tell
   then
 ;
 
@@ -345,7 +347,7 @@ lvar g_table_program
 
 (***** get/set name *****)
 : get_obj_name[  -- str:value ]
-  g_object @ .theme_name
+  g_object @ M-LIB-THEME-name
 ;
 
 : set_obj_name[  --  ]
@@ -427,9 +429,9 @@ lvar g_table_program
     g_object @ location
 
     dup "me" match swap controls if
-      .theme_unparseobj
+      M-LIB-THEME-unparseobj
     else
-      .theme_name
+      M-LIB-THEME-name
     then
   else
     "UNKNOWN"
@@ -451,9 +453,9 @@ lvar g_table_program
   then
 
   dup "me" match swap controls if
-    .theme_unparseobj
+    M-LIB-THEME-unparseobj
   else
-    .theme_name
+    M-LIB-THEME-name
   then
 ;
 
@@ -477,7 +479,7 @@ lvar g_table_program
   g_object @ exits_array var! myExits
 
   myExits @ foreach
-    swap ++ intostr "bold,cyan" textattr "] " rot name strcat "dim,cyan" textattr strcat "[" "dim,cyan" textattr swap strcat .tell
+    swap ++ intostr "bold,cyan" textattr "] " rot name strcat "dim,cyan" textattr strcat "[" "dim,cyan" textattr swap strcat \tell (* TODO: Convert to MCC *)
   repeat
   "Select an exit:" .tell
 
@@ -524,7 +526,7 @@ lvar g_table_program
   g_object @ exits_array var! myExits
 
   myExits @ foreach
-    swap ++ intostr "bold,cyan" textattr "] " rot name strcat "dim,cyan" textattr strcat "[" "dim,cyan" textattr swap strcat .tell
+    swap ++ intostr "bold,cyan" textattr "] " rot name strcat "dim,cyan" textattr strcat "[" "dim,cyan" textattr swap strcat \tell (* TODO: Convert to MCC *)
   repeat
   "Select an exit:" .tell
 
@@ -2001,25 +2003,25 @@ lvar g_table_program
 
 : do_menu_header (  --  )
 
-  "[#FFFFFF]----[#0000AA][ [#FFFF55]Object Editor[#0000AA] ][#FFFFFF]" dup .color_strlen .chars-per-row swap - "-" * strcat
-  g_object @ .theme_unparseobj
+  "[#FFFFFF]----[#0000AA][ [#FFFF55]Object Editor[#0000AA] ][#FFFFFF]" dup M-LIB-COLOR-strlen .chars-per-row swap - "-" * strcat
+  g_object @ M-LIB-THEME-unparseobj
 
-  dup .color_strlen .chars-per-row 20 - <= if
+  dup M-LIB-COLOR-strlen .chars-per-row 20 - <= if
     "[#0000AA][ [!FFFFFF]" swap strcat "[#0000AA] ][#FFFFFF]----" strcat
-     dup .color_strlen .chars-per-row swap - rot swap .color_strcut pop swap strcat
+     dup M-LIB-COLOR-strlen .chars-per-row swap - rot swap M-LIB-COLOR-strcut pop swap strcat
   else
     "\r[!FFFFFF]Object: " swap strcat strcat
   then
 
-  .color_tell
+  .tell
 ;
 
 : do_menu_footer (  --  )
-  "[#0000AA][ [#AAAAAA]" prog name strcat .version strcat prog "L" flag? prog "V" flag? or if " (#" strcat prog intostr strcat ")" strcat then " -- by " strcat .author strcat "[#0000AA] ][#FFFFFF]----" strcat
+  "[#0000AA][ [#AAAAAA]" prog name strcat M-LIB-PROGRAM-version strcat prog "L" flag? prog "V" flag? or if " (#" strcat prog intostr strcat ")" strcat then " -- by " strcat M-LIB-PROGRAM-author strcat "[#0000AA] ][#FFFFFF]----" strcat
 
-  "[#FFFFFF]" "-" .chars-per-row * strcat over .color_strlen .chars-per-row swap - .color_strcut pop swap strcat
+  "[#FFFFFF]" "-" .chars-per-row * strcat over M-LIB-COLOR-strlen .chars-per-row swap - M-LIB-COLOR-strcut pop swap strcat
 
-  .color_tell
+  .tell
 ;
 
 : draw_separator ( s -- s )
@@ -2027,7 +2029,7 @@ lvar g_table_program
     pop " "
   else
     "[#FFFFFF]-----[#0000AA][ [#00AAAA]" swap strcat "[#0000AA] ][#FFFFFF]" strcat "-" .chars-per-row * strcat
-    .chars-per-row .color_strcut pop
+    .chars-per-row M-LIB-COLOR-strcut pop
   then
 ;
 
@@ -2038,7 +2040,7 @@ lvar g_table_program
   array_vals ++ rotate execute
 
   (* Substitute 'get' string *)
-  "" .color_strcat (* HACK: This will preprocess the string and make it so that when it's subst it won't affect colors around it, but it will be affected by colors around it *)
+  "" M-LIB-COLOR-strcat (* HACK: This will preprocess the string and make it so that when it's subst it won't affect colors around it, but it will be affected by colors around it *)
   "@1" subst
 ;
 
@@ -2056,7 +2058,7 @@ lvar g_table_program
     dup int? if
       (* Flush the current row if we're on it. *)
       item_on_row @ if
-        row_string @ .color_tell
+        row_string @ .tell
         "" row_string !
         0 item_on_row !
       then
@@ -2070,13 +2072,13 @@ lvar g_table_program
     dup string? if
       (* Flush the current row if we're on it. *)
       item_on_row @ if
-        row_string @ .color_tell
+        row_string @ .tell
         "" row_string !
         0 item_on_row !
       then
 
       (* Draw a separator *)
-      draw_separator .color_tell
+      draw_separator .tell
 
       continue
     then
@@ -2087,10 +2089,10 @@ lvar g_table_program
       draw_item
 
       (* Pad with required spaces *)
-      .chars-per-row items_per_row @ / over .color_strlen over >= if
-        4 - .color_strcut pop "[!FFFFFF] ..." strcat
+      .chars-per-row items_per_row @ / over M-LIB-COLOR-strlen over >= if
+        4 - M-LIB-COLOR-strcut pop "[!FFFFFF] ..." strcat
       else
-        over .color_strlen -
+        over M-LIB-COLOR-strlen -
         begin
           dup while
 
@@ -2105,7 +2107,7 @@ lvar g_table_program
       item_on_row @ ++ (* Increment the current item count *)
 
       dup items_per_row @ >= if
-        row_string @ .color_tell
+        row_string @ .tell
         "" row_string !
 
         pop 0
@@ -2121,7 +2123,7 @@ lvar g_table_program
 
   (* Flush the current row if we're on it. *)
   item_on_row @ if
-    row_string @ .color_tell
+    row_string @ .tell
     "" row_string !
     0 item_on_row !
   then
@@ -2132,7 +2134,7 @@ lvar g_table_program
   dup 5 [] over 6 [] rot 4 []
 
   (* Display help string *)
-  .color_tell
+  .tell
 
   (* Get value *)
   array_vals ++ rotate execute
@@ -2144,7 +2146,7 @@ lvar g_table_program
   begin
     do_menu
     nomatch @ if
-      "'" swap strcat "' is invalid.  Try again, or enter 'Q' to quit." strcat .tell
+      "'" swap M-LIB-COLOR-escape strcat "' is invalid.  Try again, or enter 'Q' to quit." strcat .tell
     else
       "Please make a selection, or enter 'Q' to quit." .tell
     then
@@ -2205,7 +2207,7 @@ lvar g_table_program
 
 : main
   dup not if
-    { "Use '" command @ " <object>' to edit objects." }join .tell
+    { "Use '" command @ M-LIB-COLOR-escape " <object>' to edit objects." }join .tell
     pop exit
   then
 

@@ -44,13 +44,18 @@ $DEF OVERHEAR_REDACT_FACTOR 0.5 (* This fraction of the message will be redacted
 
 (* ------------------------------------------------------------------------- *)
 
+$INCLUDE $m/lib/string
 $INCLUDE $m/lib/match
 $INCLUDE $m/lib/grammar
 $INCLUDE $m/lib/emote
 $INCLUDE $m/lib/theme
-$INCLUDE $m/lib/notify
 $INCLUDE $m/lib/color
 $INCLUDE $m/lib/array
+$INCLUDE $m/lib/notify
+
+$DEF .notify M-LIB-NOTIFY-notify_color
+
+(* ------------------------------------------------------------------------- *)
 
 : M-HELP-desc ( d -- s )
   pop
@@ -75,12 +80,7 @@ WIZCALL M-HELP-help
 
 : redact[ str:message float:redact_factor ]
   (* Split message on quotes and spaces *)
-  {
-    message @ " " .slice_array foreach
-      nip
-      "\"" .slice_array array_vals pop
-    repeat
-  }list var! message_parts
+  message @ { " " "\"" }list { }dict M-LIB-STRING-dice_array var! message_parts
   (* Remove empty elements *)
   { message_parts @ foreach nip dup not if pop then repeat }list message_parts !
   (* Anything between the quotes and spaces is up for redaction. Count how many we have *)
@@ -99,7 +99,7 @@ WIZCALL M-HELP-help
   begin
     redact_points @ array_count redact_count_target @ >= if break then
     random redact_count_eligible @ %
-    dup redact_points @ .array_hasval if
+    dup redact_points @ M-LIB-ARRAY-hasval if
       pop continue
     then
     redact_points @ []<- redact_points !
@@ -112,7 +112,7 @@ WIZCALL M-HELP-help
       dup "\"" = over " " = or if
         continue
       then
-      this_point @ redact_points @ .array_hasval if
+      this_point @ redact_points @ M-LIB-ARRAY-hasval if
         pop "..."
       then
       this_point ++
@@ -126,7 +126,7 @@ WIZCALL M-HELP-help
   "=" split
   over not over not or if
     pop
-    "What do you want to whisper?" .tell
+    "What do you want to mumble?" .tell
     exit
   then
   var! message
@@ -156,7 +156,7 @@ WIZCALL M-HELP-help
     "highlight_mention" "no"
     "highlight_quote_level_min" 1
   }dict M-LIB-EMOTE-style
-  .color_notify
+  .notify
   (* Notify self with a copy *)
   me @
   message @ {
@@ -166,7 +166,7 @@ WIZCALL M-HELP-help
     "highlight_mention" "no"
     "highlight_quote_level_min" 1
   }dict M-LIB-EMOTE-style
-  .color_notify
+  .notify
   (* Notify everyone else in the room *)
   loc @ begin dup room? if break then location repeat M-LIB-NOTIFY-cast_targets foreach
     nip
@@ -181,7 +181,7 @@ WIZCALL M-HELP-help
       "highlight_mention" "no"
       "highlight_quote_level_min" 1
     }dict M-LIB-EMOTE-style
-    .color_notify
+    .notify
   repeat
 ;
 .

@@ -52,15 +52,15 @@ $DEF EMOTE_TEST_FROM #1
 
 : M-HELP-desc ( d -- s )
   pop
-  "FIXME"
+  "Configure your settings."
 ;
 WIZCALL M-HELP-desc
 
 : M-HELP-help ( d -- a )
   name ";" split pop toupper var! action_name
   {
-    { action_name @ " <object>" }join
-    "  FIXME"
+    action_name @
+    "  Brings up a configuraiton dialog for you to modify your character settings and player options."
   }list
 ;
 WIZCALL M-HELP-help
@@ -76,6 +76,9 @@ $INCLUDE $m/lib/theme
 $INCLUDE $m/lib/grammar
 $INCLUDE $m/lib/emote
 $INCLUDE $m/cmd/at_lsedit
+
+$DEF .tell M-LIB-NOTIFY-tell_color
+$DEF .err M-LIB-THEME-err
 
 (* Begin global variables *)
 
@@ -99,7 +102,7 @@ lvar g_table_autolook
 
 (***** get/set Flag *****)
 : get_flag[ str:flag str:valueTrue str:valueFalse -- str:value ]
-  .me flag @ flag? if
+  "me" match flag @ flag? if
     valueTrue @
   else
     valueFalse @
@@ -110,25 +113,25 @@ lvar g_table_autolook
   read
 
   dup "{y|ye|yes}" smatch if
-    .me flag @ set
+    "me" match flag @ set
     pop exit
   then
 
   dup "{n|no}" smatch if
-    .me "!" flag @ strcat set
+    "me" match "!" flag @ strcat set
     pop exit
   then
 
-  "Cancelled." .theme_err .color_tell
+  "Cancelled." .err .tell
   pop
 ;
 
 (***** get/set String Property *****)
 : get_str[ str:property str:unsetValue -- str:value ]
-  .me property @ getpropstr
+  "me" match property @ getpropstr
 
   dup not if
-    pop unsetValue @ { .me }list { "name_match" "no" "name_theme" "no" "color" "keep" }dict M-LIB-GRAMMAR-sub exit
+    pop unsetValue @ { "me" match }list { "name_match" "no" "name_theme" "no" "color" "keep" }dict M-LIB-GRAMMAR-sub exit
   then
 
   dup "\r" instr if
@@ -143,9 +146,9 @@ lvar g_table_autolook
   read
 
   dup strip not if
-    .me property @ remove_prop
+    "me" match property @ remove_prop
   else
-    .me property @ rot setprop
+    "me" match property @ rot setprop
   then
 ;
 
@@ -153,7 +156,7 @@ lvar g_table_autolook
 : set_str_pick[ str:property list:options --  ]
 
   "Options:" .tell
-  options @ "\r" array_join .tell
+  options @ "\r" array_join M-LIB-COLOR-escape .tell
   " " .tell
 
   read
@@ -168,16 +171,16 @@ lvar g_table_autolook
 
   if
     tolower 1 strcut swap toupper swap strcat
-    .me property @ rot setprop
+    "me" match property @ rot setprop
     "Set." .tell
   else
-    "'" swap strcat "' is not one of the options." strcat .theme_err .color_tell
+    "'" swap strcat "' is not one of the options." strcat .err .tell
   then
 ;
 
 (***** get/set String Boolean Property *****)
 : get_str_bool[ str:property str:valueTrue str:valueFalse -- str:value ]
-  .me property @ getpropstr
+  "me" match property @ getpropstr
 
   "yes" stringcmp not if
     valueTrue @
@@ -187,7 +190,7 @@ lvar g_table_autolook
 ;
 
 : get_str_bool2[ str:property str:valueTrue str:valueFalse -- str:value ] (* this one is for defaulting to yes *)
-  .me property @ getpropstr
+  "me" match property @ getpropstr
 
   "no" stringcmp not if
     valueFalse @
@@ -197,7 +200,7 @@ lvar g_table_autolook
 ;
 
 : get_str_bool3[ str:property str:valueTrue str:valueFalse str:valueUnset -- str:value ] (* this one has a separate value for unset *)
-  .me property @ getpropstr
+  "me" match property @ getpropstr
 
   dup not if
     pop
@@ -215,16 +218,16 @@ lvar g_table_autolook
   read
 
   dup "{y|ye|yes}" smatch if
-    .me property @ "yes" setprop
+    "me" match property @ "yes" setprop
     pop exit
   then
 
   dup "{n|no}" smatch if
-    .me property @ "no" setprop
+    "me" match property @ "no" setprop
     pop exit
   then
 
-  "Cancelled." .theme_err .color_tell
+  "Cancelled." .err .tell
   pop
 ;
 
@@ -232,22 +235,22 @@ lvar g_table_autolook
   read
 
   dup "{y|ye|yes}" smatch if
-    .me property @ "yes" setprop
+    "me" match property @ "yes" setprop
     pop exit
   then
 
   dup "{n|no}" smatch if
-    .me property @ remove_prop
+    "me" match property @ remove_prop
     pop exit
   then
 
-  "Cancelled." .theme_err .color_tell
+  "Cancelled." .err .tell
   pop
 ;
 
 (***** get/set Integer Boolean Property *****)
 : get_bool[ str:property str:valueTrue str:valueFalse -- str:value ]
-  .me property @ getpropval if
+  "me" match property @ getpropval if
     valueTrue @
   else
     valueFalse @
@@ -258,22 +261,22 @@ lvar g_table_autolook
   read
 
   dup "{y|ye|yes}" smatch if
-    .me property @ 1 setprop
+    "me" match property @ 1 setprop
     pop exit
   then
 
   dup "{n|no}" smatch if
-    .me property @ 0 setprop
+    "me" match property @ 0 setprop
     pop exit
   then
 
-  "Cancelled." .theme_err .color_tell
+  "Cancelled." .err .tell
   pop
 ;
 
 (***** get an MPI parsed value *****)
 : get_mpi[ str:property str:unsetValue -- str:value ]
-  .me property @ prog name 0 parseprop
+  "me" match property @ prog name 0 parseprop
 
   dup not if
     pop unsetValue @ exit
@@ -287,18 +290,18 @@ lvar g_table_autolook
 
 (***** get/set name *****)
 : get_obj_name[  -- str:value ]
-  .me .theme_name
+  "me" match M-LIB-THEME-name
 ;
 
 : set_obj_name[  --  ]
   read
-  .me swap setname
+  "me" match swap setname
 ;
 
 (***** set a string to {eval:{list:<property list>}}, and edit the corresponding list *****)
 : set_mpi_list[ str:property str:listprop --  ]
   (* Use existing property if available *)
-  .me property @ getpropstr
+  "me" match property @ getpropstr
   dup "{eval:{list:" stringpfx if
     12 strcut swap pop
     dup strlen 2 - strcut "}}" stringcmp not if
@@ -312,30 +315,30 @@ lvar g_table_autolook
 "< '.end' will exit and save the list.  '.abort' will abort any changes. >" .tell
 "<    To save changes to the list, and continue editing, use '.save'     >" .tell
 
-  .me listprop @ M-CMD-AT_LSEDIT-ListEdit if
-    .me property @ "{eval:{list:" listprop @ strcat "}}" strcat setprop
+  "me" match listprop @ M-CMD-AT_LSEDIT-ListEdit if
+    "me" match property @ "{eval:{list:" listprop @ strcat "}}" strcat setprop
   then
 ;
 
 (***** Get/set the current morph *****)
 : get_morph[  -- str:value ]
-  .me "/_morph" getpropstr
+  "me" match "/_morph" getpropstr
 
   dup "\r" instr if
     pop "UNKNOWN" exit
   then
 
   dup not if
-    .me "/_morph" "Default" setprop
+    "me" match "/_morph" "Default" setprop
     pop "Default" exit
   then
 ;
 
 (***** get/set Emote setting *****)
 : get_emote_option[ str:option str:prefix_default -- str:value ]
-  .me option @ M-LIB-EMOTE-config_get
-  .color_escape
-  .me "_config/emote/" option @ strcat getpropstr not if
+  "me" match option @ M-LIB-EMOTE-config_get
+  M-LIB-COLOR-escape
+  "me" match "_config/emote/" option @ strcat getpropstr not if
     prefix_default @ swap strcat
   then
 ;
@@ -346,19 +349,19 @@ lvar g_table_autolook
   read
 
   dup strip not if
-    .me "_config/emote/" option @ strcat remove_prop
+    "me" match "_config/emote/" option @ strcat remove_prop
   else
-    dup .me option @ M-LIB-EMOTE-config_valid not if
-      "That is not a valid value for this setting." .theme_err .color_tell
+    dup "me" match option @ M-LIB-EMOTE-config_valid not if
+      "That is not a valid value for this setting." .err .tell
       pop exit
     then
-    .me "_config/emote/" option @ strcat rot setprop
+    "me" match "_config/emote/" option @ strcat rot setprop
   then
 ;
 
 (***** Test emote style *****)
 : get_emote_style[ ref:from bool:force_allow_custom str:test_string -- str:value ]
-  test_string @ .me "highlight_mention_names" M-LIB-EMOTE-config_get ";" split pop "@1" subst
+  test_string @ "me" match "highlight_mention_names" M-LIB-EMOTE-config_get ";" split pop "@1" subst
   { from @ }list { "name_match" "yes" "name_theme" "no" "color" "strip" }dict M-LIB-GRAMMAR-sub
   { "from" from @ "to" me @ }dict force_allow_custom @ if "yes" swap "highlight_allow_custom" ->[] then M-LIB-EMOTE-style
 ;
@@ -508,7 +511,8 @@ lvar g_table_autolook
       'set_mpi_list { "_/writing" "_/dl/writing" }list
     }list
 
-    "" "Settings" 1
+    "" "Settings" 2
+
     { "S1"
       "[#00AAAA][[#55FFFF]S1[#00AAAA]] Pose Settings/Colors"
       'get_null { }list
@@ -525,6 +529,29 @@ lvar g_table_autolook
       'set_menu { g_table_autolook }list
     }list
 
+    { "S3"
+      "[#00AAAA][[#55FFFF]S3[#00AAAA]] MUCK Standard Aliases: [#5555FF]@1"
+      'get_str_bool3 { "_config/huh/muck_builtin" "[#5555FF]Yes" "[#5555FF]No" "[#0000AA][Default]" }list
+      {
+        "Some commands here are named differently than they are on other MUCKs. This option enables special command aliases to automatically rewrite your commands so you can continue to use standard MUCK built-in style commands."
+        "Typically, all 'out of character' type commands will always start with @. Using these aliases breaks that rule, and allows you to use commands like 'page' instead of '@page', for example."
+        " "
+        "Enter 'yes' or 'no'."
+      }list "\r" array_join
+      'set_str_bool { "_config/huh/muck_builtin" }list
+    }list
+
+    { "S4"
+      "[#00AAAA][[#55FFFF]S4[#00AAAA]] MUCK Common Aliases:   [#5555FF]@1"
+      'get_str_bool3 { "_config/huh/muck_common" "[#5555FF]Yes" "[#5555FF]No" "[#0000AA][Default]" }list
+      {
+        "Some commands here are named differently than they are on other MUCKs. This option enables special command aliases to automatically rewrite your commands so that you can continue to use some commonplace commands often found other MUCKs."
+        "Typically, all 'out of character' type commands will always start with @. Using these aliases breaks that rule, and allows you to use commands like 'ws' instead of '@who #room'"
+        " "
+        "Enter 'yes' or 'no'."
+      }list "\r" array_join
+      'set_str_bool { "_config/huh/muck_common" }list
+    }list
 
     "" (* Blank line before footer *)
   }list
@@ -599,7 +626,7 @@ lvar g_table_autolook
 
     { ""
       "  @1"
-      'get_emote_style { .me 1 "%N waves. \"Hello there!\" %s says." }list
+      'get_emote_style { "me" match 1 "%N waves. \"Hello there!\" %s says." }list
       {
       }list "\r" array_join
       'set_null { }list
@@ -786,16 +813,16 @@ lvar g_table_autolook
 
 : do_menu_header (  --  )
 
-  "[#FFFFFF]----[#0000AA][ [#FFFF55]Setup[#0000AA] ][#FFFFFF]" dup .color_strlen .chars-per-row swap - "-" * strcat
-  .color_tell
+  "[#FFFFFF]----[#0000AA][ [#FFFF55]Setup[#0000AA] ][#FFFFFF]" dup M-LIB-COLOR-strlen .chars-per-row swap - "-" * strcat
+  .tell
 ;
 
 : do_menu_footer (  --  )
   "[#0000AA][ [#AAAAAA]" "muckname" sysparm strcat "[#0000AA] ][#FFFFFF]----" strcat
 
-  "[#FFFFFF]" "-" .chars-per-row * strcat over .color_strlen .chars-per-row swap - .color_strcut pop swap strcat
+  "[#FFFFFF]" "-" .chars-per-row * strcat over M-LIB-COLOR-strlen .chars-per-row swap - M-LIB-COLOR-strcut pop swap strcat
 
-  .color_tell
+  .tell
 ;
 
 : draw_separator ( s -- s )
@@ -803,7 +830,7 @@ lvar g_table_autolook
     pop " "
   else
     "[#FFFFFF]-----[#0000AA][ [#00AAAA]" swap strcat "[#0000AA] ][#FFFFFF]" strcat "-" .chars-per-row * strcat
-    .chars-per-row .color_strcut pop
+    .chars-per-row M-LIB-COLOR-strcut pop
   then
 ;
 
@@ -831,7 +858,7 @@ lvar g_table_autolook
     dup int? if
       (* Flush the current row if we're on it. *)
       item_on_row @ if
-        row_string @ .color_tell
+        row_string @ .tell
         "" row_string !
         0 item_on_row !
       then
@@ -845,13 +872,13 @@ lvar g_table_autolook
     dup string? if
       (* Flush the current row if we're on it. *)
       item_on_row @ if
-        row_string @ .color_tell
+        row_string @ .tell
         "" row_string !
         0 item_on_row !
       then
 
       (* Draw a separator *)
-      draw_separator .color_tell
+      draw_separator .tell
 
       continue
     then
@@ -862,10 +889,10 @@ lvar g_table_autolook
       draw_item
 
       (* Pad with required spaces *)
-      .chars-per-row items_per_row @ / over .color_strlen over >= if
-        4 - .color_strcut pop "[!FFFFFF] ..." strcat
+      .chars-per-row items_per_row @ / over M-LIB-COLOR-strlen over >= if
+        4 - M-LIB-COLOR-strcut pop "[!FFFFFF] ..." strcat
       else
-        over .color_strlen -
+        over M-LIB-COLOR-strlen -
         begin
           dup while
 
@@ -880,7 +907,7 @@ lvar g_table_autolook
       item_on_row @ ++ (* Increment the current item count *)
 
       dup items_per_row @ >= if
-        row_string @ .color_tell
+        row_string @ .tell
         "" row_string !
 
         pop 0
@@ -896,7 +923,7 @@ lvar g_table_autolook
 
   (* Flush the current row if we're on it. *)
   item_on_row @ if
-    row_string @ .color_tell
+    row_string @ .tell
     "" row_string !
     0 item_on_row !
   then
@@ -907,7 +934,7 @@ lvar g_table_autolook
   dup 5 [] over 6 [] rot 4 []
 
   (* Display help string *)
-  .color_tell
+  .tell
 
   (* Get value *)
   array_vals ++ rotate execute
@@ -919,7 +946,7 @@ lvar g_table_autolook
   begin
     do_menu
     nomatch @ if
-      "'" swap strcat "' is invalid.  Try again, or enter 'Q' to quit." strcat .tell
+      "'" swap M-LIB-COLOR-escape strcat "' is invalid.  Try again, or enter 'Q' to quit." strcat .tell
     else
       "Please make a selection, or enter 'Q' to quit." .tell
     then

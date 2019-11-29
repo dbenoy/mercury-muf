@@ -38,18 +38,20 @@ $DOCCMD  @list __PROG__=2-30
 
 $PUBDEF :
 
-$PUBDEF .version prog "_version" getpropstr begin dup strlen 1 - over ".0" rinstr = not while dup ".0" instr while "." ".0" subst repeat
-$PUBDEF .author prog "_author" getpropstr
-$PUBDEF .note prog "_note" getpropstr
-$PUBDEF .docs prog "_docs" getpropstr
-$PUBDEF .mlev2 trig caller = caller mlevel 2 >= or
-$PUBDEF .mlev3 trig caller = caller mlevel 3 >= or
-$PUBDEF .mlev4 trig caller = caller "WIZARD" flag? or
-$PUBDEF .needs_mlev2 .mlev2 not if "Requires MUCKER level 2 or above." abort then
-$PUBDEF .needs_mlev3 .mlev3 not if "Requires MUCKER level 3 or above." abort then
-$PUBDEF .needs_mlev4 .mlev4 not if "Requires MUCKER level 4 or above." abort then
-$PUBDEF .me "me" match
-$PUBDEF .loc "me" match location
+$PUBDEF M-LIB-PROGRAM-version prog "_version" getpropstr begin dup strlen 1 - over ".0" rinstr = not while dup ".0" instr while "." ".0" subst repeat
+$PUBDEF M-LIB-PROGRAM-author prog "_author" getpropstr
+$PUBDEF M-LIB-PROGRAM-note prog "_note" getpropstr
+$PUBDEF M-LIB-PROGRAM-docs prog "_docs" getpropstr
+$PUBDEF M-LIB-PROGRAM-mlev1 trig caller = caller mlevel 1 >= or
+$PUBDEF M-LIB-PROGRAM-mlev2 trig caller = caller mlevel 2 >= or
+$PUBDEF M-LIB-PROGRAM-mlev3 trig caller = caller mlevel 3 >= or
+$PUBDEF M-LIB-PROGRAM-mlev4 trig caller = caller "WIZARD" flag? or
+$PUBDEF M-LIB-PROGRAM-needs_mlev2 M-LIB-PROGRAM-mlev1 not if "Requires MUCKER level 1 or above." abort then
+$PUBDEF M-LIB-PROGRAM-needs_mlev2 M-LIB-PROGRAM-mlev2 not if "Requires MUCKER level 2 or above." abort then
+$PUBDEF M-LIB-PROGRAM-needs_mlev3 M-LIB-PROGRAM-mlev3 not if "Requires MUCKER level 3 or above." abort then
+$PUBDEF M-LIB-PROGRAM-needs_mlev4 M-LIB-PROGRAM-mlev4 not if "Requires MUCKER level 4 or above." abort then
+$PUBDEF M-LIB-PROGRAM-me "me" match
+$PUBDEF M-LIB-PROGRAM-loc "me" match location
 
 : main
   "Library called as command." abort
@@ -58,5 +60,5 @@ $PUBDEF .loc "me" match location
 c
 q
 !@register m-lib-program.muf=m/lib/program
-!@set $m/lib/program.muf=L
+!@set $m/lib/program=L
 

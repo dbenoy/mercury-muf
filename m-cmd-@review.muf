@@ -113,7 +113,7 @@ WIZCALL M-HELP-help
     (* Put the completed line in the list *)
     this_line @ output_lines @ array_appenditem output_lines !
   repeat
-  output_lines @ { me @ }list M-LIB-NOTIFY-color_array_notify
+  output_lines @ { me @ }list M-LIB-NOTIFY-array_notify_color
 ;
 .
 c

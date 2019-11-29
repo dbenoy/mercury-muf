@@ -44,9 +44,11 @@ $def ENCODING_PROP "_config/color/type"
 
 (* ------------------------------------------------------------------------ *)
 
-$INCLUDE $m/lib/notify
 $INCLUDE $m/lib/color
 $INCLUDE $m/lib/string
+$INCLUDE $m/lib/notify
+
+$DEF .tell M-LIB-NOTIFY-tell_color
 
 (* ------------------------------------------------------------------------ *)
 
@@ -83,7 +85,7 @@ WIZCALL M-HELP-help
       color_me @ 1 strcut color_me !
     then
     (* Colorize the character *)
-    { "[#" red @ .itox 2 .zeropad green @ .itox 2 .zeropad blue @ .itox 2 .zeropad "]" }join swap strcat
+    { "[#" red @ M-LIB-STRING-itox 2 M-LIB-STRING-zeropad green @ M-LIB-STRING-itox 2 M-LIB-STRING-zeropad blue @ M-LIB-STRING-itox 2 M-LIB-STRING-zeropad "]" }join swap strcat
     (* Concatinate the character with retval *)
     reverse @ if
       retval @ strcat retval !
@@ -116,7 +118,7 @@ WIZCALL M-HELP-help
       { "  [#BBBBBB]" rot }join
     repeat
     "  [#BBBBBB]NOCOLOR"
-  }list { me @ }list M-LIB-NOTIFY-color_array_notify
+  }list { me @ }list M-LIB-NOTIFY-array_notify_color
 ;
 
 : cmd_echo ( s -- )
@@ -124,7 +126,7 @@ WIZCALL M-HELP-help
   dup not if
     pop " "
   then
-  .color_tell
+  .tell
 ;
 
 : cmd_set ( s -- )
@@ -138,9 +140,9 @@ WIZCALL M-HELP-help
   dup 1 array_make M-LIB-COLOR-encoding_player_valid array_intersect not if
     " " .tell
     dup if
-      "[#BBBBBB]" swap strcat "Encoding '' unknown." 255 85 85 0 0 15 0 text_gradient 10 M-LIB-COLOR-strcut rot swap strcat strcat .color_tell
+      "[#BBBBBB]" swap strcat "Encoding '' unknown." 255 85 85 0 0 15 0 text_gradient 10 M-LIB-COLOR-strcut rot swap strcat strcat .tell
     else
-      pop "Please specify an encoding." 255 85 85 0 0 15 0 text_gradient .color_tell
+      pop "Please specify an encoding." 255 85 85 0 0 15 0 text_gradient .tell
     then
     " " .tell
     info
@@ -150,7 +152,7 @@ WIZCALL M-HELP-help
 
   me @ "COLOR" set
   me @ ENCODING_PROP rot toupper setprop
-  "Done." 85 85 255 0 50 0 0 text_gradient .color_tell
+  "Done." 85 85 255 0 50 0 0 text_gradient .tell
 ;
 
 : cmd_setup ( s -- )
@@ -173,7 +175,7 @@ WIZCALL M-HELP-help
       "yes" over stringpfx if
         me @ "COLOR" set
         me @ ENCODING_PROP this_option @ setprop
-        "Done." 85 85 255 0 50 0 0 text_gradient .color_tell
+        "Done." 85 85 255 0 50 0 0 text_gradient .tell
         exit
       then
     repeat
@@ -201,7 +203,7 @@ WIZCALL M-HELP-help
     info
     " " .tell
   then
-  "See @color #help" 85 85 255 0 18 0 0 text_gradient " for options." 85 85 255 0 18 0 1 text_gradient strcat .color_tell
+  "See @color #help" 85 85 255 0 18 0 0 text_gradient " for options." 85 85 255 0 18 0 1 text_gradient strcat .tell
 ;
 .
 c

@@ -105,7 +105,7 @@ WIZCALL M-HELP-help
 (*                          M-CMD-AT_UNLINK-unlink                           *)
 (*****************************************************************************)
 : M-CMD-AT_UNLINK-unlink[ str:thing -- bool:success? ]
-  .needs_mlev3
+  M-LIB-PROGRAM-needs_mlev3
 
   "link_cost" sysparm atoi var! tp_link_cost
   "player_start" sysparm match var! tp_player_start

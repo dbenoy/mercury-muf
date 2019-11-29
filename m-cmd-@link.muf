@@ -312,7 +312,7 @@ $DEF TESTLOCKPROP getprop dup lock? if testlock else pop pop 1 then
 (*                            M-CMD-AT_LINK-link                             *)
 (*****************************************************************************)
 : M-CMD-AT_LINK-link[ str:thing str:links -- bool:success? ]
-  .needs_mlev3
+  M-LIB-PROGRAM-needs_mlev3
 
   thing @ links @ 0 doLink
 ;
@@ -323,7 +323,7 @@ $LIBDEF M-CMD-AT_LINK-link
 (*                           M-CMD-AT_LINK-relink                            *)
 (*****************************************************************************)
 : M-CMD-AT_LINK-relink[ str:thing str:links -- bool:success? ]
-  .needs_mlev3
+  M-LIB-PROGRAM-needs_mlev3
 
   thing @ links @ 1 doLink
 ;

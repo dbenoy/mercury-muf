@@ -41,11 +41,15 @@ $DOCCMD  @list __PROG__=2-28
 (* ------------------------------------------------------------------------- *)
 
 $INCLUDE $m/lib/room
-$INCLUDE $m/lib/notify
 $INCLUDE $m/lib/grammar
 $INCLUDE $m/lib/match
 $INCLUDE $m/lib/theme
+$INCLUDE $m/lib/notify
+$INCLUDE $m/lib/color
 $INCLUDE $m/cmd/at_map
+
+$DEF .tell M-LIB-NOTIFY-tell_color
+$DEF .err M-LIB-THEME-err
 
 (* ------------------------------------------------------------------------- *)
 
@@ -86,24 +90,24 @@ WIZCALL M-HELP-help
   var! map_room
   var! player
   player @ not if
-    "Please specify a player." .theme_err .color_tell
+    "Please specify a player." .err .tell
     exit
   then
   player @ { "quiet" "no" "match_start" "online" }dict M-LIB-MATCH-pmatch player !
   player @ 0 < if exit then
   player @ begin dup room? if break then location repeat var! player_room
   player_room @ M-LIB-ROOM-public? not if
-    { player @ name " is in a private location." }join .theme_err .color_tell
+    { player @ name " is in a private location." }join .err .tell
     exit
   then
   map_room @ if
     map_room @ M-CMD-AT_MAP-match
     dup #-2 = if
-      pop "I don't know which one you mean!" .theme_err .color_tell
+      pop "I don't know which one you mean!" .err .tell
       exit
     then
     dup ok? not if
-      pop "I can't find that map." .theme_err .color_tell
+      pop "I can't find that map." .err .tell
       exit
     then
   else
@@ -113,7 +117,7 @@ WIZCALL M-HELP-help
   show_map @ if
     player @ map_room @ M-CMD-AT_MAP-display
   then
-  { player @ name " is " player @ location_text "." }join .tell
+  { player @ name " is " player @ location_text "." }join M-LIB-COLOR-escape .tell
 ;
 .
 c

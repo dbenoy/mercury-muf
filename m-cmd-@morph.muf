@@ -75,6 +75,10 @@ $INCLUDE $m/lib/string
 $INCLUDE $m/lib/theme
 $INCLUDE $m/lib/notify
 
+$DEF .tell M-LIB-NOTIFY-tell_color
+$DEF .tag M-LIB-THEME-tag
+$DEF .tag_err M-LIB-THEME-tag_err
+
 (* ------------------------------------------------------------------------ *)
 
 : M-HELP-desc ( d -- s )
@@ -158,24 +162,24 @@ WIZCALL M-HELP-help
   object @ morph_dir @ propdir? if
     object @ morph_dir @ remove_prop
     object @ "_morph/mesg/" morph_name @ strcat remove_prop
-    quiet @ not if { "Morph '" morph_name @ "' deleted." }join command @ toupper .theme_tag .color_tell then
+    quiet @ not if { "Morph '" morph_name @ "' deleted." }join command @ toupper .tag .tell then
   else
-    quiet @ not if { "Morph '" morph_name @ "' not found." }join command @ toupper .theme_tag_err .color_tell then
+    quiet @ not if { "Morph '" morph_name @ "' not found." }join command @ toupper .tag_err .tell then
   then
 ;
 
 : morph_mesg_set[ str:new_mesg ref:object str:morph_name bool:quiet -- bool:success? ]
   morph_name @ fix_morph_name morph_name !
   object @ "_morph/morphs/" morph_name @ strcat propdir? not if
-    quiet @ not if { "Morph '" morph_name @ "' not found." }join command @ toupper .theme_tag_err .color_tell then
+    quiet @ not if { "Morph '" morph_name @ "' not found." }join command @ toupper .tag_err .tell then
     0 exit
   then
   new_mesg @ if
     object @ "_morph/mesg/" morph_name @ strcat new_mesg @ setprop
-    quiet @ not if { "Morph message set for '" morph_name @ "'." }join command @ toupper .theme_tag .color_tell then
+    quiet @ not if { "Morph message set for '" morph_name @ "'." }join command @ toupper .tag .tell then
   else
     object @ "_morph/mesg/" morph_name @ strcat remove_prop
-    quiet @ not if { "Morph message cleared for '" morph_name @ "'." }join command @ toupper .theme_tag .color_tell then
+    quiet @ not if { "Morph message cleared for '" morph_name @ "'." }join command @ toupper .tag .tell then
   then
   1
 ;
@@ -183,7 +187,7 @@ WIZCALL M-HELP-help
 : morph_mesg_get[ ref:object str:morph_name bool:quiet -- str:mesg ]
   morph_name @ fix_morph_name morph_name !
   object @ "_morph/morphs/" morph_name @ strcat propdir? not if
-    quiet @ not if { "Morph '" morph_name @ "' not found." }join command @ toupper .theme_tag_err .color_tell then
+    quiet @ not if { "Morph '" morph_name @ "' not found." }join command @ toupper .tag_err .tell then
     "" exit
   then
   object @ "_morph/mesg/" morph_name @ strcat getpropstr
@@ -194,18 +198,18 @@ WIZCALL M-HELP-help
 
 : morph_list[ ref:object --  ]
   object @ "/_morph/morphs" propdir? if
-    "Saved morphs:" command @ toupper .theme_tag .color_tell
+    "Saved morphs:" command @ toupper .tag .tell
     object @ "/_morph/morphs/" nextprop
     begin
       dup while
       object @ over propdir? if
-        dup "/" rsplit swap pop "  " swap strcat command @ toupper .theme_tag .color_tell
+        dup "/" rsplit swap pop "  " swap strcat command @ toupper .tag .tell
       then
       object @ swap nextprop
     repeat
     pop
   else
-    "No saved morphs." command @ toupper .theme_tag .color_tell
+    "No saved morphs." command @ toupper .tag .tell
   then
 ;
 
@@ -216,17 +220,17 @@ WIZCALL M-HELP-help
 
   save @ if
     object @ morph_dir @ propdir? if
-      quiet @ not if "Clearing existing morph..." command @ toupper .theme_tag .color_tell then
+      quiet @ not if "Clearing existing morph..." command @ toupper .tag .tell then
       object @ morph_dir @ remove_prop
-      quiet @ not if "Saving morph..." command @ toupper .theme_tag .color_tell then
+      quiet @ not if "Saving morph..." command @ toupper .tag .tell then
     else
-      quiet @ not if "Creating new morph..." command @ toupper .theme_tag .color_tell then
+      quiet @ not if "Creating new morph..." command @ toupper .tag .tell then
     then
   else
     object @ morph_dir @ propdir? if
-      quiet @ not if "Loading morph..." command @ toupper .theme_tag .color_tell then
+      quiet @ not if "Loading morph..." command @ toupper .tag .tell then
     else
-      { "Morph '" morph_name @ "' not found." }join command @ toupper .theme_tag_err .color_tell
+      { "Morph '" morph_name @ "' not found." }join command @ toupper .tag_err .tell
       0 exit
     then
   then
@@ -237,7 +241,7 @@ WIZCALL M-HELP-help
     var property
 
     save @ if
-      quiet @ not if { "  Saving '" name @ "'..." }join command @ toupper .theme_tag .color_tell then
+      quiet @ not if { "  Saving '" name @ "'..." }join command @ toupper .tag .tell then
       properties @ foreach
         nip
         property !
@@ -246,7 +250,7 @@ WIZCALL M-HELP-help
         then
       repeat
     else
-      quiet @ not if { "  Loading '" name @ "'..." }join command @ toupper .theme_tag .color_tell then
+      quiet @ not if { "  Loading '" name @ "'..." }join command @ toupper .tag .tell then
       properties @ foreach
         nip
         property !
@@ -267,7 +271,7 @@ WIZCALL M-HELP-help
 (*                            M-CMD-AT_MORPH-load                            *)
 (*****************************************************************************)
 : M-CMD-AT_MORPH-load[ ref:object str:morph_name bool:quiet -- bool:success? ]
-  .needs_mlev3
+  M-LIB-PROGRAM-needs_mlev3
   object @ dbref? not if "Non-dbref argument (1)." abort then
   morph_name @ string? not if "Non-string argument (2)." abort then
   morph_name @ not if "Empty morph name (2)." abort then
@@ -280,7 +284,7 @@ $LIBDEF M-CMD-AT_MORPH-load
 (*                            M-CMD-AT_MORPH-save                            *)
 (*****************************************************************************)
 : M-CMD-AT_MORPH-save[ ref:object str:morph_name bool:quiet -- bool:success? ]
-  .needs_mlev3
+  M-LIB-PROGRAM-needs_mlev3
   object @ dbref? not if "Non-dbref argument (1)." abort then
   morph_name @ string? not if "Non-string argument (2)." abort then
   morph_name @ not if "Empty morph name (2)." abort then
@@ -293,7 +297,7 @@ $LIBDEF M-CMD-AT_MORPH-save
 (*                           M-CMD-AT_MORPH-delete                           *)
 (*****************************************************************************)
 : M-CMD-AT_MORPH-delete[ ref:object str:morph_name bool:quiet -- bool:success? ]
-  .needs_mlev3
+  M-LIB-PROGRAM-needs_mlev3
   object @ dbref? not if "Non-dbref argument (1)." abort then
   morph_name @ string? not if "Non-string argument (2)." abort then
   morph_name @ not if "Empty morph name (2)." abort then
@@ -306,7 +310,7 @@ $LIBDEF M-CMD-AT_MORPH-delete
 (*                            M-CMD-AT_MORPH-list                            *)
 (*****************************************************************************)
 : M-CMD-AT_MORPH-list[ ref:object --  ]
-  .needs_mlev3
+  M-LIB-PROGRAM-needs_mlev3
   object @ dbref? not if "Non-dbref argument (1)." abort then
   object @ morph_list
 ;
@@ -317,7 +321,7 @@ $LIBDEF M-CMD-AT_MORPH-list
 (*                          M-CMD-AT_MORPH-mesg_get                          *)
 (*****************************************************************************)
 : M-CMD-AT_MORPH-mesg_get[ ref:object str:morph_name bool:quiet -- str:mesg ]
-  .needs_mlev3
+  M-LIB-PROGRAM-needs_mlev3
   object @ dbref? not if "Non-dbref argument (1)." abort then
   morph_name @ string? not if "Non-string argument (2)." abort then
   morph_name @ not if "Empty morph name (2)." abort then
@@ -330,7 +334,7 @@ $LIBDEF M-CMD-AT_MORPH-mesg_get
 (*                          M-CMD-AT_MORPH-mesg_set                          *)
 (*****************************************************************************)
 : M-CMD-AT_MORPH-mesg_set[ str:new_mesg ref:object str:morph_name bool:quiet -- bool:success? ]
-  .needs_mlev3
+  M-LIB-PROGRAM-needs_mlev3
   new_mesg @ string? not if "Non-string argument (1)." abort then
   object @ dbref? not if "Non-dbref argument (2)." abort then
   morph_name @ string? not if "Non-string argument (3)." abort then
@@ -352,10 +356,10 @@ $LIBDEF M-CMD-AT_MORPH-mesg_set
   strip var! operation
   strip var! morph_name
   morph_name @ not if
-    "Please specify a morph name." command @ toupper .theme_tag_err .color_tell exit
+    "Please specify a morph name." command @ toupper .tag_err .tell exit
   then
   operation @ not if
-    "Please specify an operation." command @ toupper .theme_tag_err .color_tell exit
+    "Please specify an operation." command @ toupper .tag_err .tell exit
   then
   operation @ "save" stringcmp not if
     me @ morph_name @ 1 0 morph
@@ -376,7 +380,7 @@ $LIBDEF M-CMD-AT_MORPH-mesg_set
     argument @ me @ morph_name @ 0 morph_mesg_set pop
     exit
   then
-  { "Invalid operation '" operation @ "'." }join command @ toupper .theme_tag_err .color_tell
+  { "Invalid operation '" operation @ "'." }join command @ toupper .tag_err .tell
 ;
 .
 c

@@ -101,7 +101,7 @@ WIZCALL M-HELP-help
 (*                          M-CMD-AT_ACTION-action                           *)
 (*****************************************************************************)
 : M-CMD-AT_ACTION-action[ str:source str:exitname -- ref:room ]
-  .needs_mlev3
+  M-LIB-PROGRAM-needs_mlev3
 
   "exit" 1 M-LIB-QUOTA-QuotaCheck not if #-1 exit then
 

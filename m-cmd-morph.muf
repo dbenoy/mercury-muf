@@ -41,6 +41,9 @@ $INCLUDE $m/lib/notify
 $INCLUDE $m/lib/emote
 $INCLUDE $m/cmd/at_morph
 
+$DEF .tell M-LIB-NOTIFY-tell_color
+$DEF .err M-LIB-THEME-err
+
 (* ------------------------------------------------------------------------ *)
 
 : M-HELP-desc ( d -- s )
@@ -67,7 +70,7 @@ WIZCALL M-HELP-help
 
 : main ( s --  )
   dup not if
-    "What do you want to morph into?" .theme_err .color_tell
+    "What do you want to morph into?" .err .tell
     pop exit
   then
 

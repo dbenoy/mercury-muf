@@ -216,6 +216,8 @@ $INCLUDE $m/lib/string
 $INCLUDE $m/lib/notify
 $INCLUDE $m/lib/color
 
+$DEF .notify M-LIB-NOTIFY-notify_color
+
 $DEF OPTIONS_VALID { "highlight_allow_custom" "highlight_mention_format" "highlight_mention_names" "color_name" "color_quoted" "color_unquoted" }list
 $DEF OPTIONS_VALID_HIGHLIGHT_ALLOW_CUSTOM { "YES" "NO" "PLAIN" "NOCOLOR" }list
 
@@ -229,7 +231,7 @@ $DEF OPTIONS_VALID_HIGHLIGHT_ALLOW_CUSTOM { "YES" "NO" "PLAIN" "NOCOLOR" }list
   256 /
   256 % var! b
 
-  r @ 256 * 256 * g @ 256 * + b @ + .itox 6 .zeropad
+  r @ 256 * 256 * g @ 256 * + b @ + M-LIB-STRING-itox 6 M-LIB-STRING-zeropad
 ;
 
 : history_max_count ( d -- )
@@ -250,7 +252,7 @@ $DEF OPTIONS_VALID_HIGHLIGHT_ALLOW_CUSTOM { "YES" "NO" "PLAIN" "NOCOLOR" }list
   then
   option @ "color_name" = if
     object @ if
-      value @ .color_strip "_" " " subst object @ name stringcmp 0 = exit
+      value @ M-LIB-COLOR-strip "_" " " subst object @ name stringcmp 0 = exit
     else
       1 exit
     then
@@ -490,13 +492,13 @@ $ENDIF
 : highlight_name[ ref:to ref:from dict:opts -- str:result ]
   to @ if
     to @ "highlight_allow_custom" opts @ config_get "NOCOLOR" = if
-      from @ "color_name" opts @ config_get .color_strip exit
+      from @ "color_name" opts @ config_get M-LIB-COLOR-strip exit
     then
     to @ "highlight_allow_custom" opts @ config_get "NO" = if
       from @ "color_name" config_default exit
     then
     to @ "highlight_allow_custom" opts @ config_get "PLAIN" = if
-      { THEME_COLOR_NAME from @ "color_name" opts @ config_get .color_strip }join exit
+      { THEME_COLOR_NAME from @ "color_name" opts @ config_get M-LIB-COLOR-strip }join exit
     then
   then
   from @ "color_name" opts @ config_get
@@ -505,7 +507,7 @@ $ENDIF
 : highlight_mention_format_get[ ref:to dict:opts -- str:result ]
   to @ "highlight_mention_format" opts @ config_get
   to @ "highlight_allow_custom" opts @ config_get "NOCOLOR" = if
-    .color_strip
+    M-LIB-COLOR-strip
   then
 ;
 
@@ -513,7 +515,7 @@ $DEF EINSTRING over swap instring dup not if pop strlen else nip -- then
 : style[ str:message dict:opts -- str:result ]
   "" var! result
   (* Emotes are not colored by the message text itself *)
-  message @ .color_escape message !
+  message @ M-LIB-COLOR-escape message !
   (* Store some frequently accessed information *)
   opts @ "from" [] var! from
   opts @ "to" [] var! to
@@ -523,8 +525,8 @@ $DEF EINSTRING over swap instring dup not if pop strlen else nip -- then
   var from_uname
   var from_sname
   to @ from @ opts @ highlight_name var! from_hname
-  from_hname @ .color_strip "_" " " subst var! from_uname
-  from_hname @ .color_strip " " "_" subst var! from_sname
+  from_hname @ M-LIB-COLOR-strip "_" " " subst var! from_uname
+  from_hname @ M-LIB-COLOR-strip " " "_" subst var! from_sname
   var to_names
   to @ "highlight_mention_names" opts @ config_get ";" explode_array to_names !
   { to_names @ foreach nip dup not if pop then repeat }list to_names !
@@ -551,7 +553,7 @@ $DEF EINSTRING over swap instring dup not if pop strlen else nip -- then
           message_remain @ from_uname @ strlen strcut swap pop "[0-9a-zA-Z]*" smatch not if
             quote_level @ highlight_quote_level_min @ <= if
               (* We are at the from object's name, and it is on its own, and we're outside of quotes. Place the highlighted name and increment past it. *)
-              result @ from_hname @ .color_strcat result !
+              result @ from_hname @ M-LIB-COLOR-strcat result !
               message_pos @ from_uname @ strlen + message_pos !
               highlight_ooc_style @ if
                 (* Is this the beginning of the string, and is it followed by a colon? *)
@@ -575,7 +577,7 @@ $DEF EINSTRING over swap instring dup not if pop strlen else nip -- then
         message_prevchar @ "[0-9a-zA-Z]" smatch not if
           message_remain @ found_name @ strlen strcut swap pop "[0-9a-zA-Z]*" smatch not if
             (* We are at the to object's name, and it is on its own, and we are not emoting to ourselves. Place the highlighted name and increment past it. *)
-            result @ { to @ opts @ highlight_mention_format_get message_remain @ found_name @ strlen strcut pop "@1" subst }join .color_strcat result !
+            result @ { to @ opts @ highlight_mention_format_get message_remain @ found_name @ strlen strcut pop "@1" subst }join M-LIB-COLOR-strcat result !
             message_pos @ found_name @ strlen + message_pos !
             continue
           then
@@ -588,12 +590,12 @@ $DEF EINSTRING over swap instring dup not if pop strlen else nip -- then
         (* Going up! Increase the quote level then place the quote mark. *)
         1 quoting_up !
         quote_level ++
-        result @ to @ from @ quote_level @ opts @ highlight_quotelevel_get "\"" strcat .color_strcat result !
+        result @ to @ from @ quote_level @ opts @ highlight_quotelevel_get "\"" strcat M-LIB-COLOR-strcat result !
         message_pos ++
         continue
       else
         (* Going down. Place the quote marke, then decrease the quote level. *)
-        result @ to @ from @ quote_level @ opts @ highlight_quotelevel_get "\"" strcat .color_strcat result !
+        result @ to @ from @ quote_level @ opts @ highlight_quotelevel_get "\"" strcat M-LIB-COLOR-strcat result !
         message_pos ++
         0 quoting_up !
         quote_level --
@@ -612,11 +614,11 @@ $DEF EINSTRING over swap instring dup not if pop strlen else nip -- then
       to_names @ highlight_mention @ and if
         to_names @ foreach nip message_remain @ swap EINSTRING repeat
       then
-    }list .array_min
+    }list M-LIB-ARRAY-min
     dup 1 < if
       pop 1
     then
-    result @ message_remain @ 3 pick strcut pop to @ from @ quote_level @ opts @ highlight_quotelevel_get swap strcat .color_strcat result !
+    result @ message_remain @ 3 pick strcut pop to @ from @ quote_level @ opts @ highlight_quotelevel_get swap strcat M-LIB-COLOR-strcat result !
     message_pos @ swap + message_pos !
     message_pos @ message @ strlen >=
   until
@@ -635,7 +637,7 @@ $DEF EINSTRING over swap instring dup not if pop strlen else nip -- then
     opts @ "from" [] to @ = if
       0 swap "highlight_mention" ->[]
     then
-    to @ message @ rot style .color_notify
+    to @ message @ rot style .notify
   repeat
 ;
 
@@ -719,7 +721,7 @@ $DEF EINSTRING over swap instring dup not if pop strlen else nip -- then
   opts @ "to" [] if "Emote with 'to' option specified." abort then
   "me" match from @ = not if
     "force_mlev1_name_notify" sysparm if
-      .mlev2 not if "Requires MUCKER level 2 or above to send as other players." abort then
+      M-LIB-PROGRAM-mlev2 not if "Requires MUCKER level 2 or above to send as other players." abort then
     then
   then
   message @ not if "Empty emote." abort then
@@ -739,7 +741,7 @@ $LIBDEF M-LIB-EMOTE-emote
 (*                         M-LIB-EMOTE-history_clean                         *)
 (*****************************************************************************)
 : M-LIB-EMOTE-history_clean[ ref:room -- ]
-  .needs_mlev3
+  M-LIB-PROGRAM-needs_mlev3
   room @ dbref? not if "Non-dbref argument (1)." abort then
   room @ room @ history_max_count history_clean
 ;
@@ -750,7 +752,7 @@ $LIBDEF M-LIB-EMOTE-history_clean
 (*                          M-LIB-EMOTE-history_get                          *)
 (*****************************************************************************)
 : M-LIB-EMOTE-history_get[ ref:room -- arr:history ]
-  .needs_mlev3
+  M-LIB-PROGRAM-needs_mlev3
   mode var! old_mode
   preempt
   room @ room @ history_max_count history_clean
@@ -773,7 +775,7 @@ $LIBDEF M-LIB-EMOTE-history_get
   (* M1 OK *)
 
   option @ string? not if "Non-string argument (1)." abort then
-  option @ OPTIONS_VALID .array_hasval not if "Invalid option." abort then
+  option @ OPTIONS_VALID M-LIB-ARRAY-hasval not if "Invalid option." abort then
 
   object @ option @ { }dict config_get
 ;
@@ -787,7 +789,7 @@ $LIBDEF M-LIB-EMOTE-config_get
   (* M1 OK *)
 
   option @ string? not if "Non-string argument (1)." abort then
-  option @ OPTIONS_VALID .array_hasval not if "Invalid option." abort then
+  option @ OPTIONS_VALID M-LIB-ARRAY-hasval not if "Invalid option." abort then
 
   value @ object @ option @ config_valid
 ;

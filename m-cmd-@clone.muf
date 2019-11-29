@@ -85,7 +85,7 @@ WIZCALL M-HELP-help
 (*                         M-CMD-AT_CLONE-clone                              *)
 (*****************************************************************************)
 : M-CMD-AT_CLONE-clone[ str:thingname -- ref:thing ]
-  .needs_mlev3
+  M-LIB-PROGRAM-needs_mlev3
 
   "thing" 1 M-LIB-QUOTA-QuotaCheck not if #-1 exit then
 

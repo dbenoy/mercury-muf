@@ -16,13 +16,17 @@ $PRAGMA comment_recurse
 (* EXAMPLES:                                                                 *)
 (*   @set m-lib-theme.muf=_theme/fmt_obj_exit=[#AAAAAA]!@1!                  *)
 (*   @action Test;t=here                                                     *)
-(*   @muf $INCLUDE $m/lib/theme "t" match M-LIB-THEME-name .color_tell       *)
-(*     > (In grey) !Test;t!                                                  *)
+(*   @muf                                                                    *)
+(*     $INCLUDE $m/lib/theme                                                 *)
+(*     "t" match M-LIB-THEME-name M-LIB-NOTIFY-tell_color                    *)
+(*   > (In grey) !Test;t!                                                    *)
 (*                                                                           *)
 (*   @set m-lib-theme.muf=_theme/fmt_obj_exit=[#0000AA]{@1}                  *)
 (*   @set m-lib-theme.muf=_theme/fmt_obj_exit_highlight=[#FFFFFF][@1]        *)
 (*   @action Test;t=here                                                     *)
-(*   @muf $INCLUDE $m/lib/theme "t" match M-LIB-THEME-fancy_exit .color_tell *)
+(*   @muf                                                                    *)
+(*     $INCLUDE $m/lib/theme                                                 *)
+(*     "t" match M-LIB-THEME-fancy_exit M-LIB-NOTIFY-tell_color              *)
 (*     > (In blue with bright white [T]) {[T]est}                            *)
 (*                                                                           *)
 (*   @set m-lib-theme.muf=_theme/fmt_msg_tagged:[#00AA00](@1) @2             *)
@@ -222,20 +226,48 @@ $ENDDEF
 
 (* End configurable options *)
 
-$INCLUDE $m/lib/program
+$INCLUDE $m/lib/array
+$INCLUDE $m/lib/string
 $IFDEF M_LIB_COLOR
   $INCLUDE $m/lib/color
 $ELSE
-  $INCLUDE $m/lib/array
-  $DEF .color_strcat \strcat
-  $DEF .color_strcut \strcut
-  $DEF .color_strip \strip
-  $DEF .color_carve_array .carve_array
+  $DEF M-LIB-COLOR-strcut \strcut
+  $DEF M-LIB-COLOR-strcat \strcat
+  $DEF M-LIB-COLOR-strip
+  $DEF M-LIB-COLOR-escape
 $ENDIF
 
 $PUBDEF :
 
 (* ------------------------------------------------------------------------- *)
+
+$DEFINE VALID_FORMATS
+  {
+    "obj_exit"
+    "obj_exit_highlight"
+    "obj_exit_nohighlight"
+    "obj_program"
+    "obj_player_awake"
+    "obj_player_asleep"
+    "obj_player_idle"
+    "obj_player_wawake"
+    "obj_player_wasleep"
+    "obj_player_widle"
+    "obj_room"
+    "obj_thing"
+    "obj_thing_pawake"
+    "obj_thing_pasleep"
+    "obj_flagref"
+    "msg_tagged"
+    "msg_error"
+  }list
+$ENDDEF
+
+: string_cb_strcat M-LIB-COLOR-strcat ;
+: string_cb_strcut M-LIB-COLOR-strcut ;
+: string_cb_strstrip M-LIB-COLOR-strip ;
+: string_cb ( -- a ) { "strcat" 'string_cb_strcat "strcut" 'string_cb_strcut "strstrip" 'string_cb_strstrip }dict ;
+
 : theme_get ( s -- s )
   prog "_theme/" 3 pick strcat getpropstr
   dup if
@@ -248,64 +280,18 @@ $PUBDEF :
 ;
 
 : arg_sub[ str:source arr:args -- str:result ]
-  source @ "@" .color_carve_array
+  source @ "@" string_cb M-LIB-STRING-carve_array
   1 array_cut swap array_vals pop var! result
   foreach
     nip
-    dup 2 .color_strcut pop 1 .color_strcut swap pop .color_strip number? if
-      2 .color_strcut swap 1 .color_strcut swap pop .color_strip atoi --
+    dup 2 M-LIB-COLOR-strcut pop 1 M-LIB-COLOR-strcut swap pop M-LIB-COLOR-strip number? if
+      2 M-LIB-COLOR-strcut swap 1 M-LIB-COLOR-strcut swap pop M-LIB-COLOR-strip atoi --
       args @ swap [] dup not if pop "" then
       swap strcat
     then
     result @ swap strcat result !
   repeat
   result @
-;
-
-: name_prop ( d -- s )
-  dup exit? if
-    pop "fmt_obj_exit" exit
-  then
-  dup player? if
-    dup "WIZARD" flag? if
-      dup awake? if
-        dup descrleastidle descridle "idle_threshold" theme_get atoi <= if
-          pop "fmt_obj_player_wawake" exit
-        else
-          pop "fmt_obj_player_widle" exit
-        then
-      else
-        pop "fmt_obj_player_wasleep" exit
-      then
-    else
-      dup awake? if
-        dup descrleastidle descridle "idle_threshold" theme_get atoi <= if
-          pop "fmt_obj_player_awake" exit
-        else
-          pop "fmt_obj_player_idle" exit
-        then
-      else
-        pop "fmt_obj_player_asleep" exit
-      then
-    then
-  then
-  dup program? if
-    pop "fmt_obj_program" exit
-  then
-  dup room? if
-    pop "fmt_obj_room" exit
-  then
-  dup thing? if
-    dup "ZOMBIE" flag? if
-      dup awake? if
-        pop "fmt_obj_thing_pawake" exit
-      else
-        pop "fmt_obj_thing_pasleep" exit
-      then
-    else
-      pop "fmt_obj_thing" exit
-    then
-  then
 ;
 
 (* Get the aliases of an exit sorted from shortest to longest *)
@@ -611,16 +597,74 @@ $DEF EINSTRING over swap instring dup not if pop strlen else nip -- then
   0 var! highlight_me
   exitobj @ exit_highsplit foreach
     nip
+    M-LIB-COLOR-escape
     highlight_me @ if
       "fmt_obj_exit_highlight" theme_get
     else
       "fmt_obj_exit_nohighlight" theme_get
     then
     swap 1 array_make arg_sub
-    result @ swap .color_strcat result !
+    result @ swap M-LIB-COLOR-strcat result !
     highlight_me @ not highlight_me !
   repeat
   result @
+;
+
+: format_obj_type ( d -- s )
+  dup exit? if
+    pop "obj_exit" exit
+  then
+  dup player? if
+    dup "WIZARD" flag? if
+      dup awake? if
+        dup descrleastidle descridle "idle_threshold" theme_get atoi <= if
+          pop "obj_player_wawake" exit
+        else
+          pop "obj_player_widle" exit
+        then
+      else
+        pop "obj_player_wasleep" exit
+      then
+    else
+      dup awake? if
+        dup descrleastidle descridle "idle_threshold" theme_get atoi <= if
+          pop "obj_player_awake" exit
+        else
+          pop "obj_player_idle" exit
+        then
+      else
+        pop "obj_player_asleep" exit
+      then
+    then
+  then
+  dup program? if
+    pop "obj_program" exit
+  then
+  dup room? if
+    pop "obj_room" exit
+  then
+  dup thing? if
+    dup "ZOMBIE" flag? if
+      dup awake? if
+        pop "obj_thing_pawake" exit
+      else
+        pop "obj_thing_pasleep" exit
+      then
+    else
+      pop "obj_thing" exit
+    then
+  then
+  pop "obj_thing" exit
+;
+
+: theme_name[ ref:object bool:unparse -- str:name ]
+  "fmt_" object @ format_obj_type strcat theme_get { object @ name M-LIB-COLOR-escape }list arg_sub
+  unparse @ not if
+    exit
+  then
+  object @ intostr "#" swap strcat var! refstr
+  object @ unparseobj object @ name strlen refstr @ strlen + ++ strcut nip dup strlen -- strcut pop var! flagstr
+  "fmt_obj_flagref" theme_get { refstr @ flagstr @ }list arg_sub M-LIB-COLOR-strcat
 ;
 
 (*****************************************************************************)
@@ -654,53 +698,77 @@ $LIBDEF M-LIB-THEME-idle?
 (*****************************************************************************)
 (*                             M-LIB-THEME-name                              *)
 (*****************************************************************************)
-: M-LIB-THEME-name[ ref:object str:namestr bool:unparse -- str:name ]
+: M-LIB-THEME-name ( d -- s )
   (* M1 OK *)
-  object @ dbref? not if "Non-dbref argument (1)." abort then
-  namestr @ string? not if "Non-string argument (2)." abort then
-  namestr @ not if
-    object @ name namestr !
-  then
-  object @ name_prop theme_get { namestr @ }list arg_sub
-  unparse @ not if
-    exit
-  then
-  namestr !
-  object @ intostr "#" swap strcat var! refstr
-  object @ unparseobj object @ name strlen refstr @ strlen + ++ strcut nip dup strlen -- strcut pop var! flagstr
-  namestr @ "fmt_obj_flagref" theme_get { refstr @ flagstr @ }list arg_sub .color_strcat
+  "d" checkargs
+  0 theme_name
 ;
 PUBLIC M-LIB-THEME-name
 $LIBDEF M-LIB-THEME-name
 
 (*****************************************************************************)
-(*                           M-LIB-THEME-line_err                            *)
+(*                            M-LIB-THEME-format                             *)
 (*****************************************************************************)
-: M-LIB-THEME-line_err[ str:msg -- str:line ]
+: M-LIB-THEME-format[ arr:args str:format_type -- str:result ]
+  (* M1 OK *)
+  args @ array? not if "Non-array argument (1)." abort then
+  args @ foreach nip string? not if "Array of strings expected (1)." abort then repeat
+  format_type @ string? not if "Non-string argument (2)." abort then
+  format_type @ VALID_FORMATS M-LIB-ARRAY-hasval not if "Unrecognized format type (2)." abort then
+  "fmt_" format_type @ strcat theme_get args @ arg_sub
+;
+PUBLIC M-LIB-THEME-format
+$LIBDEF M-LIB-THEME-format
+
+(*****************************************************************************)
+(*                          M-LIB-THEME-format_type                          *)
+(*****************************************************************************)
+: M-LIB-THEME-format_obj_type[ ref:object -- str:format ]
+  (* M1 OK *)
+  object @ dbref? not if "Non-dbref argument (1)." abort then
+  object @ format_obj_type
+;
+PUBLIC M-LIB-THEME-format_obj_type
+$LIBDEF M-LIB-THEME-format_obj_type
+
+(*****************************************************************************)
+(*                              M-LIB-THEME-err                              *)
+(*****************************************************************************)
+: M-LIB-THEME-err[ str:msg -- str:line ]
   (* M1 OK *)
   msg @ string? not if "Non-string argument (1)." abort then
   "fmt_msg_error" theme_get { msg @ }list arg_sub
 ;
-PUBLIC M-LIB-THEME-line_err
-$LIBDEF M-LIB-THEME-line_err
+PUBLIC M-LIB-THEME-err
+$LIBDEF M-LIB-THEME-err
 
 (*****************************************************************************)
-(*                           M-LIB-THEME-line_tag                            *)
+(*                              M-LIB-THEME-tag                              *)
 (*****************************************************************************)
-: M-LIB-THEME-line_tag[ str:msg str:tag -- str:line ]
+: M-LIB-THEME-tag[ str:msg str:tag -- str:line ]
   (* M1 OK *)
   msg @ string? not if "Non-string argument (1)." abort then
   tag @ string? not if "Non-string argument (2)." abort then
   "fmt_msg_tagged" theme_get { msg @ tag @ }list arg_sub
 ;
-PUBLIC M-LIB-THEME-line_tag
-$LIBDEF M-LIB-THEME-line_tag
+PUBLIC M-LIB-THEME-tag
+$LIBDEF M-LIB-THEME-tag
 
-$PUBDEF .theme_name "" 0 M-LIB-THEME-name
-$PUBDEF .theme_unparseobj "" 1 M-LIB-THEME-name
-$PUBDEF .theme_err M-LIB-THEME-line_err
-$PUBDEF .theme_tag M-LIB-THEME-line_tag
-$PUBDEF .theme_tag_err swap M-LIB-THEME-line_err swap M-LIB-THEME-line_tag
+(*****************************************************************************)
+(*                          M-LIB-THEME-unparseobj                           *)
+(*****************************************************************************)
+: M-LIB-THEME-unparseobj ( d -- s )
+  (* M1 OK *)
+  "d" checkargs
+  1 theme_name
+;
+PUBLIC M-LIB-THEME-unparseobj
+$LIBDEF M-LIB-THEME-unparseobj
+
+(*****************************************************************************)
+(*                            M-LIB-THEME-tag_err                            *)
+(*****************************************************************************)
+$PUBDEF M-LIB-THEME-tag_err swap M-LIB-THEME-err swap M-LIB-THEME-tag
 
 : main
   "Library called as command." abort

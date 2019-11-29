@@ -159,6 +159,11 @@ $INCLUDE $m/lib/color
 $INCLUDE $m/lib/theme
 $INCLUDE $m/cmd/at_lsedit
 
+$DEF .tell M-LIB-NOTIFY-tell_color
+$DEF .err M-LIB-THEME-err
+$DEF .tag M-LIB-THEME-tag
+$DEF .tag_err M-LIB-THEME-tag_err
+
 (* ------------------------------------------------------------------------- *)
 
 : M-HELP-desc ( d -- s )
@@ -201,18 +206,9 @@ WIZCALL M-HELP-help
   }tell
 ;
 
-: maptell ( s --  )
-  dup .color_tell
-  me @ thing? me @ "VEHICLE" flag? and if
-    dup me @ "_/oecho" getpropstr dup not if pop "Outside>" then " " strcat swap strcat me @ { me @ }list M-LIB-COLOR-cast_to
-  else
-    pop
-  then
-;
-
 : chk_abort ( s --  )
   ".abort" stringpfx if
-    "Aborted!" command @ .theme_tag .color_tell
+    "Aborted!" command @ .tag .tell
     pid kill
   then
 ;
@@ -223,7 +219,7 @@ WIZCALL M-HELP-help
 
     dup if
       dup "{\"|:|say |pose }*" smatch if
-        .me swap force
+        "me" match swap force
         continue
       then
     then
@@ -248,7 +244,7 @@ WIZCALL M-HELP-help
       0 break
     then
 
-    "Please enter 'Yes' or 'No'." command @ toupper .theme_tag .color_tell
+    "Please enter 'Yes' or 'No'." command @ toupper .tag .tell
   repeat
 ;
 
@@ -308,13 +304,13 @@ WIZCALL M-HELP-help
 
     my_is_marked @ if (* Show marker if applicable *)
       over my_y @ = if
-        my_x @ .color_strcut
-        swap dup .color_strlen -- .color_strcut pop marker_get .color_strcat swap
-        .color_strcat
+        my_x @ M-LIB-COLOR-strcut
+        swap dup M-LIB-COLOR-strlen -- M-LIB-COLOR-strcut pop marker_get M-LIB-COLOR-strcat swap
+        M-LIB-COLOR-strcat
       then
     then
 
-    maptell
+    .tell
     ++
   repeat
   pop pop
@@ -328,24 +324,24 @@ $LIBDEF M-CMD-AT_MAP-display
 (*                             M-CMD-AT_MAP-edit                             *)
 (*****************************************************************************)
 : M-CMD-AT_MAP-edit[ ref:env_room -- bool:success? ]
-  .needs_mlev3
+  M-LIB-PROGRAM-needs_mlev3
   env_room @ dbref? not if "Non-dbref argument (1)." abort then
 
-  { "You are now editing the map in environment room " env_room @ unparseobj "." }join command @ toupper .theme_tag .color_tell
-  "You can get help by entering '.h' on a line by itself." command @ toupper .theme_tag .color_tell
-  "'.end' will save and exit." command @ toupper .theme_tag .color_tell
-  "'.abort' will abort any changes." command @ toupper .theme_tag .color_tell
-  "To save changes and continue editing, use '.save'." command @ toupper .theme_tag .color_tell
+  { "You are now editing the map in environment room " env_room @ unparseobj "." }join command @ toupper .tag .tell
+  "You can get help by entering '.h' on a line by itself." command @ toupper .tag .tell
+  "'.end' will save and exit." command @ toupper .tag .tell
+  "'.abort' will abort any changes." command @ toupper .tag .tell
+  "To save changes and continue editing, use '.save'." command @ toupper .tag .tell
   env_room @ "_map" M-CMD-AT_LSEDIT-ListEdit
   dup not if
-    "Aborted!" command @ toupper .theme_tag .color_tell
+    "Aborted!" command @ toupper .tag .tell
   then
 ;
 PUBLIC M-CMD-AT_MAP-edit
 $LIBDEF M-CMD-AT_MAP-edit
 
 : M-CMD-AT_MAP-position[ ref:env_room ref:mark_room -- bool:success? ]
-  .needs_mlev3
+  M-LIB-PROGRAM-needs_mlev3
   env_room @ dbref? not if "Non-dbref argument (1)." abort then
   mark_room @ dbref? not if "Non-dbref argument (2)." abort then
 
@@ -358,11 +354,11 @@ $LIBDEF M-CMD-AT_MAP-edit
     over over >= while
     "_map#/" over intostr strcat env_room @ swap getpropstr
 
-    dup .color_strlen max_x @ > if
-      dup .color_strlen max_x !
+    dup M-LIB-COLOR-strlen max_x @ > if
+      dup M-LIB-COLOR-strlen max_x !
     then
 
-    over intostr "   " over strlen strcut swap pop swap strcat " " strcat swap .color_strcat .color_tell
+    over intostr "   " over strlen strcut swap pop swap strcat " " strcat swap M-LIB-COLOR-strcat .tell
     ++
   repeat
   pop pop
@@ -390,40 +386,40 @@ $LIBDEF M-CMD-AT_MAP-edit
 
   (* Ask for coordinates *)
   begin
-    "What is this room's column number on the map?" command @ toupper .theme_tag .color_tell
-    "[Enter column number, or .abort to quit]" command @ toupper .theme_tag .color_tell
+    "What is this room's column number on the map?" command @ toupper .tag .tell
+    "[Enter column number, or .abort to quit]" command @ toupper .tag .tell
     doRead strip
     dup chk_abort
     dup number? not if
-      "Sorry, that's not a number." command @ toupper .theme_tag .color_tell
+      "Sorry, that's not a number." command @ toupper .tag .tell
       pop continue
     then
     atoi
     dup 0 <= over max_x @ > or if
-      "Invalid entry: the column number must be between 1 and " max_x @ intostr strcat "." strcat command @ toupper .theme_tag .color_tell
+      "Invalid entry: the column number must be between 1 and " max_x @ intostr strcat "." strcat command @ toupper .tag .tell
       pop continue
     then
     mark_room @ "_mapx/" env_room @ intostr strcat rot intostr setprop break
   repeat
 
   begin
-    "What is this room's row number on the map?" command @ toupper .theme_tag .color_tell
-    "[Enter column number, or .abort to quit]" command @ toupper .theme_tag .color_tell
+    "What is this room's row number on the map?" command @ toupper .tag .tell
+    "[Enter column number, or .abort to quit]" command @ toupper .tag .tell
     doRead strip
     dup chk_abort
     dup number? not if
-      "Sorry, that's not a number." command @ toupper .theme_tag .color_tell
+      "Sorry, that's not a number." command @ toupper .tag .tell
       pop continue
     then
     atoi
     dup 0 <= over max_y @ > or if
-      "Invalid entry: the column number must be between 1 and " max_y @ intostr strcat "." strcat command @ toupper .theme_tag .color_tell
+      "Invalid entry: the column number must be between 1 and " max_y @ intostr strcat "." strcat command @ toupper .tag .tell
       pop continue
     then
     mark_room @ "_mapy/" env_room @ intostr strcat rot intostr setprop break
   repeat
 
-  "Set." command @ toupper .theme_tag .color_tell
+  "Set." command @ toupper .tag .tell
   1
 ;
 
@@ -510,7 +506,7 @@ $LIBDEF M-CMD-AT_MAP-match
 (*                           M-CMD-AT_MAP-reg_add                            *)
 (*****************************************************************************)
 : M-CMD-AT_MAP-reg_add[ str:map_name ref:env_room -- bool:success? ]
-  .needs_mlev3
+  M-LIB-PROGRAM-needs_mlev3
   map_name @ string? not if "Non-string argument (1)." abort then
   map_name @ prop-name-ok? not if "Invalid map name (1)." abort then
   map_name @ "/" instr map_name @ "~" instr 1 = or map_name @ "@" instr 1 = or if "Invalid map name (1)." abort then
@@ -532,7 +528,7 @@ $LIBDEF M-CMD-AT_MAP-reg_add
 (*                           M-CMD-AT_MAP-reg_del                            *)
 (*****************************************************************************)
 : M-CMD-AT_MAP-reg_del[ ref:env_room -- bool:success? ]
-  .needs_mlev3
+  M-LIB-PROGRAM-needs_mlev3
   env_room @ dbref? not if "Non-dbref argument (1)." abort then
 
   env_room @ not if
@@ -573,7 +569,7 @@ $LIBDEF M-CMD-AT_MAP-reg_get
 (*                            M-CMD-AT_MAP-remove                            *)
 (*****************************************************************************)
 : M-CMD-AT_MAP-remove[ ref:env_room -- bool:success? ]
-  .needs_mlev3
+  M-LIB-PROGRAM-needs_mlev3
   env_room @ dbref? not if "Non-dbref argument (1)." abort then
 
   env_room @ not if
@@ -595,27 +591,27 @@ $LIBDEF M-CMD-AT_MAP-remove
     M-CMD-AT_MAP-match
 
     dup #-2 = if
-      pop pop "I don't know which one you mean!" command @ toupper .theme_tag_err .color_tell exit
+      pop pop "I don't know which one you mean!" command @ toupper .tag_err .tell exit
     then
 
     dup ok? not if
-      pop pop "I can't find that map." command @ toupper .theme_tag_err .color_tell exit
+      pop pop "I can't find that map." command @ toupper .tag_err .tell exit
     then
   else
-    pop .loc
+    pop "me" match location
   then
 
   map_env_get
 
   dup not if
-    "Area unmapped." command @ toupper .theme_tag .color_tell exit
+    "Area unmapped." command @ toupper .tag .tell exit
   then
 
-  .me over controls not if
-    "Permission denied." command @ toupper .theme_tag_err .color_tell exit
+  "me" match over controls not if
+    "Permission denied." command @ toupper .tag_err .tell exit
   then
 
-  .loc M-CMD-AT_MAP-position not if
+  "me" match location M-CMD-AT_MAP-position not if
     exit
   then
 ;
@@ -625,23 +621,23 @@ $LIBDEF M-CMD-AT_MAP-remove
     M-CMD-AT_MAP-match
 
     dup #-2 = if
-      pop "I don't know which one you mean!" command @ toupper .theme_tag_err .color_tell exit
+      pop "I don't know which one you mean!" command @ toupper .tag_err .tell exit
     then
 
     dup ok? not if
-      pop "I can't find that map." command @ toupper .theme_tag_err .color_tell exit
+      pop "I can't find that map." command @ toupper .tag_err .tell exit
     then
   else
-    pop .loc
+    pop "me" match location
   then
 
   dup map_env_get not if
-    "Area unmapped." command @ toupper .theme_tag .color_tell exit
+    "Area unmapped." command @ toupper .tag .tell exit
   then
 
   dup room? if
     (* If you're asking for the map of a room, show your position on that room's map *)
-    .loc
+    "me" match location
   else
     (* Otherwise, show the position object on its own map. *)
     dup
@@ -653,12 +649,12 @@ $LIBDEF M-CMD-AT_MAP-remove
 : cmd_list ( s --  )
   M-CMD-AT_MAP-reg_get
   dup not if
-    pop "Sorry, no maps have been installed." command @ toupper .theme_tag .color_tell exit
+    pop "Sorry, no maps have been installed." command @ toupper .tag .tell exit
   then
-  "Available maps:" command @ toupper .theme_tag .color_tell
+  "Available maps:" command @ toupper .tag .tell
   foreach
     nip
-    "    " swap strcat command @ toupper .theme_tag .color_tell
+    "    " swap strcat command @ toupper .tag .tell
   repeat
 ;
 
@@ -667,69 +663,69 @@ $LIBDEF M-CMD-AT_MAP-remove
     M-CMD-AT_MAP-match
 
     dup #-2 = if
-      pop pop "I don't know which one you mean!" command @ toupper .theme_tag_err .color_tell exit
+      pop pop "I don't know which one you mean!" command @ toupper .tag_err .tell exit
     then
 
     dup ok? not if
-      pop pop "I can't find that map." command @ toupper .theme_tag_err .color_tell exit
+      pop pop "I can't find that map." command @ toupper .tag_err .tell exit
     then
   else
-    pop .loc
+    pop "me" match location
   then
 
   dup map_env_get not if
-    pop "There's no map to remove." command @ toupper .theme_tag_err .color_tell exit
+    pop "There's no map to remove." command @ toupper .tag_err .tell exit
   then
 
-  .me over map_env_get controls not if
-    pop "Permission denied." command @ toupper .theme_tag_err .color_tell exit
+  "me" match over map_env_get controls not if
+    pop "Permission denied." command @ toupper .tag_err .tell exit
   then
 
   map_env_get
 
   dup #-1 M-CMD-AT_MAP-display pop
 
-  "Are you certian you want to remove this map? (y/n)" command @ toupper .theme_tag .color_tell
+  "Are you certian you want to remove this map? (y/n)" command @ toupper .tag .tell
   read_yes_no if
     dup M-CMD-AT_MAP-remove if
-      "Removed." command @ toupper .theme_tag .color_tell
+      "Removed." command @ toupper .tag .tell
     else
-      "Error removing map!" command @ toupper .theme_tag .color_tell
+      "Error removing map!" command @ toupper .tag .tell
     then
   else
-    "Aborted!" command @ toupper .theme_tag .color_tell exit
+    "Aborted!" command @ toupper .tag .tell exit
   then
 ;
 
 : cmd_wizcreate ( s --  )
-  .me "WIZARD" flag? not if
-    pop "You have to be an administrator to use this command." command @ toupper .theme_tag_err .color_tell exit
+  "me" match "WIZARD" flag? not if
+    pop "You have to be an administrator to use this command." command @ toupper .tag_err .tell exit
   then
 
   dup not if
-    pop "Please specify an environment room." command @ toupper .theme_tag_err .color_tell exit
+    pop "Please specify an environment room." command @ toupper .tag_err .tell exit
   then
 
   M-CMD-AT_MAP-match
 
   dup #-2 = if
-    pop "I don't know which one you mean!" command @ toupper .theme_tag_err .color_tell exit
+    pop "I don't know which one you mean!" command @ toupper .tag_err .tell exit
   then
 
   dup ok? not if
-    pop "I can't find that map." command @ toupper .theme_tag_err .color_tell exit
+    pop "I can't find that map." command @ toupper .tag_err .tell exit
   then
 
   dup "_map#" getpropstr number? if
-    pop "Existing map found.  Try map #edit" command @ toupper .theme_tag_err .color_tell exit
+    pop "Existing map found.  Try map #edit" command @ toupper .tag_err .tell exit
   then
 
-  .me over controls not if (* Probably not needed *)
-    "Permission denied." command @ toupper .theme_tag_err .color_tell exit
+  "me" match over controls not if (* Probably not needed *)
+    "Permission denied." command @ toupper .tag_err .tell exit
   then
 
-  "What is the name of this map?" command @ toupper .theme_tag .color_tell
-  "[Enter map name, or .abort to quit]" command @ toupper .theme_tag .color_tell
+  "What is the name of this map?" command @ toupper .tag .tell
+  "[Enter map name, or .abort to quit]" command @ toupper .tag .tell
   DoRead strip
   dup chk_abort
 
@@ -739,7 +735,7 @@ $LIBDEF M-CMD-AT_MAP-remove
   over "@" instr 1 = or
   over "{here|home|me|nil}" smatch or
   if
-    pop "Sorry, that's not a valid map name." command @ toupper .theme_tag_err .color_tell exit
+    pop "Sorry, that's not a valid map name." command @ toupper .tag_err .tell exit
   then
 
   swap
@@ -749,38 +745,38 @@ $LIBDEF M-CMD-AT_MAP-remove
   then
 
   M-CMD-AT_MAP-reg_add not if
-    "Could not register map!" command @ toupper .theme_tag_err .color_tell exit
+    "Could not register map!" command @ toupper .tag_err .tell exit
   then
 ;
 
 : cmd_create ( s --  )
   dup not if
-    pop "Please specify an environment room." command @ toupper .theme_tag_err .color_tell exit
+    pop "Please specify an environment room." command @ toupper .tag_err .tell exit
   then
 
   M-CMD-AT_MAP-match
 
   dup #-2 = if
-    pop "I don't know which one you mean!" command @ toupper .theme_tag_err .color_tell exit
+    pop "I don't know which one you mean!" command @ toupper .tag_err .tell exit
   then
 
   dup ok? not if
-    pop "I can't find that map." command @ toupper .theme_tag_err .color_tell exit
+    pop "I can't find that map." command @ toupper .tag_err .tell exit
   then
 
   dup room? not if
-    "Why would you want a map on that?" command @ toupper .theme_tag_err .color_tell exit
+    "Why would you want a map on that?" command @ toupper .tag_err .tell exit
   then
 
   dup "_map#" getpropstr number? if
-    pop "Existing map found.  Try map #edit" command @ toupper .theme_tag_err .color_tell exit
+    pop "Existing map found.  Try map #edit" command @ toupper .tag_err .tell exit
   then
 
-  .me over controls not if
-    "Permission denied." command @ toupper .theme_tag_err .color_tell exit
+  "me" match over controls not if
+    "Permission denied." command @ toupper .tag_err .tell exit
   then
 
-  dup .loc = if
+  dup "me" match location = if
     "WARNING: ENSURE YOU ARE RUNNING THIS COMMAND IN YOUR ENVIRONMENT ROOM." "bold,red" textattr .tell
     "         If not, type '.abort' now!"                                    "bold,red" textattr .tell
   then
@@ -795,24 +791,24 @@ $LIBDEF M-CMD-AT_MAP-remove
     M-CMD-AT_MAP-match
 
     dup #-2 = if
-      pop pop "I don't know which one you mean!" command @ toupper .theme_tag_err .color_tell exit
+      pop pop "I don't know which one you mean!" command @ toupper .tag_err .tell exit
     then
 
     dup ok? not if
-      pop pop "I can't find that map." command @ toupper .theme_tag_err .color_tell exit
+      pop pop "I can't find that map." command @ toupper .tag_err .tell exit
     then
   else
-    .loc
+    "me" match location
   then
 
   map_env_get
 
   dup not if
-    pop "Area unmapped." command @ toupper .theme_tag .color_tell exit
+    pop "Area unmapped." command @ toupper .tag .tell exit
   then
 
-  .me over controls not if
-    "Permission denied." command @ toupper .theme_tag_err .color_tell exit
+  "me" match over controls not if
+    "Permission denied." command @ toupper .tag_err .tell exit
   then
 
   M-CMD-AT_MAP-edit not if
@@ -837,10 +833,10 @@ $LIBDEF M-CMD-AT_MAP-remove
     "#list"      over stringpfx if pop cmd_list      exit then
     "#show"      over stringpfx if pop cmd_show      exit then
 
-    "Unknown #option." command @ toupper .theme_tag_err .color_tell exit
+    "Unknown #option." command @ toupper .tag_err .tell exit
   then
 
-  "Please specify an #option." command @ toupper .theme_tag_err .color_tell exit
+  "Please specify an #option." command @ toupper .tag_err .tell exit
 ;
 .
 c
