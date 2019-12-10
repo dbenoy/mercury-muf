@@ -169,7 +169,7 @@ WIZCALL M-HELP-help
   dup ":" instr 1 = if
     1 strcut swap pop
     "me" match name
-    over 1 strcut pop dup "-" = over ":" = or swap "," = or not if
+    over pose-separator? not if
       " " strcat
     then
     swap strcat

@@ -65,7 +65,7 @@ WIZCALL M-HELP-help
     exit
   then
   me @ name
-  over 1 strcut pop dup "-" = over "'" = or over "," = or swap " " = or not if
+  over pose-separator? not if
     " " strcat
   then
   swap strcat
