@@ -9,37 +9,186 @@ $PRAGMA comment_recurse
 (*                                                                           *)
 (*   GitHub: https://github.com/dbenoy/mercury-muf (See for install info)    *)
 (*                                                                           *)
+(* CUSTOM STRING TYPE ROUTINES:                                              *)
+(*   You can define your own custom string types. Typically you would use    *)
+(*   this for color-coded strings, but you can use it to include other kinds *)
+(*   of metadata in strings as well. To do so, you define a dictionary       *)
+(*   object, and provide the following callback function pointers:           *)
+(*                                                                           *)
+(*     "strstrip" ( ? -- s )                                                 *)
+(*       This callback takes the custom string type variable, strips away    *)
+(*       all metadata and turns it into a plain string. If the string has    *)
+(*       special escapes that produce literals (Such as \~& for FB5 color    *)
+(*       codes, for example) then those sequences should be resolved and the *)
+(*       escaped version included in the string.                             *)
+(*                                                                           *)
+(*     "strcut" ( ? i -- ? ? )                                               *)
+(*       This callback works like the STRCUT primitive, cutting your custom  *)
+(*       string type at the given character, splitting it into two custom    *)
+(*       string types. Like strstrip above, it should resolve any special    *)
+(*       escape sequences that produce literals, and count those characters  *)
+(*       when deciding where to cut. Any metadata can be preserved as you    *)
+(*       see fit.                                                            *)
+(*                                                                           *)
+(*     "strcat" ( ? ? -- ? )                                                 *)
+(*       Like the STRCAT primitive, concatenate two custom string type       *)
+(*       variables to produce one. Any metadata can be preserved as you see  *)
+(*       fit.                                                                *)
+(*                                                                           *)
+(*     "toupper" ( ? -- ? )                                                  *)
+(*       Like the TOUPPER primitive, change all characters in your custom    *)
+(*       string type to uppercase.                                           *)
+(*                                                                           *)
+(*     "tolower" ( ? -- ? )                                                  *)
+(*       Like the TOLOWER primitive, change all characters in your custom    *)
+(*       string type to lowercase.                                           *)
+(*                                                                           *)
+(*   Functions ending in _cb should work equivalently to their non-_cb       *)
+(*   counterparts, but you pass in the callback dictionary as the last       *)
+(*   parameter. The following _cb routines are available:                    *)
+(*     M-LIB-STRING-array_interpret_cb                                       *)
+(*     M-LIB-STRING-}join_cb                                                 *)
+(*     M-LIB-STRING-array_join_cb                                            *)
+(*     M-LIB-STRING-}cat_cb                                                  *)
+(*     M-LIB-STRING-atoi_cb                                                  *)
+(*     M-LIB-STRING-carve_array_cb                                           *)
+(*     M-LIB-STRING-dice_array_cb                                            *)
+(*     M-LIB-STRING-einstr_cb                                                *)
+(*     M-LIB-STRING-einstring_cb                                             *)
+(*     M-LIB-STRING-erinstr_cb                                               *)
+(*     M-LIB-STRING-erinstring_cb                                            *)
+(*     M-LIB-STRING-explode_array_cb                                         *)
+(*     M-LIB-STRING-explode_cb                                               *)
+(*     M-LIB-STRING-hex?_cb                                                  *)
+(*     M-LIB-STRING-instr_cb                                                 *)
+(*     M-LIB-STRING-instring_cb                                              *)
+(*     M-LIB-STRING-midstr_cb                                                *)
+(*     M-LIB-STRING-number?_cb                                               *)
+(*     M-LIB-STRING-regslice_cb                                              *)
+(*     M-LIB-STRING-rinstr_cb                                                *)
+(*     M-LIB-STRING-rinstring_cb                                             *)
+(*     M-LIB-STRING-rsplit_cb                                                *)
+(*     M-LIB-STRING-single_space_cb                                          *)
+(*     M-LIB-STRING-slice_array_cb                                           *)
+(*     M-LIB-STRING-split_cb                                                 *)
+(*     M-LIB-STRING-strcat_cb                                                *)
+(*     M-LIB-STRING-strcmp_cb                                                *)
+(*     M-LIB-STRING-strcut_cb                                                *)
+(*     M-LIB-STRING-stringcmp_cb                                             *)
+(*     M-LIB-STRING-stringpfx_cb                                             *)
+(*     M-LIB-STRING-strip_cb                                                 *)
+(*     M-LIB-STRING-striplead_cb                                             *)
+(*     M-LIB-STRING-striptail_cb                                             *)
+(*     M-LIB-STRING-strlen_cb                                                *)
+(*     M-LIB-STRING-strncmp_cb                                               *)
+(*     M-LIB-STRING-strtof_cb                                                *)
+(*     M-LIB-STRING-subst_cb                                                 *)
+(*     M-LIB-STRING-toupper_cb                                               *)
+(*     M-LIB-STRING-tolower_cb                                               *)
+(*     M-LIB-STRING-wordwrap_cb                                              *)
+(*     M-LIB-STRING-xtoi_cb                                                  *)
+(*     M-LIB-STRING-zeropad_cb                                               *)
+(*                                                                           *)
 (* PUBLIC ROUTINES:                                                          *)
+(*   M-LIB-STRING-carve_array ( s s -- a )                                   *)
+(*     Like the EXPLODE_ARRAY primitive, except the separators are kept.     *)
+(*     They remain at the beginning of their string. For example:            *)
+(*       "a b  c-- d" " " M-LIB-STRING-carve_array                           *)
+(*       Result: {"a", " b", " ", " c--", " d"}                              *)
+(*                                                                           *)
+(*     Each element starts with a separator except for the first. If the     *)
+(*     source string starts with a separator then the first element will be  *)
+(*     an empty string, so the number of elements will always be the number  *)
+(*     of separators found, plus one.                                        *)
+(*                                                                           *)
 (*   M-LIB-STRING-command_parse ( s -- s s s )                               *)
 (*     '$lib/strings style' command string parsing.                          *)
 (*       Before: " #option  tom dick  harry = message "                      *)
 (*       After:  "option" "tom dick harry" " message "                       *)
 (*                                                                           *)
+(*   M-LIB-STRING-dice_array ( s a -- a )                                    *)
+(*     Like M-LIB-STRING-slice_array, but you can supply multiple separatior *)
+(*     options. For example:                                                 *)
+(*       "a b  c-- d" { " " "--" }list M-LIB-STRING-dice_array               *)
+(*       Result: {"a", " ", "b", " ", "", " ", "c", "--", "", " ", "d"}      *)
+(*                                                                           *)
+(*     The array will never begin or end with a separator, so it will always *)
+(*     have an odd number of elements.                                       *)
+(*                                                                           *)
+(*   M-LIB-STRING-einstr ( s s -- i )                                        *)
+(*   M-LIB-STRING-einstring ( s s -- i )                                     *)
+(*   M-LIB-STRING-erinstr ( s s -- i )                                       *)
+(*   M-LIB-STRING-erinstring ( s s -- i )                                    *)
+(*     These e- prefixed versions work like their equivalent built-in        *)
+(*     primitives, except they return a character number starting at 0. If   *)
+(*     the substring is not found, it returns one character past the end of  *)
+(*     the string. This is suitable for use with STRCUT if you want to cut   *)
+(*     just before the found instance of the substring.                      *)
+(*                                                                           *)
+(*   M-LIB-STRING-hex? ( s -- i )                                            *)
+(*     This is like the NUMBER? primitive for unsigned hexadecimal numbers.  *)
+(*     It will return true if the string contains only 0 to 9, A to F. It is *)
+(*     case insensitive.                                                     *)
+(*                                                                           *)
 (*   M-LIB-STRING-itox ( i -- s )                                            *)
 (*     Convert an integer into a hexadecimal string. This works bit-by-bit   *)
 (*     so negative numbers will appear in their two's compliment form.       *)
 (*                                                                           *)
-(*   M-LIB-STRING-xtoi ( s -- i )                                            *)
-(*     Convert a hexadecimal string to an integer. MUF uses 32-bit signed    *)
-(*     integers so this may result in a negative number. Like the atoi       *)
-(*     primitive, 0 is returned if the string is not a valid hexadecimal     *)
-(*     number.                                                               *)
+(*   M-LIB-STRING-regslice ( s s i -- a )                                    *)
+(*     Like the REGSPLIT primitive, except separators are kept. For example: *)
+(*       "a b  c-- d" " |--" 0 M-LIB-STRING-regslice                         *)
+(*       Result: {"a", " ", "b", " ", "", " ", "c", "--", "", " ", "d"}      *)
+(*                                                                           *)
+(*     The array will never begin or end with a separator, so it will always *)
+(*     have an odd number of elements.                                       *)
 (*                                                                           *)
 (*   M-LIB-STRING-single_space ( s -- s )                                    *)
 (*     Removes every series of multiple spaces in a row and replaces them    *)
 (*     each with a single space.                                             *)
 (*                                                                           *)
-(*   M-LIB-STRING-join ( ... i s -- s )                                      *)
-(*     The inverse of the EXPLODE primitive.                                 *)
-(*                                                                           *)
-(*   M-LIB-STRING-sito ( i -- s )                                            *)
+(*   M-LIB-STRING-sitox ( i -- s )                                           *)
 (*     Like M-LIB-STRING-itox but it will return negative hexadecimal        *)
 (*     numbers.                                                              *)
 (*                                                                           *)
-(*   M-LIB-STRING-zeropad ( s i -- s' )                                      *)
+(*   M-LIB-STRING-slice_array ( s s -- a )                                   *)
+(*     Like the EXPLODE_ARRAY primitive, except the separators are kept. For *)
+(*     example:                                                              *)
+(*       "a b  c-- d" " " M-LIB-STRING-slice_array                           *)
+(*       Result: {"a", " ", "b", " ", "", " ", "c--", " ", "d"}              *)
+(*                                                                           *)
+(*     The array will never begin or end with a separator, so it will always *)
+(*     have an odd number of elements.                                       *)
+(*                                                                           *)
+(*   M-LIB-STRING-wordwrap[ str:source int:width_wrap dict:opts --           *)
+(*                          arr:lines ]                                      *)
+(*     Takes a string and wraps it into multiple lines at the given wrapping *)
+(*     width. If a single word exceeds the wrapping with, then the line will *)
+(*     exceed the wrapping width. 'opts' is reserved for future use and      *)
+(*     should be an empty dictionary.                                        *)
+(*                                                                           *)
+(*   M-LIB-STRING-xtoi ( s -- i )                                            *)
+(*     Convert a hexadecimal string to an integer. MUF uses 32-bit signed    *)
+(*     integers so this may result in a negative number. Like the ATOI       *)
+(*     primitive, 0 is returned if the string is not a valid hexadecimal     *)
+(*     number.                                                               *)
+(*                                                                           *)
+(*   M-LIB-STRING-zeropad ( s i -- s )                                       *)
 (*     Pad string s out with zeros to i characters.                          *)
 (*                                                                           *)
 (*   The standard $lib/strings definitions are also available.               *)
+(*                                                                           *)
+(*  TECHNICAL NOTES:                                                         *)
+(*    Callback versions of some string primitives are missing. They may be   *)
+(*    added at some point.                                                   *)
+(*      array_fmtstrings                                                     *)
+(*      fmtstring                                                            *)
+(*      pronoun_sub                                                          *)
+(*      regexp                                                               *)
+(*      regsplit                                                             *)
+(*      regsplit_noempty                                                     *)
+(*      regsub                                                               *)
+(*      smatch                                                               *)
+(*      tokensplit                                                           *)
 (*                                                                           *)
 (*****************************************************************************)
 (* Revision History:                                                         *)
@@ -67,18 +216,24 @@ $PRAGMA comment_recurse
 $VERSION 1.000
 $AUTHOR  Daniel Benoy
 $NOTE    String manipulation routines.
-$DOCCMD  @list __PROG__=2-61
+$DOCCMD  @list __PROG__=2-212
 
 (* ------------------------------------------------------------------------- *)
-
-$INCLUDE $m/lib/array
 
 $PUBDEF :
 
-(* ------------------------------------------------------------------------- *)
+: regslice[ str:text str:pattern int:flags -- list:results ]
+  {
+    text @ begin
+      dup pattern @ flags @ regexp nip
+      dup not if pop break then
+      1 array_cut pop array_vals pop array_vals pop
+      -rot -- strcut
+      rot strcut
+    repeat
+  }list
+;
 
-(* Iterate over a string, separating it whenever anything inside a given array is found and producing an array of all the elements *)
-(* "01x2345y67" { "x" "y" }list -> { "01" "x" "2345" "y" "67" }list *)
 : dice_array[ str:source arr:sep -- arr:result ]
   { }list var! result
   begin
@@ -110,7 +265,7 @@ $PUBDEF :
   result @
 ;
 
-: carve_array ( s1 s2 -- a )
+: carve_array ( s s -- a )
   dup -rot explode_array
   1 array_cut foreach
     nip
@@ -119,7 +274,7 @@ $PUBDEF :
   nip
 ;
 
-: slice_array ( s1 s2 -- a )
+: slice_array ( s s -- a )
   dup -rot explode_array
   1 array_cut foreach
     nip
@@ -128,229 +283,61 @@ $PUBDEF :
   nip
 ;
 
-: einstring ( s s1 -- i )
+: einstr ( s s -- i )
+  over swap instr dup not if pop strlen else nip -- then
+;
+
+: einstring ( s s -- i )
   over swap instring dup not if pop strlen else nip -- then
 ;
 
-: cb_strstrip ( s a -- s )
-  2 try
-    "strstrip" [] execute
-    depth 1 = not if "Unexpected number of results from custom 'strstrip' call." abort then
-  catch
-    abort
-  endcatch
+: erinstr ( s s -- i )
+  over swap rinstr dup not if pop strlen else nip -- then
 ;
 
-: cb_strcut ( s i a -- s1 s2 )
-  3 try
-    "strcut" [] execute
-    depth 2 = not if "Unexpected number of results from custom 'strcut' call." abort then
-  catch
-    abort
-  endcatch
+: erinstring ( s s -- i )
+  over swap rinstring dup not if pop strlen else nip -- then
 ;
 
-: cb_strcat ( s1 s2 a -- s )
-  3 try
-    "strcat" [] execute
-    depth 1 = not if "Unexpected number of results from custom 'strcat' call." abort then
-  catch
-    abort
-  endcatch
-;
-
-: cb_strlen ( s a -- i )
-  var! cbs
-  cbs @ cb_strstrip
-  strlen
-;
-
-: cb_instr ( s s1 a -- i )
-  var! cbs
-  swap cbs @ cb_strstrip swap
-  cbs @ cb_strstrip
-  instr
-;
-
-: cb_rinstr ( s s1 a -- i )
-  var! cbs
-  swap cbs @ cb_strstrip swap
-  cbs @ cb_strstrip
-  rinstr
-;
-
-: cb_instring ( s s1 a -- i )
-  var! cbs
-  swap cbs @ cb_strstrip swap
-  cbs @ cb_strstrip
-  instring
-;
-
-: cb_rinstring ( s s1 a -- i )
-  var! cbs
-  swap cbs @ cb_strstrip swap
-  cbs @ cb_strstrip
-  rinstring
-;
-
-: cb_einstring ( s s1 a -- i )
-  var! cbs
-  swap cbs @ cb_strstrip swap
-  cbs @ cb_strstrip
-  einstring
-;
-
-: cb_striplead ( s a -- s )
-  var! cbs
-  dup cbs @ cb_strlen over cbs @ cb_strstrip striplead strlen -
-  cbs @ cb_strcut swap pop
-;
-
-: cb_striptail ( s a -- s )
-  var! cbs
-  dup cbs @ cb_strstrip striptail strlen
-  cbs @ cb_strcut pop
-;
-
-: cb_strip ( s a -- s )
-  var! cbs
-  cbs @ cb_striplead cbs @ cb_striptail
-;
-
-: cb_dice_array[ str:source arr:sep dict:cbs -- arr:result ]
-  source @ cbs @ cb_strstrip var! source_stripped
-  { sep @ foreach nip cbs @ cb_strstrip repeat }list var! sep_stripped
-  source_stripped @ sep_stripped @ dice_array
-  {
-    swap foreach
-      nip
-      source @ swap strlen cbs @ cb_strcut source !
-    repeat
-  }list
-;
-
-: cb_carve_array[ str:source str:sep dict:cbs -- arr:result ]
-  source @ cbs @ cb_strstrip sep @ cbs @ cb_strstrip carve_array
-  { source @ rot foreach nip strlen cbs @ cb_strcut repeat }list
-;
-
-: cb_slice_array[ str:source str:sep dict:cbs -- arr:result ]
-  source @ cbs @ cb_strstrip sep @ cbs @ cb_strstrip slice_array
-  { source @ rot foreach nip strlen cbs @ cb_strcut repeat }list
-;
-
-: cb_explode_array[ str:source str:sep dict:cbs -- arr:result ]
-  source @ cbs @ cb_strstrip sep @ cbs @ cb_strstrip explode_array
-  { source @ rot foreach nip strlen cbs @ cb_strcut 1 cbs @ cb_strcut swap pop repeat }list
-;
-
-: sms ( s -- s )
-  begin
-    " " "  " subst
-    dup "  " instr not
-  until
+: single_space ( s -- s )
+  " +" " " REG_ALL regsub
 ;
 
 : hex? ( s -- i )
+  "^[0-9A-F]+$" REG_ICASE regexp pop not not
+;
+
+: xtoi ( s -- i )
+  (* Return 0 if there are any invalid characters *)
+  dup hex? not if
+    pop 0 exit
+  then
+  (* Truncate to 32-bits worth of hexadecimal *)
+  dup strlen
+  8 - dup 0 <= if
+    pop
+  else
+    strcut nip
+  then
+  (* Convert and return*)
+  0 var! retval
+  toupper
   begin
     1 strcut swap
-    dup number? not swap ctoi dup "A" ctoi < swap "F" ctoi > or and if (* expects caps *)
-      pop 0 exit
+    dup number? if
+      atoi
+    else
+      ctoi
+      "A" ctoi - 10 +
     then
+    retval @ 4 bitshift swap + retval !
     dup not
   until
-  pop 1
+  pop
+  retval @
 ;
 
-: standard_strstrip ( s -- s ) ;
-: standard_strcut ( s i -- s1 s2 ) strcut ;
-: standard_strcat ( s1 s2 -- s ) strcat ;
-
-(* Take the callback list in user supplied format and clean it up into the format expected by the internal code *)
-: string_cbs_process[ dict:cbs_in -- dict:cbs_out ]
-  var cb
-  (* Set defaults *)
-  {
-    "strstrip" 'standard_strstrip
-    "strcut" 'standard_strcut
-    "strcat" 'standard_strcat
-  }dict var! cbs_out
-  (* Handle function pointers *)
-  { "strstrip" "strcut" "strcat" }list foreach
-    nip
-    cb !
-    cbs_in @ cb @ [] address? not if continue then
-    cbs_in @ cb @ [] cbs_out @ cb @ ->[] cbs_out !
-  repeat
-  (* Return result *)
-  cbs_out @
-;
-
-(*****************************************************************************)
-(*                         M-LIB-STRING-command_parse                        *)
-(*****************************************************************************)
-: M-LIB-STRING-command_parse ( s -- s s s )
-  (* M1 OK *)
-  "s" checkargs
-  "=" rsplit swap
-  striplead dup "#" instr 1 = if
-    1 strcut nip
-    " " split
-  else
-    "" swap
-  then
-  strip
-  sms
-  rot
-;
-PUBLIC M-LIB-STRING-command_parse
-$LIBDEF M-LIB-STRING-command_parse
-
-(*****************************************************************************)
-(*                          M-LIB-STRING-carve_array                         *)
-(*****************************************************************************)
-: M-LIB-STRING-carve_array[ str:source str:sep dict:cbs -- arr:result ]
-  (* M1 OK *)
-  source @ string? not if "Non-string argument (1)." abort then
-  sep @ string? not if "Non-string argument (2)." abort then
-  cbs @ dictionary? not if "Non-dictionary argument (3)." abort then
-  cbs @ string_cbs_process cbs !
-  source @ sep @ cbs @ cb_carve_array
-;
-PUBLIC M-LIB-STRING-carve_array
-$LIBDEF M-LIB-STRING-carve_array
-
-(*****************************************************************************)
-(*                          M-LIB-STRING-dice_array                          *)
-(*****************************************************************************)
-: M-LIB-STRING-dice_array[ str:source arr:sep dict:cbs -- arr:result ]
-  (* M1 OK *)
-  source @ string? not if "Non-string argument (1)." abort then
-  sep @ array? not if "Non-array argument (2)." abort then
-  cbs @ dictionary? not if "Non-dictionary argument (3)." abort then
-  cbs @ string_cbs_process cbs !
-  source @ sep @ cbs @ cb_dice_array
-;
-PUBLIC M-LIB-STRING-dice_array
-$LIBDEF M-LIB-STRING-dice_array
-
-(*****************************************************************************)
-(*                             M-LIB-STRING-hex?                             *)
-(*****************************************************************************)
-: M-LIB-STRING-hex? ( s -- i )
-  (* M1 OK *)
-  "s" checkargs
-  toupper hex?
-;
-PUBLIC M-LIB-STRING-hex?
-$LIBDEF M-LIB-STRING-hex?
-
-(*****************************************************************************)
-(*                             M-LIB-STRING-itox                             *)
-(*****************************************************************************)
-: M-LIB-STRING-itox ( i -- s )
-  (* M1 OK *)
-  "i" checkargs
+: itox ( i -- s )
   "" var! retval
   8 begin
     swap
@@ -369,8 +356,570 @@ $LIBDEF M-LIB-STRING-hex?
   pop pop
   retval @
 ;
+
+: strstrip_cb ( ? a -- ? )
+  2 try
+    "strstrip" [] execute
+    depth 1 = not if "Unexpected number of results from 'strstrip' callback." abort then
+  catch
+    abort
+  endcatch
+;
+
+: strcut_cb ( ? i cbs -- ? ? )
+  3 try
+    "strcut" [] execute
+    depth 2 = not if "Unexpected number of results from 'strcut' callback." abort then
+  catch
+    abort
+  endcatch
+;
+
+: strcat_cb ( ? ? cbs -- ? )
+  3 try
+    "strcat" [] execute
+    depth 1 = not if "Unexpected number of results from 'strcat' callback." abort then
+  catch
+    abort
+  endcatch
+;
+
+: toupper_cb ( ? cbs -- ? )
+  2 try
+    "toupper" [] execute
+    depth 1 = not if "Unexpected number of results from 'toupper' callback." abort then
+  catch
+    abort
+  endcatch
+;
+
+: tolower_cb ( ? cbs -- ? )
+  2 try
+    "tolower" [] execute
+    depth 1 = not if "Unexpected number of results from 'tolower' callback." abort then
+  catch
+    abort
+  endcatch
+;
+
+: strlen_cb ( s a -- i )
+  strstrip_cb strlen
+;
+
+: instr_cb ( s s a -- i )
+  var! cbs
+  swap cbs @ strstrip_cb swap
+  cbs @ strstrip_cb
+  instr
+;
+
+: rinstr_cb ( s s a -- i )
+  var! cbs
+  swap cbs @ strstrip_cb swap
+  cbs @ strstrip_cb
+  rinstr
+;
+
+: instring_cb ( s s a -- i )
+  var! cbs
+  swap cbs @ strstrip_cb swap
+  cbs @ strstrip_cb
+  instring
+;
+
+: rinstring_cb ( s s a -- i )
+  var! cbs
+  swap cbs @ strstrip_cb swap
+  cbs @ strstrip_cb
+  rinstring
+;
+
+: einstr_cb ( s s a -- i )
+  var! cbs
+  swap cbs @ strstrip_cb swap
+  cbs @ strstrip_cb
+  einstr
+;
+
+: einstring_cb ( s s a -- i )
+  var! cbs
+  swap cbs @ strstrip_cb swap
+  cbs @ strstrip_cb
+  einstring
+;
+
+: erinstr_cb ( s s a -- i )
+  var! cbs
+  swap cbs @ strstrip_cb swap
+  cbs @ strstrip_cb
+  einstr
+;
+
+: erinstring_cb ( s s a -- i )
+  var! cbs
+  swap cbs @ strstrip_cb swap
+  cbs @ strstrip_cb
+  einstring
+;
+
+: striplead_cb ( s a -- s )
+  var! cbs
+  dup cbs @ strlen_cb over cbs @ strstrip_cb striplead strlen -
+  cbs @ strcut_cb swap pop
+;
+
+: striptail_cb ( s a -- s )
+  var! cbs
+  dup cbs @ strstrip_cb striptail strlen
+  cbs @ strcut_cb pop
+;
+
+: strip_cb ( s a -- s )
+  var! cbs
+  cbs @ striplead_cb cbs @ striptail_cb
+;
+
+: dice_array_cb[ str:source arr:sep dict:cbs -- arr:result ]
+  source @ cbs @ strstrip_cb var! source_stripped
+  { sep @ foreach nip cbs @ strstrip_cb repeat }list var! sep_stripped
+  source_stripped @ sep_stripped @ dice_array
+  { source @ rot foreach nip strlen cbs @ strcut_cb repeat pop }list
+;
+
+: regslice_cb[ str:text str:pattern int:flags dict:cbs -- arr:results ]
+  text @ cbs @ strstrip_cb pattern @ flags @ regslice
+  { text @ rot foreach nip strlen cbs @ strcut_cb repeat pop }list
+;
+
+: carve_array_cb[ str:source str:sep dict:cbs -- arr:result ]
+  source @ cbs @ strstrip_cb sep @ cbs @ strstrip_cb carve_array
+  { source @ rot foreach nip strlen cbs @ strcut_cb repeat pop }list
+;
+
+: slice_array_cb[ str:source str:sep dict:cbs -- arr:result ]
+  source @ cbs @ strstrip_cb sep @ cbs @ strstrip_cb slice_array
+  { source @ rot foreach nip strlen cbs @ strcut_cb repeat pop }list
+;
+
+: explode_array_cb[ str:source str:sep dict:cbs -- arr:result ]
+  source @ cbs @ strstrip_cb sep @ cbs @ strstrip_cb explode_array
+  sep @ strlen var! sep_len
+  { source @ rot foreach nip strlen cbs @ strcut_cb sep_len @ cbs @ strcut_cb swap pop repeat pop }list
+;
+
+: subst_cb[ str:source str:to str:from arr:cbs -- str:result ]
+  source @ from @ cbs @ slice_array_cb
+  1 array_cut swap array_vals pop var! result
+  begin
+    dup not if pop break then
+    2 array_cut swap array_vals pop
+    nip
+    result @ to @ cbs @ strcat_cb swap cbs @ strcat_cb result !
+  repeat
+  result @
+;
+
+: wordwrap_cb[ any:source int:width_wrap dict:opts dict:cbs -- arr:lines ]
+  { }list var! lines
+  (* FIXME: Split \r into separate lines. *)
+  source @ cbs @ striptail_cb " " cbs @ carve_array_cb
+  1 array_cut swap array_vals pop var! line
+  foreach
+    nip
+    dup cbs @ strlen_cb line @ cbs @ strlen_cb + width_wrap @ > if
+      line @ lines @ []<- lines !
+      "" line !
+      cbs @ striplead_cb
+    then
+    line @ swap cbs @ strcat_cb line !
+  repeat
+  line @ if
+    line @ lines @ []<- lines !
+  then
+  lines @
+;
+
+: std_cb_strstrip ( s -- s ) ;
+: std_cb_strcut ( s i -- s1 s2 ) strcut ;
+: std_cb_strcat ( s1 s2 -- s ) strcat ;
+: std_cb_toupper ( s -- s ) toupper ;
+: std_cb_tolower ( s -- s ) tolower ;
+: std_cb ( -- a ) { "strcat" 'std_cb_strcat "strcut" 'std_cb_strcut "strstrip" 'std_cb_strstrip "toupper" 'std_cb_toupper "tolower" 'std_cb_tolower }dict ;
+
+(* Take the callback list in user supplied format and clean it up into the format expected by the internal code *)
+: string_cbs_process[ dict:cbs_in -- dict:cbs_out ]
+  var cb
+  (* Set defaults *)
+  {
+    "strstrip" 'std_cb_strstrip
+    "strcut" 'std_cb_strcut
+    "strcat" 'std_cb_strcat
+    "toupper" 'std_cb_toupper
+    "tolower" 'std_cb_tolower
+  }dict var! cbs_out
+  (* Handle function pointers *)
+  { "strstrip" "strcut" "strcat" "toupper" "tolower" }list foreach
+    nip
+    cb !
+    cbs_in @ cb @ [] address? not if continue then
+    cbs_in @ cb @ [] cbs_out @ cb @ ->[] cbs_out !
+  repeat
+  (* Return result *)
+  cbs_out @
+;
+
+(*****************************************************************************)
+(*                      M-LIB-STRING-array_interpret_cb                      *)
+(*****************************************************************************)
+: M-LIB-STRING-array_interpret_cb ( a a -- ? )
+  (* M1 OK *)
+  "yx" checkargs
+  string_cbs_process var! cbs
+  "" swap foreach
+    nip
+    1 array_make array_interpret cbs @ strcat_cb
+  repeat
+;
+PUBLIC M-LIB-STRING-array_interpret_cb
+$LIBDEF M-LIB-STRING-array_interpret_cb
+
+(*****************************************************************************)
+(*                        M-LIB-STRING-array_join_cb                         *)
+(*****************************************************************************)
+: M-LIB-STRING-array_join_cb ( a ? a -- ? )
+  (* M1 OK *)
+  "y?x" checkargs
+  string_cbs_process var! cbs
+  swap 1 array_cut foreach nip 3 pick rot []<- []<- repeat swap pop
+  "" swap foreach
+    nip
+    1 array_make "" array_join cbs @ strcat_cb
+  repeat
+;
+PUBLIC M-LIB-STRING-array_join_cb
+$LIBDEF M-LIB-STRING-array_join_cb
+
+(*****************************************************************************)
+(*                           M-LIB-STRING-atoi_cb                            *)
+(*****************************************************************************)
+: M-LIB-STRING-atoi_cb ( ? cbs -- i )
+  (* M1 OK *)
+  "?x" checkargs
+  string_cbs_process strstrip_cb
+  atoi
+;
+PUBLIC M-LIB-STRING-atoi_cb
+$LIBDEF M-LIB-STRING-atoi_cb
+
+(*****************************************************************************)
+(*                         M-LIB-STRING-carve_array                          *)
+(*****************************************************************************)
+: M-LIB-STRING-carve_array ( s s -- a )
+  (* M1 OK *)
+  "ss" checkargs
+  carve_array
+;
+PUBLIC M-LIB-STRING-carve_array
+$LIBDEF M-LIB-STRING-carve_array
+
+(*****************************************************************************)
+(*                        M-LIB-STRING-carve_array_cb                        *)
+(*****************************************************************************)
+: M-LIB-STRING-carve_array_cb ( ? ? cbs -- a )
+  (* M1 OK *)
+  "??x" checkargs
+  string_cbs_process carve_array_cb
+;
+PUBLIC M-LIB-STRING-carve_array_cb
+$LIBDEF M-LIB-STRING-carve_array_cb
+
+(*****************************************************************************)
+(*                         M-LIB-STRING-command_parse                        *)
+(*****************************************************************************)
+: M-LIB-STRING-command_parse ( s -- s s s )
+  (* M1 OK *)
+  "s" checkargs
+  "=" rsplit swap
+  striplead dup "#" instr 1 = if
+    1 strcut nip
+    " " split
+  else
+    "" swap
+  then
+  strip
+  single_space
+  rot
+;
+PUBLIC M-LIB-STRING-command_parse
+$LIBDEF M-LIB-STRING-command_parse
+
+(*****************************************************************************)
+(*                          M-LIB-STRING-dice_array                          *)
+(*****************************************************************************)
+: M-LIB-STRING-dice_array ( s a -- a )
+  (* M1 OK *)
+  "sy" checkargs
+  dice_array
+;
+PUBLIC M-LIB-STRING-dice_array
+$LIBDEF M-LIB-STRING-dice_array
+
+(*****************************************************************************)
+(*                         M-LIB-STRING-dice_array_cb                        *)
+(*****************************************************************************)
+: M-LIB-STRING-dice_array_cb ( ? a a -- a )
+  (* M1 OK *)
+  "?yx" checkargs
+  string_cbs_process dice_array_cb
+;
+PUBLIC M-LIB-STRING-dice_array_cb
+$LIBDEF M-LIB-STRING-dice_array_cb
+
+(*****************************************************************************)
+(*                            M-LIB-STRING-einstr                            *)
+(*****************************************************************************)
+: M-LIB-STRING-einstr ( s s -- i )
+  (* M1 OK *)
+  "ss" checkargs
+  einstr
+;
+PUBLIC M-LIB-STRING-einstr
+$LIBDEF M-LIB-STRING-einstr
+
+(*****************************************************************************)
+(*                          M-LIB-STRING-einstr_cb                           *)
+(*****************************************************************************)
+: M-LIB-STRING-einstr_cb ( ? ? a -- i )
+  (* M1 OK *)
+  "??x" checkargs
+  string_cbs_process einstr_cb
+;
+PUBLIC M-LIB-STRING-einstr_cb
+$LIBDEF M-LIB-STRING-einstr_cb
+
+(*****************************************************************************)
+(*                          M-LIB-STRING-einstring                           *)
+(*****************************************************************************)
+: M-LIB-STRING-einstring ( s s -- i )
+  (* M1 OK *)
+  "ss" checkargs
+  einstring
+;
+PUBLIC M-LIB-STRING-einstring
+$LIBDEF M-LIB-STRING-einstring
+
+(*****************************************************************************)
+(*                         M-LIB-STRING-einstring_cb                         *)
+(*****************************************************************************)
+: M-LIB-STRING-einstring_cb ( ? ? a -- i )
+  (* M1 OK *)
+  "??x" checkargs
+  string_cbs_process einstring_cb
+;
+PUBLIC M-LIB-STRING-einstring_cb
+$LIBDEF M-LIB-STRING-einstring_cb
+
+(*****************************************************************************)
+(*                           M-LIB-STRING-erinstr                            *)
+(*****************************************************************************)
+: M-LIB-STRING-erinstr ( s s -- i )
+  (* M1 OK *)
+  "ss" checkargs
+  erinstr
+;
+PUBLIC M-LIB-STRING-erinstr
+$LIBDEF M-LIB-STRING-erinstr
+
+(*****************************************************************************)
+(*                          M-LIB-STRING-erinstr_cb                          *)
+(*****************************************************************************)
+: M-LIB-STRING-erinstr_cb ( ? ? a -- i )
+  (* M1 OK *)
+  "??x" checkargs
+  string_cbs_process erinstr_cb
+;
+PUBLIC M-LIB-STRING-erinstr_cb
+$LIBDEF M-LIB-STRING-erinstr_cb
+
+(*****************************************************************************)
+(*                          M-LIB-STRING-erinstring                          *)
+(*****************************************************************************)
+: M-LIB-STRING-erinstring ( s s -- i )
+  (* M1 OK *)
+  "ss" checkargs
+  erinstring
+;
+PUBLIC M-LIB-STRING-erinstring
+$LIBDEF M-LIB-STRING-erinstring
+
+(*****************************************************************************)
+(*                        M-LIB-STRING-erinstring_cb                         *)
+(*****************************************************************************)
+: M-LIB-STRING-erinstring_cb ( ? ? a -- i )
+  (* M1 OK *)
+  "??x" checkargs
+  string_cbs_process erinstring_cb
+;
+PUBLIC M-LIB-STRING-erinstring_cb
+$LIBDEF M-LIB-STRING-erinstring_cb
+
+(*****************************************************************************)
+(*                          M-LIB-STRING-explode_cb                          *)
+(*****************************************************************************)
+: M-LIB-STRING-explode_cb ( ? ? cbs -- ... i )
+  (* M1 OK *)
+  "??x" checkargs
+  string_cbs_process explode_array_cb array_vals
+;
+PUBLIC M-LIB-STRING-explode_cb
+$LIBDEF M-LIB-STRING-explode_cb
+
+(*****************************************************************************)
+(*                       M-LIB-STRING-explode_array_cb                       *)
+(*****************************************************************************)
+: M-LIB-STRING-explode_array_cb ( ? ? cbs -- a )
+  (* M1 OK *)
+  "??x" checkargs
+  string_cbs_process explode_array_cb
+;
+PUBLIC M-LIB-STRING-explode_array_cb
+$LIBDEF M-LIB-STRING-explode_array_cb
+
+(*****************************************************************************)
+(*                             M-LIB-STRING-hex?                             *)
+(*****************************************************************************)
+: M-LIB-STRING-hex? ( s -- i )
+  (* M1 OK *)
+  "s" checkargs
+  hex?
+;
+PUBLIC M-LIB-STRING-hex?
+$LIBDEF M-LIB-STRING-hex?
+
+(*****************************************************************************)
+(*                           M-LIB-STRING-hex?_cb                            *)
+(*****************************************************************************)
+: M-LIB-STRING-hex?_cb ( ? cbs -- i )
+  (* M1 OK *)
+  "?x" checkargs
+  string_cbs_process strstrip_cb hex?
+;
+PUBLIC M-LIB-STRING-hex?_cb
+$LIBDEF M-LIB-STRING-hex?_cb
+
+(*****************************************************************************)
+(*                           M-LIB-STRING-instr_cb                           *)
+(*****************************************************************************)
+: M-LIB-STRING-instr_cb ( ? ? cbs -- i )
+  (* M1 OK *)
+  "??x" checkargs
+  string_cbs_process instr_cb
+;
+PUBLIC M-LIB-STRING-instr_cb
+$LIBDEF M-LIB-STRING-instr_cb
+
+(*****************************************************************************)
+(*                         M-LIB-STRING-instring_cb                          *)
+(*****************************************************************************)
+: M-LIB-STRING-instring_cb ( ? ? cbs -- i )
+  (* M1 OK *)
+  "??x" checkargs
+  string_cbs_process instring_cb
+;
+PUBLIC M-LIB-STRING-instring_cb
+$LIBDEF M-LIB-STRING-instring_cb
+
+(*****************************************************************************)
+(*                             M-LIB-STRING-itox                             *)
+(*****************************************************************************)
+: M-LIB-STRING-itox ( i -- s )
+  (* M1 OK *)
+  "i" checkargs
+  itox
+;
 PUBLIC M-LIB-STRING-itox
 $LIBDEF M-LIB-STRING-itox
+
+(*****************************************************************************)
+(*                          M-LIB-STRING-midstr_cb                           *)
+(*****************************************************************************)
+: M-LIB-STRING-midstr_cb ( ? i i cbs -- ? )
+  (* M1 OK *)
+  "?iix" checkargs
+  string_cbs_process var! cbs
+  over 1 < if "Data must be a positive integer. (2)" abort then
+  -rot -- cbs @ strcut_cb swap pop swap cbs @ strcut_cb pop
+;
+PUBLIC M-LIB-STRING-midstr_cb
+$LIBDEF M-LIB-STRING-midstr_cb
+
+(*****************************************************************************)
+(*                          M-LIB-STRING-number?_cb                          *)
+(*****************************************************************************)
+: M-LIB-STRING-number?_cb ( ? cbs -- i )
+  (* M1 OK *)
+  "?x" checkargs
+  string_cbs_process strstrip_cb number?
+;
+PUBLIC M-LIB-STRING-number?_cb
+$LIBDEF M-LIB-STRING-number?_cb
+
+(*****************************************************************************)
+(*                           M-LIB-STRING-regslice                           *)
+(*****************************************************************************)
+: M-LIB-STRING-regslice ( s s i -- a )
+  (* M1 OK *)
+  "ssi" checkargs
+  regslice
+;
+PUBLIC M-LIB-STRING-regslice
+$LIBDEF M-LIB-STRING-regslice
+
+(*****************************************************************************)
+(*                         M-LIB-STRING-regslice_cb                          *)
+(*****************************************************************************)
+: M-LIB-STRING-regslice_cb ( ? ? i cbs -- a )
+  (* M1 OK *)
+  "??ix" checkargs
+  string_cbs_process regslice_cb
+;
+PUBLIC M-LIB-STRING-regslice_cb
+$LIBDEF M-LIB-STRING-regslice_cb
+
+(*****************************************************************************)
+(*                          M-LIB-STRING-rinstr_cb                           *)
+(*****************************************************************************)
+: M-LIB-STRING-rinstr_cb ( ? ? cbs -- i )
+  (* M1 OK *)
+  "??x" checkargs
+  string_cbs_process rinstr_cb
+;
+PUBLIC M-LIB-STRING-rinstr_cb
+$LIBDEF M-LIB-STRING-rinstr_cb
+
+(*****************************************************************************)
+(*                         M-LIB-STRING-rinstring_cb                         *)
+(*****************************************************************************)
+: M-LIB-STRING-rinstring_cb ( ? ? cbs -- i )
+  (* M1 OK *)
+  "??x" checkargs
+  string_cbs_process rinstring_cb
+;
+PUBLIC M-LIB-STRING-rinstring_cb
+$LIBDEF M-LIB-STRING-rinstring_cb
+
+(*****************************************************************************)
+(*                          M-LIB-STRING-rsplit_cb                           *)
+(*****************************************************************************)
+: M-LIB-STRING-rsplit_cb[ any:source any:sep arr:cbs -- any:result1 any:result2 ]
+  (* M1 OK *)
+  cbs @ dictionary? not if "Non-dictionary argument (3)." abort then
+  cbs @ string_cbs_process cbs !
+  source @ source @ sep @ cbs @ erinstr_cb cbs @ strcut_cb
+  sep @ cbs @ strlen_cb cbs @ strcut_cb swap pop
+;
+PUBLIC M-LIB-STRING-rsplit_cb
+$LIBDEF M-LIB-STRING-rsplit_cb
 
 (*****************************************************************************)
 (*                         M-LIB-STRING-single_space                         *)
@@ -378,51 +927,265 @@ $LIBDEF M-LIB-STRING-itox
 : M-LIB-STRING-single_space ( s -- s )
   (* M1 OK *)
   "s" checkargs
-  sms
+  single_space
 ;
 PUBLIC M-LIB-STRING-single_space
 $LIBDEF M-LIB-STRING-single_space
 
 (*****************************************************************************)
-(*                           M-LIB-STRING-wordwrap                           *)
+(*                       M-LIB-STRING-single_space_cb                        *)
 (*****************************************************************************)
-: M-LIB-STRING-wordwrap[ str:source int:width_wrap dict:cbs -- arr:lines ]
+: M-LIB-STRING-single_space_cb ( ? cbs -- ? )
   (* M1 OK *)
-  source @ string? not if "Non-string argument (1)." abort then
-  source @ "\r" instr if "Newlines in word wrap strings not yet supported." abort then
-  width_wrap @ int? not if "Non-integer argument (2)." abort then
+  "?x" checkargs
+  string_cbs_process var! cbs
+  begin " " "  " cbs @ subst_cb
+    dup "  " cbs @ instr_cb not
+  until
+;
+PUBLIC M-LIB-STRING-single_space_cb
+$LIBDEF M-LIB-STRING-single_space_cb
+
+(*****************************************************************************)
+(*                            M-LIB-STRING-sitox                             *)
+(*****************************************************************************)
+: M-LIB-STRING-sitox ( i -- s )
+  (* M1 OK *)
+  "i" checkargs
+  dup 0 < if
+    abs "-" swap itox strcat
+  else
+    itox
+  then
+;
+PUBLIC M-LIB-STRING-sitox
+$LIBDEF M-LIB-STRING-sitox
+
+(*****************************************************************************)
+(*                         M-LIB-STRING-slice_array                          *)
+(*****************************************************************************)
+: M-LIB-STRING-slice_array ( s s -- a )
+  (* M1 OK *)
+  "ss" checkargs
+  slice_array
+;
+PUBLIC M-LIB-STRING-slice_array
+$LIBDEF M-LIB-STRING-slice_array
+
+(*****************************************************************************)
+(*                        M-LIB-STRING-slice_array_cb                        *)
+(*****************************************************************************)
+: M-LIB-STRING-slice_array_cb ( ? ? cbs -- a )
+  (* M1 OK *)
+  "??x" checkargs
+  string_cbs_process slice_array_cb
+;
+PUBLIC M-LIB-STRING-slice_array_cb
+$LIBDEF M-LIB-STRING-slice_array_cb
+
+(*****************************************************************************)
+(*                           M-LIB-STRING-split_cb                           *)
+(*****************************************************************************)
+: M-LIB-STRING-split_cb[ any:source any:sep arr:cbs -- any:result1 any:result2 ]
+  (* M1 OK *)
   cbs @ dictionary? not if "Non-dictionary argument (3)." abort then
   cbs @ string_cbs_process cbs !
-  { }list var! lines
-  (* Dice an array with space separators, but leave the spaces attached in front of the saparated words *)
-  source @ cbs @ cb_strstrip var! source_stripped
-  {
-    ""
-    source_stripped @ striptail { " " }list dice_array foreach
-      nip
-      over strip not if strcat then
-    repeat
-  }list
-  {
-    swap foreach
-      nip
-      source @ swap strlen cbs @ cb_strcut source !
-    repeat
-  }list
-  1 array_cut swap array_vals pop var! line
-  foreach
-    nip
-    dup cbs @ cb_strlen line @ cbs @ cb_strlen + width_wrap @ > if
-      line @ lines @ []<- lines !
-      "" line !
-      cbs @ cb_striplead
-    then
-    line @ swap cbs @ cb_strcat line !
-  repeat
-  line @ if
-    line @ lines @ []<- lines !
-  then
-  lines @
+  source @ source @ sep @ cbs @ einstr_cb cbs @ strcut_cb
+  sep @ cbs @ strlen_cb cbs @ strcut_cb swap pop
+;
+PUBLIC M-LIB-STRING-split_cb
+$LIBDEF M-LIB-STRING-split_cb
+
+(*****************************************************************************)
+(*                          M-LIB-STRING-strcat_cb                           *)
+(*****************************************************************************)
+: M-LIB-STRING-strcat_cb ( ? ? cbs -- ? )
+  (* M1 OK *)
+  "??x" checkargs
+  string_cbs_process strcat_cb
+;
+PUBLIC M-LIB-STRING-strcat_cb
+$LIBDEF M-LIB-STRING-strcat_cb
+
+(*****************************************************************************)
+(*                          M-LIB-STRING-strcmp_cb                           *)
+(*****************************************************************************)
+: M-LIB-STRING-strcmp_cb ( ? ? cbs -- i )
+  (* M1 OK *)
+  "??x" checkargs
+  string_cbs_process var! cbs
+  swap cbs @ strstrip_cb swap
+  cbs @ strstrip_cb
+  strcmp
+;
+PUBLIC M-LIB-STRING-strcmp_cb
+$LIBDEF M-LIB-STRING-strcmp_cb
+
+(*****************************************************************************)
+(*                          M-LIB-STRING-strcut_cb                           *)
+(*****************************************************************************)
+: M-LIB-STRING-strcut_cb ( ? i cbs -- ? ? )
+  (* M1 OK *)
+  "?ix" checkargs
+  string_cbs_process strcut_cb
+;
+PUBLIC M-LIB-STRING-strcut_cb
+$LIBDEF M-LIB-STRING-strcut_cb
+
+(*****************************************************************************)
+(*                         M-LIB-STRING-stringcmp_cb                         *)
+(*****************************************************************************)
+: M-LIB-STRING-stringcmp_cb ( ? ? cbs -- i )
+  (* M1 OK *)
+  "??x" checkargs
+  string_cbs_process var! cbs
+  swap cbs @ strstrip_cb swap
+  cbs @ strstrip_cb
+  stringcmp
+;
+PUBLIC M-LIB-STRING-stringcmp_cb
+$LIBDEF M-LIB-STRING-stringcmp_cb
+
+(*****************************************************************************)
+(*                         M-LIB-STRING-stringpfx_cb                         *)
+(*****************************************************************************)
+: M-LIB-STRING-stringpfx_cb ( ? ? cbs -- i )
+  (* M1 OK *)
+  "??x" checkargs
+  string_cbs_process var! cbs
+  swap cbs @ strstrip_cb swap
+  cbs @ strstrip_cb
+  stringpfx
+;
+PUBLIC M-LIB-STRING-stringpfx_cb
+$LIBDEF M-LIB-STRING-stringpfx_cb
+
+(*****************************************************************************)
+(*                           M-LIB-STRING-strip_cb                           *)
+(*****************************************************************************)
+: M-LIB-STRING-strip_cb ( ? cbs -- ? )
+  (* M1 OK *)
+  "?x" checkargs
+  string_cbs_process strip_cb
+;
+PUBLIC M-LIB-STRING-strip_cb
+$LIBDEF M-LIB-STRING-strip_cb
+
+(*****************************************************************************)
+(*                         M-LIB-STRING-striplead_cb                         *)
+(*****************************************************************************)
+: M-LIB-STRING-striplead_cb ( ? cbs -- ? )
+  (* M1 OK *)
+  "?x" checkargs
+  string_cbs_process striplead_cb
+;
+PUBLIC M-LIB-STRING-striplead_cb
+$LIBDEF M-LIB-STRING-striplead_cb
+
+(*****************************************************************************)
+(*                         M-LIB-STRING-striptail_cb                         *)
+(*****************************************************************************)
+: M-LIB-STRING-striptail_cb ( ? cbs -- ? )
+  (* M1 OK *)
+  "?x" checkargs
+  string_cbs_process striptail_cb
+;
+PUBLIC M-LIB-STRING-striptail_cb
+$LIBDEF M-LIB-STRING-striptail_cb
+
+(*****************************************************************************)
+(*                          M-LIB-STRING-strlen_cb                           *)
+(*****************************************************************************)
+: M-LIB-STRING-strlen_cb ( ? cbs -- i )
+  (* M1 OK *)
+  "?x" checkargs
+  string_cbs_process strlen_cb
+;
+PUBLIC M-LIB-STRING-strlen_cb
+$LIBDEF M-LIB-STRING-strlen_cb
+
+(*****************************************************************************)
+(*                          M-LIB-STRING-strncmp_cb                          *)
+(*****************************************************************************)
+: M-LIB-STRING-strncmp_cb ( ? ? i cbs -- i )
+  (* M1 OK *)
+  "??ix" checkargs
+  string_cbs_process var! cbs
+  swap cbs @ strstrip_cb swap
+  cbs @ strstrip_cb
+  strncmp
+;
+PUBLIC M-LIB-STRING-strncmp_cb
+$LIBDEF M-LIB-STRING-strncmp_cb
+
+(*****************************************************************************)
+(*                          M-LIB-STRING-strtof_cb                           *)
+(*****************************************************************************)
+: M-LIB-STRING-strtof_cb ( ? cbs -- f )
+  (* M1 OK *)
+  "?x" checkargs
+  string_cbs_process strstrip_cb strtof
+;
+PUBLIC M-LIB-STRING-strtof_cb
+$LIBDEF M-LIB-STRING-strtof_cb
+
+(*****************************************************************************)
+(*                           M-LIB-STRING-subst_cb                           *)
+(*****************************************************************************)
+: M-LIB-STRING-subst_cb ( ? ? ? cbs -- ? )
+  (* M1 OK *)
+  "???x" checkargs
+  over not if "Empty string argument (3)" abort then
+  string_cbs_process subst_cb
+;
+PUBLIC M-LIB-STRING-subst_cb
+$LIBDEF M-LIB-STRING-subst_cb
+
+(*****************************************************************************)
+(*                          M-LIB-STRING-toupper_cb                          *)
+(*****************************************************************************)
+: M-LIB-STRING-toupper_cb ( ? cbs -- i )
+  (* M1 OK *)
+  "?x" checkargs
+  string_cbs_process toupper_cb
+;
+PUBLIC M-LIB-STRING-toupper_cb
+$LIBDEF M-LIB-STRING-toupper_cb
+
+(*****************************************************************************)
+(*                          M-LIB-STRING-tolower_cb                          *)
+(*****************************************************************************)
+: M-LIB-STRING-tolower_cb ( ? cbs -- i )
+  (* M1 OK *)
+  "?x" checkargs
+  string_cbs_process tolower_cb
+;
+PUBLIC M-LIB-STRING-tolower_cb
+$LIBDEF M-LIB-STRING-tolower_cb
+
+(*****************************************************************************)
+(*                          M-LIB-STRING-wordwrap_cb                         *)
+(*****************************************************************************)
+: M-LIB-STRING-wordwrap_cb[ any:source int:width_wrap dict:opts dict:cbs -- arr:lines ]
+  (* M1 OK *)
+  width_wrap @ int? not if "Non-integer argument (2)." abort then
+  opts @ dictionary? not if "Non-dictionary argument (3)." abort then
+  cbs @ dictionary? not if "Non-dictionary argument (4)." abort then
+  cbs @ string_cbs_process cbs !
+  source @ width_wrap @ opts @ cbs @ wordwrap_cb
+;
+PUBLIC M-LIB-STRING-wordwrap_cb
+$LIBDEF M-LIB-STRING-wordwrap_cb
+
+(*****************************************************************************)
+(*                           M-LIB-STRING-wordwrap                           *)
+(*****************************************************************************)
+: M-LIB-STRING-wordwrap[ str:source int:width_wrap dict:opts -- arr:lines ]
+  (* M1 OK *)
+  source @ string? not if "Non-string argument (1)." abort then
+  width_wrap @ int? not if "Non-integer argument (2)." abort then
+  opts @ dictionary? not if "Non-dictionary argument (3)." abort then
+  source @ width_wrap @ opts @ std_cb wordwrap_cb
 ;
 PUBLIC M-LIB-STRING-wordwrap
 $LIBDEF M-LIB-STRING-wordwrap
@@ -433,51 +1196,55 @@ $LIBDEF M-LIB-STRING-wordwrap
 : M-LIB-STRING-xtoi ( s -- i )
   (* M1 OK *)
   "s" checkargs
-  toupper
-  (* Return 0 if there are any invalid characters *)
-  dup hex? not if
-    pop 0 exit
-  then
-  (* Truncate to 32-bits worth of hexadecimal *)
-  dup strlen
-  8 - dup 0 <= if
-    pop
-  else
-    strcut nip
-  then
-  (* Convert and return*)
-  0 var! retval
-  begin
-    1 strcut swap
-    dup number? if
-      atoi
-    else
-      ctoi
-      "A" ctoi - 10 +
-    then
-    retval @ 4 bitshift swap + retval !
-    dup not
-  until
-  pop
-  retval @
+  xtoi
 ;
 PUBLIC M-LIB-STRING-xtoi
 $LIBDEF M-LIB-STRING-xtoi
 
 (*****************************************************************************)
-(*                             M-LIB-STRING-join                             *)
+(*                           M-LIB-STRING-xtoi_cb                            *)
 (*****************************************************************************)
-$PUBDEF M-LIB-STRING-join    over 2 + 0 swap - rotate array_make swap array_join
-
-(*****************************************************************************)
-(*                            M-LIB-STRING-sxtoi                             *)
-(*****************************************************************************)
-$PUBDEF M-LIB-STRING-sitox   dup 0 < if abs "-" swap M-LIB-STRING-itox strcat else M-LIB-STRING-itox then
+: M-LIB-STRING-xtoi_cb ( ? cbs -- i )
+  (* M1 OK *)
+  "?x" checkargs
+  string_cbs_process strstrip_cb
+  xtoi
+;
+PUBLIC M-LIB-STRING-xtoi_cb
+$LIBDEF M-LIB-STRING-xtoi_cb
 
 (*****************************************************************************)
 (*                           M-LIB-STRING-zeropad                            *)
 (*****************************************************************************)
-$PUBDEF M-LIB-STRING-zeropad over strlen - dup 0 > if "0" * swap strcat else pop then
+: M-LIB-STRING-zeropad ( s i -- i )
+  (* M1 OK *)
+  "si" checkargs
+  over strlen - dup 0 > if "0" * swap strcat else pop then
+;
+PUBLIC M-LIB-STRING-zeropad
+$LIBDEF M-LIB-STRING-zeropad
+
+(*****************************************************************************)
+(*                          M-LIB-STRING-zeropad_cb                          *)
+(*****************************************************************************)
+: M-LIB-STRING-zeropad_cb ( ? i a -- i )
+  (* M1 OK *)
+  "?ix" checkargs
+  string_cbs_process var! cbs
+  over cbs @ strlen_cb - dup 0 > if "0" * swap cbs @ strcat_cb else pop then
+;
+PUBLIC M-LIB-STRING-zeropad_cb
+$LIBDEF M-LIB-STRING-zeropad_cb
+
+(*****************************************************************************)
+(*                            M-LIB-STRING-}join                             *)
+(*****************************************************************************)
+$PUBDEF M-LIB-STRING-}join_cb "" M-LIB-STRING-array_join_cb
+
+(*****************************************************************************)
+(*                             M-LIB-STRING-}cat                             *)
+(*****************************************************************************)
+$PUBDEF M-LIB-STRING-}cat_cb M-LIB-STRING-array_interpret_cb
 
 (* -------------------- Compatibility with $lib/strings -------------------- *)
 $PUBDEF .asc           ctoi

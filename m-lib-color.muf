@@ -59,10 +59,22 @@ $PRAGMA comment_recurse
 (*     value array of three floats.                                          *)
 (*                                                                           *)
 (*   M-LIB-COLOR-strcat[ str:source1 str:source2 -- str:result ]             *)
+(*   M-LIB-COLOR-strcat_hard[ str:source1 str:source2 -- str:result ]        *)
 (*     Works like the STRCAT primitive for MCC strings, but unlike the       *)
 (*     STRCAT primitive it combines them in a such a way that the colors are *)
 (*     preserved and the color codes in one string will not affect the       *)
 (*     colors in the other string.                                           *)
+(*                                                                           *)
+(*     Because of codes like 'color at', and potential future codes as well, *)
+(*     any MCC strings that are supplied by user input, etc, should always   *)
+(*     be concatenated by these functions and never with the bulit-in STRCAT *)
+(*     primitive.                                                            *)
+(*                                                                           *)
+(*     If you do not specify color codes at the beginning of the second      *)
+(*     string, the colors at the very end of the first string will continue  *)
+(*     into the second string, unless the 'hard' version is used, which      *)
+(*     ensures that no color information at all from the first string        *)
+(*     perseveres into the second string.                                    *)
 (*                                                                           *)
 (*   M-LIB-COLOR-strcut[ str:source int:split_point str:type                 *)
 (*                      -- str:string1 str:string2 ]                         *)
@@ -112,11 +124,10 @@ $PRAGMA comment_recurse
 (*                                                                           *)
 (*       [!000000] - This is removed and replaced with nothing.              *)
 (*       [!000001] - This becomes a '[' character                            *)
-(*       [!000002] - This becomes a ']' character                            *)
 (*       [!FFFFFF] - 'Reset' the colors and formatting back to default       *)
 (*                                                                           *)
 (*       These symbols are reserved for future use:                          *)
-(*         " $ & ' (  ) + , -  . / : ; = ? [ \ ] ^ _ ` { | } ~               *)
+(*         " $ & ' ( ) + , - . / : ; = ? [ \ ] ^ _ ` { | } ~                 *)
 (*                                                                           *)
 (*   NOCOLOR                                                                 *)
 (*     This encoding has no color information.                               *)
@@ -550,7 +561,6 @@ $enddef
 
 $def CODE_VALUE_SPECIAL_NOOP "000000"
 $def CODE_VALUE_SPECIAL_OPENBRACKET "000001"
-$def CODE_VALUE_SPECIAL_CLOSEBRACKET "000002"
 $def CODE_VALUE_SPECIAL_RESET "FFFFFF"
 
 $def SUPPORTED_TYPES_ANSI { "ANSI-24BIT" "ANSI-8BIT" "ANSI-4BIT-VGA" "ANSI-4BIT-XTERM" "ANSI-3BIT-VGA" "ANSI-3BIT-XTERM" }list
@@ -1269,9 +1279,6 @@ lvar ansi_table_3bit_xterm_rgb
     code_value @ CODE_VALUE_SPECIAL_OPENBRACKET = if
       "[" exit
     then
-    code_value @ CODE_VALUE_SPECIAL_CLOSEBRACKET = if
-      "]" exit
-    then
     { "[MCC-v" M-LIB-PROGRAM-version " " code_type @ " BADVAL]" }join exit
   then
   { "[MCC-v" M-LIB-PROGRAM-version " " code_type @ " BADTYP]" }join
@@ -1294,7 +1301,7 @@ lvar ansi_table_3bit_xterm_rgb
 
 (* Splits a string, ignoring MCC codes when deciding where to split *)
 : mcc_strcut[ str:source str:split_point bool:keep_color -- str:result ]
-  source @ "[" instr not if
+  source @ "\\[[#*>}<{!\"'+,./:;=?\\[\\\\\\]^_-][0-9A-F][0-9A-F][0-9A-F][0-9A-F][0-9A-F][0-9A-F]\\]" 0 regexp pop not if
     source @ split_point @ strcut exit
   then
 
@@ -1316,8 +1323,8 @@ lvar ansi_table_3bit_xterm_rgb
             background_code !
           then
         then
-        code_type @ CODE_TYPE_SPECIAL = code_value @ CODE_VALUE_SPECIAL_OPENBRACKET = code_value @ CODE_VALUE_SPECIAL_CLOSEBRACKET = or and if
-          (* We hit a literal [ or ], so increment the place in string without codes by one. *)
+        code_type @ CODE_TYPE_SPECIAL = code_value @ CODE_VALUE_SPECIAL_OPENBRACKET = and if
+          (* We hit a literal [, so increment the place in string without codes by one. *)
           place_in_string_without_codes ++
         then
         source @ strlen post_code @ strlen - place_in_string !
@@ -1356,7 +1363,7 @@ lvar ansi_table_3bit_xterm_rgb
 
 (* Convert an entire line of MCC to another encoding *)
 : mcc_convert_line[ str:source str:to_type -- str:result ]
-  source @ "[" instr not if
+  source @ "\\[[#*>}<{!\"'+,./:;=?\\[\\\\\\]^_-][0-9A-F][0-9A-F][0-9A-F][0-9A-F][0-9A-F][0-9A-F]\\]" 0 regexp pop not if
     source @ exit
   then
 
@@ -1393,45 +1400,14 @@ lvar ansi_table_3bit_xterm_rgb
 ;
 
 (* Convert MCC color codes to its colorless equivalent. *)
-: mcc_strip[ str:source -- str:result ]
-  source @ "[" instr not if
-    source @ exit
-  then
-
-  (* Strip all codes *)
-  source @ "[" split swap var! retval
-  "[" explode_array foreach
-    nip
-    "[" swap strcat
-    dup mcc_tagparse var! post_code var! code_value var! code_type
-    code_type @ code_value @ and if
-      pop
-      retval @
-      code_type @ CODE_TYPE_SPECIAL = if
-        code_value @ CODE_VALUE_SPECIAL_OPENBRACKET = if
-          "[" strcat
-        else code_value @ CODE_VALUE_SPECIAL_CLOSEBRACKET = if
-          "]" strcat
-        then then
-      then
-      post_code @ strcat
-      retval !
-    else
-      retval @ swap strcat retval !
-    then
-  repeat
-
-  (* Return the results *)
-  retval @
+: mcc_strip ( s -- s )
+  "(?!\\[!000001\\])\\[[#*>}<{!\"'+,./:;=?\\[\\\\\\]^_-][0-9A-F][0-9A-F][0-9A-F][0-9A-F][0-9A-F][0-9A-F]\\]" "" REG_ALL regsub
+  "[" "[!000001]" subst
 ;
 
 (* Preprocess an MCC line for 'modify something elsewhere on the line' codes *)
 : mcc_preprocess_line[ str: source -- str:result ]
-  source @ "[" CODE_TYPE_FOREGROUND_AT strcat instr not
-  source @ "[" CODE_TYPE_BACKGROUND_AT strcat instr not
-  source @ "[" CODE_TYPE_FOREGROUND_RAT strcat instr not
-  source @ "[" CODE_TYPE_BACKGROUND_RAT strcat instr not
-  and and and if
+  source @ "\\[[>}<{][0-9A-F][0-9A-F][0-9A-F][0-9A-F][0-9A-F][0-9A-F]\\]" 0 regexp pop not if
     source @ exit
   then
 
@@ -1537,6 +1513,35 @@ lvar ansi_table_3bit_xterm_rgb
 
 : mcc_escape ( s -- s )
   { "[" CODE_TYPE_SPECIAL CODE_VALUE_SPECIAL_OPENBRACKET "]" }join "[" subst
+;
+
+: mcc_toupper ( s -- s )
+  "\\[[#*>}<{!\"'+,./:;=?\\[\\\\\\]^_-][0-9A-F][0-9A-F][0-9A-F][0-9A-F][0-9A-F][0-9A-F]\\]" REG_ICASE M-LIB-STRING-regslice
+  1 array_cut swap array_vals pop var! retval
+  begin
+    dup not if pop break then
+    2 array_cut swap array_vals pop
+    swap
+    dup toupper over != if
+      (* This code was caught because we used REG_ICASE, it's not actually a valid code. But if we turned it uppercase, it would become a valid code. Escape it so that it doesn't. *)
+      1 strcut swap pop
+      { "[" CODE_TYPE_SPECIAL CODE_VALUE_SPECIAL_OPENBRACKET "]" }join swap strcat
+    then
+    retval @ swap toupper strcat swap toupper strcat retval !
+  repeat
+  retval @
+;
+
+: mcc_tolower ( s -- s )
+  "\\[[#*>}<{!\"'+,./:;=?\\[\\\\\\]^_-][0-9A-F][0-9A-F][0-9A-F][0-9A-F][0-9A-F][0-9A-F]\\]" 0 M-LIB-STRING-regslice
+  1 array_cut swap array_vals pop var! retval
+  begin
+    dup not if pop break then
+    2 array_cut swap array_vals pop
+    swap
+    retval @ swap strcat swap tolower strcat retval !
+  repeat
+  retval @
 ;
 
 : encoding_get[ ref:object -- str:type ]
@@ -1677,6 +1682,32 @@ PUBLIC M-LIB-COLOR-rgb2hsl
 $LIBDEF M-LIB-COLOR-rgb2hsl
 
 (*****************************************************************************)
+(*                          M-LIB-COLOR-strcat_hard                          *)
+(*****************************************************************************)
+: M-LIB-COLOR-strcat_hard[ str:source1 str:source2 -- str:result ]
+  (* M1 OK *)
+
+  source1 @ string? not if "Non-string argument (1)." abort then
+  source2 @ string? not if "Non-string argument (2)." abort then
+
+  (* Use ordinary strcat if there are no color codes in either string. *)
+  source1 @ source2 @ strcat begin
+    dup mcc_tagparse pop and if
+      break
+    then
+    1 strcut swap pop
+    dup not
+  until
+  if
+    { source1 @ mcc_preprocess "[" CODE_TYPE_SPECIAL CODE_VALUE_SPECIAL_RESET "]" source2 @ mcc_preprocess }join
+  else
+    source1 @ source2 @ strcat
+  then
+;
+PUBLIC M-LIB-COLOR-strcat_hard
+$LIBDEF M-LIB-COLOR-strcat_hard
+
+(*****************************************************************************)
 (*                            M-LIB-COLOR-strcat                             *)
 (*****************************************************************************)
 : M-LIB-COLOR-strcat[ str:source1 str:source2 -- str:result ]
@@ -1694,7 +1725,7 @@ $LIBDEF M-LIB-COLOR-rgb2hsl
     dup not
   until
   if
-    { source1 @ mcc_preprocess "[" CODE_TYPE_SPECIAL CODE_VALUE_SPECIAL_RESET "]" source2 @ mcc_preprocess }join
+    source1 @ mcc_preprocess source2 @ mcc_preprocess strcat
   else
     source1 @ source2 @ strcat
   then
@@ -1742,6 +1773,28 @@ $LIBDEF M-LIB-COLOR-strlen
 ;
 PUBLIC M-LIB-COLOR-strip
 $LIBDEF M-LIB-COLOR-strip
+
+(*****************************************************************************)
+(*                            M-LIB-COLOR-toupper                            *)
+(*****************************************************************************)
+: M-LIB-COLOR-toupper[ str:source -- str:result ]
+  (* M1 OK *)
+  source @ string? not if "Non-string argument (1)." abort then
+  source @ mcc_toupper
+;
+PUBLIC M-LIB-COLOR-toupper
+$LIBDEF M-LIB-COLOR-toupper
+
+(*****************************************************************************)
+(*                            M-LIB-COLOR-tolower                            *)
+(*****************************************************************************)
+: M-LIB-COLOR-tolower[ str:source -- str:result ]
+  (* M1 OK *)
+  source @ string? not if "Non-string argument (1)." abort then
+  source @ mcc_tolower
+;
+PUBLIC M-LIB-COLOR-tolower
+$LIBDEF M-LIB-COLOR-tolower
 
 (*****************************************************************************)
 (*                          M-LIB-COLOR-testpattern                          *)

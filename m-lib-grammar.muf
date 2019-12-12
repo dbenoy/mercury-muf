@@ -360,15 +360,11 @@ $INCLUDE $m/lib/string
 
 $IFDEF M_LIB_COLOR
   $INCLUDE $m/lib/color
-  $DEF .color_escape M-LIB-COLOR-escape
-  $DEF .color_strcut M-LIB-COLOR-strcut
-  $DEF .color_strcat M-LIB-COLOR-strcat
-  $DEF .color_strip M-LIB-COLOR-strip
 $ELSE
-  $DEF .color_escape
-  $DEF .color_strcat \strcut
-  $DEF .color_strcat \strcat
-  $DEF .color_strip
+  $DEF M-LIB-COLOR-escape
+  $DEF M-LIB-COLOR-strcut \strcut
+  $DEF M-LIB-COLOR-strcat \strcat
+  $DEF M-LIB-COLOR-strip
 $ENDIF
 
 $IFDEF M_LIB_THEME
@@ -379,10 +375,12 @@ $PUBDEF :
 
 (* ------------------------------------------------------------------------- *)
 
-: string_cb_strcat .color_strcat ;
-: string_cb_strcut .color_strcut ;
-: string_cb_strstrip .color_strip ;
-: string_cb ( -- a ) { "strcat" 'string_cb_strcat "strcut" 'string_cb_strcut "strstrip" 'string_cb_strstrip }dict ;
+: color_cb_strcat M-LIB-COLOR-strcat ;
+: color_cb_strcut M-LIB-COLOR-strcut ;
+: color_cb_strstrip M-LIB-COLOR-strip ;
+: color_cb_toupper M-LIB-COLOR-toupper ;
+: color_cb_tolower M-LIB-COLOR-tolower ;
+: color_cb ( -- a ) { "strcat" 'color_cb_strcat "strcut" 'color_cb_strcut "strstrip" 'color_cb_strstrip "toupper" 'color_cb_toupper "tolower" 'color_cb_tolower }dict ;
 
 : sex_category[ str:sex -- str:category ]
   "" var! category
@@ -686,12 +684,12 @@ $PUBDEF :
 $IFDEF M_LIB_COLOR
   opts @ "color" [] dup not if pop "" then "escape" stringcmp not if
     substitutions @ foreach
-      .color_escape
+      M-LIB-COLOR-escape
       substitutions @ rot ->[] substitutions !
     repeat
   else opts @ "color" [] dup not if pop "" then "keep" stringcmp if
     substitutions @ foreach
-      .color_strip
+      M-LIB-COLOR-strip
       substitutions @ rot ->[] substitutions !
     repeat
   then then
@@ -699,9 +697,9 @@ $ENDIF
   opts @ "name_match" [] dup not if pop "" then "no" stringcmp if
     object @ name "_" " " subst tolower var! object_name
     object @ base_names { swap foreach nip "_" " " subst tolower repeat }list var! object_base_names
-    substitutions @ "%n" .color_strip [] "_" " " subst tolower var! opt_n
-    substitutions @ "%d" .color_strip [] "_" " " subst tolower var! opt_d
-    substitutions @ "%i" .color_strip [] "_" " " subst tolower var! opt_i
+    substitutions @ "%n" M-LIB-COLOR-strip [] "_" " " subst tolower var! opt_n
+    substitutions @ "%d" M-LIB-COLOR-strip [] "_" " " subst tolower var! opt_d
+    substitutions @ "%i" M-LIB-COLOR-strip [] "_" " " subst tolower var! opt_i
     opt_n @ object_name @ stringcmp if
       object @ default_n substitutions @ "%n" ->[] substitutions !
     then
@@ -722,13 +720,13 @@ $IFDEF M_LIB_THEME
   opts @ "name_theme" [] dup not if pop "" then "yes" stringcmp not if
     substitutions @ "%n" [] if
       substitutions @ "%n" []
-      .color_strip
+      M-LIB-COLOR-strip
       1 array_make object @ M-LIB-THEME-format_obj_type M-LIB-THEME-format
       substitutions @ "%n" ->[] substitutions !
     then
     substitutions @ "%d" [] if
       substitutions @ "%d" []
-      .color_strip
+      M-LIB-COLOR-strip
       dup "the[_ ]*" smatch if
         4 strcut
       else
@@ -740,7 +738,7 @@ $IFDEF M_LIB_THEME
     then
     substitutions @ "%i" [] if
       substitutions @ "%i" []
-      .color_strip
+      M-LIB-COLOR-strip
       dup "the[_ ]*" smatch if
         4 strcut
       else dup "an[_ ]*" smatch if
@@ -762,7 +760,7 @@ $ENDIF
 : sub_code[ str:codestr arr:substitutions -- str:result ]
   var code
   var obj_id
-  codestr @ .color_strip 1 strcut swap pop var! codestr_stripped
+  codestr @ M-LIB-COLOR-strip 1 strcut swap pop var! codestr_stripped
   codestr_stripped @ "[1-9][adinoprstvwxyz]" smatch if
     codestr_stripped @
     1 strcut swap atoi obj_id ! code !
@@ -781,7 +779,7 @@ $ENDIF
     codestr @ exit
   then
   code @ code @ toupper = if
-     1 .color_strcut swap toupper swap strcat
+     1 M-LIB-COLOR-strcut swap toupper swap strcat
   then
 ;
 
@@ -792,17 +790,16 @@ $ENDIF
     var! object
     object @ get_substitutions object @ opts @ sub_fix substitutions @ []<- substitutions !
   repeat
-  template @ "%" string_cb M-LIB-STRING-carve_array
+  template @ "%" color_cb M-LIB-STRING-carve_array_cb
   1 array_cut swap array_vals pop var! result
   foreach
     nip
-    dup 1 .color_strcut swap pop 1 .color_strcut pop .color_strip number? if
-      3 .color_strcut swap substitutions @ sub_code swap .color_strcat
+    dup 1 M-LIB-COLOR-strcut swap pop 1 M-LIB-COLOR-strcut pop M-LIB-COLOR-strip number? if
+      3 M-LIB-COLOR-strcut swap substitutions @ sub_code swap M-LIB-COLOR-strcat_hard
     else
-      2 .color_strcut swap substitutions @ sub_code swap .color_strcat
+      2 M-LIB-COLOR-strcut swap substitutions @ sub_code swap M-LIB-COLOR-strcat_hard
     then
-    (* No .color_strcat here because we want the color to bleed from the template string into the beginning of the substitution *)
-    result @ swap strcat result !
+    result @ swap M-LIB-COLOR-strcat result !
   repeat
   result @
 ;
