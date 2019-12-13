@@ -52,7 +52,6 @@ $PRAGMA comment_recurse
 (*     M-LIB-STRING-}cat_cb                                                  *)
 (*     M-LIB-STRING-atoi_cb                                                  *)
 (*     M-LIB-STRING-carve_array_cb                                           *)
-(*     M-LIB-STRING-dice_array_cb                                            *)
 (*     M-LIB-STRING-einstr_cb                                                *)
 (*     M-LIB-STRING-einstring_cb                                             *)
 (*     M-LIB-STRING-erinstr_cb                                               *)
@@ -105,15 +104,6 @@ $PRAGMA comment_recurse
 (*     '$lib/strings style' command string parsing.                          *)
 (*       Before: " #option  tom dick  harry = message "                      *)
 (*       After:  "option" "tom dick harry" " message "                       *)
-(*                                                                           *)
-(*   M-LIB-STRING-dice_array ( s a -- a )                                    *)
-(*     Like M-LIB-STRING-slice_array, but you can supply multiple separatior *)
-(*     options. For example:                                                 *)
-(*       "a b  c-- d" { " " "--" }list M-LIB-STRING-dice_array               *)
-(*       Result: {"a", " ", "b", " ", "", " ", "c", "--", "", " ", "d"}      *)
-(*                                                                           *)
-(*     The array will never begin or end with a separator, so it will always *)
-(*     have an odd number of elements.                                       *)
 (*                                                                           *)
 (*   M-LIB-STRING-einstr ( s s -- i )                                        *)
 (*   M-LIB-STRING-einstring ( s s -- i )                                     *)
@@ -232,37 +222,6 @@ $PUBDEF :
       rot strcut
     repeat
   }list
-;
-
-: dice_array[ str:source arr:sep -- arr:result ]
-  { }list var! result
-  begin
-    (* Find the next match for each separator and keep the closest one *)
-    "" var! min_sep
-    inf var! min_pos
-    sep @ foreach
-      nip
-      var! this_sep
-      source @ this_sep @ instring var! this_pos
-      this_pos @ if
-        this_pos @ -- this_pos ! (* We want to cut just before the separator *)
-        this_pos @ min_pos @ < if
-          this_pos @ min_pos !
-          this_sep @ min_sep !
-        then
-      then
-    repeat
-    (* If we found no separator, we're done. *)
-    min_sep @ not if
-      source @ result @ array_appenditem result !
-      break
-    then
-    (* Slice off everything up to the next separator, and the separator *)
-    source @ min_pos @ strcut source ! result @ array_appenditem result !
-    source @ min_sep @ strlen strcut source ! result @ array_appenditem result !
-  repeat
-  (* Return result *)
-  result @
 ;
 
 : carve_array ( s s -- a )
@@ -479,13 +438,6 @@ $PUBDEF :
   cbs @ striplead_cb cbs @ striptail_cb
 ;
 
-: dice_array_cb[ str:source arr:sep dict:cbs -- arr:result ]
-  source @ cbs @ strstrip_cb var! source_stripped
-  { sep @ foreach nip cbs @ strstrip_cb repeat }list var! sep_stripped
-  source_stripped @ sep_stripped @ dice_array
-  { source @ rot foreach nip strlen cbs @ strcut_cb repeat pop }list
-;
-
 : regslice_cb[ str:text str:pattern int:flags dict:cbs -- arr:results ]
   text @ cbs @ strstrip_cb pattern @ flags @ regslice
   { text @ rot foreach nip strlen cbs @ strcut_cb repeat pop }list
@@ -644,29 +596,6 @@ $LIBDEF M-LIB-STRING-carve_array_cb
 ;
 PUBLIC M-LIB-STRING-command_parse
 $LIBDEF M-LIB-STRING-command_parse
-
-(*****************************************************************************)
-(*                          M-LIB-STRING-dice_array                          *)
-(*****************************************************************************)
-: M-LIB-STRING-dice_array ( s a -- a )
-  (* M1 OK *)
-  "sy" checkargs
-  dice_array
-;
-PUBLIC M-LIB-STRING-dice_array
-$LIBDEF M-LIB-STRING-dice_array
-
-(*****************************************************************************)
-(*                         M-LIB-STRING-dice_array_cb                        *)
-(*****************************************************************************)
-: M-LIB-STRING-dice_array_cb ( ? a a -- a )
-  (* M1 OK *)
-  "?yx" checkargs
-  dup cbs_check
-  dice_array_cb
-;
-PUBLIC M-LIB-STRING-dice_array_cb
-$LIBDEF M-LIB-STRING-dice_array_cb
 
 (*****************************************************************************)
 (*                            M-LIB-STRING-einstr                            *)

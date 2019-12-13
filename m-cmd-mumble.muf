@@ -80,7 +80,7 @@ WIZCALL M-HELP-help
 
 : redact[ str:message float:redact_factor ]
   (* Split message on quotes and spaces *)
-  message @ { " " "\"" }list { }dict M-LIB-STRING-dice_array var! message_parts
+  message @ " |\"" 0 M-LIB-STRING-regslice var! message_parts
   (* Remove empty elements *)
   { message_parts @ foreach nip dup not if pop then repeat }list message_parts !
   (* Anything between the quotes and spaces is up for redaction. Count how many we have *)
