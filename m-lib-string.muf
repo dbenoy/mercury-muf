@@ -547,25 +547,13 @@ $PUBDEF :
 : std_cb ( -- a ) { "strcat" 'std_cb_strcat "strcut" 'std_cb_strcut "strstrip" 'std_cb_strstrip "toupper" 'std_cb_toupper "tolower" 'std_cb_tolower }dict ;
 
 (* Take the callback list in user supplied format and clean it up into the format expected by the internal code *)
-: string_cbs_process[ dict:cbs_in -- dict:cbs_out ]
+: cbs_check[ dict:cbs -- ]
   var cb
-  (* Set defaults *)
-  {
-    "strstrip" 'std_cb_strstrip
-    "strcut" 'std_cb_strcut
-    "strcat" 'std_cb_strcat
-    "toupper" 'std_cb_toupper
-    "tolower" 'std_cb_tolower
-  }dict var! cbs_out
-  (* Handle function pointers *)
   { "strstrip" "strcut" "strcat" "toupper" "tolower" }list foreach
     nip
-    cb !
-    cbs_in @ cb @ [] address? not if continue then
-    cbs_in @ cb @ [] cbs_out @ cb @ ->[] cbs_out !
+    var! cb
+    cbs @ cb @ [] address? not if { "String callback " cb @ " not found." }join abort then
   repeat
-  (* Return result *)
-  cbs_out @
 ;
 
 (*****************************************************************************)
@@ -574,7 +562,8 @@ $PUBDEF :
 : M-LIB-STRING-array_interpret_cb ( a a -- ? )
   (* M1 OK *)
   "yx" checkargs
-  string_cbs_process var! cbs
+  dup cbs_check
+  var! cbs
   "" swap foreach
     nip
     1 array_make array_interpret cbs @ strcat_cb
@@ -589,7 +578,8 @@ $LIBDEF M-LIB-STRING-array_interpret_cb
 : M-LIB-STRING-array_join_cb ( a ? a -- ? )
   (* M1 OK *)
   "y?x" checkargs
-  string_cbs_process var! cbs
+  dup cbs_check
+  var! cbs
   swap 1 array_cut foreach nip 3 pick rot []<- []<- repeat swap pop
   "" swap foreach
     nip
@@ -605,7 +595,8 @@ $LIBDEF M-LIB-STRING-array_join_cb
 : M-LIB-STRING-atoi_cb ( ? cbs -- i )
   (* M1 OK *)
   "?x" checkargs
-  string_cbs_process strstrip_cb
+  dup cbs_check
+  strstrip_cb
   atoi
 ;
 PUBLIC M-LIB-STRING-atoi_cb
@@ -628,7 +619,8 @@ $LIBDEF M-LIB-STRING-carve_array
 : M-LIB-STRING-carve_array_cb ( ? ? cbs -- a )
   (* M1 OK *)
   "??x" checkargs
-  string_cbs_process carve_array_cb
+  dup cbs_check
+  carve_array_cb
 ;
 PUBLIC M-LIB-STRING-carve_array_cb
 $LIBDEF M-LIB-STRING-carve_array_cb
@@ -670,7 +662,8 @@ $LIBDEF M-LIB-STRING-dice_array
 : M-LIB-STRING-dice_array_cb ( ? a a -- a )
   (* M1 OK *)
   "?yx" checkargs
-  string_cbs_process dice_array_cb
+  dup cbs_check
+  dice_array_cb
 ;
 PUBLIC M-LIB-STRING-dice_array_cb
 $LIBDEF M-LIB-STRING-dice_array_cb
@@ -692,7 +685,8 @@ $LIBDEF M-LIB-STRING-einstr
 : M-LIB-STRING-einstr_cb ( ? ? a -- i )
   (* M1 OK *)
   "??x" checkargs
-  string_cbs_process einstr_cb
+  dup cbs_check
+  einstr_cb
 ;
 PUBLIC M-LIB-STRING-einstr_cb
 $LIBDEF M-LIB-STRING-einstr_cb
@@ -714,7 +708,8 @@ $LIBDEF M-LIB-STRING-einstring
 : M-LIB-STRING-einstring_cb ( ? ? a -- i )
   (* M1 OK *)
   "??x" checkargs
-  string_cbs_process einstring_cb
+  dup cbs_check
+  einstring_cb
 ;
 PUBLIC M-LIB-STRING-einstring_cb
 $LIBDEF M-LIB-STRING-einstring_cb
@@ -736,7 +731,8 @@ $LIBDEF M-LIB-STRING-erinstr
 : M-LIB-STRING-erinstr_cb ( ? ? a -- i )
   (* M1 OK *)
   "??x" checkargs
-  string_cbs_process erinstr_cb
+  dup cbs_check
+  erinstr_cb
 ;
 PUBLIC M-LIB-STRING-erinstr_cb
 $LIBDEF M-LIB-STRING-erinstr_cb
@@ -758,7 +754,8 @@ $LIBDEF M-LIB-STRING-erinstring
 : M-LIB-STRING-erinstring_cb ( ? ? a -- i )
   (* M1 OK *)
   "??x" checkargs
-  string_cbs_process erinstring_cb
+  dup cbs_check
+  erinstring_cb
 ;
 PUBLIC M-LIB-STRING-erinstring_cb
 $LIBDEF M-LIB-STRING-erinstring_cb
@@ -769,7 +766,8 @@ $LIBDEF M-LIB-STRING-erinstring_cb
 : M-LIB-STRING-explode_cb ( ? ? cbs -- ... i )
   (* M1 OK *)
   "??x" checkargs
-  string_cbs_process explode_array_cb array_vals
+  dup cbs_check
+  explode_array_cb array_vals
 ;
 PUBLIC M-LIB-STRING-explode_cb
 $LIBDEF M-LIB-STRING-explode_cb
@@ -780,7 +778,8 @@ $LIBDEF M-LIB-STRING-explode_cb
 : M-LIB-STRING-explode_array_cb ( ? ? cbs -- a )
   (* M1 OK *)
   "??x" checkargs
-  string_cbs_process explode_array_cb
+  dup cbs_check
+  explode_array_cb
 ;
 PUBLIC M-LIB-STRING-explode_array_cb
 $LIBDEF M-LIB-STRING-explode_array_cb
@@ -802,7 +801,8 @@ $LIBDEF M-LIB-STRING-hex?
 : M-LIB-STRING-hex?_cb ( ? cbs -- i )
   (* M1 OK *)
   "?x" checkargs
-  string_cbs_process strstrip_cb hex?
+  dup cbs_check
+  strstrip_cb hex?
 ;
 PUBLIC M-LIB-STRING-hex?_cb
 $LIBDEF M-LIB-STRING-hex?_cb
@@ -813,7 +813,8 @@ $LIBDEF M-LIB-STRING-hex?_cb
 : M-LIB-STRING-instr_cb ( ? ? cbs -- i )
   (* M1 OK *)
   "??x" checkargs
-  string_cbs_process instr_cb
+  dup cbs_check
+  instr_cb
 ;
 PUBLIC M-LIB-STRING-instr_cb
 $LIBDEF M-LIB-STRING-instr_cb
@@ -824,7 +825,8 @@ $LIBDEF M-LIB-STRING-instr_cb
 : M-LIB-STRING-instring_cb ( ? ? cbs -- i )
   (* M1 OK *)
   "??x" checkargs
-  string_cbs_process instring_cb
+  dup cbs_check
+  instring_cb
 ;
 PUBLIC M-LIB-STRING-instring_cb
 $LIBDEF M-LIB-STRING-instring_cb
@@ -846,7 +848,8 @@ $LIBDEF M-LIB-STRING-itox
 : M-LIB-STRING-midstr_cb ( ? i i cbs -- ? )
   (* M1 OK *)
   "?iix" checkargs
-  string_cbs_process var! cbs
+  dup cbs_check
+  var! cbs
   over 1 < if "Data must be a positive integer. (2)" abort then
   -rot -- cbs @ strcut_cb swap pop swap cbs @ strcut_cb pop
 ;
@@ -859,7 +862,8 @@ $LIBDEF M-LIB-STRING-midstr_cb
 : M-LIB-STRING-number?_cb ( ? cbs -- i )
   (* M1 OK *)
   "?x" checkargs
-  string_cbs_process strstrip_cb number?
+  dup cbs_check
+  strstrip_cb number?
 ;
 PUBLIC M-LIB-STRING-number?_cb
 $LIBDEF M-LIB-STRING-number?_cb
@@ -881,7 +885,8 @@ $LIBDEF M-LIB-STRING-regslice
 : M-LIB-STRING-regslice_cb ( ? ? i cbs -- a )
   (* M1 OK *)
   "??ix" checkargs
-  string_cbs_process regslice_cb
+  dup cbs_check
+  regslice_cb
 ;
 PUBLIC M-LIB-STRING-regslice_cb
 $LIBDEF M-LIB-STRING-regslice_cb
@@ -892,7 +897,8 @@ $LIBDEF M-LIB-STRING-regslice_cb
 : M-LIB-STRING-rinstr_cb ( ? ? cbs -- i )
   (* M1 OK *)
   "??x" checkargs
-  string_cbs_process rinstr_cb
+  dup cbs_check
+  rinstr_cb
 ;
 PUBLIC M-LIB-STRING-rinstr_cb
 $LIBDEF M-LIB-STRING-rinstr_cb
@@ -903,7 +909,8 @@ $LIBDEF M-LIB-STRING-rinstr_cb
 : M-LIB-STRING-rinstring_cb ( ? ? cbs -- i )
   (* M1 OK *)
   "??x" checkargs
-  string_cbs_process rinstring_cb
+  dup cbs_check
+  rinstring_cb
 ;
 PUBLIC M-LIB-STRING-rinstring_cb
 $LIBDEF M-LIB-STRING-rinstring_cb
@@ -914,7 +921,7 @@ $LIBDEF M-LIB-STRING-rinstring_cb
 : M-LIB-STRING-rsplit_cb[ any:source any:sep arr:cbs -- any:result1 any:result2 ]
   (* M1 OK *)
   cbs @ dictionary? not if "Non-dictionary argument (3)." abort then
-  cbs @ string_cbs_process cbs !
+  cbs @ cbs_check
   source @ source @ sep @ cbs @ erinstr_cb cbs @ strcut_cb
   sep @ cbs @ strlen_cb cbs @ strcut_cb swap pop
 ;
@@ -938,7 +945,8 @@ $LIBDEF M-LIB-STRING-single_space
 : M-LIB-STRING-single_space_cb ( ? cbs -- ? )
   (* M1 OK *)
   "?x" checkargs
-  string_cbs_process var! cbs
+  dup cbs_check
+  var! cbs
   begin " " "  " cbs @ subst_cb
     dup "  " cbs @ instr_cb not
   until
@@ -978,7 +986,8 @@ $LIBDEF M-LIB-STRING-slice_array
 : M-LIB-STRING-slice_array_cb ( ? ? cbs -- a )
   (* M1 OK *)
   "??x" checkargs
-  string_cbs_process slice_array_cb
+  dup cbs_check
+  slice_array_cb
 ;
 PUBLIC M-LIB-STRING-slice_array_cb
 $LIBDEF M-LIB-STRING-slice_array_cb
@@ -989,7 +998,7 @@ $LIBDEF M-LIB-STRING-slice_array_cb
 : M-LIB-STRING-split_cb[ any:source any:sep arr:cbs -- any:result1 any:result2 ]
   (* M1 OK *)
   cbs @ dictionary? not if "Non-dictionary argument (3)." abort then
-  cbs @ string_cbs_process cbs !
+  cbs @ cbs_check
   source @ source @ sep @ cbs @ einstr_cb cbs @ strcut_cb
   sep @ cbs @ strlen_cb cbs @ strcut_cb swap pop
 ;
@@ -1002,7 +1011,8 @@ $LIBDEF M-LIB-STRING-split_cb
 : M-LIB-STRING-strcat_cb ( ? ? cbs -- ? )
   (* M1 OK *)
   "??x" checkargs
-  string_cbs_process strcat_cb
+  dup cbs_check
+  strcat_cb
 ;
 PUBLIC M-LIB-STRING-strcat_cb
 $LIBDEF M-LIB-STRING-strcat_cb
@@ -1013,7 +1023,8 @@ $LIBDEF M-LIB-STRING-strcat_cb
 : M-LIB-STRING-strcmp_cb ( ? ? cbs -- i )
   (* M1 OK *)
   "??x" checkargs
-  string_cbs_process var! cbs
+  dup cbs_check
+  var! cbs
   swap cbs @ strstrip_cb swap
   cbs @ strstrip_cb
   strcmp
@@ -1027,7 +1038,8 @@ $LIBDEF M-LIB-STRING-strcmp_cb
 : M-LIB-STRING-strcut_cb ( ? i cbs -- ? ? )
   (* M1 OK *)
   "?ix" checkargs
-  string_cbs_process strcut_cb
+  dup cbs_check
+  strcut_cb
 ;
 PUBLIC M-LIB-STRING-strcut_cb
 $LIBDEF M-LIB-STRING-strcut_cb
@@ -1038,7 +1050,8 @@ $LIBDEF M-LIB-STRING-strcut_cb
 : M-LIB-STRING-stringcmp_cb ( ? ? cbs -- i )
   (* M1 OK *)
   "??x" checkargs
-  string_cbs_process var! cbs
+  dup cbs_check
+  var! cbs
   swap cbs @ strstrip_cb swap
   cbs @ strstrip_cb
   stringcmp
@@ -1052,7 +1065,8 @@ $LIBDEF M-LIB-STRING-stringcmp_cb
 : M-LIB-STRING-stringpfx_cb ( ? ? cbs -- i )
   (* M1 OK *)
   "??x" checkargs
-  string_cbs_process var! cbs
+  dup cbs_check
+  var! cbs
   swap cbs @ strstrip_cb swap
   cbs @ strstrip_cb
   stringpfx
@@ -1066,7 +1080,8 @@ $LIBDEF M-LIB-STRING-stringpfx_cb
 : M-LIB-STRING-strip_cb ( ? cbs -- ? )
   (* M1 OK *)
   "?x" checkargs
-  string_cbs_process strip_cb
+  dup cbs_check
+  strip_cb
 ;
 PUBLIC M-LIB-STRING-strip_cb
 $LIBDEF M-LIB-STRING-strip_cb
@@ -1077,7 +1092,8 @@ $LIBDEF M-LIB-STRING-strip_cb
 : M-LIB-STRING-striplead_cb ( ? cbs -- ? )
   (* M1 OK *)
   "?x" checkargs
-  string_cbs_process striplead_cb
+  dup cbs_check
+  striplead_cb
 ;
 PUBLIC M-LIB-STRING-striplead_cb
 $LIBDEF M-LIB-STRING-striplead_cb
@@ -1088,7 +1104,8 @@ $LIBDEF M-LIB-STRING-striplead_cb
 : M-LIB-STRING-striptail_cb ( ? cbs -- ? )
   (* M1 OK *)
   "?x" checkargs
-  string_cbs_process striptail_cb
+  dup cbs_check
+  striptail_cb
 ;
 PUBLIC M-LIB-STRING-striptail_cb
 $LIBDEF M-LIB-STRING-striptail_cb
@@ -1099,7 +1116,8 @@ $LIBDEF M-LIB-STRING-striptail_cb
 : M-LIB-STRING-strlen_cb ( ? cbs -- i )
   (* M1 OK *)
   "?x" checkargs
-  string_cbs_process strlen_cb
+  dup cbs_check
+  strlen_cb
 ;
 PUBLIC M-LIB-STRING-strlen_cb
 $LIBDEF M-LIB-STRING-strlen_cb
@@ -1110,7 +1128,8 @@ $LIBDEF M-LIB-STRING-strlen_cb
 : M-LIB-STRING-strncmp_cb ( ? ? i cbs -- i )
   (* M1 OK *)
   "??ix" checkargs
-  string_cbs_process var! cbs
+  dup cbs_check
+  var! cbs
   swap cbs @ strstrip_cb swap
   cbs @ strstrip_cb
   strncmp
@@ -1124,7 +1143,8 @@ $LIBDEF M-LIB-STRING-strncmp_cb
 : M-LIB-STRING-strtof_cb ( ? cbs -- f )
   (* M1 OK *)
   "?x" checkargs
-  string_cbs_process strstrip_cb strtof
+  dup cbs_check
+  strstrip_cb strtof
 ;
 PUBLIC M-LIB-STRING-strtof_cb
 $LIBDEF M-LIB-STRING-strtof_cb
@@ -1136,7 +1156,8 @@ $LIBDEF M-LIB-STRING-strtof_cb
   (* M1 OK *)
   "???x" checkargs
   over not if "Empty string argument (3)" abort then
-  string_cbs_process subst_cb
+  dup cbs_check
+  subst_cb
 ;
 PUBLIC M-LIB-STRING-subst_cb
 $LIBDEF M-LIB-STRING-subst_cb
@@ -1147,7 +1168,8 @@ $LIBDEF M-LIB-STRING-subst_cb
 : M-LIB-STRING-toupper_cb ( ? cbs -- i )
   (* M1 OK *)
   "?x" checkargs
-  string_cbs_process toupper_cb
+  dup cbs_check
+  toupper_cb
 ;
 PUBLIC M-LIB-STRING-toupper_cb
 $LIBDEF M-LIB-STRING-toupper_cb
@@ -1158,7 +1180,8 @@ $LIBDEF M-LIB-STRING-toupper_cb
 : M-LIB-STRING-tolower_cb ( ? cbs -- i )
   (* M1 OK *)
   "?x" checkargs
-  string_cbs_process tolower_cb
+  dup cbs_check
+  tolower_cb
 ;
 PUBLIC M-LIB-STRING-tolower_cb
 $LIBDEF M-LIB-STRING-tolower_cb
@@ -1171,7 +1194,7 @@ $LIBDEF M-LIB-STRING-tolower_cb
   width_wrap @ int? not if "Non-integer argument (2)." abort then
   opts @ dictionary? not if "Non-dictionary argument (3)." abort then
   cbs @ dictionary? not if "Non-dictionary argument (4)." abort then
-  cbs @ string_cbs_process cbs !
+  cbs @ cbs_check
   source @ width_wrap @ opts @ cbs @ wordwrap_cb
 ;
 PUBLIC M-LIB-STRING-wordwrap_cb
@@ -1207,7 +1230,8 @@ $LIBDEF M-LIB-STRING-xtoi
 : M-LIB-STRING-xtoi_cb ( ? cbs -- i )
   (* M1 OK *)
   "?x" checkargs
-  string_cbs_process strstrip_cb
+  dup cbs_check
+  strstrip_cb
   xtoi
 ;
 PUBLIC M-LIB-STRING-xtoi_cb
@@ -1230,7 +1254,8 @@ $LIBDEF M-LIB-STRING-zeropad
 : M-LIB-STRING-zeropad_cb ( ? i a -- i )
   (* M1 OK *)
   "?ix" checkargs
-  string_cbs_process var! cbs
+  dup cbs_check
+  var! cbs
   over cbs @ strlen_cb - dup 0 > if "0" * swap cbs @ strcat_cb else pop then
 ;
 PUBLIC M-LIB-STRING-zeropad_cb
