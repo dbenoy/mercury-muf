@@ -212,10 +212,26 @@ $DOCCMD  @list __PROG__=2-212
 
 $PUBDEF :
 
+: regexp_nozero[ str:text str:pattern int:flags -- list:submatchvals list:submatchidx ]
+  text @ pattern @ flags @ regexp
+  dup not if exit then
+  dup 1 array_cut pop array_vals pop array_vals pop 0 = swap 1 = and if
+    (* Matched at the beginning of the string, zero length, so fix it by removing the first character and trying again. *)
+    pop pop
+    text @ 1 strcut swap pop pattern @ flags @ regexp
+    {
+      swap foreach
+        nip
+        dup 0 [] ++ swap 0 ->[]
+      repeat
+    }list
+  then
+;
+
 : regslice[ str:text str:pattern int:flags -- list:results ]
   {
     text @ begin
-      dup pattern @ flags @ regexp nip
+      dup pattern @ flags @ regexp_nozero nip
       dup not if pop break then
       1 array_cut pop array_vals pop array_vals pop
       -rot -- strcut
