@@ -62,7 +62,7 @@ WIZCALL M-HELP-desc
 : M-HELP-help ( d -- a )
   name ";" split pop toupper var! action_name
   {
-    { action_name @ " [#nomap ]<player>[=<mapname>]" }join
+    { action_name @ " [#nomap ]<player>[=<mapname>]" }cat
     " "
     "  Displays the location of another player. Unless #nomap is specified, the map at the location of the player will also be shown. If a map name is specified, it will show the player's location on that map. The map program (Typically @map #list) can display a list of globally available maps."
   }list
@@ -97,7 +97,7 @@ WIZCALL M-HELP-help
   player @ 0 < if exit then
   player @ begin dup room? if break then location repeat var! player_room
   player_room @ M-LIB-ROOM-public? not if
-    { player @ name " is in a private location." }join .err .tell
+    { player @ name " is in a private location." }cat .err .tell
     exit
   then
   map_room @ if
@@ -117,7 +117,7 @@ WIZCALL M-HELP-help
   show_map @ if
     player @ map_room @ M-CMD-AT_MAP-display
   then
-  { player @ name " is " player @ location_text "." }join M-LIB-COLOR-escape .tell
+  { player @ name " is " player @ location_text "." }cat M-LIB-COLOR-escape .tell
 ;
 .
 c

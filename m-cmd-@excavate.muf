@@ -69,9 +69,9 @@ WIZCALL M-HELP-desc
 : M-HELP-help ( d -- a )
   name ";" split pop toupper var! action_name
   {
-    { action_name @ " <room>[=<exit to room>[=<backlink from room>]]" }join
+    { action_name @ " <room>[=<exit to room>[=<backlink from room>]]" }cat
     " "
-    { "  Creates a new room and, optionally, an exit leading from your current location to the room, and/or an exit leading from the room to your current location. The room is automatically parented to the same position in the environment tree as your current location. Creating a room costs " "room_cost" sysparm M-LIB-PENNIES-pennies ".  Creating an exit costs " "exit_cost" sysparm M-LIB-PENNIES-pennies ". Only a builder may use this command." }join
+    { "  Creates a new room and, optionally, an exit leading from your current location to the room, and/or an exit leading from the room to your current location. The room is automatically parented to the same position in the environment tree as your current location. Creating a room costs " "room_cost" sysparm M-LIB-PENNIES-pennies ".  Creating an exit costs " "exit_cost" sysparm M-LIB-PENNIES-pennies ". Only a builder may use this command." }cat
   }list
 ;
 WIZCALL M-HELP-help
@@ -93,16 +93,16 @@ WIZCALL M-HELP-help
 
   foreexit @ if
     "Creating " foreexit @ strcat "..." strcat .tell
-    { "#" loc @ intostr }join foreexit @ M-CMD-AT_ACTION-action dup not if pop exit then var! newforeexit
+    { "#" loc @ intostr }cat foreexit @ M-CMD-AT_ACTION-action dup not if pop exit then var! newforeexit
     "Trying to link..." .tell
-    { "#" newforeexit @ intostr }join { "#" newroom @ intostr }join M-CMD-AT_LINK-link not if exit then
+    { "#" newforeexit @ intostr }cat { "#" newroom @ intostr }cat M-CMD-AT_LINK-link not if exit then
   then
 
   backexit @ if
     "Creating " backexit @ strcat "..." strcat .tell
-    { "#" newroom @ intostr }join backexit @ M-CMD-AT_ACTION-action dup not if pop exit then var! newbackexit
+    { "#" newroom @ intostr }cat backexit @ M-CMD-AT_ACTION-action dup not if pop exit then var! newbackexit
     "Trying to link..." .tell
-    { "#" newbackexit @ intostr }join { "#" loc @ intostr }join M-CMD-AT_LINK-link not if exit then
+    { "#" newbackexit @ intostr }cat { "#" loc @ intostr }cat M-CMD-AT_LINK-link not if exit then
   then
 ;
 .

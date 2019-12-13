@@ -80,9 +80,9 @@ WIZCALL M-HELP-desc
 : M-HELP-help ( d -- a )
   name ";" split pop toupper var! action_name
   {
-    { action_name @ " <name>=<source>[,<destination>[; <destination2>; ... <destinationN>]] [=<regname>]" }join
+    { action_name @ " <name>=<source>[,<destination>[; <destination2>; ... <destinationN>]] [=<regname>]" }cat
     " "
-    { "  Creates a new action and attaches it to the thing, room, or player specified. If a <regname> is specified, then the _reg/<regname> property on the player is set to the dbref of the new object. This lets players refer to the object as $<regname> (ie: $mybutton) in @locks, @sets, etc. You may only attach actions you control to things you control. Creating an action costs " "exit_cost" sysparm M-LIB-PENNIES-pennies ". The action can then be linked with the command @LINK." }join
+    { "  Creates a new action and attaches it to the thing, room, or player specified. If a <regname> is specified, then the _reg/<regname> property on the player is set to the dbref of the new object. This lets players refer to the object as $<regname> (ie: $mybutton) in @locks, @sets, etc. You may only attach actions you control to things you control. Creating an action costs " "exit_cost" sysparm M-LIB-PENNIES-pennies ". The action can then be linked with the command @LINK." }cat
   }list
 ;
 WIZCALL M-HELP-help
@@ -144,7 +144,7 @@ WIZCALL M-HELP-help
   then
 
   cost @ M-LIB-PENNIES-payfor_chk not if
-    { "Sorry, you don't have enough " "pennies" sysparm " to create an action/exit." }join .tell
+    { "Sorry, you don't have enough " "pennies" sysparm " to create an action/exit." }cat .tell
     #-1 exit
   then
 

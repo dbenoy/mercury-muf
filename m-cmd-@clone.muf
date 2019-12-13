@@ -72,7 +72,7 @@ WIZCALL M-HELP-desc
 : M-HELP-help ( d -- a )
   name ";" split pop toupper var! action_name
   {
-    { action_name @ " <object> [=<regname>]" }join
+    { action_name @ " <object> [=<regname>]" }cat
     " "
     "Clones the given object, including name, location, flags, and properties.  You must have control of the object, you may not clone rooms, exits, etc, and cloning may cost pennies.  If successful, the command prints the identifier of the new object.  Only a Builder may use this command."
   }list
@@ -125,13 +125,13 @@ WIZCALL M-HELP-help
   then
 
   cost @ M-LIB-PENNIES-payfor_chk not if
-    { "Sorry, you don't have enough " "pennies" sysparm "." }join .tell
+    { "Sorry, you don't have enough " "pennies" sysparm "." }cat .tell
     #-1 exit
   then
 
   thing @ copyobj var! newThing
 
-  { "Object " thing @ unparseobj " cloned as " newThing @ unparseobj "." }join .tell
+  { "Object " thing @ unparseobj " cloned as " newThing @ unparseobj "." }cat .tell
 
   (* Endow the object *)
   cost @ M-LIB-PENNIES-payfor

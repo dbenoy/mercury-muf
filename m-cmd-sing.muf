@@ -49,8 +49,8 @@ WIZCALL M-HELP-desc
 : M-HELP-help ( d -- a )
   name ";" split pop var! action_name
   {
-    { action_name @ " <message>" }join
-    { "  Sing <message> out loud to everyone in the room.  If your name is Igor, and you typed '" action_name @ tolower " Turn around, bright eyes.', then you and everyone in the room will see:" }join
+    { action_name @ " <message>" }cat
+    { "  Sing <message> out loud to everyone in the room.  If your name is Igor, and you typed '" action_name @ tolower " Turn around, bright eyes.', then you and everyone in the room will see:" }cat
     "    Igor sings, o/` Turn around, bright eyes. o/`"
   }list
 ;
@@ -64,7 +64,7 @@ WIZCALL M-HELP-help
     "Sing what?" .tell
     exit
   then
-  { me @ name " sings, o/` "}join swap " o/`" strcat strcat
+  { me @ name " sings, o/` " }cat swap " o/`" strcat strcat
   { "from" me @ }dict M-LIB-EMOTE-emote
 ;
 .

@@ -68,7 +68,7 @@ WIZCALL M-HELP-desc
 : M-HELP-help ( d -- a )
   name ";" split pop toupper var! action_name
   {
-    { action_name @ " <object>=<prop>" }join
+    { action_name @ " <object>=<prop>" }cat
     " "
     "  Runs a line editor to edit the 'list' type property named <prop> on <object>."
   }list

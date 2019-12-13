@@ -278,7 +278,7 @@ $DEF OPTIONS_VALID_HIGHLIGHT_ALLOW_CUSTOM { "YES" "NO" "PLAIN" "NOCOLOR" }list
   option @ "color_name" = option @ "color_quoted" = or option @ "color_unquoted" = or if
     object @ not if "" exit then
     (* Generate a random pastel color seeded off the option name and the object's name *)
-    { "COLOR" "muckname" sysparm object @ name }join sha1hash setseed
+    { "COLOR" "muckname" sysparm object @ name }cat sha1hash setseed
     color_srand M-LIB-COLOR-rgb2hsl var! hsl
     option @ "color_name" = option @ "color_quoted" = or if
       (* Constrain the saturation *)
@@ -294,9 +294,9 @@ $DEF OPTIONS_VALID_HIGHLIGHT_ALLOW_CUSTOM { "YES" "NO" "PLAIN" "NOCOLOR" }list
     then
     hsl @ M-LIB-COLOR-hsl2rgb
     option @ "color_name" = if
-      { "[#" rot "]" object @ name " " "_" subst }join
+      { "[#" rot "]" object @ name " " "_" subst }cat
     else
-      { "[#" rot "]" }join
+      { "[#" rot "]" }cat
     then
     exit
   then
@@ -354,7 +354,7 @@ $DEF OPTIONS_VALID_HIGHLIGHT_ALLOW_CUSTOM { "YES" "NO" "PLAIN" "NOCOLOR" }list
     entry_dir @ "/" rsplit nip var! entry_serial
     entry_serial @ number? not if
 $IFDEF USERLOG
-      { "Bad emote history entry '" entry_dir @ "' on room #" room @ intostr ": Invalid serial number. Removing." }join userlog
+      { "Bad emote history entry '" entry_dir @ "' on room #" room @ intostr ": Invalid serial number. Removing." }cat userlog
 $ENDIF
       room @ entry_dir @ remove_prop
       continue
@@ -363,7 +363,7 @@ $ENDIF
     (* Ensure we're dealing with a propdir *)
     room @ entry_dir @ propdir? not if
 $IFDEF USERLOG
-      { "Bad emote history entry '" entry_dir @ "' on room #" room @ intostr ": Not a propdir. Removing." }join userlog
+      { "Bad emote history entry '" entry_dir @ "' on room #" room @ intostr ": Not a propdir. Removing." }cat userlog
 $ENDIF
       room @ entry_dir @ remove_prop
       continue
@@ -372,7 +372,7 @@ $ENDIF
     room @ entry_dir @ "/" strcat "timestamp" strcat getprop var! entry_timestamp
     entry_timestamp @ not if
 $IFDEF USERLOG
-      { "Bad emote history entry '" entry_dir @ "' on room #" room @ intostr ": No timestamp. Removing." }join userlog
+      { "Bad emote history entry '" entry_dir @ "' on room #" room @ intostr ": No timestamp. Removing." }cat userlog
 $ENDIF
       room @ entry_dir @ remove_prop
       continue
@@ -380,7 +380,7 @@ $ENDIF
     now @ entry_timestamp @ -
     dup 0 < if
 $IFDEF USERLOG
-      { "Bad emote history entry '" entry_dir @ "' on room #" room @ intostr ": Future timestamp!" }join userlog
+      { "Bad emote history entry '" entry_dir @ "' on room #" room @ intostr ": Future timestamp!" }cat userlog
 $ENDIF
     then
     room @ history_max_age > if
@@ -404,14 +404,14 @@ $ENDIF
     repeat
     good_count @ 2 < if
 $IFDEF USERLOG
-      { "Bad emote history entry '" entry_dir @ "' on room #" room @ intostr ": Invalid properties, or essential properties missing. Removing." }join userlog
+      { "Bad emote history entry '" entry_dir @ "' on room #" room @ intostr ": Invalid properties, or essential properties missing. Removing." }cat userlog
 $ENDIF
       room @ entry_dir @ remove_prop
       continue
     then
     (* We're good. Track this entry. *)
     entry_serial @ max_serial @ > if entry_serial @ max_serial ! then
-    { entry_timestamp @ intostr "-" entry_serial @ intostr }join timestamps @ array_appenditem timestamps !
+    { entry_timestamp @ intostr "-" entry_serial @ intostr }cat timestamps @ array_appenditem timestamps !
     entry_count ++
   repeat
   (* Is the highest serial entry greater than the currently stored serial number? If so, increment it. *)
@@ -459,7 +459,7 @@ $ENDIF
     "message_format" opts @ "message_format" []
     "message" message @
   }dict var! entry
-  room @ { HISTORY_PROPDIR "/" serial @ intostr "/" }join entry @ array_put_propvals
+  room @ { HISTORY_PROPDIR "/" serial @ intostr "/" }cat entry @ array_put_propvals
   old_mode @ setmode
 ;
 
@@ -498,7 +498,7 @@ $ENDIF
       from @ "color_name" config_default exit
     then
     to @ "highlight_allow_custom" opts @ config_get "PLAIN" = if
-      { THEME_COLOR_NAME from @ "color_name" opts @ config_get M-LIB-COLOR-strip }join exit
+      { THEME_COLOR_NAME from @ "color_name" opts @ config_get M-LIB-COLOR-strip }cat exit
     then
   then
   from @ "color_name" opts @ config_get
@@ -577,7 +577,7 @@ $DEF EINSTRING over swap instring dup not if pop strlen else nip -- then
         message_prevchar @ "[0-9a-zA-Z]" smatch not if
           message_remain @ found_name @ strlen strcut swap pop "[0-9a-zA-Z]*" smatch not if
             (* We are at the to object's name, and it is on its own, and we are not emoting to ourselves. Place the highlighted name and increment past it. *)
-            result @ { to @ opts @ highlight_mention_format_get message_remain @ found_name @ strlen strcut pop "@1" subst }join M-LIB-COLOR-strcat result !
+            result @ { to @ opts @ highlight_mention_format_get message_remain @ found_name @ strlen strcut pop "@1" subst }cat M-LIB-COLOR-strcat result !
             message_pos @ found_name @ strlen + message_pos !
             continue
           then

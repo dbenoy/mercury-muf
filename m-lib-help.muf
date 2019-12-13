@@ -116,13 +116,13 @@ $PUBDEF :
         depth 1 != if "One result expected." abort then
         dup string? not if "String expected." abort then
       catch
-        { "ERROR: (" FUNC_COMMAND_DESC ") " }join swap strcat
+        { "ERROR: (" FUNC_COMMAND_DESC ") " }cat swap strcat
       endcatch
       exit
     then
   then
   (* No luck. Return a default. *)
-  { "The " action @ name ";" split pop " command." }join
+  { "The " action @ name ";" split pop " command." }cat
 ;
 
 : command_get_help[ ref:action -- str:result ]
@@ -147,7 +147,7 @@ $PUBDEF :
         repeat
       catch_detailed
         {
-          { "ERROR in " FUNC_COMMAND_HELP }join
+          { "ERROR in " FUNC_COMMAND_HELP }cat
           rot foreach
             dup int? if intostr then
             dup dbref? if intostr "#" swap strcat then

@@ -69,7 +69,7 @@ WIZCALL M-HELP-desc
 : M-HELP-help ( d -- a )
   name ";" split pop var! action_name
   {
-    { action_name @ toupper " <player>=[:]<message>" }join
+    { action_name @ toupper " <player>=[:]<message>" }cat
     " "
     "Send a private message to a player. If the message starts with a colon it acts as a 'pose style' message. If a player is offline, the message will be delivered to them the next time they're available."
   }list
@@ -101,7 +101,7 @@ WIZCALL M-HELP-help
     "highlight_ooc_style" highlight_ooc_style @
     "message" message @
   }dict var! entry
-  to @ { MAIL_PROPDIR "/" serial @ intostr "/" }join entry @ array_put_propvals
+  to @ { MAIL_PROPDIR "/" serial @ intostr "/" }cat entry @ array_put_propvals
   old_mode @ setmode
   1
 ;
@@ -129,7 +129,7 @@ WIZCALL M-HELP-help
         "color_unquoted"      mail_entry @ "color_unquoted"      [] dup string? not if pop "" then
         "color_quoted"        mail_entry @ "color_quoted"        [] dup string? not if pop "" then
         "highlight_ooc_style" mail_entry @ "highlight_ooc_style" [] dup string? not if pop "" then
-      }dict M-LIB-EMOTE-style { "[#008080] (Sent " "%F %T" mail_entry @ "timestamp" [] timefmt ")" }join M-LIB-COLOR-strcat
+      }dict M-LIB-EMOTE-style { "[#008080] (Sent " "%F %T" mail_entry @ "timestamp" [] timefmt ")" }cat M-LIB-COLOR-strcat
       "PAGE" .tag .tell
   repeat
   "me" match MAIL_PROPDIR remove_prop

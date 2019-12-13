@@ -55,7 +55,7 @@ WIZCALL M-HELP-desc
 : M-HELP-help ( d -- a )
   name ";" split pop toupper var! action_name
   {
-    { action_name @ " <morph name>" }join
+    { action_name @ " <morph name>" }cat
     " "
     "  Loads a 'morph,' from the object editor."
     "  Morphs are a preset collection of descriptions and other cosmetic details."

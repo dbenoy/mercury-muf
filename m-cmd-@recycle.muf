@@ -78,7 +78,7 @@ WIZCALL M-HELP-desc
 : M-HELP-help ( d -- a )
   name ";" split pop toupper var! action_name
   {
-    { action_name @ " <object>" }join
+    { action_name @ " <object>" }cat
     " "
     "Destroy an object and remove all references to it within the database. The object is then added to a free list, and newly created objects are assigned from the pool of recycled objects first.  You *must* own the object being recycled, even wizards must use the @chown command to recycle someone else's belongings."
   }list
@@ -158,7 +158,7 @@ WIZCALL M-HELP-help
     .tell
     0
   else
-    pop { "Thank you for recycling " unparsedName @ "." }join .tell
+    pop { "Thank you for recycling " unparsedName @ "." }cat .tell
     1
   then
 ;

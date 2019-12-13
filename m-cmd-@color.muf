@@ -64,11 +64,11 @@ WIZCALL M-HELP-desc
     action_name @
     "  Display your current color text settings."
     " "
-    { action_name @ " #SETUP" }join
+    { action_name @ " #SETUP" }cat
     "  Enter a color test dialog that helps you configure your color text settings."
     " "
-    { action_name @ " #SET <type>" }join
-    { "  Set a specific color encoding type. (e.g. Use '" action_name @ " #SET NOCOLOR' to turn off color)" }join
+    { action_name @ " #SET <type>" }cat
+    { "  Set a specific color encoding type. (e.g. Use '" action_name @ " #SET NOCOLOR' to turn off color)" }cat
   }list
 ;
 WIZCALL M-HELP-help
@@ -85,7 +85,7 @@ WIZCALL M-HELP-help
       color_me @ 1 strcut color_me !
     then
     (* Colorize the character *)
-    { "[#" red @ M-LIB-STRING-itox 2 M-LIB-STRING-zeropad green @ M-LIB-STRING-itox 2 M-LIB-STRING-zeropad blue @ M-LIB-STRING-itox 2 M-LIB-STRING-zeropad "]" }join swap strcat
+    { "[#" red @ M-LIB-STRING-itox 2 M-LIB-STRING-zeropad green @ M-LIB-STRING-itox 2 M-LIB-STRING-zeropad blue @ M-LIB-STRING-itox 2 M-LIB-STRING-zeropad "]" }cat swap strcat
     (* Concatinate the character with retval *)
     reverse @ if
       retval @ strcat retval !
@@ -110,12 +110,12 @@ WIZCALL M-HELP-help
 
 : info ( -- )
   {
-    { "Current Color Encoding: " 85 85 255 0 15 0 0 text_gradient "[#BBBBBB]" me @ M-LIB-COLOR-encoding_get }join
+    { "Current Color Encoding: " 85 85 255 0 15 0 0 text_gradient "[#BBBBBB]" me @ M-LIB-COLOR-encoding_get }cat
     " "
     "Available Encodings: " 85 85 255 0 15 0 0 text_gradient
     M-LIB-COLOR-encoding_player_valid foreach
       nip
-      { "  [#BBBBBB]" rot }join
+      { "  [#BBBBBB]" rot }cat
     repeat
     "  [#BBBBBB]NOCOLOR"
   }list { me @ }list M-LIB-NOTIFY-array_notify_color
@@ -168,7 +168,7 @@ WIZCALL M-HELP-help
     this_option @ M-LIB-COLOR-testpattern { me @ }list array_notify
     had_color @ not if me @ "!COLOR" set then
     " " .tell
-    { "Would you like to use " this_option @ "? (y/n)" }join .tell
+    { "Would you like to use " this_option @ "? (y/n)" }cat .tell
     begin
       read
       "no" over stringpfx if pop break then

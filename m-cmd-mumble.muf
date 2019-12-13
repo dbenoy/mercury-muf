@@ -66,7 +66,7 @@ WIZCALL M-HELP-desc
 : M-HELP-help ( d -- a )
   name ";" split pop var! action_name
   {
-    { action_name @ toupper " <player>=<message>" }join
+    { action_name @ toupper " <player>=<message>" }cat
     " "
     "Send a semi-private message to a player or object in your location. All other listeners in the same room will see a portion of the message. Some of it will be redacted, but maybe they might be able to piece together what you said!"
     " "
@@ -117,7 +117,7 @@ WIZCALL M-HELP-help
       then
       this_point ++
     repeat
-  }list "" array_join var! redact_message
+  }list array_interpret var! redact_message
   (* Return the result *)
   redact_message @
 ;

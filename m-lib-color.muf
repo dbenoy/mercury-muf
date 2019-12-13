@@ -1224,27 +1224,27 @@ lvar ansi_table_3bit_xterm_rgb
   code_type @ CODE_TYPE_BACKGROUND = code_type @ CODE_TYPE_FOREGROUND = or if
     "" var! retval
     to_type @ "ANSI-3BIT-VGA" = if
-      { "\[[" code_value @ ansi3_nearest_vga code_type @ CODE_TYPE_BACKGROUND = if 10 + then intostr "m" }join exit
+      { "\[[" code_value @ ansi3_nearest_vga code_type @ CODE_TYPE_BACKGROUND = if 10 + then intostr "m" }cat exit
     then
     to_type @ "ANSI-3BIT-XTERM" = if
-      { "\[[" code_value @ ansi3_nearest_xterm code_type @ CODE_TYPE_BACKGROUND = if 10 + then intostr "m" }join exit
+      { "\[[" code_value @ ansi3_nearest_xterm code_type @ CODE_TYPE_BACKGROUND = if 10 + then intostr "m" }cat exit
     then
     to_type @ "ANSI-4BIT-VGA" = if
       code_type @ CODE_TYPE_FOREGROUND = if
-        { "\[[" code_value @ ansi4_nearest_vga intostr "m" }join exit
+        { "\[[" code_value @ ansi4_nearest_vga intostr "m" }cat exit
       else
-        { "\[[" code_value @ ansi3_nearest_vga 10 + intostr "m" }join exit
+        { "\[[" code_value @ ansi3_nearest_vga 10 + intostr "m" }cat exit
       then
     then
     to_type @ "ANSI-4BIT-XTERM" = if
       code_type @ CODE_TYPE_FOREGROUND = if
-        { "\[[" code_value @ ansi4_nearest_xterm intostr "m" }join exit
+        { "\[[" code_value @ ansi4_nearest_xterm intostr "m" }cat exit
       else
-        { "\[[" code_value @ ansi3_nearest_xterm 10 + intostr "m" }join exit
+        { "\[[" code_value @ ansi3_nearest_xterm 10 + intostr "m" }cat exit
       then
     then
     to_type @ "ANSI-8BIT" = if
-      { code_type @ CODE_TYPE_FOREGROUND = if "\[[38;5;" else "\[[48;5;" then code_value @ ansi8_nearest intostr "m" }join exit
+      { code_type @ CODE_TYPE_FOREGROUND = if "\[[38;5;" else "\[[48;5;" then code_value @ ansi8_nearest intostr "m" }cat exit
     then
     to_type @ "ANSI-24BIT" = if
       code_value @
@@ -1252,7 +1252,7 @@ lvar ansi_table_3bit_xterm_rgb
       2 strcut swap M-LIB-STRING-xtoi var! g
       2 strcut swap M-LIB-STRING-xtoi var! b
       pop
-      { code_type @ CODE_TYPE_FOREGROUND = if "\[[38;2;" else "\[[48;2;" then r @ intostr ";" g @ intostr ";" b @ intostr "m" }join exit
+      { code_type @ CODE_TYPE_FOREGROUND = if "\[[38;2;" else "\[[48;2;" then r @ intostr ";" g @ intostr ";" b @ intostr "m" }cat exit
     then
     "Invalid ANSI type" abort
   then
@@ -1279,9 +1279,9 @@ lvar ansi_table_3bit_xterm_rgb
     code_value @ CODE_VALUE_SPECIAL_OPENBRACKET = if
       "[" exit
     then
-    { "[MCC-v" M-LIB-PROGRAM-version " " code_type @ " BADVAL]" }join exit
+    { "[MCC-v" M-LIB-PROGRAM-version " " code_type @ " BADVAL]" }cat exit
   then
-  { "[MCC-v" M-LIB-PROGRAM-version " " code_type @ " BADTYP]" }join
+  { "[MCC-v" M-LIB-PROGRAM-version " " code_type @ " BADTYP]" }cat
 ;
 
 (* Take an MCC code sequence tag at the start of a string and parse it. *)
@@ -1316,7 +1316,7 @@ lvar ansi_table_3bit_xterm_rgb
       code_type @ code_value @ and if
         (* We're currently at the start of a code. Take note of the code and advance our position to the end of the code. *)
         code_type @ CODE_TYPE_FOREGROUND = code_type @ CODE_TYPE_BACKGROUND = or if
-          { "[" code_type @ code_value @ "]" }join
+          { "[" code_type @ code_value @ "]" }cat
           code_type @ CODE_TYPE_FOREGROUND = if
             foreground_code !
           else
@@ -1374,7 +1374,7 @@ lvar ansi_table_3bit_xterm_rgb
     "[" swap strcat
     dup mcc_tagparse var! post_code var! code_value var! code_type
     code_type @ code_value @ and if
-      pop { retval @ to_type @ code_type @ code_value @ mcc_seq post_code @ }join retval !
+      pop { retval @ to_type @ code_type @ code_value @ mcc_seq post_code @ }cat retval !
     else
       retval @ swap strcat retval !
     then
@@ -1382,7 +1382,7 @@ lvar ansi_table_3bit_xterm_rgb
 
   (* Return the result, automatically resetting before and after *)
   to_type @ CODE_TYPE_SPECIAL CODE_VALUE_SPECIAL_RESET mcc_seq var! color_reset
-  { color_reset @ retval @ color_reset @ }join
+  { color_reset @ retval @ color_reset @ }cat
 ;
 
 (* Convert an entire MCC sequence to another encoding *)
@@ -1429,7 +1429,7 @@ lvar ansi_table_3bit_xterm_rgb
       pre_insert_pos !
       (* Parse the insert position *)
       pre_insert_pos @ number? not if
-        { retval @ "[MCC-v" M-LIB-PROGRAM-version " " code_type @ " BADPOS]" post_code @ }join retval !
+        { retval @ "[MCC-v" M-LIB-PROGRAM-version " " code_type @ " BADPOS]" post_code @ }cat retval !
         errors ++
         continue
       then
@@ -1441,17 +1441,17 @@ lvar ansi_table_3bit_xterm_rgb
       (* Parse the insert color *)
       pre_insert_color @ atoi pre_insert_color !
       pre_insert_color @ 16 < pre_insert_color @ 255 > or if
-        { retval @ "[MCC-v" M-LIB-PROGRAM-version " " code_type @ " BADCLR]" post_code @ }join retval !
+        { retval @ "[MCC-v" M-LIB-PROGRAM-version " " code_type @ " BADCLR]" post_code @ }cat retval !
         errors ++
         continue
       then
         ansi_table_8bit_rgb pre_insert_color @ array_getitem pre_insert_color !
-        { pre_insert_color @ 0 [] M-LIB-STRING-itox 2 M-LIB-STRING-zeropad pre_insert_color @ 1 [] M-LIB-STRING-itox 2 M-LIB-STRING-zeropad pre_insert_color @ 2 [] M-LIB-STRING-itox 2 M-LIB-STRING-zeropad }join pre_insert_color !
+        { pre_insert_color @ 0 [] M-LIB-STRING-itox 2 M-LIB-STRING-zeropad pre_insert_color @ 1 [] M-LIB-STRING-itox 2 M-LIB-STRING-zeropad pre_insert_color @ 2 [] M-LIB-STRING-itox 2 M-LIB-STRING-zeropad }cat pre_insert_color !
       (* Store the insert for later *)
       code_type @ CODE_TYPE_FOREGROUND_AT = code_type @ CODE_TYPE_FOREGROUND_RAT = or if
-        { "[#" pre_insert_color @ "]" }join
+        { "[#" pre_insert_color @ "]" }cat
       else
-        { "[*" pre_insert_color @ "]" }join
+        { "[*" pre_insert_color @ "]" }cat
       then
       pre_insert_color !
       { pre_insert_pos @ pre_insert_color @ }list pre_inserts @ array_appenditem pre_inserts !
@@ -1512,7 +1512,7 @@ lvar ansi_table_3bit_xterm_rgb
 ;
 
 : mcc_escape ( s -- s )
-  { "[" CODE_TYPE_SPECIAL CODE_VALUE_SPECIAL_OPENBRACKET "]" }join "[" subst
+  { "[" CODE_TYPE_SPECIAL CODE_VALUE_SPECIAL_OPENBRACKET "]" }cat "[" subst
 ;
 
 : mcc_toupper ( s -- s )
@@ -1525,7 +1525,7 @@ lvar ansi_table_3bit_xterm_rgb
     dup toupper over != if
       (* This code was caught because we used REG_ICASE, it's not actually a valid code. But if we turned it uppercase, it would become a valid code. Escape it so that it doesn't. *)
       1 strcut swap pop
-      { "[" CODE_TYPE_SPECIAL CODE_VALUE_SPECIAL_OPENBRACKET "]" }join swap strcat
+      { "[" CODE_TYPE_SPECIAL CODE_VALUE_SPECIAL_OPENBRACKET "]" }cat swap strcat
     then
     retval @ swap toupper strcat swap toupper strcat retval !
   repeat
@@ -1595,7 +1595,7 @@ lvar ansi_table_3bit_xterm_rgb
     "Decoding ANSI strings is not yet supported." abort
   then
 
-  { "Transcoding from " from_type @ " to " to_type @ " is not yet supported." }join abort
+  { "Transcoding from " from_type @ " to " to_type @ " is not yet supported." }cat abort
 ;
 
 (*****************************************************************************)
@@ -1657,7 +1657,7 @@ $LIBDEF M-LIB-COLOR-escape
   var! b
   var! g
   var! r
-  { r @ M-LIB-STRING-itox 2 M-LIB-STRING-zeropad g @ M-LIB-STRING-itox 2 M-LIB-STRING-zeropad b @ M-LIB-STRING-itox 2 M-LIB-STRING-zeropad }join
+  { r @ M-LIB-STRING-itox 2 M-LIB-STRING-zeropad g @ M-LIB-STRING-itox 2 M-LIB-STRING-zeropad b @ M-LIB-STRING-itox 2 M-LIB-STRING-zeropad }cat
 ;
 PUBLIC M-LIB-COLOR-hsl2rgb
 $LIBDEF M-LIB-COLOR-hsl2rgb
@@ -1699,7 +1699,7 @@ $LIBDEF M-LIB-COLOR-rgb2hsl
     dup not
   until
   if
-    { source1 @ mcc_preprocess "[" CODE_TYPE_SPECIAL CODE_VALUE_SPECIAL_RESET "]" source2 @ mcc_preprocess }join
+    { source1 @ mcc_preprocess "[" CODE_TYPE_SPECIAL CODE_VALUE_SPECIAL_RESET "]" source2 @ mcc_preprocess }cat
   else
     source1 @ source2 @ strcat
   then

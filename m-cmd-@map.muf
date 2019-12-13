@@ -178,15 +178,15 @@ WIZCALL M-HELP-desc
     action_name @ toupper
     "  A utility for creating and displaying area maps."
     " "
-    { "  " action_name @ tolower " #list ................... Display list of available maps" }join
-    { "  " action_name @ tolower " #create <env room>....... Create a map in the given environment room" }join
-    { "  " action_name @ tolower " #wizcreate <env room>.... Same as #create, but also add to the list of maps" }join
-    { "  " action_name @ tolower " #edit ................... Edit current map" }join
-    { "  " action_name @ tolower " #edit <map> ............. Edit some other map" }join
-    { "  " action_name @ tolower " #remove ................. Remove current map" }join
-    { "  " action_name @ tolower " #remove <map> ........... Remove some other map" }join
-    { "  " action_name @ tolower " #position ............... Set position of current room on its map" }join
-    { "  " action_name @ tolower " #position <map> ......... Set position of current room on another map" }join
+    { "  " action_name @ tolower " #list ................... Display list of available maps" }cat
+    { "  " action_name @ tolower " #create <env room>....... Create a map in the given environment room" }cat
+    { "  " action_name @ tolower " #wizcreate <env room>.... Same as #create, but also add to the list of maps" }cat
+    { "  " action_name @ tolower " #edit ................... Edit current map" }cat
+    { "  " action_name @ tolower " #edit <map> ............. Edit some other map" }cat
+    { "  " action_name @ tolower " #remove ................. Remove current map" }cat
+    { "  " action_name @ tolower " #remove <map> ........... Remove some other map" }cat
+    { "  " action_name @ tolower " #position ............... Set position of current room on its map" }cat
+    { "  " action_name @ tolower " #position <map> ......... Set position of current room on another map" }cat
   }list
 ;
 WIZCALL M-HELP-help
@@ -327,7 +327,7 @@ $LIBDEF M-CMD-AT_MAP-display
   M-LIB-PROGRAM-needs_mlev3
   env_room @ dbref? not if "Non-dbref argument (1)." abort then
 
-  { "You are now editing the map in environment room " env_room @ unparseobj "." }join command @ toupper .tag .tell
+  { "You are now editing the map in environment room " env_room @ unparseobj "." }cat command @ toupper .tag .tell
   "You can get help by entering '.h' on a line by itself." command @ toupper .tag .tell
   "'.end' will save and exit." command @ toupper .tag .tell
   "'.abort' will abort any changes." command @ toupper .tag .tell

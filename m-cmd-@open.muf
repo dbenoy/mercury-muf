@@ -69,9 +69,9 @@ WIZCALL M-HELP-desc
 : M-HELP-help ( d -- a )
   name ";" split pop toupper var! action_name
   {
-    { action_name @ " <exit> [=<object> [; <object2>; ... <objectn> ] [=<regname>]]" }join
+    { action_name @ " <exit> [=<object> [; <object2>; ... <objectn> ] [=<regname>]]" }cat
     " "
-    { "  Opens an exit in the current room, optionally attempting to link it simultaneously.  If a <regname> is specified, then the _reg/<regname> property on the player is set to the dbref of the new object.  This lets players refer to the object as $<regname> (ie: $mybutton) in @locks, @sets, etc.  Opening an exit costs " "exit_cost" sysparm M-LIB-PENNIES-pennies ", and " "link_cost" sysparm M-LIB-PENNIES-pennies " to link it, and you must control the room where it is being opened." }join
+    { "  Opens an exit in the current room, optionally attempting to link it simultaneously.  If a <regname> is specified, then the _reg/<regname> property on the player is set to the dbref of the new object.  This lets players refer to the object as $<regname> (ie: $mybutton) in @locks, @sets, etc.  Opening an exit costs " "exit_cost" sysparm M-LIB-PENNIES-pennies ", and " "link_cost" sysparm M-LIB-PENNIES-pennies " to link it, and you must control the room where it is being opened." }cat
   }list
 ;
 WIZCALL M-HELP-help
@@ -90,13 +90,13 @@ WIZCALL M-HELP-help
   strip var! exitname
 
   (* Create action *)
-  { "#" loc @ intostr }join exitname @ M-CMD-AT_ACTION-action var! newAction
+  { "#" loc @ intostr }cat exitname @ M-CMD-AT_ACTION-action var! newAction
   newAction @ not if exit then
 
   (* Perform link *)
   destination @ if
     "Trying to link..." .tell
-    { "#" newAction @ intostr }join destination @ M-CMD-AT_LINK-link not if exit then
+    { "#" newAction @ intostr }cat destination @ M-CMD-AT_LINK-link not if exit then
   then
 
   (* Register action *)

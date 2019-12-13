@@ -82,7 +82,7 @@ WIZCALL M-HELP-help
     nip
     var! this_entry
     (* Start with the timestamp. This will also be used to sort the results later. *)
-    { "[#00AAAA][" "%F %T" this_entry @ "timestamp" [] timefmt "][!FFFFFF]" }join var! this_line
+    { "[#00AAAA][" "%F %T" this_entry @ "timestamp" [] timefmt "][!FFFFFF]" }cat var! this_line
     (* Add the message text itself. *)
     {
       this_line @
@@ -99,16 +99,16 @@ WIZCALL M-HELP-help
         "color_quoted"   this_entry @ "color_quoted"   [] dup not if pop "" then
       }dict
       M-LIB-EMOTE-style
-    }join this_line !
+    }cat this_line !
     (* Append the name of the object if necessary. *)
     this_entry @ "object_name" [] var! owner_tag
     this_entry @ "object_owner" [] if
       this_entry @ "object_owner" [] this_entry @ "object_name" [] != if
-        { owner_tag @ " - " this_entry @ "object_owner" [] }join owner_tag !
+        { owner_tag @ " - " this_entry @ "object_owner" [] }cat owner_tag !
       then
     then
     this_entry @ "message" [] "_" " " subst owner_tag @ instr 1 = not if
-      { this_line @ " [#0000AA](" owner_tag @ ")" }join this_line !
+      { this_line @ " [#0000AA](" owner_tag @ ")" }cat this_line !
     then
     (* Put the completed line in the list *)
     this_line @ output_lines @ array_appenditem output_lines !

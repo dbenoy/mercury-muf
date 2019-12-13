@@ -59,7 +59,7 @@ WIZCALL M-HELP-desc
 : M-HELP-help ( d -- a )
   name ";" split pop toupper var! action_name
   {
-    { action_name @ " <object>" }join
+    { action_name @ " <object>" }cat
     "  Brings up an editing menu system to modify an object. You can edit players, rooms, things, exits, etc."
     "  Try editing 'me' or 'here'."
   }list
@@ -442,7 +442,7 @@ lvar g_table_program
   "(Enter a #dbref, *player_name, present object's name, 'me', 'here', or 'home')" .tell
   read
 
-  { "#" g_object @ intostr }join swap M-CMD-AT_ATTACH-Attach
+  { "#" g_object @ intostr }cat swap M-CMD-AT_ATTACH-Attach
 ;
 
 : get_link[ str:valueUnlinked -- str:value ]
@@ -464,9 +464,9 @@ lvar g_table_program
   read
 
   dup "." = if
-    { "#" g_object @ intostr }join M-CMD-AT_UNLINK-unlink pop
+    { "#" g_object @ intostr }cat M-CMD-AT_UNLINK-unlink pop
   else
-    { "#" g_object @ intostr }join swap M-CMD-AT_LINK-relink pop
+    { "#" g_object @ intostr }cat swap M-CMD-AT_LINK-relink pop
   then
 ;
 
@@ -2207,7 +2207,7 @@ lvar g_table_program
 
 : main
   dup not if
-    { "Use '" command @ M-LIB-COLOR-escape " <object>' to edit objects." }join .tell
+    { "Use '" command @ M-LIB-COLOR-escape " <object>' to edit objects." }cat .tell
     pop exit
   then
 

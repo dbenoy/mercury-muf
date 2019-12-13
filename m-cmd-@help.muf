@@ -91,7 +91,7 @@ WIZCALL M-HELP-desc
 : M-HELP-help ( d -- a )
   name ";" split pop toupper var! action_name
   {
-    { action_name @ " [<topic>]" }join
+    { action_name @ " [<topic>]" }cat
     " "
     "Outputs documentation to help players. If you're lost, you can start here."
     "You can optionally specify a help topic such as the name of a global command, otherwise a list of topics will be displayed."
@@ -110,9 +110,9 @@ WIZCALL M-HELP-help
 
 : help_page_main[ list:topics -- list:lines ]
   {
-    { "Welcome to " "muckname" sysparm "! To get help, try the following commands:" }join
-    { "  " command @ " alpha .... Get an alphabetical listing of all help topics." }join
-    { "  " command @ " globals .. List information on available commands." }join
+    { "Welcome to " "muckname" sysparm "! To get help, try the following commands:" }cat
+    { "  " command @ " alpha .... Get an alphabetical listing of all help topics." }cat
+    { "  " command @ " globals .. List information on available commands." }cat
   }list
 ;
 
@@ -122,7 +122,7 @@ WIZCALL M-HELP-help
       nip
       dup getlink not if (* Unlinked global exit! *)
         me @ "TRUEWIZARD" flag? if
-          { "WARNING: Unlinked global exit: " 3 pick unparseobj }join .err .tell
+          { "WARNING: Unlinked global exit: " 3 pick unparseobj }cat .err .tell
         then
         pop continue
       then
@@ -150,11 +150,11 @@ $DEF .color_fillfield rot M-LIB-COLOR-strlen - dup 1 < if pop pop "" else * then
     {
       "   "
       (* Name *)
-      { "[#5555FF]" global_exit @ M-LIB-HELP-command_get_name }join dup " " 21 .color_fillfield M-LIB-COLOR-strcat
+      { "[#5555FF]" global_exit @ M-LIB-HELP-command_get_name }cat dup " " 21 .color_fillfield M-LIB-COLOR-strcat
       (* Short Description *)
-      { "[#55FFFF]" global_exit @ M-LIB-HELP-command_get_desc }join dup " " 51 .color_fillfield M-LIB-COLOR-strcat
+      { "[#55FFFF]" global_exit @ M-LIB-HELP-command_get_desc }cat dup " " 51 .color_fillfield M-LIB-COLOR-strcat
       "[!FFFFFF]   "
-    }join
+    }cat
     entries @ array_appenditem entries !
   repeat
   {
@@ -204,7 +204,7 @@ $DEF .color_fillfield rot M-LIB-COLOR-strlen - dup 1 < if pop pop "" else * then
       this_letter @ toupper lines @ []<- lines !
       this_letter @ prev_letter !
     then
-    line @ { "  " topic @ }join strcat line !
+    line @ { "  " topic @ }cat strcat line !
   repeat
   line @ if
     line @ lines @ []<- lines !
@@ -213,7 +213,7 @@ $DEF .color_fillfield rot M-LIB-COLOR-strlen - dup 1 < if pop pop "" else * then
 ;
 
 : help_page_custom[ list:topics str:custom_topic_name ]
-  prog { "_at_help/entries/" custom_topic_name @ "/help" }join array_get_proplist
+  prog { "_at_help/entries/" custom_topic_name @ "/help" }cat array_get_proplist
 ;
 
 (* Like array_setitem but if there's already an entry with that key it will add it under a different key. *)
@@ -260,7 +260,7 @@ $DEF .color_fillfield rot M-LIB-COLOR-strlen - dup 1 < if pop pop "" else * then
   prog "_at_help/entries/" array_get_propdirs foreach
     nip
     var! custom_topic_name
-    prog { "_at_help/entries/" custom_topic_name @ "/listed" }join getpropstr "no" stringcmp not not var! custom_topic_listed
+    prog { "_at_help/entries/" custom_topic_name @ "/listed" }cat getpropstr "no" stringcmp not not var! custom_topic_listed
     { "listed" custom_topic_listed @ "args" { custom_topic_name @ }list "func" 'help_page_custom }dict topic_list @ custom_topic_name @ array_setitem_redundant topic_list !
   repeat
   (* TODO: Some built-in help topics, especially ones that benefit from being auto-generated like describing penny costs for things *)
@@ -275,7 +275,7 @@ $DEF .color_fillfield rot M-LIB-COLOR-strlen - dup 1 < if pop pop "" else * then
   prog "_at_help/entries/" array_get_propdirs foreach
     nip
     var! custom_topic_name
-    prog { "_at_help/entries/" custom_topic_name @ "/aliases" }join getpropstr
+    prog { "_at_help/entries/" custom_topic_name @ "/aliases" }cat getpropstr
     dup not if pop continue then
     ";" explode_array foreach
       nip
@@ -337,7 +337,7 @@ $DEF .color_fillfield rot M-LIB-COLOR-strlen - dup 1 < if pop pop "" else * then
     else
       pop
       {
-        { "There is no entry for '" requested_topic @ "'. See '" command @ " alpha' for a listing of available help topics." }join .err
+        { "There is no entry for '" requested_topic @ "'. See '" command @ " alpha' for a listing of available help topics." }cat .err
       }list
     then
   else

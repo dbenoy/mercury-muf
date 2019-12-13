@@ -49,8 +49,8 @@ WIZCALL M-HELP-desc
 : M-HELP-help ( d -- a )
   name ";" split pop var! action_name
   {
-    { action_name @ " <message>" }join
-    { "  Sends a verbatim message to the room. For example, if you type '" tolower action_name @ " The wind is howling.' everyone in the room will see:" }join
+    { action_name @ " <message>" }cat
+    { "  Sends a verbatim message to the room. For example, if you type '" tolower action_name @ " The wind is howling.' everyone in the room will see:" }cat
     "    The wind is howling."
     "  Mesasge output, logging, and special highlighting may be used to help others identify who sent the spoof."
   }list

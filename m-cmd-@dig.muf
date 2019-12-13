@@ -73,9 +73,9 @@ WIZCALL M-HELP-desc
 : M-HELP-help ( d -- a )
   name ";" split pop toupper var! action_name
   {
-    { action_name @ " <room> [=<parent> [=<regname>]]" }join
+    { action_name @ " <room> [=<parent> [=<regname>]]" }cat
     " "
-    { "  Creates a new room, sets its parent, and gives it a personal registered name.  If no parent is given, it defaults to the first ABODE room down the environment tree from the current room.  If it fails to find one, it sets the parent to " "default_room_parent" sysparm stod unparseobj ".  If no <regname> is given, then it doesn't register the object.  If one is given, then the object's dbref is recorded in the player's _reg/<regname> property, so that they can refer to the object later as $<regname>.  Digging a room costs " "room_cost" sysparm M-LIB-PENNIES-pennies ", and you must be able to link to the parent room if specified.  Only a builder may use this command." }join
+    { "  Creates a new room, sets its parent, and gives it a personal registered name.  If no parent is given, it defaults to the first ABODE room down the environment tree from the current room.  If it fails to find one, it sets the parent to " "default_room_parent" sysparm stod unparseobj ".  If no <regname> is given, then it doesn't register the object.  If one is given, then the object's dbref is recorded in the player's _reg/<regname> property, so that they can refer to the object later as $<regname>.  Digging a room costs " "room_cost" sysparm M-LIB-PENNIES-pennies ", and you must be able to link to the parent room if specified.  Only a builder may use this command." }cat
   }list
 ;
 WIZCALL M-HELP-help
@@ -112,7 +112,7 @@ WIZCALL M-HELP-help
   "room_cost" sysparm atoi var! cost
 
   cost @ M-LIB-PENNIES-payfor_chk not if
-    { "Sorry, you don't have enough " "pennies" sysparm " to dig a room." }join .tell
+    { "Sorry, you don't have enough " "pennies" sysparm " to dig a room." }cat .tell
     #-1 exit
   then
 

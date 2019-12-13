@@ -75,7 +75,7 @@ WIZCALL M-HELP-desc
 : M-HELP-help ( d -- a )
   name ";" split pop toupper var! action_name
   {
-    { action_name @ " <object1>=<object2> [; <object3>; ...  <objectn> ]" }join
+    { action_name @ " <object1>=<object2> [; <object3>; ...  <objectn> ]" }cat
     " "
     "  Links <object1> to <object2>, provided you control <object1>, and <object2> is either controlled by you or linkable.  Actions may be linked to more than one thing, specified in a list separated by semi-colons."
   }list
@@ -190,7 +190,7 @@ $DEF TESTLOCKPROP getprop dup lock? if testlock else pop pop 1 then
       thing @ owner "me" match owner = if
         alreadyLinked not if
           tp_link_cost @ M-LIB-PENNIES-payfor_chk not if
-            { "It costs " tp_link_cost @ " " "pennies" sysparm " to link this exit."  }join .tell
+            { "It costs " tp_link_cost @ " " "pennies" sysparm " to link this exit."  }cat .tell
             0 exit
           then
         then
@@ -200,7 +200,7 @@ $DEF TESTLOCKPROP getprop dup lock? if testlock else pop pop 1 then
            0 exit
         then
         tp_link_cost @ tp_exit_cost @ + M-LIB-PENNIES-payfor_chk not if
-          { "It costs " tp_link_cost @ tp_exit_cost @ + " " "pennies" sysparm " to link this exit."  }join .tell
+          { "It costs " tp_link_cost @ tp_exit_cost @ + " " "pennies" sysparm " to link this exit."  }cat .tell
           0 exit
         then
       then
@@ -216,18 +216,18 @@ $DEF TESTLOCKPROP getprop dup lock? if testlock else pop pop 1 then
         then
 
         thisLinkRef @ player? "teleport_to_player" sysparm "no" = and if
-          { "You can't link to players. Destination " thisLinkRef @ unparseobj " ignored." }join .tell
+          { "You can't link to players. Destination " thisLinkRef @ unparseobj " ignored." }cat .tell
           continue
         then
 
         "me" match thing @ thisLinkRef @ canLinkTo not if
-          { "You can't link to " thisLinkRef @ unparseobj "." }join .tell
+          { "You can't link to " thisLinkRef @ unparseobj "." }cat .tell
           continue
         then
 
         thisLinkRef @ player? thisLinkRef @ room? or thisLinkRef @ program? or if
           alreadySeenPR @ if
-            { "Only one player, room, or program destination allowed. Destination " thisLinkRef @ unparseobj " ignored." }join .tell
+            { "Only one player, room, or program destination allowed. Destination " thisLinkRef @ unparseobj " ignored." }cat .tell
             continue
           then
           1 alreadySeenPR !
@@ -235,7 +235,7 @@ $DEF TESTLOCKPROP getprop dup lock? if testlock else pop pop 1 then
 
         thisLinkRef @ exit? if
           thing @ thisLinkRef @ exitLoopCheck if
-            { "Destination " thisLinkRef @ unparseobj " would create a loop, ignored." }join .tell
+            { "Destination " thisLinkRef @ unparseobj " would create a loop, ignored." }cat .tell
           then
         then
 

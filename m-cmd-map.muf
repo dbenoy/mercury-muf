@@ -57,7 +57,7 @@ WIZCALL M-HELP-desc
 : M-HELP-help ( d -- a )
   name ";" split pop toupper var! action_name
   {
-    { action_name @ " [<map name>]" }join
+    { action_name @ " [<map name>]" }cat
     " "
     "  Views the map of the current area, or a given map by name if available."
   }list
@@ -116,7 +116,7 @@ WIZCALL M-HELP-help
       repeat
     }list other_maps !
     other_maps @ if
-      { "The " other_maps @ "and" M-LIB-GRAMMAR-oxford_join M-LIB-COLOR-escape " map" other_maps @ array_count 1 > if "s are " else " is " then "available here, too." }join .tell
+      { "The " other_maps @ "and" M-LIB-GRAMMAR-oxford_join M-LIB-COLOR-escape " map" other_maps @ array_count 1 > if "s are " else " is " then "available here, too." }cat .tell
     then
   then
 ;

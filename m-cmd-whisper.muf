@@ -62,7 +62,7 @@ WIZCALL M-HELP-desc
 : M-HELP-help ( d -- a )
   name ";" split pop var! action_name
   {
-    { action_name @ toupper " <player>=[:]<message>" }join
+    { action_name @ toupper " <player>=[:]<message>" }cat
     " "
     "Send a private message to a player or object in your location. If the message starts with a colon it acts as a 'pose style' message."
   }list

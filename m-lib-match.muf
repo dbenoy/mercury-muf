@@ -257,9 +257,9 @@ $PUBDEF :
   (* Output to user *)
   opts @ "quiet" [] not if
     match_result @ #-1 = if (* Invalid *)
-      { "'" name @ "' not found." }join
+      { "'" name @ "' not found." }cat
     else match_result @ #-2 = if (* Ambiguous *)
-      { "Which '" name @ "'?" }join
+      { "Which '" name @ "'?" }cat
     else
       ""
     then then
@@ -301,9 +301,9 @@ $LIBDEF M-LIB-MATCH-match
   (* Output to user *)
   opts @ "quiet" [] not if
     match_result @ #-1 = if (* Invalid *)
-      { "Player '" name @ "' not found." }join
+      { "Player '" name @ "' not found." }cat
     else match_result @ #-2 = if (* Ambiguous *)
-      { "Which '" name @ "'?" }join
+      { "Which '" name @ "'?" }cat
     else
       ""
     then then
@@ -334,7 +334,7 @@ $LIBDEF M-LIB-MATCH-pmatch
   regname @ string? not if "Non-string argument (2)." abort then
 
   regname @ prop-name-ok? not if
-    { "Registry name '" regname @ "' is not valid" }join .tell
+    { "Registry name '" regname @ "' is not valid" }cat .tell
     exit
   then
 

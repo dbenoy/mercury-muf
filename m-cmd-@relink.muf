@@ -64,7 +64,7 @@ WIZCALL M-HELP-desc
 : M-HELP-help ( d -- a )
   name ";" split pop toupper var! action_name
   {
-    { action_name @ " <object1>=<object2> [; <object3>; ...  <objectn> ]" }join
+    { action_name @ " <object1>=<object2> [; <object3>; ...  <objectn> ]" }cat
     " "
     "  Unlinks <object1>, then links it to <object2>, provided you control <object1>, and <object2> is either controlled by you or linkable. Actions may be linked to more than one thing, specified in a list separated by semi-colons."
   }list

@@ -94,13 +94,13 @@ WIZCALL M-HELP-desc
     "  Lists your available morphs."
     "  Morphs are a preset collection of your description text and other cosmetic details."
     " "
-    { action_name @ toupper " <morph name>=<save/load/delete>" }join
+    { action_name @ toupper " <morph name>=<save/load/delete>" }cat
     "  Manages your morphs."
     "  Saving will create or overwrite a given morph with your current descriptions and cosmetic settings. Loading will overwrite your current descriptions and cosmetic settings."
     " "
-    { action_name @ toupper " <morph name>=mesg<:message>" }join
+    { action_name @ toupper " <morph name>=mesg<:message>" }cat
     "  Sets a morph message."
-    { "  Morph messages are 'spoofed' from you automatically when loading a morph. Loading your morphs with '" action_name @ tolower " <morph>=load' will not send this spoof, but more 'in character' morphing commands will, such as the 'morph' command on most servers. If you don't supply a message, it will be reset to default. It defaults to '<name> morphs into a <morph name>.'" }join
+    { "  Morph messages are 'spoofed' from you automatically when loading a morph. Loading your morphs with '" action_name @ tolower " <morph>=load' will not send this spoof, but more 'in character' morphing commands will, such as the 'morph' command on most servers. If you don't supply a message, it will be reset to default. It defaults to '<name> morphs into a <morph name>.'" }cat
   }list
 ;
 WIZCALL M-HELP-help
@@ -162,24 +162,24 @@ WIZCALL M-HELP-help
   object @ morph_dir @ propdir? if
     object @ morph_dir @ remove_prop
     object @ "_morph/mesg/" morph_name @ strcat remove_prop
-    quiet @ not if { "Morph '" morph_name @ "' deleted." }join command @ toupper .tag .tell then
+    quiet @ not if { "Morph '" morph_name @ "' deleted." }cat command @ toupper .tag .tell then
   else
-    quiet @ not if { "Morph '" morph_name @ "' not found." }join command @ toupper .tag_err .tell then
+    quiet @ not if { "Morph '" morph_name @ "' not found." }cat command @ toupper .tag_err .tell then
   then
 ;
 
 : morph_mesg_set[ str:new_mesg ref:object str:morph_name bool:quiet -- bool:success? ]
   morph_name @ fix_morph_name morph_name !
   object @ "_morph/morphs/" morph_name @ strcat propdir? not if
-    quiet @ not if { "Morph '" morph_name @ "' not found." }join command @ toupper .tag_err .tell then
+    quiet @ not if { "Morph '" morph_name @ "' not found." }cat command @ toupper .tag_err .tell then
     0 exit
   then
   new_mesg @ if
     object @ "_morph/mesg/" morph_name @ strcat new_mesg @ setprop
-    quiet @ not if { "Morph message set for '" morph_name @ "'." }join command @ toupper .tag .tell then
+    quiet @ not if { "Morph message set for '" morph_name @ "'." }cat command @ toupper .tag .tell then
   else
     object @ "_morph/mesg/" morph_name @ strcat remove_prop
-    quiet @ not if { "Morph message cleared for '" morph_name @ "'." }join command @ toupper .tag .tell then
+    quiet @ not if { "Morph message cleared for '" morph_name @ "'." }cat command @ toupper .tag .tell then
   then
   1
 ;
@@ -187,12 +187,12 @@ WIZCALL M-HELP-help
 : morph_mesg_get[ ref:object str:morph_name bool:quiet -- str:mesg ]
   morph_name @ fix_morph_name morph_name !
   object @ "_morph/morphs/" morph_name @ strcat propdir? not if
-    quiet @ not if { "Morph '" morph_name @ "' not found." }join command @ toupper .tag_err .tell then
+    quiet @ not if { "Morph '" morph_name @ "' not found." }cat command @ toupper .tag_err .tell then
     "" exit
   then
   object @ "_morph/mesg/" morph_name @ strcat getpropstr
   dup not if
-    pop { object @ name 1 strcut swap toupper swap strcat " morphs into a " morph_name @ tolower " " "_" subst .sms "." }join
+    pop { object @ name 1 strcut swap toupper swap strcat " morphs into a " morph_name @ tolower " " "_" subst .sms "." }cat
   then
 ;
 
@@ -230,7 +230,7 @@ WIZCALL M-HELP-help
     object @ morph_dir @ propdir? if
       quiet @ not if "Loading morph..." command @ toupper .tag .tell then
     else
-      { "Morph '" morph_name @ "' not found." }join command @ toupper .tag_err .tell
+      { "Morph '" morph_name @ "' not found." }cat command @ toupper .tag_err .tell
       0 exit
     then
   then
@@ -241,21 +241,21 @@ WIZCALL M-HELP-help
     var property
 
     save @ if
-      quiet @ not if { "  Saving '" name @ "'..." }join command @ toupper .tag .tell then
+      quiet @ not if { "  Saving '" name @ "'..." }cat command @ toupper .tag .tell then
       properties @ foreach
         nip
         property !
         object @ property @ propdir? object @ property @ getpropstr or if
-          object @ property @ object @ { morph_dir @ "/" property @ }join copy_props
+          object @ property @ object @ { morph_dir @ "/" property @ }cat copy_props
         then
       repeat
     else
-      quiet @ not if { "  Loading '" name @ "'..." }join command @ toupper .tag .tell then
+      quiet @ not if { "  Loading '" name @ "'..." }cat command @ toupper .tag .tell then
       properties @ foreach
         nip
         property !
-        object @ { morph_dir @ "/" property @ }join propdir? object @ { morph_dir @ "/" property @ }join getpropstr or if
-          object @ { morph_dir @ "/" property @ }join object @ property @ copy_props
+        object @ { morph_dir @ "/" property @ }cat propdir? object @ { morph_dir @ "/" property @ }cat getpropstr or if
+          object @ { morph_dir @ "/" property @ }cat object @ property @ copy_props
         then
       repeat
     then
@@ -380,7 +380,7 @@ $LIBDEF M-CMD-AT_MORPH-mesg_set
     argument @ me @ morph_name @ 0 morph_mesg_set pop
     exit
   then
-  { "Invalid operation '" operation @ "'." }join command @ toupper .tag_err .tell
+  { "Invalid operation '" operation @ "'." }cat command @ toupper .tag_err .tell
 ;
 .
 c

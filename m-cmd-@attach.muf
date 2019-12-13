@@ -67,7 +67,7 @@ WIZCALL M-HELP-desc
 : M-HELP-help ( d -- a )
   name ";" split pop toupper var! action_name
   {
-    { action_name @ " <action>=<new source>" }join
+    { action_name @ " <action>=<new source>" }cat
     " "
     "  Removes the action from where it was and attaches it to the new source. You must control the action in question."
   }list

@@ -49,7 +49,7 @@ WIZCALL M-HELP-desc
 : M-HELP-help ( d -- a )
   name ";" split pop toupper var! action_name
   {
-    { action_name @ " <message>" }join
+    { action_name @ " <message>" }cat
     " "
     "Think <message> noticibly to everyone in the room.  If your name is Igor, and you typed 'ponder What if Pinocchio said his nose will grow?', then you and everyone in the room will see:"
     " "
@@ -66,7 +66,7 @@ WIZCALL M-HELP-help
     "Ponder what?" .tell
     exit
   then
-  { me @ name " . o O ( "}join swap " )" strcat strcat
+  { me @ name " . o O ( "}cat swap " )" strcat strcat
   { "from" me @ }dict M-LIB-EMOTE-emote
 ;
 .

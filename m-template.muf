@@ -64,7 +64,7 @@ WIZCALL M-HELP-desc
 : M-HELP-help ( d -- a )
   name ";" split pop toupper var! action_name
   {
-    { action_name @ " <--ARGS-->" }join
+    { action_name @ " <--ARGS-->" }cat
     " "
     "  <--HELP-->"
   }list

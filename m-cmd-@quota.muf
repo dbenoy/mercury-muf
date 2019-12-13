@@ -57,7 +57,7 @@ WIZCALL M-HELP-desc
 : M-HELP-help ( d -- a )
   name ";" split pop toupper var! action_name
   {
-    { action_name @ " [<player>]" }join
+    { action_name @ " [<player>]" }cat
     " "
     "  Displays quota information and ownership totals."
   }list

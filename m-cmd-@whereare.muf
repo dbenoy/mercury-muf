@@ -61,7 +61,7 @@ WIZCALL M-HELP-desc
 : M-HELP-help ( d -- a )
   name ";" split pop toupper var! action_name
   {
-    { action_name @ " [<threshold>]" }join
+    { action_name @ " [<threshold>]" }cat
     " "
     "  Lists all rooms that contain players. If a <threshold> number is supplied, then it will only list rooms with that many players or more."
   }list
@@ -171,7 +171,7 @@ $DEF TRUNCATE_LENGTH 80
     result @ "[!FFFFFF], " strcat swap strcat result !
   repeat
   join_me @ if
-    { result @ "[!FFFFFF] (and " join_me @ array_count intostr " more)" }join result !
+    { result @ "[!FFFFFF] (and " join_me @ array_count intostr " more)" }cat result !
   then
   result @
 ;
@@ -225,11 +225,11 @@ $DEF TRUNCATE_LENGTH 80
     room_dbref @ M-LIB-ROOM-directions var! room_directions
     (* Add lines to list *)
     lines @
-    { room_dbref @ M-LIB-THEME-name }join
-    room_directions @ if { "[!FFFFFF] ([#AA5500]" room_directions @ "[!FFFFFF])" }join strcat then
+    { room_dbref @ M-LIB-THEME-name }cat
+    room_directions @ if { "[!FFFFFF] ([#AA5500]" room_directions @ "[!FFFFFF])" }cat strcat then
     swap []<-
-    players_active @ if  { "  [#FFFFFF]Awake:[!FFFFFF]  " players_active @ truncated_join }join swap []<- then
-    players_idle @ if    { "  [#FFFFFF]Idle:[!FFFFFF]   " players_idle @ truncated_join }join swap []<- then
+    players_active @ if  { "  [#FFFFFF]Awake:[!FFFFFF]  " players_active @ truncated_join }cat swap []<- then
+    players_idle @ if    { "  [#FFFFFF]Idle:[!FFFFFF]   " players_idle @ truncated_join }cat swap []<- then
     lines !
   then
   lines @
@@ -248,7 +248,7 @@ $DEF TRUNCATE_LENGTH 80
   threshold @ room_info_get
   dup not if
     pop 
-    { "No locations found with " threshold @ intostr " or more players." }join command @ toupper .tag_err .tell
+    { "No locations found with " threshold @ intostr " or more players." }cat command @ toupper .tag_err .tell
     exit
   then
   "/----" command @ toupper .tag .tell

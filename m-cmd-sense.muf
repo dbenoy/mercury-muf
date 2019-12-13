@@ -234,18 +234,18 @@ WIZCALL M-HELP-desc
   (* Construct the help lines *)
   {
     action_name @ if
-      { action_name @ " [<object>]" }join
+      { action_name @ " [<object>]" }cat
       "  %V an object, or %v the room in general if you don't specify an object." { action @ }list { }dict M-LIB-GRAMMAR-sub
       " "
-      { action_name @ " <container>'s <object>" }join
+      { action_name @ " <container>'s <object>" }cat
       "  %V an object that is inside of another object." { action @ }list { }dict M-LIB-GRAMMAR-sub
     then
     action_name @ action_at_name @ and if
       " "
     then
     action_at_name @ if
-      { action_at_name @ " <object>=<new" action @ "aspect" get_conf_on_action tolower ">" }join
-      { "  Set a new " action @ "aspect" get_conf_on_action tolower " on an object." }join
+      { action_at_name @ " <object>=<new" action @ "aspect" get_conf_on_action tolower ">" }cat
+      { "  Set a new " action @ "aspect" get_conf_on_action tolower " on an object." }cat
     then
   }list
 ;
@@ -335,13 +335,13 @@ WIZCALL M-HELP-help
       repeat
     }list var! contents_names
     contents_names @ if
-      { "You can %v " { trig }list { }dict M-LIB-GRAMMAR-sub contents_names @ "and" M-LIB-GRAMMAR-oxford_join }join
+      { "You can %v " { trig }list { }dict M-LIB-GRAMMAR-sub contents_names @ "and" M-LIB-GRAMMAR-oxford_join }cat
       contents_random_skipped @ if
         ", among other " "aspect" get_conf "s" strcat strcat strcat
       then
       "." strcat
     else
-      { "There are other " "aspect" get_conf "s " is_here @ if "here" else "there" then ", too." }join
+      { "There are other " "aspect" get_conf "s " is_here @ if "here" else "there" then ", too." }cat
     then
   else
     ""
@@ -366,7 +366,7 @@ WIZCALL M-HELP-help
   repeat
   contents_total @ if
     contents_names @ SORTTYPE_CASE_ASCEND array_sort contents_names !
-    { "There is also " contents_names @ "and" M-LIB-GRAMMAR-oxford_join " " is_here @ if "here" else "there" then "." }join
+    { "There is also " contents_names @ "and" M-LIB-GRAMMAR-oxford_join " " is_here @ if "here" else "there" then "." }cat
   else
     ""
   then

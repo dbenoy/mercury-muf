@@ -158,7 +158,7 @@ $LIBDEF M-LIB-QUOTA-GetUsage
     "me" match type @ M-LIB-QUOTA-GetQuota
     dup -1 != if
       "me" match type @ M-LIB-QUOTA-GetUsage swap >= if
-        noisy @ if { "You already have too many '" type @ "' objects. See @quota." }join .tell then
+        noisy @ if { "You already have too many '" type @ "' objects. See @quota." }cat .tell then
         0 exit
       then
     else

@@ -58,7 +58,7 @@ WIZCALL M-HELP-desc
 : M-HELP-help ( d -- a )
   name ";" split pop toupper var! action_name
   {
-    { action_name @ " <global>" }join
+    { action_name @ " <global>" }cat
     " "
     "Outputs detailed information on the global command <global>."
   }list

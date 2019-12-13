@@ -59,7 +59,7 @@ WIZCALL M-HELP-desc
 : M-HELP-help ( d -- a )
   name ";" split pop toupper var! action_name
   {
-    { action_name @ " [#room]" }join
+    { action_name @ " [#room]" }cat
     " "
     "  Displays all connected players on the server. If #room is specified, then only players in the current room will be displayed, including sleeping players and puppet objects."
   }list
@@ -75,7 +75,7 @@ WIZCALL M-HELP-help
     source @ not if break then
     source @ strlen float source_length @ float / bright @ dim @ - * int dim @ + var! brightness
     source @ 1 strcut source !
-    { "[#" brightness @ M-LIB-STRING-itox dup dup "]" }join swap strcat
+    { "[#" brightness @ M-LIB-STRING-itox dup dup "]" }cat swap strcat
     result @ swap strcat result !
   repeat
   result @
@@ -128,9 +128,9 @@ $DEF FOOTER_BRACKET_CLOSE "[#FFFFFF] )-[#AAAAAA]-[#555555]-"
 : table_render_footer[ dict:opts arr:widths -- str:line ]
   0 var! width
   widths @ foreach nip width @ + width ! repeat
-  { FOOTER_BRACKET_OPEN opts @ "footer_left" [] dup not if pop "" then FOOTER_BRACKET_CLOSE }join var! footer_left
-  { FOOTER_BRACKET_OPEN opts @ "footer_right" [] dup not if pop "" then FOOTER_BRACKET_CLOSE }join var! footer_right
-  { footer_left @ footer_left @ footer_right @ strcat "-" width @ .color_fillfield footer_right @ }join
+  { FOOTER_BRACKET_OPEN opts @ "footer_left" [] dup not if pop "" then FOOTER_BRACKET_CLOSE }cat var! footer_left
+  { FOOTER_BRACKET_OPEN opts @ "footer_right" [] dup not if pop "" then FOOTER_BRACKET_CLOSE }cat var! footer_right
+  { footer_left @ footer_left @ footer_right @ strcat "-" width @ .color_fillfield footer_right @ }cat
 ;
 
 : table_render[ arr:data dict:opts -- arr:lines ]
@@ -264,7 +264,7 @@ $DEF FOOTER_BRACKET_CLOSE "[#FFFFFF] )-[#AAAAAA]-[#555555]-"
           room_player_entry @ "species" []
         }list
       repeat
-    }list { "widths" { 33 16 30 }list "footer_right" { room_awake @ "/" room_asleep @ " " room @ name }join }dict table_render { me @ }list M-LIB-NOTIFY-array_notify_color
+    }list { "widths" { 33 16 30 }list "footer_right" { room_awake @ "/" room_asleep @ " " room @ name }cat }dict table_render { me @ }list M-LIB-NOTIFY-array_notify_color
   else
     (* Construct a all_players data structure with information on connected players *)
     { }dict var! all_players
@@ -317,8 +317,8 @@ $DEF FOOTER_BRACKET_CLOSE "[#FFFFFF] )-[#AAAAAA]-[#555555]-"
       repeat
     }list {
       "widths" { 24 3 17 5 5 25 }list
-      "footer_left" { all_players @ array_count intostr " Players Online" }join
-      "footer_right" { "%H:%M - %F" systime timefmt }join
+      "footer_left" { all_players @ array_count intostr " Players Online" }cat
+      "footer_right" { "%H:%M - %F" systime timefmt }cat
     }dict table_render { me @ }list M-LIB-NOTIFY-array_notify_color
   then
 ;

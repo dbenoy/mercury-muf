@@ -72,9 +72,9 @@ WIZCALL M-HELP-desc
 : M-HELP-help ( d -- a )
   name ";" split pop toupper var! action_name
   {
-    { action_name @ " <object> [=<cost>[=<regname>]]" }join
+    { action_name @ " <object> [=<cost>[=<regname>]]" }cat
     " "
-    { "  Creates a new object and places it in your inventory.  This costs at least " "object_cost" sysparm M-LIB-PENNIES-pennies ".  If <cost> is specified, you are charged that many pennies, and in return, the object is endowed with a value according to the formula: " M-LIB-PENNIES-endow_str_get ".  The maximum value of an object is " "max_object_endowment" sysparm M-LIB-PENNIES-pennies ", which would cost " "max_object_endowment" sysparm atoi M-LIB-PENNIES-endow_cost_get intostr M-LIB-PENNIES-pennies " to create. If a <regname> is specified, then the _reg/<regname> property on the player is set to the dbref of the new object.  This lets players refer to the object as $<regname> (ie: $mybutton) in @locks, @sets, et cetera.  Only a builder may use this command." }join
+    { "  Creates a new object and places it in your inventory.  This costs at least " "object_cost" sysparm M-LIB-PENNIES-pennies ".  If <cost> is specified, you are charged that many pennies, and in return, the object is endowed with a value according to the formula: " M-LIB-PENNIES-endow_str_get ".  The maximum value of an object is " "max_object_endowment" sysparm M-LIB-PENNIES-pennies ", which would cost " "max_object_endowment" sysparm atoi M-LIB-PENNIES-endow_cost_get intostr M-LIB-PENNIES-pennies " to create. If a <regname> is specified, then the _reg/<regname> property on the player is set to the dbref of the new object.  This lets players refer to the object as $<regname> (ie: $mybutton) in @locks, @sets, et cetera.  Only a builder may use this command." }cat
   }list
 ;
 WIZCALL M-HELP-help
@@ -121,7 +121,7 @@ WIZCALL M-HELP-help
   then
 
   payment @ M-LIB-PENNIES-payfor_chk not if
-    { "Sorry, you don't have enough " "pennies" sysparm "." }join .tell
+    { "Sorry, you don't have enough " "pennies" sysparm "." }cat .tell
     #-1 exit
   then
 

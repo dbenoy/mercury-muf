@@ -120,7 +120,7 @@ WIZCALL M-HELP-help
 (* ------------------------------------------------------------------------ *)
 
 : enabled[ str:opt_name -- bool:enabled? ]
-  me @ { CONFIG_PROPDIR "/" opt_name @ }join getpropstr
+  me @ { CONFIG_PROPDIR "/" opt_name @ }cat getpropstr
   dup not if
     pop config_defaults opt_name @ []
     dup not if
@@ -149,9 +149,9 @@ WIZCALL M-HELP-help
     objects_total_length @ swap M-LIB-COLOR-strlen + objects_total_length !
   repeat
   objects_total_length @ 150 < if
-    notify_me @ { "[ [#FFFFFF]" title @ ":" " " 8 title @ strlen - * }join objects @ "and" M-LIB-GRAMMAR-oxford_join M-LIB-COLOR-strcat "[!FFFFFF] ]" M-LIB-COLOR-strcat .notify
+    notify_me @ { "[ [#FFFFFF]" title @ ":" " " 8 title @ strlen - * }cat objects @ "and" M-LIB-GRAMMAR-oxford_join M-LIB-COLOR-strcat "[!FFFFFF] ]" M-LIB-COLOR-strcat .notify
   else
-    notify_me @ { "[#FFFFFF]" title @ ":" }join .notify
+    notify_me @ { "[#FFFFFF]" title @ ":" }cat .notify
     objects @ foreach
       nip
       me @ "  " rot strcat .notify

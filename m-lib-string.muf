@@ -47,7 +47,7 @@ $PRAGMA comment_recurse
 (*   counterparts, but you pass in the callback dictionary as the last       *)
 (*   parameter. The following _cb routines are available:                    *)
 (*     M-LIB-STRING-array_interpret_cb                                       *)
-(*     M-LIB-STRING-}join_cb                                                 *)
+(*     M-LIB-STRING-}cat_cb                                                 *)
 (*     M-LIB-STRING-array_join_cb                                            *)
 (*     M-LIB-STRING-}cat_cb                                                  *)
 (*     M-LIB-STRING-atoi_cb                                                  *)
@@ -504,7 +504,7 @@ $PUBDEF :
   { "strstrip" "strcut" "strcat" "toupper" "tolower" }list foreach
     nip
     var! cb
-    cbs @ cb @ [] address? not if { "String callback " cb @ " not found." }join abort then
+    cbs @ cb @ [] address? not if { "String callback " cb @ " not found." }cat abort then
   repeat
 ;
 
@@ -518,7 +518,10 @@ $PUBDEF :
   var! cbs
   "" swap foreach
     nip
-    1 array_make array_interpret cbs @ strcat_cb
+    dup int? over dbref? or over float? or over lock? or if
+      1 array_make array_interpret
+    then
+    cbs @ strcat_cb
   repeat
 ;
 PUBLIC M-LIB-STRING-array_interpret_cb
@@ -535,7 +538,10 @@ $LIBDEF M-LIB-STRING-array_interpret_cb
   swap 1 array_cut foreach nip 3 pick rot []<- []<- repeat swap pop
   "" swap foreach
     nip
-    1 array_make "" array_join cbs @ strcat_cb
+    dup int? over dbref? or over float? or over lock? or if
+      1 array_make "" array_join
+    then
+    cbs @ strcat_cb
   repeat
 ;
 PUBLIC M-LIB-STRING-array_join_cb
@@ -1193,12 +1199,12 @@ $LIBDEF M-LIB-STRING-zeropad_cb
 (*****************************************************************************)
 (*                            M-LIB-STRING-}join                             *)
 (*****************************************************************************)
-$PUBDEF M-LIB-STRING-}join_cb "" M-LIB-STRING-array_join_cb
+$PUBDEF M-LIB-STRING-}join_cb } swap over 0 swap - -- rotate -- array_make "" rot M-LIB-STRING-array_join_cb
 
 (*****************************************************************************)
 (*                             M-LIB-STRING-}cat                             *)
 (*****************************************************************************)
-$PUBDEF M-LIB-STRING-}cat_cb M-LIB-STRING-array_interpret_cb
+$PUBDEF M-LIB-STRING-}cat_cb } swap over 0 swap - -- rotate -- array_make swap M-LIB-STRING-array_interpret_cb
 
 (* -------------------- Compatibility with $lib/strings -------------------- *)
 $PUBDEF .asc           ctoi
