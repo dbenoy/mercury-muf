@@ -488,6 +488,23 @@ $PRAGMA comment_recurse
 (*     254  FE  Grey89            [#E4E4E4]                                  *)
 (*     255  FF  Grey93            [#EEEEEE]                                  *)
 (*                                                                           *)
+(*   TODO:                                                                   *)
+(*     * Color approximation is a bit overambitious and is too slow. It      *)
+(*       causes a lot of instructions to be executed which can make          *)
+(*       color-heavy tasks slow. The tmux program has an algorithm that does *)
+(*       the same thing but without worrying so much about the 'bicone color *)
+(*       space' color approximation. Maybe it would be less accurate to use  *)
+(*       this same algorithm, but the accuracy loss will probably be minor   *)
+(*       especially compared to the performance improvement. See             *)
+(*       'color_find_rgb' in this file:                                      *)
+(*         https://github.com/tmux/tmux/blob/master/colour.c                 *)
+(*     * Due to the small fixed buffer sizes for strings in fuzzball, the    *)
+(*       mcc_strcat and mcc_preprocessing routines should remove redundant   *)
+(*       codes during processing. If the foreground or background is being   *)
+(*       changed to a color that it already has set, then that redundant     *)
+(*       code should be stripped away to keep strings as short as possible   *)
+(*       at all times.                                                       *)
+(*                                                                           *)
 (*****************************************************************************)
 (* Revision History:                                                         *)
 (*   Version 1.0 -- Daniel Benoy -- October, 2019                            *)
@@ -514,7 +531,7 @@ $PRAGMA comment_recurse
 $VERSION 1.0
 $AUTHOR  Daniel Benoy
 $NOTE    Text color library.
-$DOCCMD  @list __PROG__=2-502
+$DOCCMD  @list __PROG__=2-527
 
 (* Begin configurable options *)
 
