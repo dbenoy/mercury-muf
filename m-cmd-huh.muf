@@ -163,6 +163,7 @@ lvar g_prop_aliases
     {
       "whereis;where;find=@whereis"
       "whereare;wa=@whereare"
+      "whospecies;whospec;ws=@who #room"
       "playeredit;editplayer=@setup"
       "roomedit;editroom=@editobject here"
       "morph=@morph"
