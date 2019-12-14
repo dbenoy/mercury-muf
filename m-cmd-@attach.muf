@@ -3,21 +3,16 @@
 i
 $PRAGMA comment_recurse
 (*****************************************************************************)
-(* m_cmd-@attach.muf - $m/cmd/at_attach                                      *)
+(* m-cmd-@attach.muf - $m/cmd/at_attach                                      *)
 (*   A replacement for the built-in @attach command which tries to mimic     *)
 (*   stock behavior while adding features.                                   *)
 (*                                                                           *)
+(*   The business itself is taken care of by m-lib-@attach.muf, so that the  *)
+(*   command can more easily be run from other programs like automated       *)
+(*   building programs, but still retain proper message output, permission   *)
+(*   checks, penny handling, etc.                                            *)
+(*                                                                           *)
 (*   GitHub: https://github.com/dbenoy/mercury-muf (See for install info)    *)
-(*                                                                           *)
-(* FEATURES:                                                                 *)
-(*   o Can act as a library for other programs to attach exits with proper   *)
-(*     permission checks, penny charges, etc.                                *)
-(*                                                                           *)
-(* PUBLIC ROUTINES:                                                          *)
-(*   M-CMD-AT_ATTACH-attach[ str:action str:source -- bool:success? ]        *)
-(*     Attempts to attach an exit as though the current player ran the       *)
-(*     @attach command, including all the same message output, permission    *)
-(*     checks, etc. M3 required.                                             *)
 (*                                                                           *)
 (*****************************************************************************)
 (* Revision History:                                                         *)
@@ -51,8 +46,7 @@ $DOCCMD  @list __PROG__=2-42
 
 (* End configurable options *)
 
-$INCLUDE $m/lib/program
-$INCLUDE $m/lib/match
+$INCLUDE $m/lib/at_attach
 
 $PUBDEF :
 
@@ -74,76 +68,6 @@ WIZCALL M-HELP-desc
 ;
 WIZCALL M-HELP-help
 
-(* ------------------------------------------------------------------------ *)
-
-: doReattach ( d d -- s )
-  2 try
-    moveto "" exit
-  catch
-    exit
-  endcatch
-;
-(*****************************************************************************)
-(*                          M-CMD-AT_ATTACH-attach                           *)
-(*****************************************************************************)
-: M-CMD-AT_ATTACH-attach[ str:action str:source -- bool:success? ]
-  M-LIB-PROGRAM-needs_mlev3
-
-  source @ not action @ not or if
-    "You must specify an action name and a source object." .tell
-    0 exit
-  then
-
-  action @ { "quiet" "no" "match_absolute" "yes" "match_home" "no" "match_nil" "no" }dict M-LIB-MATCH-match action !
-  action @ not if
-    0 exit
-  then
-
-  action @ exit? not if
-    "That's not an action!" .tell
-    0 exit
-  then
-
-  "me" match action @ controls not if
-    "Permission denied. (you don't control the action you're trying to reattach)" .tell
-    0 exit
-  then
-
-  source @ { "quiet" "no" "match_absolute" "yes" "match_home" "no" "match_nil" "no" }dict M-LIB-MATCH-match source !
-  source @ not if
-    0 exit
-  then
-
-  "me" match source @ controls not if
-    "Permission denied. (you don't control the attachment point)" .tell
-    0 exit
-  then
-
-  source @ exit? if
-    "You can't attach an action to an action." .tell
-    0 exit
-  then
-
-  source @ program? if
-    "You can't attach an action to a program." .tell
-    0 exit
-  then
-
-  action @ source @ doReattach
-  dup if .tell pop #-1 exit else pop then
-
-  "Action re-attached." .tell
-
-  action @ mlevel if
-    action @ "!M" set
-    "Action priority Level reset to zero." .tell
-  then
-
-  1
-;
-PUBLIC M-CMD-AT_ATTACH-attach
-$LIBDEF M-CMD-AT_ATTACH-attach
-
 (* ------------------------------------------------------------------------- *)
 
 : main ( s --  )
@@ -157,12 +81,12 @@ $LIBDEF M-CMD-AT_ATTACH-attach
   strip var! action
 
   (* Reattach exit *)
-  action @ source @ M-CMD-AT_ATTACH-attach pop
+  action @ source @ M-LIB-AT_ATTACH-attach pop
 ;
 .
 c
 q
 !@register m-cmd-@attach.muf=m/cmd/at_attach
-!@set $m/cmd/at_attach=L
 !@set $m/cmd/at_attach=M3
+!@set $m/cmd/at_attach=W
 

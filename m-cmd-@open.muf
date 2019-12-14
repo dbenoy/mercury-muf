@@ -9,15 +9,6 @@ $PRAGMA comment_recurse
 (*                                                                           *)
 (*   GitHub: https://github.com/dbenoy/mercury-muf (See for install info)    *)
 (*                                                                           *)
-(* FEATURES:                                                                 *)
-(*   o Uses $m/lib/quota to enforce player object quotas.                    *)
-(*                                                                           *)
-(* TECHNICAL NOTES:                                                          *)
-(*   Calls public routines on the following commands, so they must be        *)
-(*   installed and registered:                                               *)
-(*     m-cmd-@action.muf                                                     *)
-(*     m-cmd-@link.muf                                                       *)
-(*                                                                           *)
 (*****************************************************************************)
 (* Revision History:                                                         *)
 (*   Version 1.1 -- Daniel Benoy -- September, 2019                          *)
@@ -55,8 +46,8 @@ $DOCCMD  @list __PROG__=2-44
 
 $INCLUDE $m/lib/match
 $INCLUDE $m/lib/pennies
-$INCLUDE $m/cmd/at_action
-$INCLUDE $m/cmd/at_link
+$INCLUDE $m/lib/at_action
+$INCLUDE $m/lib/at_link
 
 (* ------------------------------------------------------------------------- *)
 
@@ -90,13 +81,13 @@ WIZCALL M-HELP-help
   strip var! exitname
 
   (* Create action *)
-  { "#" loc @ intostr }cat exitname @ M-CMD-AT_ACTION-action var! newAction
+  { "#" loc @ intostr }cat exitname @ M-LIB-AT_ACTION-action var! newAction
   newAction @ not if exit then
 
   (* Perform link *)
   destination @ if
     "Trying to link..." .tell
-    { "#" newAction @ intostr }cat destination @ M-CMD-AT_LINK-link not if exit then
+    { "#" newAction @ intostr }cat destination @ M-LIB-AT_LINK-link not if exit then
   then
 
   (* Register action *)
@@ -109,4 +100,5 @@ c
 q
 !@register m-cmd-@open.muf=m/cmd/at_open
 !@set $m/cmd/at_open=M3
+!@set $m/cmd/at_open=W
 

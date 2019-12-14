@@ -7,18 +7,12 @@ $PRAGMA comment_recurse
 (*   A replacement for the built-in @dig command which tries to mimic stock  *)
 (*   behavior while adding features.                                         *)
 (*                                                                           *)
+(*   The business itself is taken care of by m-lib-@dig.muf, so that the     *)
+(*   command can more easily be run from other programs like automated       *)
+(*   building programs, but still retain proper message output, permission   *)
+(*   checks, penny handling, etc.                                            *)
+(*                                                                           *)
 (*   GitHub: https://github.com/dbenoy/mercury-muf (See for install info)    *)
-(*                                                                           *)
-(* FEATURES:                                                                 *)
-(*   o Uses $m/lib/quota to enforce player object quotas.                    *)
-(*   o Can act as a library for other objects to create rooms with proper    *)
-(*     permission checks, penny charges, etc.                                *)
-(*                                                                           *)
-(* PUBLIC ROUTINES:                                                          *)
-(*   M-CMD-AT_DIG-dig[ str:roomname str:parent -- ref:dbref ]                *)
-(*     Attempts to create an room as though the current player ran the @dig  *)
-(*     command, including all the same message output, permission checks,    *)
-(*     penny manipulation, etc. M3 required.                                 *)
 (*                                                                           *)
 (*****************************************************************************)
 (* Revision History:                                                         *)
@@ -55,10 +49,9 @@ $DOCCMD  @list __PROG__=2-46
 
 (* End configurable options *)
 
-$INCLUDE $m/lib/program
-$INCLUDE $m/lib/quota
-$INCLUDE $m/lib/match
+$INCLUDE $m/lib/at_dig
 $INCLUDE $m/lib/pennies
+$INCLUDE $m/lib/match
 
 $PUBDEF :
 
@@ -80,87 +73,6 @@ WIZCALL M-HELP-desc
 ;
 WIZCALL M-HELP-help
 
-(* ------------------------------------------------------------------------ *)
-
-: doNewRoom ( d s -- d s )
-  2 try
-    newroom "" exit
-  catch
-    #-1 swap exit
-  endcatch
-;
-
-(*****************************************************************************)
-(*                           M-CMD-AT_DIG-dig                                *)
-(*****************************************************************************)
-
-: M-CMD-AT_DIG-dig[ str:roomname str:parent -- ref:dbref ]
-  M-LIB-PROGRAM-needs_mlev3
-
-  "room" 1 M-LIB-QUOTA-QuotaCheck not if #-1 exit then
-
-  roomname @ not if
-    "You must specify a name for the room." .tell
-    #-1 exit
-  then
-
-  roomname @ name-ok? not if
-    "That's a silly name for a room!" .tell
-    #-1 exit
-  then
-
-  "room_cost" sysparm atoi var! cost
-
-  cost @ M-LIB-PENNIES-payfor_chk not if
-    { "Sorry, you don't have enough " "pennies" sysparm " to dig a room." }cat .tell
-    #-1 exit
-  then
-
-  (* Find default parent and create room *)
-  "me" match location begin
-    dup while
-
-    dup "ABODE" flag? if
-      break
-    then
-
-    location
-  repeat
-
-  dup not if
-    pop "default_room_parent" sysparm stod
-  then
-
-  roomname @ doNewRoom
-  dup if .tell pop #-1 exit else pop then
-  var! newroom
-
-  "Room " newroom @ name strcat " (#" strcat newroom @ intostr strcat ") created." strcat .tell
-
-  cost @ M-LIB-PENNIES-payfor
-
-  parent @ if
-    "Trying to set parent..." .tell
-
-    parent @ { "quiet" "no" "match_absolute" "yes" "match_home" "no" "match_nil" "no" }dict M-LIB-MATCH-match parent !
-
-    parent @ ok? parent @ #-3 = or not if
-      "Parent set to default." .tell
-    else
-      "me" match parent @ controls not parent @ "ABODE" flag? not and parent @ newroom @ = not and if
-        "Permission denied. Parent set to default" .tell
-      else
-        newroom @ parent @ moveto
-        "Parent set to " parent @ unparseobj strcat "." strcat .tell
-      then
-    then
-  then
-
-  newroom @
-;
-PUBLIC M-CMD-AT_DIG-dig
-$LIBDEF M-CMD-AT_DIG-dig
-
 (* ------------------------------------------------------------------------- *)
 
 : main ( s --  )
@@ -175,7 +87,7 @@ $LIBDEF M-CMD-AT_DIG-dig
   strip var! roomname
 
   (* Create room *)
-  roomname @ parent @ M-CMD-AT_DIG-dig
+  roomname @ parent @ M-LIB-AT_DIG-dig
   dup not if
     pop
     exit
@@ -190,7 +102,6 @@ $LIBDEF M-CMD-AT_DIG-dig
 c
 q
 !@register m-cmd-@dig.muf=m/cmd/at_dig
-!@set $m/cmd/at_dig=L
 !@set $m/cmd/at_dig=M3
 !@set $m/cmd/at_dig=W
 

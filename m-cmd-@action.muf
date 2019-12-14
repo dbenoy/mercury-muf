@@ -3,28 +3,16 @@
 i
 $PRAGMA comment_recurse
 (*****************************************************************************)
-(* m_cmd-@action.muf - $m/cmd/at_action                                      *)
+(* m-cmd-@action.muf - $m/cmd/at_action                                      *)
 (*   A replacement for the built-in @action command which tries to mimic     *)
 (*   stock behavior while adding features.                                   *)
 (*                                                                           *)
+(*   The business itself is taken care of by m-lib-@action.muf, so that the  *)
+(*   command can more easily be run from other programs like automated       *)
+(*   building programs, but still retain proper message output, permission   *)
+(*   checks, penny handling, etc.                                            *)
+(*                                                                           *)
 (*   GitHub: https://github.com/dbenoy/mercury-muf (See for install info)    *)
-(*                                                                           *)
-(* FEATURES:                                                                 *)
-(*   o Uses $m/lib/quota to enforce player object quotas.                    *)
-(*   o Also link the exit with the same command.                             *)
-(*   o Can act as a library for other objects to create exits with proper    *)
-(*     permission checks, penny charges, etc.                                *)
-(*                                                                           *)
-(* PUBLIC ROUTINES:                                                          *)
-(*   M-CMD-AT_ACTION-action[ str:source str:exitname -- ref:room ]           *)
-(*     Attempts to create an action as though the current player ran the     *)
-(*     @action command, including all the same message output, permission    *)
-(*     checks, penny manipulation, etc. M3 required.                         *)
-(*                                                                           *)
-(* TECHNICAL NOTES:                                                          *)
-(*   Calls public routines on the following commands, so they must be        *)
-(*   installed and registered:                                               *)
-(*     m-cmd-@link.muf                                                       *)
 (*                                                                           *)
 (*****************************************************************************)
 (* Revision History:                                                         *)
@@ -61,11 +49,10 @@ $DOCCMD  @list __PROG__=2-52
 
 (* End configurable options *)
 
-$INCLUDE $m/lib/program
-$INCLUDE $m/lib/quota
-$INCLUDE $m/lib/match
+$INCLUDE $m/lib/at_action
+$INCLUDE $m/lib/at_link
 $INCLUDE $m/lib/pennies
-$INCLUDE $m/cmd/at_link
+$INCLUDE $m/lib/match
 
 $PUBDEF :
 
@@ -89,77 +76,6 @@ WIZCALL M-HELP-help
 
 (* ------------------------------------------------------------------------ *)
 
-: doNewExit ( d s -- d s )
-  2 try
-    newexit "" exit
-  catch
-    #-1 swap exit
-  endcatch
-;
-
-(*****************************************************************************)
-(*                          M-CMD-AT_ACTION-action                           *)
-(*****************************************************************************)
-: M-CMD-AT_ACTION-action[ str:source str:exitname -- ref:room ]
-  M-LIB-PROGRAM-needs_mlev3
-
-  "exit" 1 M-LIB-QUOTA-QuotaCheck not if #-1 exit then
-
-  "exit_cost" sysparm atoi var! cost
-
-  exitname @ not if
-    "You must specify a direction or action name to open." .tell
-    #-1 exit
-  then
-
-  exitname @ name-ok? not if
-    "That's a strange name for an exit!" .tell
-    #-1 exit
-  then
-
-  source @ not if
-    "You must specify a source object." .tell
-    #-1 exit
-  then
-
-  source @ { "quiet" "no" "match_absolute" "yes" "match_home" "no" "match_nil" "no" }dict M-LIB-MATCH-match source !
-
-  source @ ok? not if
-    #-1 exit
-  then
-
-  "me" match source @ controls not if
-    "Permission denied. (you don't control the attachment point)" .tell
-    #-1 exit
-  then
-
-  source @ exit? if
-    "You can't attach an action to an action." .tell
-    #-1 exit
-  then
-
-  source @ program? if
-    "You can't attach an action to a program." .tell
-    #-1 exit
-  then
-
-  cost @ M-LIB-PENNIES-payfor_chk not if
-    { "Sorry, you don't have enough " "pennies" sysparm " to create an action/exit." }cat .tell
-    #-1 exit
-  then
-
-  source @ exitname @ doNewExit
-  dup if .tell pop #-1 exit else pop then
-
-  cost @ M-LIB-PENNIES-payfor
-
-  "Action " over name strcat " (#" strcat over intostr strcat ") created." strcat .tell
-;
-PUBLIC M-CMD-AT_ACTION-action
-$LIBDEF M-CMD-AT_ACTION-action
-
-(* ------------------------------------------------------------------------- *)
-
 : main ( s --  )
   "me" match "BUILDER" flag? "me" match "WIZARD" flag? or not if
     "Only builders are allowed to @action." .tell
@@ -174,13 +90,13 @@ $LIBDEF M-CMD-AT_ACTION-action
   strip var! exitname
 
   (* Create action *)
-  source @ exitname @ M-CMD-AT_ACTION-action var! newAction
+  source @ exitname @ M-LIB-AT_ACTION-action var! newAction
   newAction @ not if exit then
 
   (* Perform link *)
   destination @ if
     "Trying to link..." .tell
-    "#" newAction @ intostr strcat destination @ M-CMD-AT_LINK-link not if exit then
+    "#" newAction @ intostr strcat destination @ M-LIB-AT_LINK-link not if exit then
   then
 
   (* Register action *)
@@ -192,7 +108,6 @@ $LIBDEF M-CMD-AT_ACTION-action
 c
 q
 !@register m-cmd-@action.muf=m/cmd/at_action
-!@set $m/cmd/at_action=L
 !@set $m/cmd/at_action=M3
 !@set $m/cmd/at_action=W
 

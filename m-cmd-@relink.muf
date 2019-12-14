@@ -9,12 +9,6 @@ $PRAGMA comment_recurse
 (*                                                                           *)
 (*   GitHub: https://github.com/dbenoy/mercury-muf (See for install info)    *)
 (*                                                                           *)
-(* TECHNICAL NOTES:                                                          *)
-(*   Calls public routines on the following commands, so they must be        *)
-(*   installed and registered:                                               *)
-(*     m-cmd-@link.muf                                                       *)
-(*     m-cmd-@unlink.muf                                                     *)
-(*                                                                           *)
 (*****************************************************************************)
 (* Revision History:                                                         *)
 (*   Version 1.1 -- Daniel Benoy -- September, 2019                          *)
@@ -50,8 +44,8 @@ $DOCCMD  @list __PROG__=2-43
 
 (* End configurable options *)
 
-$INCLUDE $m/cmd/at_link
-$INCLUDE $m/cmd/at_unlink
+$INCLUDE $m/lib/at_link
+$INCLUDE $m/lib/at_unlink
 
 (* ------------------------------------------------------------------------ *)
 
@@ -79,10 +73,10 @@ WIZCALL M-HELP-help
   strip var! exitname
 
   (* Unlink it, if it's an exit *)
-  exitname @ M-CMD-AT_UNLINK-unlink not if exit then
+  exitname @ M-LIB-AT_UNLINK-unlink not if exit then
 
   (* Perform link *)
-  exitname @ destination @ M-CMD-AT_LINK-link pop
+  exitname @ destination @ M-LIB-AT_LINK-link pop
 ;
 
 .
@@ -90,4 +84,5 @@ c
 q
 !@register m-cmd-@relink.muf=m/cmd/at_relink
 !@set $m/cmd/at_relink=M3
+!@set $m/cmd/at_relink=W
 

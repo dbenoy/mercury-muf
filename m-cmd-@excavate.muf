@@ -8,16 +8,6 @@ $PRAGMA comment_recurse
 (*                                                                           *)
 (*   GitHub: https://github.com/dbenoy/mercury-muf (See for install info)    *)
 (*                                                                           *)
-(* FEATURES:                                                                 *)
-(*   o Uses $m/lib/quota to enforce player object quotas.                    *)
-(*                                                                           *)
-(* TECHNICAL NOTES:                                                          *)
-(*   Calls public routines on the following commands, so they must be        *)
-(*   installed and registered:                                               *)
-(*     m-cmd-@action.muf                                                     *)
-(*     m-cmd-@dig.muf                                                        *)
-(*     m-cmd-@link.muf                                                       *)
-(*                                                                           *)
 (*****************************************************************************)
 (* Revision History:                                                         *)
 (*   Version 1.1 -- Daniel Benoy -- September, 2019                          *)
@@ -54,9 +44,9 @@ $DOCCMD  @list __PROG__=2-43
 (* End configurable options *)
 
 $INCLUDE $m/lib/pennies
-$INCLUDE $m/cmd/at_action
-$INCLUDE $m/cmd/at_dig
-$INCLUDE $m/cmd/at_link
+$INCLUDE $m/lib/at_action
+$INCLUDE $m/lib/at_dig
+$INCLUDE $m/lib/at_link
 
 (* ------------------------------------------------------------------------ *)
 
@@ -89,20 +79,20 @@ WIZCALL M-HELP-help
   strip var! foreexit
   strip var! roomname
 
-  roomname @ "" M-CMD-AT_DIG-dig dup not if pop exit then var! newroom
+  roomname @ "" M-LIB-AT_DIG-dig dup not if pop exit then var! newroom
 
   foreexit @ if
     "Creating " foreexit @ strcat "..." strcat .tell
-    { "#" loc @ intostr }cat foreexit @ M-CMD-AT_ACTION-action dup not if pop exit then var! newforeexit
+    { "#" loc @ intostr }cat foreexit @ M-LIB-AT_ACTION-action dup not if pop exit then var! newforeexit
     "Trying to link..." .tell
-    { "#" newforeexit @ intostr }cat { "#" newroom @ intostr }cat M-CMD-AT_LINK-link not if exit then
+    { "#" newforeexit @ intostr }cat { "#" newroom @ intostr }cat M-LIB-AT_LINK-link not if exit then
   then
 
   backexit @ if
     "Creating " backexit @ strcat "..." strcat .tell
-    { "#" newroom @ intostr }cat backexit @ M-CMD-AT_ACTION-action dup not if pop exit then var! newbackexit
+    { "#" newroom @ intostr }cat backexit @ M-LIB-AT_ACTION-action dup not if pop exit then var! newbackexit
     "Trying to link..." .tell
-    { "#" newbackexit @ intostr }cat { "#" loc @ intostr }cat M-CMD-AT_LINK-link not if exit then
+    { "#" newbackexit @ intostr }cat { "#" loc @ intostr }cat M-LIB-AT_LINK-link not if exit then
   then
 ;
 .
@@ -110,4 +100,5 @@ c
 q
 !@register m-cmd-@excavate.muf=m/cmd/at_excavate
 !@set $m/cmd/at_excavate=M3
+!@set $m/cmd/at_excavate=W
 

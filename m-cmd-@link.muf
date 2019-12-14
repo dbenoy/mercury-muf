@@ -7,21 +7,12 @@ $PRAGMA comment_recurse
 (*   A replacement for the built-in @link command which tries to mimic stock *)
 (*   behavior while adding features.                                         *)
 (*                                                                           *)
+(*   The business itself is taken care of by m-lib-@link.muf, so that the    *)
+(*   command can more easily be run from other programs like automated       *)
+(*   building programs, but still retain proper message output, permission   *)
+(*   checks, penny handling, etc.                                            *)
+(*                                                                           *)
 (*   GitHub: https://github.com/dbenoy/mercury-muf (See for install info)    *)
-(*                                                                           *)
-(* FEATURES:                                                                 *)
-(*   o Can act as a library for other objects to link objects with proper    *)
-(*     permission checks, penny charges, etc.                                *)
-(*                                                                           *)
-(* PUBLIC ROUTINES:                                                          *)
-(*   M-CMD-AT_LINK-link[ str:thing str:links -- bool:success? ]              *)
-(*     Attempts to perform a linkas though the current player ran the @link  *)
-(*     command, including all the same message output, permission checks,    *)
-(*     penny manipulation, etc. M3 required.                                 *)
-(*                                                                           *)
-(*   M-CMD-AT_LINK-relink[ str:thing str:links -- bool:success? ]            *)
-(*     Same as M-CMD-AT_LINK-link, except it will skip checking if the exit  *)
-(*     is already linked.                                                    *)
 (*                                                                           *)
 (*****************************************************************************)
 (* Revision History:                                                         *)
@@ -58,9 +49,7 @@ $DOCCMD  @list __PROG__=2-49
 
 (* End configurable options *)
 
-$INCLUDE $m/lib/program
-$INCLUDE $m/lib/match
-$INCLUDE $m/lib/pennies
+$INCLUDE $m/lib/at_link
 
 $PUBDEF :
 
@@ -82,254 +71,6 @@ WIZCALL M-HELP-desc
 ;
 WIZCALL M-HELP-help
 
-(* ------------------------------------------------------------------------ *)
-
-: doSetLinksArray ( d1 a -- s )
-  2 try
-    setlinks_array "" exit
-  catch
-    exit
-  endcatch
-;
-
-$DEF LINKABLE dup room? over thing? or dup 3 pick "ABODE" flag? and swap not 3 pick "LINK_OK" flag? and or over #-3 = or swap pop
-$DEF TESTLOCKPROP getprop dup lock? if testlock else pop pop 1 then
-
-: canLinkTo[ ref:who ref:what ref:where -- bool:success? ]
-  (* Can always link to HOME *)
-  #-3 where @ = if
-    1 exit
-  then
-
-  (* Exits can be linked to NIL *)
-  #-4 where @ = what @ exit? and if
-    1 exit
-  then
-
-  (* Can't link to an invalid dbref *)
-  where @ ok? not if
-    0 exit
-  then
-
-  what @ case
-    exit? when
-      who @ where @ controls if 1 exit then
-      where @ "LINK_OK" flag? "me" match where @ "_/lklk" TESTLOCKPROP and if 1 exit then
-    end
-    player? when
-      where @ room? not if 0 exit then
-      who @ where @ controls if 1 exit then
-      where @ LINKABLE "me" match where @ "_/lklk" TESTLOCKPROP and if 1 exit then
-    end
-    room? when
-      where @ room? where @ thing? or not if 0 exit then
-      who @ where @ controls if 1 exit then
-      where @ LINKABLE "me" match where @ "_/lklk" TESTLOCKPROP and if 1 exit then
-    end
-    thing? when
-      where @ room? where @ thing? or where @ player? or not if 0 exit then
-      who @ where @ controls if 1 exit then
-      where @ LINKABLE "me" match where @ "_/lklk" TESTLOCKPROP and if 1 exit then
-    end
-  endcase
-
-  0
-;
-
-: exitLoopCheck[ ref:source ref:dest -- bool:success? ]
-  source @ dest @ = if 1 exit then
-  dest @ ok? not if 0 exit then
-  dest @ exit? if
-    dest @ getlinks array_make foreach
-      swap pop
-      var! current
-      current @ exit? if
-        source @ current @ exitLoopCheck if 1 exit then
-      then
-    repeat
-  then
-  0 exit
-;
-
-: doLink[ str:thing str:links bool:relink -- bool:success? ]
-  "link_cost" sysparm atoi var! tp_link_cost
-  "exit_cost" sysparm atoi var! tp_exit_cost
-
-  thing @ { "quiet" "no" "match_absolute" "yes" "match_home" "no" "match_nil" "no" }dict M-LIB-MATCH-match thing !
-
-  thing @ not if
-    0 exit
-  then
-
-  thing @ getlink not not var! alreadyLinked
-
-  links @ ";" explode_array links !
-
-  thing @ exit? not if
-    links @ array_count 1 > if
-      "Only actions and exits can be linked to multiple destinations." .tell
-      0 exit
-    then
-  then
-
-  thing @ case
-    exit? when (*** Exits ***)
-      (* Fail on an existing link, unless you own it and it's NIL. *)
-      (* No existing link means anyone can link it, which is a little silly, but that's how it works in the built-in commands *)
-      alreadyLinked @ if
-        "me" match thing @ controls not if
-          "Permission denied. (you don't control the exit to relink)" .tell
-          0 exit
-        then
-        relink @ not thing @ getlink #-4 = not and if
-          "That exit is already linked." .tell
-          0 exit
-        then
-      then
-      (* Check for sufficient pennies *)
-      thing @ owner "me" match owner = if
-        alreadyLinked not if
-          tp_link_cost @ M-LIB-PENNIES-payfor_chk not if
-            { "It costs " tp_link_cost @ " " "pennies" sysparm " to link this exit."  }cat .tell
-            0 exit
-          then
-        then
-      else
-        "me" match "BUILDER" flag? "me" match "WIZARD" flag? or not if
-          "Only authorized builders may seize exits." .tell
-           0 exit
-        then
-        tp_link_cost @ tp_exit_cost @ + M-LIB-PENNIES-payfor_chk not if
-          { "It costs " tp_link_cost @ tp_exit_cost @ + " " "pennies" sysparm " to link this exit."  }cat .tell
-          0 exit
-        then
-      then
-      (* Link has been validated, start looking up destinations *)
-      0 var! alreadySeenPR
-      { }array var! linkRefs
-      links @ foreach
-        swap pop
-        { "quiet" "no" "match_absolute" "yes" "match_home" "yes" "match_nil" "yes" }dict M-LIB-MATCH-match var! thisLinkRef
-
-        thisLinkRef @ not if
-          continue
-        then
-
-        thisLinkRef @ player? "teleport_to_player" sysparm "no" = and if
-          { "You can't link to players. Destination " thisLinkRef @ unparseobj " ignored." }cat .tell
-          continue
-        then
-
-        "me" match thing @ thisLinkRef @ canLinkTo not if
-          { "You can't link to " thisLinkRef @ unparseobj "." }cat .tell
-          continue
-        then
-
-        thisLinkRef @ player? thisLinkRef @ room? or thisLinkRef @ program? or if
-          alreadySeenPR @ if
-            { "Only one player, room, or program destination allowed. Destination " thisLinkRef @ unparseobj " ignored." }cat .tell
-            continue
-          then
-          1 alreadySeenPR !
-        then
-
-        thisLinkRef @ exit? if
-          thing @ thisLinkRef @ exitLoopCheck if
-            { "Destination " thisLinkRef @ unparseobj " would create a loop, ignored." }cat .tell
-          then
-        then
-
-        thisLinkRef @ linkRefs @ array_appenditem linkRefs !
-        linkRefs @ array_count 50 >= if
-          "Too many destinations, rest ignored." .tell
-          break
-        then
-      repeat
-
-      linkRefs @ array_count not if
-        "No destinations linked." .tell
-        0 exit
-      then
-
-      thing @ linkRefs @ doSetLinksArray
-      dup if .tell 0 exit else pop then
-
-      linkRefs @ foreach
-        swap pop
-        "Linked to " swap unparseobj strcat "." strcat .tell
-      repeat
-      (* Charge pennies and change ownership if appropriate *)
-      thing @ owner "me" match owner = if
-        alreadyLinked @ not if
-          "me" match tp_link_cost @ M-LIB-PENNIES-payfor
-        then
-      else
-        "me" match tp_link_cost @ tp_exit_cost @ + M-LIB-PENNIES-payfor
-        thing @ owner tp_exit_cost @ addpennies
-        thing @ "me" match setown
-      then
-    end
-    dup player? swap thing? or when (*** Players / Things ***)
-      links @ 0 [] { "quiet" "no" "match_absolute" "yes" "match_home" "no" "match_nil" "no" }dict M-LIB-MATCH-match var! newHome
-      newHome @ not if 0 exit then
-
-      "me" match newHome @ controls not "me" match thing @ newHome @ canLinkTo not and if
-        "Permission denied. (you don't control the thing, or you can't link to dest)" .tell
-        0 exit
-      then
-
-      thing @ { newHome @ }array doSetLinksArray
-      dup if .tell 0 exit else pop then
-
-      "Home set." .tell
-    end
-    room? when (*** Rooms ***)
-      links @ 0 [] { "quiet" "no" "match_absolute" "yes" "match_home" "yes" "match_nil" "no" }dict M-LIB-MATCH-match var! newDropto
-      newDropto @ not if 0 exit then
-
-      #-3 newDropto @ = not if
-        "me" match newDropto @ controls not "me" match thing @ newDropto @ canLinkTo not and thing @ newDropto @ = or if
-          "Permission denied. (you don't control the thing, or you can't link to the dropto)" .tell
-          0 exit
-        then
-      then
-
-      thing @ { newDropto @ }array doSetLinksArray
-      dup if .tell 0 exit else pop then
-
-      "Dropto set." .tell
-    end
-    program? when (*** Programs ***)
-      "You can't link programs to things!" .tell
-      0 exit
-    end
-  endcase
-
-  1
-;
-
-(*****************************************************************************)
-(*                            M-CMD-AT_LINK-link                             *)
-(*****************************************************************************)
-: M-CMD-AT_LINK-link[ str:thing str:links -- bool:success? ]
-  M-LIB-PROGRAM-needs_mlev3
-
-  thing @ links @ 0 doLink
-;
-PUBLIC M-CMD-AT_LINK-link
-$LIBDEF M-CMD-AT_LINK-link
-
-(*****************************************************************************)
-(*                           M-CMD-AT_LINK-relink                            *)
-(*****************************************************************************)
-: M-CMD-AT_LINK-relink[ str:thing str:links -- bool:success? ]
-  M-LIB-PROGRAM-needs_mlev3
-
-  thing @ links @ 1 doLink
-;
-PUBLIC M-CMD-AT_LINK-relink
-$LIBDEF M-CMD-AT_LINK-relink
-
 (* ------------------------------------------------------------------------- *)
 
 : main ( s --  )
@@ -338,13 +79,12 @@ $LIBDEF M-CMD-AT_LINK-relink
   strip var! exitname
 
   (* Perform link *)
-  exitname @ destination @ M-CMD-AT_LINK-link pop
+  exitname @ destination @ M-LIB-AT_LINK-link pop
 ;
 .
 c
 q
 !@register m-cmd-@link.muf=m/cmd/at_link
-!@set $m/cmd/at_link=L
 !@set $m/cmd/at_link=M3
 !@set $m/cmd/at_link=W
 

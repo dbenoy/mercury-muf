@@ -7,17 +7,12 @@ $PRAGMA comment_recurse
 (*   A replacement for the built-in @create command which tries to mimic     *)
 (*   stock behavior while adding features.                                   *)
 (*                                                                           *)
+(*   The business itself is taken care of by m-lib-@create.muf, so that the  *)
+(*   command can more easily be run from other programs like automated       *)
+(*   building programs, but still retain proper message output, permission   *)
+(*   checks, penny handling, etc.                                            *)
+(*                                                                           *)
 (*   GitHub: https://github.com/dbenoy/mercury-muf (See for install info)    *)
-(*                                                                           *)
-(* FEATURES:                                                                 *)
-(*   o Uses $m/lib/quota to enforce player object quotas.                    *)
-(*   o Can act as a library for other programs to create objects.            *)
-(*                                                                           *)
-(* PUBLIC ROUTINES:                                                          *)
-(*   M-CMD-AT_CREATE-create[ str:thingname str:payment -- ref:thing ]        *)
-(*     Attempts to create an object as though the current player ran the     *)
-(*     @create command, including all the same message output, permission    *)
-(*     checks, penny manipulation, etc. M3 required.                         *)
 (*                                                                           *)
 (*****************************************************************************)
 (* Revision History:                                                         *)
@@ -54,10 +49,9 @@ $DOCCMD  @list __PROG__=2-45
 
 (* End configurable options *)
 
-$INCLUDE $m/lib/program
-$INCLUDE $m/lib/quota
-$INCLUDE $m/lib/match
+$INCLUDE $m/lib/at_create
 $INCLUDE $m/lib/pennies
+$INCLUDE $m/lib/match
 
 $PUBDEF :
 
@@ -79,68 +73,6 @@ WIZCALL M-HELP-desc
 ;
 WIZCALL M-HELP-help
 
-(* ------------------------------------------------------------------------ *)
-
-: doNewObject ( d s -- d s )
-  2 try
-    newobject "" exit
-  catch
-    #-1 swap exit
-  endcatch
-;
-
-(*****************************************************************************)
-(*                          M-CMD-AT_CREATE-create                           *)
-(*****************************************************************************)
-: M-CMD-AT_CREATE-create[ str:thingname str:payment -- ref:thing ]
-  M-LIB-PROGRAM-needs_mlev3
-
-  "thing" 1 M-LIB-QUOTA-QuotaCheck not if #-1 exit then
-
-  "max_object_endowment" sysparm atoi var! tp_max_endowment
-  "object_cost" sysparm atoi var! tp_object_cost
-
-  thingname @ not if
-    "Please specify a valid name for this thing." .tell
-    #-1 exit
-  then
-
-  thingname @ name-ok? not if
-    "Please specify a valid name for this thing." .tell
-    #-1 exit
-  then
-
-  payment @ atoi payment !
-  payment @ 0 < if
-    "You can't create an object for less than nothing!" .tell
-    #-1 exit
-  then
-
-  payment @ tp_object_cost @ < if
-    tp_object_cost @ payment !
-  then
-
-  payment @ M-LIB-PENNIES-payfor_chk not if
-    { "Sorry, you don't have enough " "pennies" sysparm "." }cat .tell
-    #-1 exit
-  then
-
-  (* Create the object *)
-  "me" match thingname @ doNewObject
-  dup if .tell pop #-1 exit else pop then
-
-  "Object " over name strcat " (#" strcat over intostr strcat ") created." strcat .tell
-
-  (* Endow the object *)
-  payment @ M-LIB-PENNIES-payfor
-  payment @ M-LIB-PENNIES-endow_get var! thingValue
-  thingValue @ tp_max_endowment @ > if tp_max_endowment @ thingValue ! then
-  thingValue @ 0 < if 0 thingValue ! then
-  dup thingValue @ addpennies
-;
-PUBLIC M-CMD-AT_CREATE-create
-$LIBDEF M-CMD-AT_CREATE-create
-
 (* ------------------------------------------------------------------------- *)
 
 : main ( s --  )
@@ -155,7 +87,7 @@ $LIBDEF M-CMD-AT_CREATE-create
   strip var! thingname
 
   (* Create thing *)
-  thingname @ cost @ M-CMD-AT_CREATE-create
+  thingname @ cost @ M-LIB-AT_CREATE-create
   dup not if
     pop
     exit
@@ -170,7 +102,6 @@ $LIBDEF M-CMD-AT_CREATE-create
 c
 q
 !@register m-cmd-@create.muf=m/cmd/at_create
-!@set $m/cmd/at_create=L
 !@set $m/cmd/at_create=M3
 !@set $m/cmd/at_create=W
 

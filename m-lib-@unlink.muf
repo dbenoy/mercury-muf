@@ -1,18 +1,19 @@
-!@program m-cmd-@unlink.muf
+!@program m-lib-@unlink.muf
 1 99999 d
 i
 $PRAGMA comment_recurse
 (*****************************************************************************)
-(* m-cmd-@unlink.muf - $m/cmd/at_unlink                                      *)
+(* m-lib-@unlink.muf - $m/lib/at_unlink                                      *)
 (*   A replacement for the built-in @unlink command which tries to mimic     *)
 (*   stock behavior while adding features.                                   *)
 (*                                                                           *)
-(*   The business itself is taken care of by m-lib-@unlink.muf, so that the  *)
-(*   command can more easily be run from other programs like automated       *)
-(*   building programs, but still retain proper message output, permission   *)
-(*   checks, penny handling, etc.                                            *)
-(*                                                                           *)
 (*   GitHub: https://github.com/dbenoy/mercury-muf (See for install info)    *)
+(*                                                                           *)
+(* PUBLIC ROUTINES:                                                          *)
+(*   M-LIB-AT_UNLINK-Unlink[ str:thing -- bool:success? ]                    *)
+(*     Attempts to perform an unlink as though the current player ran the    *)
+(*     @unlink command, including all the same message output, permission    *)
+(*     checks, etc. M4 required.                                             *)
 (*                                                                           *)
 (*****************************************************************************)
 (* Revision History:                                                         *)
@@ -49,44 +50,98 @@ $DOCCMD  @list __PROG__=2-45
 
 (* End configurable options *)
 
-$INCLUDE $m/lib/at_unlink
+$INCLUDE $m/lib/program
+$INCLUDE $m/lib/match
 $INCLUDE $m/lib/pennies
 
 $PUBDEF :
 
-(* ------------------------------------------------------------------------ *)
+(* ------------------------------------------------------------------------- *)
 
-: M-HELP-desc ( d -- s )
-  pop
-  "Remove the 'link' between two objects."
-;
-WIZCALL M-HELP-desc
+: controlsLink[ ref:who ref:thing -- bool:success? ]
+  thing @ ok? not if
+    0 exit
+  then
 
-: M-HELP-help ( d -- a )
-  name ";" split pop toupper var! action_name
-  {
-    { action_name @ " <exit>" }cat
-    { action_name @ " here" }cat
-    " "
-    { "  Removes the link on the exit in the specified direction, or removes the drop-to on the room. Unlinked exits may be picked up and dropped elsewhere. Be careful, anyone can relink an unlinked exit, becoming its new owner" "link_cost" sysparm atoi if " (but you will be reimbursed your " "link_cost" sysparm M-LIB-PENNIES-pennies ")" then "." }cat
-  }list
+  thing @ program? if
+    0 exit
+  then
+
+  thing @ getlinks array_make foreach
+    swap pop
+    dup ok? if
+      who @ swap controls if 1 exit then
+    else
+      pop
+    then
+  repeat
+  0 exit
 ;
-WIZCALL M-HELP-help
+
+(*****************************************************************************)
+(*                          M-LIB-AT_UNLINK-unlink                           *)
+(*****************************************************************************)
+: M-LIB-AT_UNLINK-unlink[ str:thing -- bool:success? ]
+  M-LIB-PROGRAM-needs_mlev4
+
+  "link_cost" sysparm atoi var! tp_link_cost
+  "player_start" sysparm match var! tp_player_start
+
+  thing @ { "quiet" "no" "match_absolute" "yes" "match_home" "no" "match_nil" "no" }dict M-LIB-MATCH-match thing !
+
+  thing @ not if
+    0 exit
+  then
+
+  "me" match thing @ controls "me" match thing @ controlsLink or not if
+    "Permission denied. (You don't control the exit or its link)" .tell
+    0 exit
+  then
+
+  thing @ case
+    exit? when
+      thing @ getlink var! doRefund
+      thing @ #-1 setlink
+      "Unlinked." .tell
+      doRefund @ if
+        thing @ owner tp_link_cost @ addpennies
+      then
+      thing @ mlevel if
+        thing @ "!mucker" set
+        "Action priority Level reset to 0." .tell
+      then
+    end
+    room? when
+      thing @ #-1 setlink
+      "Dropto removed." .tell
+    end
+    thing? when
+      thing @ thing @ owner setlink
+      "Thing's home reset to owner." .tell
+    end
+    player? when
+      thing @ tp_player_start setlink
+      "Player's home reset to default player start room." .tell
+    end
+    default
+      "You can't unlink that!" .tell
+    end
+  endcase
+  1
+;
+PUBLIC M-LIB-AT_UNLINK-Unlink
+$LIBDEF M-LIB-AT_UNLINK-Unlink
 
 (* ------------------------------------------------------------------------- *)
 
 : main ( s --  )
-  "=" split
-  pop
-  strip var! exitname
-
-  (* Perform unlink *)
-  exitname @ M-LIB-AT_UNLINK-unlink pop
+  "Library called as command." abort
 ;
 .
 c
 q
-!@register m-cmd-@unlink.muf=m/cmd/at_unlink
-!@set $m/cmd/at_unlink=M3
-!@set $m/cmd/at_unlink=W
+!@register m-lib-@unlink.muf=m/lib/at_unlink
+!@set $m/lib/at_unlink=L
+!@set $m/lib/at_unlink=M3
+!@set $m/lib/at_unlink=W
 

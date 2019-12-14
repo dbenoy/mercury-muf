@@ -1,18 +1,19 @@
-!@program m-cmd-@unlink.muf
+!@program m-lib-@action.muf
 1 99999 d
 i
 $PRAGMA comment_recurse
 (*****************************************************************************)
-(* m-cmd-@unlink.muf - $m/cmd/at_unlink                                      *)
-(*   A replacement for the built-in @unlink command which tries to mimic     *)
+(* m-lib-@action.muf - $m/lib/at_action                                      *)
+(*   A replacement for the built-in @action command which tries to mimic     *)
 (*   stock behavior while adding features.                                   *)
 (*                                                                           *)
-(*   The business itself is taken care of by m-lib-@unlink.muf, so that the  *)
-(*   command can more easily be run from other programs like automated       *)
-(*   building programs, but still retain proper message output, permission   *)
-(*   checks, penny handling, etc.                                            *)
-(*                                                                           *)
 (*   GitHub: https://github.com/dbenoy/mercury-muf (See for install info)    *)
+(*                                                                           *)
+(* PUBLIC ROUTINES:                                                          *)
+(*   M-LIB-AT_ACTION-action[ str:source str:exitname -- ref:room ]           *)
+(*     Attempts to create an action as though the current player ran the     *)
+(*     @action command, including all the same message output, permission    *)
+(*     checks, penny manipulation, etc. M4 required.                         *)
 (*                                                                           *)
 (*****************************************************************************)
 (* Revision History:                                                         *)
@@ -42,51 +43,101 @@ $PRAGMA comment_recurse
 (*****************************************************************************)
 $VERSION 1.001
 $AUTHOR  Daniel Benoy
-$NOTE    @unlink command with more features.
-$DOCCMD  @list __PROG__=2-45
+$NOTE    @action command with more features.
+$DOCCMD  @list __PROG__=2-52
 
 (* Begin configurable options *)
 
 (* End configurable options *)
 
-$INCLUDE $m/lib/at_unlink
+$INCLUDE $m/lib/program
+$INCLUDE $m/lib/quota
+$INCLUDE $m/lib/match
 $INCLUDE $m/lib/pennies
 
 $PUBDEF :
 
-(* ------------------------------------------------------------------------ *)
+(* ------------------------------------------------------------------------- *)
 
-: M-HELP-desc ( d -- s )
-  pop
-  "Remove the 'link' between two objects."
+: doNewExit ( d s -- d s )
+  2 try
+    newexit "" exit
+  catch
+    #-1 swap exit
+  endcatch
 ;
-WIZCALL M-HELP-desc
 
-: M-HELP-help ( d -- a )
-  name ";" split pop toupper var! action_name
-  {
-    { action_name @ " <exit>" }cat
-    { action_name @ " here" }cat
-    " "
-    { "  Removes the link on the exit in the specified direction, or removes the drop-to on the room. Unlinked exits may be picked up and dropped elsewhere. Be careful, anyone can relink an unlinked exit, becoming its new owner" "link_cost" sysparm atoi if " (but you will be reimbursed your " "link_cost" sysparm M-LIB-PENNIES-pennies ")" then "." }cat
-  }list
+(*****************************************************************************)
+(*                          M-LIB-AT_ACTION-action                           *)
+(*****************************************************************************)
+: M-LIB-AT_ACTION-action[ str:source str:exitname -- ref:room ]
+  M-LIB-PROGRAM-needs_mlev4
+
+  "exit" 1 M-LIB-QUOTA-QuotaCheck not if #-1 exit then
+
+  "exit_cost" sysparm atoi var! cost
+
+  exitname @ not if
+    "You must specify a direction or action name to open." .tell
+    #-1 exit
+  then
+
+  exitname @ name-ok? not if
+    "That's a strange name for an exit!" .tell
+    #-1 exit
+  then
+
+  source @ not if
+    "You must specify a source object." .tell
+    #-1 exit
+  then
+
+  source @ { "quiet" "no" "match_absolute" "yes" "match_home" "no" "match_nil" "no" }dict M-LIB-MATCH-match source !
+
+  source @ ok? not if
+    #-1 exit
+  then
+
+  "me" match source @ controls not if
+    "Permission denied. (you don't control the attachment point)" .tell
+    #-1 exit
+  then
+
+  source @ exit? if
+    "You can't attach an action to an action." .tell
+    #-1 exit
+  then
+
+  source @ program? if
+    "You can't attach an action to a program." .tell
+    #-1 exit
+  then
+
+  cost @ M-LIB-PENNIES-payfor_chk not if
+    { "Sorry, you don't have enough " "pennies" sysparm " to create an action/exit." }cat .tell
+    #-1 exit
+  then
+
+  source @ exitname @ doNewExit
+  dup if .tell pop #-1 exit else pop then
+
+  cost @ M-LIB-PENNIES-payfor
+
+  "Action " over name strcat " (#" strcat over intostr strcat ") created." strcat .tell
 ;
-WIZCALL M-HELP-help
+PUBLIC M-LIB-AT_ACTION-action
+$LIBDEF M-LIB-AT_ACTION-action
 
 (* ------------------------------------------------------------------------- *)
 
 : main ( s --  )
-  "=" split
-  pop
-  strip var! exitname
-
-  (* Perform unlink *)
-  exitname @ M-LIB-AT_UNLINK-unlink pop
+  "Library called as command." abort
 ;
 .
 c
 q
-!@register m-cmd-@unlink.muf=m/cmd/at_unlink
-!@set $m/cmd/at_unlink=M3
-!@set $m/cmd/at_unlink=W
+!@register m-lib-@action.muf=m/lib/at_action
+!@set $m/lib/at_action=L
+!@set $m/lib/at_action=M3
+!@set $m/lib/at_action=W
 
