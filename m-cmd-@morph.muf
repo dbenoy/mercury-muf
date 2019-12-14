@@ -8,17 +8,6 @@ $PRAGMA comment_recurse
 (*                                                                           *)
 (*   GitHub: https://github.com/dbenoy/mercury-muf (See for install info)    *)
 (*                                                                           *)
-(* PUBLIC ROUTINES:                                                          *)
-(*   M-CMD-AT_EDITOBJECT-save_morph[ str:morph_name bool:quiet               *)
-(*                                  -- bool:success? ]                       *)
-(*   M-CMD-AT_EDITOBJECT-load_morph[ str:morph_name bool:quiet               *)
-(*                                  -- bool:success? ]                       *)
-(*     Save or load a specified morph. If quiet is true, then only error     *)
-(*     messages will be displayed.                                           *)
-(*                                                                           *)
-(*   M-CMD-AT_EDITOBJECT-list_morphs[  --  ]                                 *)
-(*     Outputs a list of available morphs to the player.                     *)
-(*                                                                           *)
 (*****************************************************************************)
 (* Revision History:                                                         *)
 (*   Version 1.0 -- Daniel Benoy -- September, 2019                          *)
@@ -70,8 +59,7 @@ lvar g_morph_props
 
 (* ======================= END CONFIGURABLE OPTIONS ======================= *)
 
-$INCLUDE $m/lib/program
-$INCLUDE $m/lib/string
+$INCLUDE $m/lib/morph
 $INCLUDE $m/lib/theme
 $INCLUDE $m/lib/notify
 
@@ -105,251 +93,12 @@ WIZCALL M-HELP-desc
 ;
 WIZCALL M-HELP-help
 
-: copy_props[ ref:from str:fromprop ref:to str:toprop -- ]
-
-  to @ toprop @ propdir? toprop @ strlen toprop @ "#" instr = and if (* If it's a list type prop and it exists, destroy it before copying contents in *)
-    to @ toprop @ remove_prop
-  then
-
-  to @ toprop @ from @ fromprop @ getprop setprop
-
-  (* If it's a propdir, recursively descend the tree *)
-  from @ fromprop @ propdir? if
-    fromprop @ "/" strcat fromprop !
-    from @ fromprop @ nextprop
-    begin
-      dup while
-
-      from @   (* from stays the same *)
-      over     (* The curently iterated item is the new fromprop *)
-      to @     (* to stays the same *)
-      toprop @ 5 pick "/" rsplit "/" swap strcat swap pop strcat (* The new toprop is the old toprop, plus the relitive name of the currently iterated item. *)
-      copy_props
-
-      from @ swap nextprop
-    repeat
-    pop
-  then
-;
-
-: fix_morph_name[ str:source -- str:result ]
-  1 var! caps_next
-  "" source @
-  begin
-    1 strcut swap
-    caps_next @ if
-      toupper
-      0 caps_next !
-    then
-    dup "[a-z0-9_]" smatch not if
-      pop "_"
-      1 caps_next !
-    then
-    rot swap strcat swap
-    dup not
-  until
-  pop
-  dup not if
-    pop "_"
-  then
-;
-
-: morph_delete[ ref:object str:morph_name bool:quiet --  ]
-  morph_name @ fix_morph_name morph_name !
-
-  "_morph/morphs/" morph_name @ strcat var! morph_dir
-
-  object @ morph_dir @ propdir? if
-    object @ morph_dir @ remove_prop
-    object @ "_morph/mesg/" morph_name @ strcat remove_prop
-    quiet @ not if { "Morph '" morph_name @ "' deleted." }cat command @ toupper .tag .tell then
-  else
-    quiet @ not if { "Morph '" morph_name @ "' not found." }cat command @ toupper .tag_err .tell then
-  then
-;
-
-: morph_mesg_set[ str:new_mesg ref:object str:morph_name bool:quiet -- bool:success? ]
-  morph_name @ fix_morph_name morph_name !
-  object @ "_morph/morphs/" morph_name @ strcat propdir? not if
-    quiet @ not if { "Morph '" morph_name @ "' not found." }cat command @ toupper .tag_err .tell then
-    0 exit
-  then
-  new_mesg @ if
-    object @ "_morph/mesg/" morph_name @ strcat new_mesg @ setprop
-    quiet @ not if { "Morph message set for '" morph_name @ "'." }cat command @ toupper .tag .tell then
-  else
-    object @ "_morph/mesg/" morph_name @ strcat remove_prop
-    quiet @ not if { "Morph message cleared for '" morph_name @ "'." }cat command @ toupper .tag .tell then
-  then
-  1
-;
-
-: morph_mesg_get[ ref:object str:morph_name bool:quiet -- str:mesg ]
-  morph_name @ fix_morph_name morph_name !
-  object @ "_morph/morphs/" morph_name @ strcat propdir? not if
-    quiet @ not if { "Morph '" morph_name @ "' not found." }cat command @ toupper .tag_err .tell then
-    "" exit
-  then
-  object @ "_morph/mesg/" morph_name @ strcat getpropstr
-  dup not if
-    pop { object @ name 1 strcut swap toupper swap strcat " morphs into a " morph_name @ tolower " " "_" subst .sms "." }cat
-  then
-;
-
-: morph_list[ ref:object --  ]
-  object @ "/_morph/morphs" propdir? if
-    "Saved morphs:" command @ toupper .tag .tell
-    object @ "/_morph/morphs/" nextprop
-    begin
-      dup while
-      object @ over propdir? if
-        dup "/" rsplit swap pop "  " swap strcat command @ toupper .tag .tell
-      then
-      object @ swap nextprop
-    repeat
-    pop
-  else
-    "No saved morphs." command @ toupper .tag .tell
-  then
-;
-
-: morph[ ref:object str:morph_name bool:save bool:quiet -- bool:success? ]
-  morph_name @ fix_morph_name morph_name !
-
-  "_morph/morphs/" morph_name @ strcat var! morph_dir
-
-  save @ if
-    object @ morph_dir @ propdir? if
-      quiet @ not if "Clearing existing morph..." command @ toupper .tag .tell then
-      object @ morph_dir @ remove_prop
-      quiet @ not if "Saving morph..." command @ toupper .tag .tell then
-    else
-      quiet @ not if "Creating new morph..." command @ toupper .tag .tell then
-    then
-  else
-    object @ morph_dir @ propdir? if
-      quiet @ not if "Loading morph..." command @ toupper .tag .tell then
-    else
-      { "Morph '" morph_name @ "' not found." }cat command @ toupper .tag_err .tell
-      0 exit
-    then
-  then
-
-  morph_props foreach
-    var! properties
-    var! name
-    var property
-
-    save @ if
-      quiet @ not if { "  Saving '" name @ "'..." }cat command @ toupper .tag .tell then
-      properties @ foreach
-        nip
-        property !
-        object @ property @ propdir? object @ property @ getpropstr or if
-          object @ property @ object @ { morph_dir @ "/" property @ }cat copy_props
-        then
-      repeat
-    else
-      quiet @ not if { "  Loading '" name @ "'..." }cat command @ toupper .tag .tell then
-      properties @ foreach
-        nip
-        property !
-        object @ { morph_dir @ "/" property @ }cat propdir? object @ { morph_dir @ "/" property @ }cat getpropstr or if
-          object @ { morph_dir @ "/" property @ }cat object @ property @ copy_props
-        then
-      repeat
-    then
-  repeat
-
-  object @ "/_morph/current" morph_name @ setprop
-  1
-;
-
-(* ------------------------------------------------------------------------- *)
-
-(*****************************************************************************)
-(*                            M-CMD-AT_MORPH-load                            *)
-(*****************************************************************************)
-: M-CMD-AT_MORPH-load[ ref:object str:morph_name bool:quiet -- bool:success? ]
-  M-LIB-PROGRAM-needs_mlev3
-  object @ dbref? not if "Non-dbref argument (1)." abort then
-  morph_name @ string? not if "Non-string argument (2)." abort then
-  morph_name @ not if "Empty morph name (2)." abort then
-  object @ morph_name @ 0 quiet @ morph
-;
-PUBLIC M-CMD-AT_MORPH-load
-$LIBDEF M-CMD-AT_MORPH-load
-
-(*****************************************************************************)
-(*                            M-CMD-AT_MORPH-save                            *)
-(*****************************************************************************)
-: M-CMD-AT_MORPH-save[ ref:object str:morph_name bool:quiet -- bool:success? ]
-  M-LIB-PROGRAM-needs_mlev3
-  object @ dbref? not if "Non-dbref argument (1)." abort then
-  morph_name @ string? not if "Non-string argument (2)." abort then
-  morph_name @ not if "Empty morph name (2)." abort then
-  object @ morph_name @ 1 quiet @ morph
-;
-PUBLIC M-CMD-AT_MORPH-save
-$LIBDEF M-CMD-AT_MORPH-save
-
-(*****************************************************************************)
-(*                           M-CMD-AT_MORPH-delete                           *)
-(*****************************************************************************)
-: M-CMD-AT_MORPH-delete[ ref:object str:morph_name bool:quiet -- bool:success? ]
-  M-LIB-PROGRAM-needs_mlev3
-  object @ dbref? not if "Non-dbref argument (1)." abort then
-  morph_name @ string? not if "Non-string argument (2)." abort then
-  morph_name @ not if "Empty morph name (2)." abort then
-  object @ morph_name @ quiet @ morph_delete
-;
-PUBLIC M-CMD-AT_MORPH-delete
-$LIBDEF M-CMD-AT_MORPH-delete
-
-(*****************************************************************************)
-(*                            M-CMD-AT_MORPH-list                            *)
-(*****************************************************************************)
-: M-CMD-AT_MORPH-list[ ref:object --  ]
-  M-LIB-PROGRAM-needs_mlev3
-  object @ dbref? not if "Non-dbref argument (1)." abort then
-  object @ morph_list
-;
-PUBLIC M-CMD-AT_MORPH-list
-$LIBDEF M-CMD-AT_MORPH-list
-
-(*****************************************************************************)
-(*                          M-CMD-AT_MORPH-mesg_get                          *)
-(*****************************************************************************)
-: M-CMD-AT_MORPH-mesg_get[ ref:object str:morph_name bool:quiet -- str:mesg ]
-  M-LIB-PROGRAM-needs_mlev3
-  object @ dbref? not if "Non-dbref argument (1)." abort then
-  morph_name @ string? not if "Non-string argument (2)." abort then
-  morph_name @ not if "Empty morph name (2)." abort then
-  object @ morph_name @ quiet @ morph_mesg_get
-;
-PUBLIC M-CMD-AT_MORPH-mesg_get
-$LIBDEF M-CMD-AT_MORPH-mesg_get
-
-(*****************************************************************************)
-(*                          M-CMD-AT_MORPH-mesg_set                          *)
-(*****************************************************************************)
-: M-CMD-AT_MORPH-mesg_set[ str:new_mesg ref:object str:morph_name bool:quiet -- bool:success? ]
-  M-LIB-PROGRAM-needs_mlev3
-  new_mesg @ string? not if "Non-string argument (1)." abort then
-  object @ dbref? not if "Non-dbref argument (2)." abort then
-  morph_name @ string? not if "Non-string argument (3)." abort then
-  morph_name @ not if "Empty morph name (3)." abort then
-  new_mesg @ object @ morph_name @ quiet @ morph_mesg_set
-;
-PUBLIC M-CMD-AT_MORPH-mesg_set
-$LIBDEF M-CMD-AT_MORPH-mesg_set
-
 (* ------------------------------------------------------------------------- *)
 
 : main ( s --  )
   dup strip not if
     pop
-    me @ morph_list
+    me @ M-LIB-MORPH-list
     exit
   then
   "=" split
@@ -362,23 +111,21 @@ $LIBDEF M-CMD-AT_MORPH-mesg_set
     "Please specify an operation." command @ toupper .tag_err .tell exit
   then
   operation @ "save" stringcmp not if
-    me @ morph_name @ 1 0 morph
-    exit
+    me @ morph_name @ 0 M-LIB-MORPH-save pop exit
   then
   operation @ "load" stringcmp not if
-    me @ morph_name @ 0 0 morph
+    me @ morph_name @ 0 M-LIB-MORPH-load pop exit
     exit
   then
   operation @ "delete" stringcmp not if
-    me @ morph_name @ 0 morph_delete
+    me @ morph_name @ 0 M-LIB-MORPH-delete pop exit
     exit
   then
   operation @ ":" split
   var! argument
   operation !
   operation @ "mesg" stringcmp not if
-    argument @ me @ morph_name @ 0 morph_mesg_set pop
-    exit
+    argument @ me @ morph_name @ 0 M-LIB-MORPH-mesg_set pop exit
   then
   { "Invalid operation '" operation @ "'." }cat command @ toupper .tag_err .tell
 ;
@@ -387,5 +134,4 @@ c
 q
 !@register m-cmd-@morph.muf=m/cmd/at_morph
 !@set $m/cmd/at_morph=M3
-!@set $m/cmd/at_morph=L
 

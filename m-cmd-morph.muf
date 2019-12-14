@@ -39,7 +39,7 @@ $DOCCMD  @list __PROG__=2-30
 $INCLUDE $m/lib/theme
 $INCLUDE $m/lib/notify
 $INCLUDE $m/lib/emote
-$INCLUDE $m/cmd/at_morph
+$INCLUDE $m/lib/morph
 
 $DEF .tell M-LIB-NOTIFY-tell_color
 $DEF .err M-LIB-THEME-err
@@ -76,8 +76,8 @@ WIZCALL M-HELP-help
 
   var! morph_name
 
-  me @ morph_name @ 1 M-CMD-AT_MORPH-load if
-    me @ morph_name @ 1 M-CMD-AT_MORPH-mesg_get { "from" me @ }dict M-LIB-EMOTE-emote
+  me @ morph_name @ 1 M-LIB-MORPH-load if
+    me @ morph_name @ 1 M-LIB-MORPH-mesg_get { "from" me @ }dict M-LIB-EMOTE-emote
   then
 ;
 .
