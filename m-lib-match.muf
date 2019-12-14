@@ -224,7 +224,9 @@ $PUBDEF :
   opts @ array? not if "Non-array argument (2)." abort then
   opts @ match_opts_process opts !
   (* Perform the search *)
-  name @ "#" instr 1 = if
+  name @ not if
+    #-1
+  else name @ "#" instr 1 = if
     opts @ "match_absolute" [] if
       name @ 1 strcut swap pop stod
     else
@@ -248,7 +250,7 @@ $PUBDEF :
     #-1
   else
     name @ match
-  then then then then then then then
+  then then then then then then then then
   var! match_result
   (* In case any more special dbrefs are created *)
   match_result @ -4 < if
@@ -289,13 +291,17 @@ $LIBDEF M-LIB-MATCH-match
   opts @ array? not if "Non-array argument (2)." abort then
   opts @ pmatch_opts_process opts !
   (* Perform the search *)
-  name @ "me" stringcmp not opts @ "match_me" [] not and if
+  name @ not if
     #-1
   else
-    name @ pmatch
-  then
-  dup not opts @ "match_start" [] 2 = and if
-    pop name @ part_pmatch
+    name @ "me" stringcmp not opts @ "match_me" [] not and if
+      #-1
+    else
+      name @ pmatch
+    then
+    dup not opts @ "match_start" [] 2 = and if
+      pop name @ part_pmatch
+    then
   then
   var! match_result
   (* Output to user *)
