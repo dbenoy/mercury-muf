@@ -535,8 +535,8 @@ $DOCCMD  @list __PROG__=2-527
 
 (* Begin configurable options *)
 
-$def ENCODING_DEFAULT "ANSI-8BIT"
-$def ENCODING_PROP "_config/color/type"
+$DEF ENCODING_DEFAULT "ANSI-8BIT"
+$DEF ENCODING_PROP "_config/color/type"
 
 (* End configurable options *)
 
@@ -548,19 +548,23 @@ $def ENCODING_PROP "_config/color/type"
 
 $PUBDEF :
 
-$include $m/lib/program
-$include $m/lib/array
-$include $m/lib/string
+$INCLUDE $m/lib/program
+$INCLUDE $m/lib/array
+$INCLUDE $m/lib/string
 
-$def CODE_TYPE_FOREGROUND "#"
-$def CODE_TYPE_BACKGROUND "*"
-$def CODE_TYPE_FOREGROUND_AT ">"
-$def CODE_TYPE_BACKGROUND_AT "}"
-$def CODE_TYPE_FOREGROUND_RAT "<"
-$def CODE_TYPE_BACKGROUND_RAT "{"
-$def CODE_TYPE_SPECIAL "!"
+$DEF CODE_TYPE_FOREGROUND "#"
+$DEF CODE_TYPE_BACKGROUND "*"
+$DEF CODE_TYPE_FOREGROUND_AT ">"
+$DEF CODE_TYPE_BACKGROUND_AT "}"
+$DEF CODE_TYPE_FOREGROUND_RAT "<"
+$DEF CODE_TYPE_BACKGROUND_RAT "{"
+$DEF CODE_TYPE_SPECIAL "!"
 
-$define CODE_TYPE_VALID
+$DEF REGEXP_MCC_CODE "\\[[#*>}<{!\"'+,./:;=?\\[\\\\\\]^_-][0-9A-F][0-9A-F][0-9A-F][0-9A-F][0-9A-F][0-9A-F]\\]" (* All valid codes, case sensitive. *)
+$DEF REGEXP_MCC_CODE_PREPROCESS "\\[[>}<{][0-9A-F][0-9A-F][0-9A-F][0-9A-F][0-9A-F][0-9A-F]\\]" (* Only codes handled by preprocessing, case sensitive. *)
+$DEF REGEXP_MCC_CODE_NOLITERALS "(?!\\[!000001\\])\\[[#*>}<{!\"'+,./:;=?\\[\\\\\\]^_-][0-9A-F][0-9A-F][0-9A-F][0-9A-F][0-9A-F][0-9A-F]\\]" (* All valid codes, except the string-literal '['. *)
+
+$DEFine CODE_TYPE_VALID
 {
   (* Defined *)
   CODE_TYPE_FOREGROUND
@@ -574,15 +578,15 @@ $define CODE_TYPE_VALID
   (* Reserved *)
   "\"" "$" "&" "'" "(" ")" "*" "+" "," "-" "." "/" ":" ";" "=" "?" "[" "\\" "]" "^" "_" "`" "|" "~"
 }list
-$enddef
+$ENDDEF
 
-$def CODE_VALUE_SPECIAL_NOOP "000000"
-$def CODE_VALUE_SPECIAL_OPENBRACKET "000001"
-$def CODE_VALUE_SPECIAL_RESET "FFFFFF"
+$DEF CODE_VALUE_SPECIAL_NOOP "000000"
+$DEF CODE_VALUE_SPECIAL_OPENBRACKET "000001"
+$DEF CODE_VALUE_SPECIAL_RESET "FFFFFF"
 
-$def SUPPORTED_TYPES_ANSI { "ANSI-24BIT" "ANSI-8BIT" "ANSI-4BIT-VGA" "ANSI-4BIT-XTERM" "ANSI-3BIT-VGA" "ANSI-3BIT-XTERM" }list
-$def SUPPORTED_TYPES_CODE { "MCC" "NOCOLOR" }list
-$def SUPPORTED_TYPES SUPPORTED_TYPES_ANSI SUPPORTED_TYPES_CODE array_union
+$DEF SUPPORTED_TYPES_ANSI { "ANSI-24BIT" "ANSI-8BIT" "ANSI-4BIT-VGA" "ANSI-4BIT-XTERM" "ANSI-3BIT-VGA" "ANSI-3BIT-XTERM" }list
+$DEF SUPPORTED_TYPES_CODE { "MCC" "NOCOLOR" }list
+$DEF SUPPORTED_TYPES SUPPORTED_TYPES_ANSI SUPPORTED_TYPES_CODE array_union
 
 (* 8-BIT ANSI PALLATTE TABLE - RGB *)
 lvar g_ansi_table_8bit_rgb
@@ -1318,7 +1322,7 @@ lvar ansi_table_3bit_xterm_rgb
 
 (* Splits a string, ignoring MCC codes when deciding where to split *)
 : mcc_strcut[ str:source str:split_point bool:keep_color -- str:result ]
-  source @ "\\[[#*>}<{!\"'+,./:;=?\\[\\\\\\]^_-][0-9A-F][0-9A-F][0-9A-F][0-9A-F][0-9A-F][0-9A-F]\\]" 0 regexp pop not if
+  source @ REGEXP_MCC_CODE 0 regexp pop not if
     source @ split_point @ strcut exit
   then
 
@@ -1380,7 +1384,7 @@ lvar ansi_table_3bit_xterm_rgb
 
 (* Convert an entire line of MCC to another encoding *)
 : mcc_convert_line[ str:source str:to_type -- str:result ]
-  source @ "\\[[#*>}<{!\"'+,./:;=?\\[\\\\\\]^_-][0-9A-F][0-9A-F][0-9A-F][0-9A-F][0-9A-F][0-9A-F]\\]" 0 regexp pop not if
+  source @ REGEXP_MCC_CODE 0 regexp pop not if
     source @ exit
   then
 
@@ -1418,13 +1422,13 @@ lvar ansi_table_3bit_xterm_rgb
 
 (* Convert MCC color codes to its colorless equivalent. *)
 : mcc_strip ( s -- s )
-  "(?!\\[!000001\\])\\[[#*>}<{!\"'+,./:;=?\\[\\\\\\]^_-][0-9A-F][0-9A-F][0-9A-F][0-9A-F][0-9A-F][0-9A-F]\\]" "" REG_ALL regsub
+  REGEXP_MCC_CODE_NOLITERALS "" REG_ALL regsub
   "[" "[!000001]" subst
 ;
 
 (* Preprocess an MCC line for 'modify something elsewhere on the line' codes *)
 : mcc_preprocess_line[ str: source -- str:result ]
-  source @ "\\[[>}<{][0-9A-F][0-9A-F][0-9A-F][0-9A-F][0-9A-F][0-9A-F]\\]" 0 regexp pop not if
+  source @ REGEXP_MCC_CODE_PREPROCESS 0 regexp pop not if
     source @ exit
   then
 
@@ -1533,7 +1537,7 @@ lvar ansi_table_3bit_xterm_rgb
 ;
 
 : mcc_toupper ( s -- s )
-  "\\[[#*>}<{!\"'+,./:;=?\\[\\\\\\]^_-][0-9A-F][0-9A-F][0-9A-F][0-9A-F][0-9A-F][0-9A-F]\\]" REG_ICASE M-LIB-STRING-regslice
+  REGEXP_MCC_CODE REG_ICASE M-LIB-STRING-regslice
   1 array_cut swap array_vals pop var! retval
   begin
     dup not if pop break then
@@ -1550,7 +1554,7 @@ lvar ansi_table_3bit_xterm_rgb
 ;
 
 : mcc_tolower ( s -- s )
-  "\\[[#*>}<{!\"'+,./:;=?\\[\\\\\\]^_-][0-9A-F][0-9A-F][0-9A-F][0-9A-F][0-9A-F][0-9A-F]\\]" 0 M-LIB-STRING-regslice
+  REGEXP_MCC_CODE 0 M-LIB-STRING-regslice
   1 array_cut swap array_vals pop var! retval
   begin
     dup not if pop break then
