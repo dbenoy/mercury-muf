@@ -95,7 +95,7 @@ $INCLUDE $m/lib/theme
 $INCLUDE $m/lib/color
 $INCLUDE $m/lib/notify
 $INCLUDE $m/lib/grammar
-$INCLUDE $m/cmd/at_map
+$INCLUDE $m/lib/map
 
 $DEF .notify M-LIB-NOTIFY-notify_color
 
@@ -162,7 +162,7 @@ WIZCALL M-HELP-help
 : notify_autolook[ ref:notify_me -- ]
   (* Show room map *)
   "map" enabled if
-    loc @ loc @ M-CMD-AT_MAP-display pop
+    loc @ loc @ M-LIB-MAP-display pop
   then
   (* Show room name *)
   "location_name" enabled if

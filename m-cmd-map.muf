@@ -41,7 +41,7 @@ $INCLUDE $m/lib/grammar
 $INCLUDE $m/lib/theme
 $INCLUDE $m/lib/color
 $INCLUDE $m/lib/notify
-$INCLUDE $m/cmd/at_map
+$INCLUDE $m/lib/map
 
 $DEF .tell M-LIB-NOTIFY-tell_color
 $DEF .err M-LIB-THEME-err
@@ -71,7 +71,7 @@ WIZCALL M-HELP-help
 
 : main ( s --  )
   dup if
-    M-CMD-AT_MAP-match
+    M-LIB-MAP-match
 
     dup #-2 = if
       pop "I don't know which one you mean!" .err .tell exit
@@ -85,7 +85,7 @@ WIZCALL M-HELP-help
   then
   var! map_room
 
-  map_room @ M-CMD-AT_MAP-env_get not if
+  map_room @ M-LIB-MAP-env_get not if
     "It seems to be uncharted territory." .tell exit
   then
 
@@ -97,9 +97,9 @@ WIZCALL M-HELP-help
     (* Otherwise, show the position of the object on its own map. *)
     dup
   then
-  M-CMD-AT_MAP-display
+  M-LIB-MAP-display
   if
-    M-CMD-AT_MAP-reg_get var! other_maps
+    M-LIB-MAP-reg_get var! other_maps
     {
       me @ begin
         dup location

@@ -263,5 +263,4 @@ c
 q
 !@register m-cmd-@whereare=m/cmd/at_whereare
 !@set $m/cmd/at_whereare=M3
-!@set $m/cmd/at_whereare=L
 

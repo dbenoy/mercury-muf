@@ -46,7 +46,7 @@ $INCLUDE $m/lib/match
 $INCLUDE $m/lib/theme
 $INCLUDE $m/lib/notify
 $INCLUDE $m/lib/color
-$INCLUDE $m/cmd/at_map
+$INCLUDE $m/lib/map
 
 $DEF .tell M-LIB-NOTIFY-tell_color
 $DEF .err M-LIB-THEME-err
@@ -101,7 +101,7 @@ WIZCALL M-HELP-help
     exit
   then
   map_room @ if
-    map_room @ M-CMD-AT_MAP-match
+    map_room @ M-LIB-MAP-match
     dup #-2 = if
       pop "I don't know which one you mean!" .err .tell
       exit
@@ -115,7 +115,7 @@ WIZCALL M-HELP-help
   then
   map_room !
   show_map @ if
-    player @ map_room @ M-CMD-AT_MAP-display
+    player @ map_room @ M-LIB-MAP-display
   then
   { player @ name " is " player @ location_text "." }cat M-LIB-COLOR-escape .tell
 ;

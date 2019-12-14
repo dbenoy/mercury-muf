@@ -75,7 +75,7 @@ $INCLUDE $m/lib/notify
 $INCLUDE $m/lib/theme
 $INCLUDE $m/lib/grammar
 $INCLUDE $m/lib/emote
-$INCLUDE $m/cmd/at_lsedit
+$INCLUDE $m/lib/lsedit
 
 $DEF .tell M-LIB-NOTIFY-tell_color
 $DEF .err M-LIB-THEME-err
@@ -315,7 +315,7 @@ lvar g_table_autolook
 "< '.end' will exit and save the list.  '.abort' will abort any changes. >" .tell
 "<    To save changes to the list, and continue editing, use '.save'     >" .tell
 
-  "me" match listprop @ M-CMD-AT_LSEDIT-ListEdit if
+  "me" match listprop @ M-LIB-LSEDIT-listedit if
     "me" match property @ "{eval:{list:" listprop @ strcat "}}" strcat setprop
   then
 ;

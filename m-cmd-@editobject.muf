@@ -76,12 +76,12 @@ $INCLUDE $m/lib/color
 $INCLUDE $m/lib/match
 $INCLUDE $m/lib/theme
 $INCLUDE $m/lib/grammar
-$INCLUDE $m/cmd/at_action
-$INCLUDE $m/cmd/at_attach
-$INCLUDE $m/cmd/at_link
-$INCLUDE $m/cmd/at_unlink
-$INCLUDE $m/cmd/at_recycle
-$INCLUDE $m/cmd/at_lsedit
+$INCLUDE $m/lib/lsedit
+$INCLUDE $m/lib/at_action
+$INCLUDE $m/lib/at_attach
+$INCLUDE $m/lib/at_link
+$INCLUDE $m/lib/at_unlink
+$INCLUDE $m/lib/at_recycle
 
 $DEF .tell M-LIB-NOTIFY-tell_color
 
@@ -372,7 +372,7 @@ lvar g_table_program
 "< '.end' will exit and save the list.  '.abort' will abort any changes. >" .tell
 "<    To save changes to the list, and continue editing, use '.save'     >" .tell
 
-  g_object @ listprop @ M-CMD-AT_LSEDIT-ListEdit if
+  g_object @ listprop @ M-LIB-LSEDIT-listedit if
     g_object @ property @ "{eval:{list:" listprop @ strcat "}}" strcat setprop
   then
 ;
@@ -442,7 +442,7 @@ lvar g_table_program
   "(Enter a #dbref, *player_name, present object's name, 'me', 'here', or 'home')" .tell
   read
 
-  { "#" g_object @ intostr }cat swap M-CMD-AT_ATTACH-Attach
+  { "#" g_object @ intostr }cat swap M-LIB-AT_ATTACH-attach
 ;
 
 : get_link[ str:valueUnlinked -- str:value ]
@@ -464,9 +464,9 @@ lvar g_table_program
   read
 
   dup "." = if
-    { "#" g_object @ intostr }cat M-CMD-AT_UNLINK-unlink pop
+    { "#" g_object @ intostr }cat M-LIB-AT_UNLINK-unlink pop
   else
-    { "#" g_object @ intostr }cat swap M-CMD-AT_LINK-relink pop
+    { "#" g_object @ intostr }cat swap M-LIB-AT_LINK-relink pop
   then
 ;
 
@@ -503,7 +503,7 @@ lvar g_table_program
 
   "Enter the name of the new exit:" .tell
 
-  "#" g_object @ intostr strcat read M-CMD-AT_ACTION-Action
+  "#" g_object @ intostr strcat read M-LIB-AT_ACTION-action
 
   dup if
     dup chk_perms not if
@@ -542,7 +542,7 @@ lvar g_table_program
     pop "Permission denied.  (Try exiting the editor and running 'help @chown' for information on seizing exits.)" .tell exit
   then
 
-  "#" swap intostr strcat 1 M-CMD-AT_RECYCLE-Recycle
+  "#" swap intostr strcat 1 M-LIB-AT_RECYCLE-recycle
 ;
 
 (***** Change to parent objects *****)

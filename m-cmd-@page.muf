@@ -215,6 +215,5 @@ c
 q
 !@register m-cmd-@page.muf=m/cmd/at_page
 !@set $m/cmd/at_page=M3
-!@set $m/cmd/at_page=L
 !@register #prop #0:_connect m-cmd-@page.muf=m-cmd-@page.muf
 
