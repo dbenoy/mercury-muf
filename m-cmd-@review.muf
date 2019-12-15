@@ -4,22 +4,9 @@ i
 $PRAGMA comment_recurse
 (*****************************************************************************)
 (* m-cmd-@review - $m/cmd/at_review                                          *)
-(*   <description>                                                           *)
+(*   View a room's $m/lib/emote history.                                     *)
 (*                                                                           *)
 (*   GitHub: https://github.com/dbenoy/mercury-muf (See for install info)    *)
-(*                                                                           *)
-(* USAGE:                                                                    *)
-(*   <Basic usage information, if required>                                  *)
-(*                                                                           *)
-(* PUBLIC ROUTINES:                                                          *)
-(*   <routine name> <arguments>                                              *)
-(*     <description>                                                         *)
-(*                                                                           *)
-(*   <routine name> <arguments>                                              *)
-(*     <description>                                                         *)
-(*                                                                           *)
-(* TECHNICAL NOTES:                                                          *)
-(*   <if nessessary>                                                         *)
 (*                                                                           *)
 (*****************************************************************************)
 (* Revision History:                                                         *)
@@ -78,41 +65,47 @@ WIZCALL M-HELP-help
   me @ begin location dup room? until var! room
 
   { }list var! output_lines
-  room @ M-LIB-EMOTE-history_get SORTTYPE_CASE_ASCEND "timestamp" array_sort_indexed foreach
-    nip
-    var! this_entry
-    (* Start with the timestamp. This will also be used to sort the results later. *)
-    { "[#00AAAA][" "%F %T" this_entry @ "timestamp" [] timefmt "][!FFFFFF]" }cat var! this_line
-    (* Add the message text itself. *)
-    {
-      this_line @
-      " "
-      this_entry @ "message" []
+  room @ M-LIB-EMOTE-history_get
+  dup not if
+    pop
+    { "No history available." }list output_lines !
+  else
+    SORTTYPE_CASE_ASCEND "timestamp" array_sort_indexed foreach
+      nip
+      var! this_entry
+      (* Start with the timestamp. This will also be used to sort the results later. *)
+      { "[#00AAAA][" "%F %T" this_entry @ "timestamp" [] timefmt "][!FFFFFF]" }cat var! this_line
+      (* Add the message text itself. *)
       {
-        "to" me @
-        this_entry @ "object_name" [] me @ name = if
-          "highlight_mention" "no"
+        this_line @
+        " "
+        this_entry @ "message" []
+        {
+          "to" me @
+          this_entry @ "object_name" [] me @ name = if
+            "highlight_mention" "no"
+          then
+          "message_format" this_entry @ "message_format" [] dup not if pop "" then
+          "color_name"     this_entry @ "color_name"     [] dup not if pop "" then
+          "color_unquoted" this_entry @ "color_unquoted" [] dup not if pop "" then
+          "color_quoted"   this_entry @ "color_quoted"   [] dup not if pop "" then
+        }dict
+        M-LIB-EMOTE-style
+      }cat this_line !
+      (* Append the name of the object if necessary. *)
+      this_entry @ "object_name" [] var! owner_tag
+      this_entry @ "object_owner" [] if
+        this_entry @ "object_owner" [] this_entry @ "object_name" [] != if
+          { owner_tag @ " - " this_entry @ "object_owner" [] }cat owner_tag !
         then
-        "message_format" this_entry @ "message_format" [] dup not if pop "" then
-        "color_name"     this_entry @ "color_name"     [] dup not if pop "" then
-        "color_unquoted" this_entry @ "color_unquoted" [] dup not if pop "" then
-        "color_quoted"   this_entry @ "color_quoted"   [] dup not if pop "" then
-      }dict
-      M-LIB-EMOTE-style
-    }cat this_line !
-    (* Append the name of the object if necessary. *)
-    this_entry @ "object_name" [] var! owner_tag
-    this_entry @ "object_owner" [] if
-      this_entry @ "object_owner" [] this_entry @ "object_name" [] != if
-        { owner_tag @ " - " this_entry @ "object_owner" [] }cat owner_tag !
       then
-    then
-    this_entry @ "message" [] "_" " " subst owner_tag @ instr 1 = not if
-      { this_line @ " [#0000AA](" owner_tag @ ")" }cat this_line !
-    then
-    (* Put the completed line in the list *)
-    this_line @ output_lines @ array_appenditem output_lines !
-  repeat
+      this_entry @ "message" [] "_" " " subst owner_tag @ instr 1 = not if
+        { this_line @ " [#0000AA](" owner_tag @ ")" }cat this_line !
+      then
+      (* Put the completed line in the list *)
+      this_line @ output_lines @ array_appenditem output_lines !
+    repeat
+  then
   output_lines @ { me @ }list M-LIB-NOTIFY-array_notify_color
 ;
 .
