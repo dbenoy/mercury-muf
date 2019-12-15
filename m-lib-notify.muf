@@ -91,8 +91,6 @@ $DEF M_LIB_COLOR
 
 $PUBDEF :
 
-$include $m/lib/program
-
 $IFDEF M_LIB_COLOR
   $INCLUDE $m/lib/color
 $ENDIF
@@ -140,7 +138,7 @@ $ENDIF
 (*                      M-LIB-NOTIFY-array_notify_color                      *)
 (*****************************************************************************)
 : M-LIB-NOTIFY-array_notify_color[ arr:strings arr:targets -- ]
-  M-LIB-PROGRAM-needs_mlev2
+  (* Permissions inherited *)
 
   strings @ array? not if "Non-array argument (1)." abort then
   strings @ foreach nip string? not if "Array of strings expected (1)." abort then repeat
@@ -156,7 +154,7 @@ $LIBDEF M-LIB-NOTIFY-array_notify_color
 (*                             M-LIB-NOTIFY-cast                             *)
 (*****************************************************************************)
 : M-LIB-NOTIFY-cast ( s -- )
-  M-LIB-PROGRAM-needs_mlev2
+  (* Permissions inherited *)
 
   "s" checkargs
 
@@ -169,7 +167,7 @@ $LIBDEF M-LIB-NOTIFY-cast
 (*                          M-LIB-NOTIFY-cast_color                          *)
 (*****************************************************************************)
 : M-LIB-NOTIFY-cast_color ( s -- )
-  M-LIB-PROGRAM-needs_mlev2
+  (* Permissions inherited *)
 
   "s" checkargs
 
@@ -182,7 +180,7 @@ $LIBDEF M-LIB-NOTIFY-cast_color
 (*                         M-LIB-NOTIFY-cast_targets                         *)
 (*****************************************************************************)
 : M-LIB-NOTIFY-cast_targets[ ref:object -- ]
-  (* M1 OK *)
+  (* Permissions inherited *)
 
   object @ dbref? not if "Non-dbref argument (1)." abort then
 
@@ -195,7 +193,7 @@ $LIBDEF M-LIB-NOTIFY-cast_targets
 (*                         M-LIB-NOTIFY-notify_color                         *)
 (*****************************************************************************)
 : M-LIB-NOTIFY-notify_color ( d s -- )
-  M-LIB-PROGRAM-needs_mlev2
+  (* Permissions inherited *)
 
   "ds" checkargs
 
@@ -208,7 +206,7 @@ $LIBDEF M-LIB-NOTIFY-notify_color
 (*                            M-LIB-NOTIFY-ocast                             *)
 (*****************************************************************************)
 : M-LIB-NOTIFY-ocast ( s -- )
-  M-LIB-PROGRAM-needs_mlev2
+  (* Permissions inherited *)
 
   "s" checkargs
 
@@ -221,7 +219,7 @@ $LIBDEF M-LIB-NOTIFY-ocast
 (*                         M-LIB-NOTIFY-ocast_color                          *)
 (*****************************************************************************)
 : M-LIB-NOTIFY-ocast_color ( s -- )
-  M-LIB-PROGRAM-needs_mlev2
+  (* Permissions inherited *)
 
   "s" checkargs
 
@@ -234,7 +232,7 @@ $LIBDEF M-LIB-NOTIFY-ocast_color
 (*                         M-LIB-NOTIFY-otell_color                          *)
 (*****************************************************************************)
 : M-LIB-NOTIFY-otell_color ( s -- )
-  M-LIB-PROGRAM-needs_mlev2 
+  (* Permissions inherited *) 
 
   "s" checkargs
 
@@ -247,7 +245,7 @@ $LIBDEF M-LIB-NOTIFY-otell_color
 (*                          M-LIB-NOTIFY-tell_color                          *)
 (*****************************************************************************)
 : M-LIB-NOTIFY-tell_color ( s -- )
-  (* M1 OK *)
+  (* Permissions inherited *)
 
   "s" checkargs
 
@@ -265,6 +263,8 @@ $LIBDEF M-LIB-NOTIFY-tell_color
 c
 q
 !@register m-lib-notify.muf=m/lib/notify
-!@set $m/lib/notify=W
+!@set $m/lib/notify=M2
+!@set $m/lib/notify=H
+!@set $m/lib/notify=S
 !@set $m/lib/notify=L
 

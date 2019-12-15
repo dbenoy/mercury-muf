@@ -148,7 +148,7 @@ $LIBDEF M-LIB-QUOTA-GetUsage
 (*                          M-LIB-QUOTA-QuotaCheck                           *)
 (*****************************************************************************)
 : M-LIB-QUOTA-QuotaCheck[ str:type bool:noisy -- bool:hasanyroom? ]
-  (* M1 OK *)
+  M-LIB-PROGRAM-needs_mlev1
 
   type @ string? not if "Non-string argument (1)." abort then
 

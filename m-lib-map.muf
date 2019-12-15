@@ -19,41 +19,41 @@ $PRAGMA comment_recurse
 (*   o Maps can be made in color, using MCC color codes.                     *)
 (*                                                                           *)
 (* PUBLIC ROUTINES:                                                          *)
-(*   M-LIB-MAP-display[ ref:map_room ref:mark_room -- bool:success? ]     *)
+(*   M-LIB-MAP-display[ ref:map_room ref:mark_room -- bool:success? ]        *)
 (*     Shows the map of map_room (Its closest environment map). mark_room is *)
 (*     which room will receieve the X marker on that map. Use #-1 to not     *)
 (*     show a marker.                                                        *)
 (*                                                                           *)
-(*   M-LIB-MAP-edit[ ref:env_room -- bool:success? ]                      *)
+(*   M-LIB-MAP-edit[ ref:env_room -- bool:success? ]                         *)
 (*     Shows an editing dialog for the map of env_room.                      *)
 (*                                                                           *)
-(*   M-LIB-MAP-env_get[ ref:map_room -- ref:env_room ]                    *)
+(*   M-LIB-MAP-env_get[ ref:map_room -- ref:env_room ]                       *)
 (*     Given an object, find which environment room has its map. #-1 if no   *)
 (*     map is available.                                                     *)
 (*                                                                           *)
-(*   M-LIB-MAP-match[ str:map_name -- ref:object ]                        *)
+(*   M-LIB-MAP-match[ str:map_name -- ref:object ]                           *)
 (*     Like the MATCH primitive, but it takes the object that matches, and   *)
 (*     returns the environment room of that object's map. You must control   *)
 (*     the object that maps in order to see its environment room, unless the *)
-(*     match is for a global map registered with M-LIB-MAP-reg_add.       *)
+(*     match is for a global map registered with M-LIB-MAP-reg_add.          *)
 (*                                                                           *)
-(*   M-LIB-MAP-position[ ref:env_room ref:mark_room -- bool:success? ]    *)
+(*   M-LIB-MAP-position[ ref:env_room ref:mark_room -- bool:success? ]       *)
 (*     Shows an editing dialog for you to mark the position of mark_room on  *)
 (*     the map in env_room.                                                  *)
 (*                                                                           *)
-(*   M-LIB-MAP-reg_add[ str:map_name ref:env_room -- bool:success? ]      *)
+(*   M-LIB-MAP-reg_add[ str:map_name ref:env_room -- bool:success? ]         *)
 (*     Registers a map name globally. Registered map names can be listed,    *)
 (*     and can always be viewed with @map <name>.                            *)
 (*                                                                           *)
-(*   M-LIB-MAP-reg_del[ ref:env_room -- bool:success? ]                   *)
+(*   M-LIB-MAP-reg_del[ ref:env_room -- bool:success? ]                      *)
 (*     Removes the map in env_room from the list of registered names created *)
-(*     by M-LIB-MAP-reg_add.                                              *)
+(*     by M-LIB-MAP-reg_add.                                                 *)
 (*                                                                           *)
-(*   M-LIB-MAP-reg_get[ -- dict:global_maps ]                             *)
-(*     Returns a dict of registered names created by M-LIB-MAP-reg_add,   *)
+(*   M-LIB-MAP-reg_get[ -- dict:global_maps ]                                *)
+(*     Returns a dict of registered names created by M-LIB-MAP-reg_add,      *)
 (*     keyed by dbrefs of the environment room for each name in string form. *)
 (*                                                                           *)
-(*   M-LIB-MAP-remove[ ref:map_room -- bool:success? ]                    *)
+(*   M-LIB-MAP-remove[ ref:map_room -- bool:success? ]                       *)
 (*     Deletes the map of map_room (Its closest environment map).            *)
 (*                                                                           *)
 (* TECHNICAL NOTES:                                                          *)
@@ -207,10 +207,10 @@ $DEF .tag_err M-LIB-THEME-tag_err
 (* ------------------------------------------------------------------------- *)
 
 (*****************************************************************************)
-(*                           M-LIB-MAP-display                            *)
+(*                             M-LIB-MAP-display                             *)
 (*****************************************************************************)
 : M-LIB-MAP-display[ ref:map_room ref:mark_room -- bool:success? ]
-  (* M1 OK *)
+  M-LIB-PROGRAM-needs_mlev1
   map_room @ dbref? not if "Non-dbref argument (1)." abort then
   mark_room @ dbref? not if "Non-dbref argument (2)." abort then
 
@@ -259,7 +259,7 @@ PUBLIC M-LIB-MAP-display
 $LIBDEF M-LIB-MAP-display
 
 (*****************************************************************************)
-(*                             M-LIB-MAP-edit                             *)
+(*                              M-LIB-MAP-edit                               *)
 (*****************************************************************************)
 : M-LIB-MAP-edit[ ref:env_room -- bool:success? ]
   M-LIB-PROGRAM-needs_mlev3
@@ -279,7 +279,7 @@ PUBLIC M-LIB-MAP-edit
 $LIBDEF M-LIB-MAP-edit
 
 (*****************************************************************************)
-(*                           M-LIB-MAP-positiion                          *)
+(*                            M-LIB-MAP-positiion                            *)
 (*****************************************************************************)
 : M-LIB-MAP-position[ ref:env_room ref:mark_room -- bool:success? ]
   M-LIB-PROGRAM-needs_mlev3
@@ -367,10 +367,10 @@ PUBLIC M-LIB-MAP-position
 $LIBDEF M-LIB-MAP-position
 
 (*****************************************************************************)
-(*                           M-LIB-MAP-env_get                            *)
+(*                             M-LIB-MAP-env_get                             *)
 (*****************************************************************************)
 : M-LIB-MAP-env_get[ ref:map_room -- ref:env_room ]
-  (* M1 OK *)
+  M-LIB-PROGRAM-needs_mlev1
   map_room @ dbref? not if "Non-dbref argument (1)." abort then
   map_room @ map_env_get
 ;
@@ -378,10 +378,10 @@ PUBLIC M-LIB-MAP-env_get
 $LIBDEF M-LIB-MAP-env_get
 
 (*****************************************************************************)
-(*                             M-LIB-MAP-match                            *)
+(*                              M-LIB-MAP-match                              *)
 (*****************************************************************************)
 : M-LIB-MAP-match[ str:map_name -- ref:object ]
-  (* M1 OK *)
+  M-LIB-PROGRAM-needs_mlev1
   map_name @ string? not if "Non-string argument (1)." abort then
 
   map_name @ "#" stringpfx if
@@ -446,7 +446,7 @@ PUBLIC M-LIB-MAP-match
 $LIBDEF M-LIB-MAP-match
 
 (*****************************************************************************)
-(*                           M-LIB-MAP-reg_add                            *)
+(*                             M-LIB-MAP-reg_add                             *)
 (*****************************************************************************)
 : M-LIB-MAP-reg_add[ str:map_name ref:env_room -- bool:success? ]
   M-LIB-PROGRAM-needs_mlev3
@@ -468,7 +468,7 @@ PUBLIC M-LIB-MAP-reg_add
 $LIBDEF M-LIB-MAP-reg_add
 
 (*****************************************************************************)
-(*                           M-LIB-MAP-reg_del                            *)
+(*                             M-LIB-MAP-reg_del                             *)
 (*****************************************************************************)
 : M-LIB-MAP-reg_del[ ref:env_room -- bool:success? ]
   M-LIB-PROGRAM-needs_mlev3
@@ -490,10 +490,10 @@ PUBLIC M-LIB-MAP-reg_del
 $LIBDEF M-LIB-MAP-reg_del
 
 (*****************************************************************************)
-(*                           M-LIB-MAP-reg_get                            *)
+(*                             M-LIB-MAP-reg_get                             *)
 (*****************************************************************************)
 : M-LIB-MAP-reg_get[ -- dict:global_maps ]
-  (* M1 OK *)
+  M-LIB-PROGRAM-needs_mlev1
   {
     prog "_maps/" nextprop
     begin
@@ -509,7 +509,7 @@ PUBLIC M-LIB-MAP-reg_get
 $LIBDEF M-LIB-MAP-reg_get
 
 (*****************************************************************************)
-(*                            M-LIB-MAP-remove                            *)
+(*                             M-LIB-MAP-remove                              *)
 (*****************************************************************************)
 : M-LIB-MAP-remove[ ref:env_room -- bool:success? ]
   M-LIB-PROGRAM-needs_mlev3

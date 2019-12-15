@@ -73,7 +73,7 @@ $PUBDEF :
 (*                           M-LIB-ROOM-directions                           *)
 (*****************************************************************************)
 : M-LIB-ROOM-directions[ ref:room -- str:directions ]
-  (* M1 OK *)
+  (* Permissions inherited *)
   room @ dbref? not if "Non-dbref argument (1)." abort then
   room @ room? not if "Non-room argument (1)." abort then
   room @ "_room/directions" getpropstr
@@ -86,7 +86,7 @@ $LIBDEF M-LIB-ROOM-directions
 (*                            M-LIB-ROOM-public?                             *)
 (*****************************************************************************)
 : M-LIB-ROOM-public?[ ref:room -- bool:public? ]
-  (* M1 OK *)
+  (* Permissions inherited *)
   room @ dbref? not if "Non-dbref argument (1)." abort then
   room @ room? not if "Non-room argument (1)." abort then
   room @ #0 = if 0 exit then
@@ -101,7 +101,7 @@ $LIBDEF M-LIB-ROOM-public?
 (*                           M-LIB-ROOM-short_desc                           *)
 (*****************************************************************************)
 : M-LIB-ROOM-short_desc[ ref:room -- str:desc ]
-  (* M1 OK *)
+  (* Permissions inherited *)
   room @ dbref? not if "Non-dbref argument (1)." abort then
   room @ room? not if "Non-room argument (1)." abort then
   room @ "_room/short_desc" getpropstr

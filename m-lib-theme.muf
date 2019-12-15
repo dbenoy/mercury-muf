@@ -673,7 +673,7 @@ $DEF EINSTRING over swap instring dup not if pop strlen else nip -- then
 (*                          M-LIB-THEME-fancy_exit                           *)
 (*****************************************************************************)
 : M-LIB-THEME-fancy_exit[ ref:exitobj -- str:name ]
-  (* M1 OK *)
+  (* Permissions inherited *)
   exitobj @ dbref? not if "Non-dbref argument (1)." abort then
   exitobj @ fmt_fancy_exit
 ;
@@ -684,7 +684,7 @@ $LIBDEF M-LIB-THEME-fancy_exit
 (*                             M-LIB-THEME-idle?                             *)
 (*****************************************************************************)
 : M-LIB-THEME-idle?[ ref:object -- bool:idle? ]
-  (* M1 OK *)
+  (* Permissions inherited *)
   object @ dbref? not if "Non-dbref argument (1)." abort then
   object @ thing? object @ "ZOMBIE" flag? and not object @ player? not and if
     1 exit
@@ -701,7 +701,7 @@ $LIBDEF M-LIB-THEME-idle?
 (*                             M-LIB-THEME-name                              *)
 (*****************************************************************************)
 : M-LIB-THEME-name ( d -- s )
-  (* M1 OK *)
+  (* Permissions inherited *)
   "d" checkargs
   0 theme_name
 ;
@@ -712,7 +712,7 @@ $LIBDEF M-LIB-THEME-name
 (*                            M-LIB-THEME-format                             *)
 (*****************************************************************************)
 : M-LIB-THEME-format[ arr:args str:format_type -- str:result ]
-  (* M1 OK *)
+  (* Permissions inherited *)
   args @ array? not if "Non-array argument (1)." abort then
   args @ foreach nip string? not if "Array of strings expected (1)." abort then repeat
   format_type @ string? not if "Non-string argument (2)." abort then
@@ -726,7 +726,7 @@ $LIBDEF M-LIB-THEME-format
 (*                          M-LIB-THEME-format_type                          *)
 (*****************************************************************************)
 : M-LIB-THEME-format_obj_type[ ref:object -- str:format ]
-  (* M1 OK *)
+  (* Permissions inherited *)
   object @ dbref? not if "Non-dbref argument (1)." abort then
   object @ format_obj_type
 ;
@@ -737,7 +737,7 @@ $LIBDEF M-LIB-THEME-format_obj_type
 (*                              M-LIB-THEME-err                              *)
 (*****************************************************************************)
 : M-LIB-THEME-err[ str:msg -- str:line ]
-  (* M1 OK *)
+  (* Permissions inherited *)
   msg @ string? not if "Non-string argument (1)." abort then
   "fmt_msg_error" theme_get { msg @ }list arg_sub
 ;
@@ -748,7 +748,7 @@ $LIBDEF M-LIB-THEME-err
 (*                              M-LIB-THEME-tag                              *)
 (*****************************************************************************)
 : M-LIB-THEME-tag[ str:msg str:tag -- str:line ]
-  (* M1 OK *)
+  (* Permissions inherited *)
   msg @ string? not if "Non-string argument (1)." abort then
   tag @ string? not if "Non-string argument (2)." abort then
   "fmt_msg_tagged" theme_get { msg @ tag @ }list arg_sub
@@ -760,7 +760,7 @@ $LIBDEF M-LIB-THEME-tag
 (*                          M-LIB-THEME-unparseobj                           *)
 (*****************************************************************************)
 : M-LIB-THEME-unparseobj ( d -- s )
-  (* M1 OK *)
+  (* Permissions inherited *)
   "d" checkargs
   1 theme_name
 ;
@@ -780,7 +780,7 @@ c
 q
 !@register m-lib-theme.muf=m/lib/theme
 !@set $m/lib/theme=M2
-!@set $m/lib/theme=L
-!@set $m/lib/theme=S
 !@set $m/lib/theme=H
+!@set $m/lib/theme=S
+!@set $m/lib/theme=L
 

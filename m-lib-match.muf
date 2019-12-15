@@ -107,8 +107,6 @@ $DEF M_LIB_THEME
 
 (* End configurable options *)
 
-$INCLUDE $m/lib/program
-
 $IFDEF M_LIB_THEME
   $INCLUDE $m/lib/theme
   $INCLUDE $m/lib/notify
@@ -219,7 +217,7 @@ $PUBDEF :
 (*                             M-LIB-MATCH-match                             *)
 (*****************************************************************************)
 : M-LIB-MATCH-match[ str:name dict:opts -- ref:dbref ]
-  (* M1 OK *)
+  (* Permissions inherited *)
   name @ string? not if "Non-string argument (1)." abort then
   opts @ array? not if "Non-array argument (2)." abort then
   opts @ match_opts_process opts !
@@ -286,7 +284,7 @@ $LIBDEF M-LIB-MATCH-match
 (*                            M-LIB-MATCH-pmatch                             *)
 (*****************************************************************************)
 : M-LIB-MATCH-pmatch[ str:name dict:opts -- ref:dbref ]
-  (* M1 OK *)
+  (* Permissions inherited *)
   name @ string? not if "Non-string argument (1)." abort then
   opts @ array? not if "Non-array argument (2)." abort then
   opts @ pmatch_opts_process opts !
@@ -334,7 +332,7 @@ $LIBDEF M-LIB-MATCH-pmatch
 (*                        M-LIB-MATCH-register_object                        *)
 (*****************************************************************************)
 : M-LIB-MATCH-register_object[ ref:object str:regname ]
-  M-LIB-PROGRAM-needs_mlev3
+  (* Permissions inherited *)
 
   object @ dbref? not if "Non-dbref argument (1)." abort then
   regname @ string? not if "Non-string argument (2)." abort then
@@ -357,6 +355,8 @@ $LIBDEF M-LIB-MATCH-register_object
 c
 q
 !@register m-lib-match.muf=m/lib/match
-!@set $m/lib/match=L
-!@set $m/lib/match=M3
+!@set $m/lib/notify=M2
+!@set $m/lib/notify=H
+!@set $m/lib/notify=S
+!@set $m/lib/notify=L
 

@@ -772,7 +772,7 @@ $LIBDEF M-LIB-EMOTE-history_get
 (*                          M-LIB-EMOTE-config_get                           *)
 (*****************************************************************************)
 : M-LIB-EMOTE-config_get[ ref:object str:option -- str:value ]
-  (* M1 OK *)
+  M-LIB-PROGRAM-needs_mlev1
 
   option @ string? not if "Non-string argument (1)." abort then
   option @ OPTIONS_VALID M-LIB-ARRAY-hasval not if "Invalid option." abort then
@@ -786,7 +786,7 @@ $LIBDEF M-LIB-EMOTE-config_get
 (*                         M-LIB-EMOTE-config_valid                          *)
 (*****************************************************************************)
 : M-LIB-EMOTE-config_valid[ str:value ref:object str:option -- bool:valid? ]
-  (* M1 OK *)
+  M-LIB-PROGRAM-needs_mlev1
 
   option @ string? not if "Non-string argument (1)." abort then
   option @ OPTIONS_VALID M-LIB-ARRAY-hasval not if "Invalid option." abort then
@@ -800,7 +800,7 @@ $LIBDEF M-LIB-EMOTE-config_valid
 (*                             M-LIB-EMOTE-style                             *)
 (*****************************************************************************)
 : M-LIB-EMOTE-style[ str:message dict:opts -- str:result ]
-  (* M1 OK *)
+  M-LIB-PROGRAM-needs_mlev1
   message @ string? not if "Non-string argument (1)." abort then
   opts @ array? not if "Non-array argument (2)." abort then
   opts @ style_opts_process opts !

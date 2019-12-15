@@ -1632,7 +1632,7 @@ $LIBDEF M-LIB-COLOR-encoding_default
 (*                          M-LIB-COLOR-encoding_get                         *)
 (*****************************************************************************)
 : M-LIB-COLOR-encoding_get[ ref:object -- str:type ]
-  (* M1 OK *)
+  M-LIB-PROGRAM-needs_mlev1
 
   object @ dbref? not if "Non-dbref argument (1)." abort then
 
@@ -1645,7 +1645,7 @@ $LIBDEF M-LIB-COLOR-encoding_get
 (*                     M-LIB-COLOR-encoding_player_valid                     *)
 (*****************************************************************************)
 : M-LIB-COLOR-encoding_player_valid[ -- list:options ]
-  (* M1 OK *)
+  M-LIB-PROGRAM-needs_mlev1
 
   SUPPORTED_TYPES_ANSI
 ;
@@ -1656,7 +1656,7 @@ $LIBDEF M-LIB-COLOR-encoding_player_valid
 (*                            M-LIB-COLOR-escape                             *)
 (*****************************************************************************)
 : M-LIB-COLOR-escape[ str:source -- str:result ]
-  (* M1 OK *)
+  M-LIB-PROGRAM-needs_mlev1
 
   source @ string? not if "Non-string argument (1)." abort then
 
@@ -1669,7 +1669,7 @@ $LIBDEF M-LIB-COLOR-escape
 (*                            M-LIB-COLOR-hsl2rgb                            *)
 (*****************************************************************************)
 : M-LIB-COLOR-hsl2rgb[ arr:hsl -- str:rgb ]
-  (* M1 OK *)
+  M-LIB-PROGRAM-needs_mlev1
   hsl @ array? hsl @ dictionary? not and not if "Non-array-list argument (1)." abort then
   hsl @ array_count 3 != if "Invalid HSL values." abort then
   hsl @ 0 [] float? hsl @ 1 [] float? and hsl @ 2 [] float? and not if "HSL values must be floats." abort then
@@ -1687,7 +1687,7 @@ $LIBDEF M-LIB-COLOR-hsl2rgb
 (*                            M-LIB-COLOR-rgb2hsl                            *)
 (*****************************************************************************)
 : M-LIB-COLOR-rgb2hsl[ str:rgb -- arr:hsl ]
-  (* M1 OK *)
+  M-LIB-PROGRAM-needs_mlev1
   rgb @ string? not if "Non-string argument (1)." abort then
   rgb @ strlen 6 = rgb @ M-LIB-STRING-hex? and not if "Invalid RGB string" abort then
 
@@ -1706,7 +1706,7 @@ $LIBDEF M-LIB-COLOR-rgb2hsl
 (*                          M-LIB-COLOR-strcat_hard                          *)
 (*****************************************************************************)
 : M-LIB-COLOR-strcat_hard[ str:source1 str:source2 -- str:result ]
-  (* M1 OK *)
+  M-LIB-PROGRAM-needs_mlev1
 
   source1 @ string? not if "Non-string argument (1)." abort then
   source2 @ string? not if "Non-string argument (2)." abort then
@@ -1732,7 +1732,7 @@ $LIBDEF M-LIB-COLOR-strcat_hard
 (*                            M-LIB-COLOR-strcat                             *)
 (*****************************************************************************)
 : M-LIB-COLOR-strcat[ str:source1 str:source2 -- str:result ]
-  (* M1 OK *)
+  M-LIB-PROGRAM-needs_mlev1
 
   source1 @ string? not if "Non-string argument (1)." abort then
   source2 @ string? not if "Non-string argument (2)." abort then
@@ -1758,7 +1758,7 @@ $LIBDEF M-LIB-COLOR-strcat
 (*                            M-LIB-COLOR-strcut                             *)
 (*****************************************************************************)
 : M-LIB-COLOR-strcut[ str:source int:split_point -- str:string1 str:string2 ]
-  (* M1 OK *)
+  M-LIB-PROGRAM-needs_mlev1
 
   source @ string? not if "Non-string argument (1)." abort then
   split_point @ int? not if "Non-integer argument (2)." abort then
@@ -1773,7 +1773,7 @@ $LIBDEF M-LIB-COLOR-strcut
 (*                            M-LIB-COLOR-strlen                             *)
 (*****************************************************************************)
 : M-LIB-COLOR-strlen[ str:source -- int:result ]
-  (* M1 OK *)
+  M-LIB-PROGRAM-needs_mlev1
 
   source @ string? not if "Non-string argument (1)." abort then
 
@@ -1786,7 +1786,7 @@ $LIBDEF M-LIB-COLOR-strlen
 (*                             M-LIB-COLOR-strip                             *)
 (*****************************************************************************)
 : M-LIB-COLOR-strip[ str:source -- str:result ]
-  (* M1 OK *)
+  M-LIB-PROGRAM-needs_mlev1
 
   source @ string? not if "Non-string argument (1)." abort then
 
@@ -1799,7 +1799,7 @@ $LIBDEF M-LIB-COLOR-strip
 (*                            M-LIB-COLOR-toupper                            *)
 (*****************************************************************************)
 : M-LIB-COLOR-toupper[ str:source -- str:result ]
-  (* M1 OK *)
+  M-LIB-PROGRAM-needs_mlev1
   source @ string? not if "Non-string argument (1)." abort then
   source @ mcc_toupper
 ;
@@ -1810,7 +1810,7 @@ $LIBDEF M-LIB-COLOR-toupper
 (*                            M-LIB-COLOR-tolower                            *)
 (*****************************************************************************)
 : M-LIB-COLOR-tolower[ str:source -- str:result ]
-  (* M1 OK *)
+  M-LIB-PROGRAM-needs_mlev1
   source @ string? not if "Non-string argument (1)." abort then
   source @ mcc_tolower
 ;
@@ -1821,7 +1821,7 @@ $LIBDEF M-LIB-COLOR-tolower
 (*                          M-LIB-COLOR-testpattern                          *)
 (*****************************************************************************)
 : M-LIB-COLOR-testpattern[ str:ansi_type -- arr:strings ]
-  (* M1 OK *)
+  M-LIB-PROGRAM-needs_mlev1
 
   ansi_type @ "ANSI-24BIT" = if
     {
@@ -2078,7 +2078,7 @@ $LIBDEF M-LIB-COLOR-testpattern
 (*                           M-LIB-COLOR-transcode                           *)
 (*****************************************************************************)
 : M-LIB-COLOR-transcode[ str:source str:from_type str:to_type -- str:result ]
-  (* M1 OK *)
+  M-LIB-PROGRAM-needs_mlev1
 
   from_type @ string? not if "Non-string argument (1)." abort then
   to_type @ string? not if "Non-string argument (2)." abort then

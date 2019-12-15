@@ -528,7 +528,7 @@ $PUBDEF :
 (*                      M-LIB-STRING-array_interpret_cb                      *)
 (*****************************************************************************)
 : M-LIB-STRING-array_interpret_cb ( a a -- ? )
-  (* M1 OK *)
+  (* Permissions inherited *)
   "yx" checkargs
   dup cbs_check
   var! cbs
@@ -547,7 +547,7 @@ $LIBDEF M-LIB-STRING-array_interpret_cb
 (*                        M-LIB-STRING-array_join_cb                         *)
 (*****************************************************************************)
 : M-LIB-STRING-array_join_cb ( a ? a -- ? )
-  (* M1 OK *)
+  (* Permissions inherited *)
   "y?x" checkargs
   dup cbs_check
   var! cbs
@@ -567,7 +567,7 @@ $LIBDEF M-LIB-STRING-array_join_cb
 (*                           M-LIB-STRING-atoi_cb                            *)
 (*****************************************************************************)
 : M-LIB-STRING-atoi_cb ( ? cbs -- i )
-  (* M1 OK *)
+  (* Permissions inherited *)
   "?x" checkargs
   dup cbs_check
   strstrip_cb
@@ -580,7 +580,7 @@ $LIBDEF M-LIB-STRING-atoi_cb
 (*                         M-LIB-STRING-carve_array                          *)
 (*****************************************************************************)
 : M-LIB-STRING-carve_array ( s s -- a )
-  (* M1 OK *)
+  (* Permissions inherited *)
   "ss" checkargs
   carve_array
 ;
@@ -591,7 +591,7 @@ $LIBDEF M-LIB-STRING-carve_array
 (*                        M-LIB-STRING-carve_array_cb                        *)
 (*****************************************************************************)
 : M-LIB-STRING-carve_array_cb ( ? ? cbs -- a )
-  (* M1 OK *)
+  (* Permissions inherited *)
   "??x" checkargs
   dup cbs_check
   carve_array_cb
@@ -603,7 +603,7 @@ $LIBDEF M-LIB-STRING-carve_array_cb
 (*                         M-LIB-STRING-command_parse                        *)
 (*****************************************************************************)
 : M-LIB-STRING-command_parse ( s -- s s s )
-  (* M1 OK *)
+  (* Permissions inherited *)
   "s" checkargs
   "=" rsplit swap
   striplead dup "#" instr 1 = if
@@ -623,7 +623,7 @@ $LIBDEF M-LIB-STRING-command_parse
 (*                            M-LIB-STRING-einstr                            *)
 (*****************************************************************************)
 : M-LIB-STRING-einstr ( s s -- i )
-  (* M1 OK *)
+  (* Permissions inherited *)
   "ss" checkargs
   einstr
 ;
@@ -634,7 +634,7 @@ $LIBDEF M-LIB-STRING-einstr
 (*                          M-LIB-STRING-einstr_cb                           *)
 (*****************************************************************************)
 : M-LIB-STRING-einstr_cb ( ? ? a -- i )
-  (* M1 OK *)
+  (* Permissions inherited *)
   "??x" checkargs
   dup cbs_check
   einstr_cb
@@ -646,7 +646,7 @@ $LIBDEF M-LIB-STRING-einstr_cb
 (*                          M-LIB-STRING-einstring                           *)
 (*****************************************************************************)
 : M-LIB-STRING-einstring ( s s -- i )
-  (* M1 OK *)
+  (* Permissions inherited *)
   "ss" checkargs
   einstring
 ;
@@ -657,7 +657,7 @@ $LIBDEF M-LIB-STRING-einstring
 (*                         M-LIB-STRING-einstring_cb                         *)
 (*****************************************************************************)
 : M-LIB-STRING-einstring_cb ( ? ? a -- i )
-  (* M1 OK *)
+  (* Permissions inherited *)
   "??x" checkargs
   dup cbs_check
   einstring_cb
@@ -669,7 +669,7 @@ $LIBDEF M-LIB-STRING-einstring_cb
 (*                           M-LIB-STRING-erinstr                            *)
 (*****************************************************************************)
 : M-LIB-STRING-erinstr ( s s -- i )
-  (* M1 OK *)
+  (* Permissions inherited *)
   "ss" checkargs
   erinstr
 ;
@@ -680,7 +680,7 @@ $LIBDEF M-LIB-STRING-erinstr
 (*                          M-LIB-STRING-erinstr_cb                          *)
 (*****************************************************************************)
 : M-LIB-STRING-erinstr_cb ( ? ? a -- i )
-  (* M1 OK *)
+  (* Permissions inherited *)
   "??x" checkargs
   dup cbs_check
   erinstr_cb
@@ -692,7 +692,7 @@ $LIBDEF M-LIB-STRING-erinstr_cb
 (*                          M-LIB-STRING-erinstring                          *)
 (*****************************************************************************)
 : M-LIB-STRING-erinstring ( s s -- i )
-  (* M1 OK *)
+  (* Permissions inherited *)
   "ss" checkargs
   erinstring
 ;
@@ -703,7 +703,7 @@ $LIBDEF M-LIB-STRING-erinstring
 (*                        M-LIB-STRING-erinstring_cb                         *)
 (*****************************************************************************)
 : M-LIB-STRING-erinstring_cb ( ? ? a -- i )
-  (* M1 OK *)
+  (* Permissions inherited *)
   "??x" checkargs
   dup cbs_check
   erinstring_cb
@@ -715,7 +715,7 @@ $LIBDEF M-LIB-STRING-erinstring_cb
 (*                          M-LIB-STRING-explode_cb                          *)
 (*****************************************************************************)
 : M-LIB-STRING-explode_cb ( ? ? cbs -- ... i )
-  (* M1 OK *)
+  (* Permissions inherited *)
   "??x" checkargs
   dup cbs_check
   explode_array_cb array_vals
@@ -727,7 +727,7 @@ $LIBDEF M-LIB-STRING-explode_cb
 (*                       M-LIB-STRING-explode_array_cb                       *)
 (*****************************************************************************)
 : M-LIB-STRING-explode_array_cb ( ? ? cbs -- a )
-  (* M1 OK *)
+  (* Permissions inherited *)
   "??x" checkargs
   dup cbs_check
   explode_array_cb
@@ -739,7 +739,7 @@ $LIBDEF M-LIB-STRING-explode_array_cb
 (*                             M-LIB-STRING-hex?                             *)
 (*****************************************************************************)
 : M-LIB-STRING-hex? ( s -- i )
-  (* M1 OK *)
+  (* Permissions inherited *)
   "s" checkargs
   hex?
 ;
@@ -750,7 +750,7 @@ $LIBDEF M-LIB-STRING-hex?
 (*                           M-LIB-STRING-hex?_cb                            *)
 (*****************************************************************************)
 : M-LIB-STRING-hex?_cb ( ? cbs -- i )
-  (* M1 OK *)
+  (* Permissions inherited *)
   "?x" checkargs
   dup cbs_check
   strstrip_cb hex?
@@ -762,7 +762,7 @@ $LIBDEF M-LIB-STRING-hex?_cb
 (*                           M-LIB-STRING-instr_cb                           *)
 (*****************************************************************************)
 : M-LIB-STRING-instr_cb ( ? ? cbs -- i )
-  (* M1 OK *)
+  (* Permissions inherited *)
   "??x" checkargs
   dup cbs_check
   instr_cb
@@ -774,7 +774,7 @@ $LIBDEF M-LIB-STRING-instr_cb
 (*                         M-LIB-STRING-instring_cb                          *)
 (*****************************************************************************)
 : M-LIB-STRING-instring_cb ( ? ? cbs -- i )
-  (* M1 OK *)
+  (* Permissions inherited *)
   "??x" checkargs
   dup cbs_check
   instring_cb
@@ -786,7 +786,7 @@ $LIBDEF M-LIB-STRING-instring_cb
 (*                             M-LIB-STRING-itox                             *)
 (*****************************************************************************)
 : M-LIB-STRING-itox ( i -- s )
-  (* M1 OK *)
+  (* Permissions inherited *)
   "i" checkargs
   itox
 ;
@@ -797,7 +797,7 @@ $LIBDEF M-LIB-STRING-itox
 (*                          M-LIB-STRING-midstr_cb                           *)
 (*****************************************************************************)
 : M-LIB-STRING-midstr_cb ( ? i i cbs -- ? )
-  (* M1 OK *)
+  (* Permissions inherited *)
   "?iix" checkargs
   dup cbs_check
   var! cbs
@@ -811,7 +811,7 @@ $LIBDEF M-LIB-STRING-midstr_cb
 (*                          M-LIB-STRING-number?_cb                          *)
 (*****************************************************************************)
 : M-LIB-STRING-number?_cb ( ? cbs -- i )
-  (* M1 OK *)
+  (* Permissions inherited *)
   "?x" checkargs
   dup cbs_check
   strstrip_cb number?
@@ -823,7 +823,7 @@ $LIBDEF M-LIB-STRING-number?_cb
 (*                           M-LIB-STRING-regslice                           *)
 (*****************************************************************************)
 : M-LIB-STRING-regslice ( s s i -- a )
-  (* M1 OK *)
+  (* Permissions inherited *)
   "ssi" checkargs
   regslice
 ;
@@ -834,7 +834,7 @@ $LIBDEF M-LIB-STRING-regslice
 (*                         M-LIB-STRING-regslice_cb                          *)
 (*****************************************************************************)
 : M-LIB-STRING-regslice_cb ( ? ? i cbs -- a )
-  (* M1 OK *)
+  (* Permissions inherited *)
   "??ix" checkargs
   dup cbs_check
   regslice_cb
@@ -846,7 +846,7 @@ $LIBDEF M-LIB-STRING-regslice_cb
 (*                          M-LIB-STRING-rinstr_cb                           *)
 (*****************************************************************************)
 : M-LIB-STRING-rinstr_cb ( ? ? cbs -- i )
-  (* M1 OK *)
+  (* Permissions inherited *)
   "??x" checkargs
   dup cbs_check
   rinstr_cb
@@ -858,7 +858,7 @@ $LIBDEF M-LIB-STRING-rinstr_cb
 (*                         M-LIB-STRING-rinstring_cb                         *)
 (*****************************************************************************)
 : M-LIB-STRING-rinstring_cb ( ? ? cbs -- i )
-  (* M1 OK *)
+  (* Permissions inherited *)
   "??x" checkargs
   dup cbs_check
   rinstring_cb
@@ -870,7 +870,7 @@ $LIBDEF M-LIB-STRING-rinstring_cb
 (*                          M-LIB-STRING-rsplit_cb                           *)
 (*****************************************************************************)
 : M-LIB-STRING-rsplit_cb[ any:source any:sep arr:cbs -- any:result1 any:result2 ]
-  (* M1 OK *)
+  (* Permissions inherited *)
   cbs @ dictionary? not if "Non-dictionary argument (3)." abort then
   cbs @ cbs_check
   source @ source @ sep @ cbs @ erinstr_cb cbs @ strcut_cb
@@ -883,7 +883,7 @@ $LIBDEF M-LIB-STRING-rsplit_cb
 (*                         M-LIB-STRING-single_space                         *)
 (*****************************************************************************)
 : M-LIB-STRING-single_space ( s -- s )
-  (* M1 OK *)
+  (* Permissions inherited *)
   "s" checkargs
   single_space
 ;
@@ -894,7 +894,7 @@ $LIBDEF M-LIB-STRING-single_space
 (*                       M-LIB-STRING-single_space_cb                        *)
 (*****************************************************************************)
 : M-LIB-STRING-single_space_cb ( ? cbs -- ? )
-  (* M1 OK *)
+  (* Permissions inherited *)
   "?x" checkargs
   dup cbs_check
   var! cbs
@@ -909,7 +909,7 @@ $LIBDEF M-LIB-STRING-single_space_cb
 (*                            M-LIB-STRING-sitox                             *)
 (*****************************************************************************)
 : M-LIB-STRING-sitox ( i -- s )
-  (* M1 OK *)
+  (* Permissions inherited *)
   "i" checkargs
   dup 0 < if
     abs "-" swap itox strcat
@@ -924,7 +924,7 @@ $LIBDEF M-LIB-STRING-sitox
 (*                         M-LIB-STRING-slice_array                          *)
 (*****************************************************************************)
 : M-LIB-STRING-slice_array ( s s -- a )
-  (* M1 OK *)
+  (* Permissions inherited *)
   "ss" checkargs
   slice_array
 ;
@@ -935,7 +935,7 @@ $LIBDEF M-LIB-STRING-slice_array
 (*                        M-LIB-STRING-slice_array_cb                        *)
 (*****************************************************************************)
 : M-LIB-STRING-slice_array_cb ( ? ? cbs -- a )
-  (* M1 OK *)
+  (* Permissions inherited *)
   "??x" checkargs
   dup cbs_check
   slice_array_cb
@@ -947,7 +947,7 @@ $LIBDEF M-LIB-STRING-slice_array_cb
 (*                           M-LIB-STRING-split_cb                           *)
 (*****************************************************************************)
 : M-LIB-STRING-split_cb[ any:source any:sep arr:cbs -- any:result1 any:result2 ]
-  (* M1 OK *)
+  (* Permissions inherited *)
   cbs @ dictionary? not if "Non-dictionary argument (3)." abort then
   cbs @ cbs_check
   source @ source @ sep @ cbs @ einstr_cb cbs @ strcut_cb
@@ -960,7 +960,7 @@ $LIBDEF M-LIB-STRING-split_cb
 (*                          M-LIB-STRING-strcat_cb                           *)
 (*****************************************************************************)
 : M-LIB-STRING-strcat_cb ( ? ? cbs -- ? )
-  (* M1 OK *)
+  (* Permissions inherited *)
   "??x" checkargs
   dup cbs_check
   strcat_cb
@@ -972,7 +972,7 @@ $LIBDEF M-LIB-STRING-strcat_cb
 (*                          M-LIB-STRING-strcmp_cb                           *)
 (*****************************************************************************)
 : M-LIB-STRING-strcmp_cb ( ? ? cbs -- i )
-  (* M1 OK *)
+  (* Permissions inherited *)
   "??x" checkargs
   dup cbs_check
   var! cbs
@@ -987,7 +987,7 @@ $LIBDEF M-LIB-STRING-strcmp_cb
 (*                          M-LIB-STRING-strcut_cb                           *)
 (*****************************************************************************)
 : M-LIB-STRING-strcut_cb ( ? i cbs -- ? ? )
-  (* M1 OK *)
+  (* Permissions inherited *)
   "?ix" checkargs
   dup cbs_check
   strcut_cb
@@ -999,7 +999,7 @@ $LIBDEF M-LIB-STRING-strcut_cb
 (*                         M-LIB-STRING-stringcmp_cb                         *)
 (*****************************************************************************)
 : M-LIB-STRING-stringcmp_cb ( ? ? cbs -- i )
-  (* M1 OK *)
+  (* Permissions inherited *)
   "??x" checkargs
   dup cbs_check
   var! cbs
@@ -1014,7 +1014,7 @@ $LIBDEF M-LIB-STRING-stringcmp_cb
 (*                         M-LIB-STRING-stringpfx_cb                         *)
 (*****************************************************************************)
 : M-LIB-STRING-stringpfx_cb ( ? ? cbs -- i )
-  (* M1 OK *)
+  (* Permissions inherited *)
   "??x" checkargs
   dup cbs_check
   var! cbs
@@ -1029,7 +1029,7 @@ $LIBDEF M-LIB-STRING-stringpfx_cb
 (*                           M-LIB-STRING-strip_cb                           *)
 (*****************************************************************************)
 : M-LIB-STRING-strip_cb ( ? cbs -- ? )
-  (* M1 OK *)
+  (* Permissions inherited *)
   "?x" checkargs
   dup cbs_check
   strip_cb
@@ -1041,7 +1041,7 @@ $LIBDEF M-LIB-STRING-strip_cb
 (*                         M-LIB-STRING-striplead_cb                         *)
 (*****************************************************************************)
 : M-LIB-STRING-striplead_cb ( ? cbs -- ? )
-  (* M1 OK *)
+  (* Permissions inherited *)
   "?x" checkargs
   dup cbs_check
   striplead_cb
@@ -1053,7 +1053,7 @@ $LIBDEF M-LIB-STRING-striplead_cb
 (*                         M-LIB-STRING-striptail_cb                         *)
 (*****************************************************************************)
 : M-LIB-STRING-striptail_cb ( ? cbs -- ? )
-  (* M1 OK *)
+  (* Permissions inherited *)
   "?x" checkargs
   dup cbs_check
   striptail_cb
@@ -1065,7 +1065,7 @@ $LIBDEF M-LIB-STRING-striptail_cb
 (*                          M-LIB-STRING-strlen_cb                           *)
 (*****************************************************************************)
 : M-LIB-STRING-strlen_cb ( ? cbs -- i )
-  (* M1 OK *)
+  (* Permissions inherited *)
   "?x" checkargs
   dup cbs_check
   strlen_cb
@@ -1077,7 +1077,7 @@ $LIBDEF M-LIB-STRING-strlen_cb
 (*                          M-LIB-STRING-strncmp_cb                          *)
 (*****************************************************************************)
 : M-LIB-STRING-strncmp_cb ( ? ? i cbs -- i )
-  (* M1 OK *)
+  (* Permissions inherited *)
   "??ix" checkargs
   dup cbs_check
   var! cbs
@@ -1092,7 +1092,7 @@ $LIBDEF M-LIB-STRING-strncmp_cb
 (*                          M-LIB-STRING-strtof_cb                           *)
 (*****************************************************************************)
 : M-LIB-STRING-strtof_cb ( ? cbs -- f )
-  (* M1 OK *)
+  (* Permissions inherited *)
   "?x" checkargs
   dup cbs_check
   strstrip_cb strtof
@@ -1104,7 +1104,7 @@ $LIBDEF M-LIB-STRING-strtof_cb
 (*                           M-LIB-STRING-subst_cb                           *)
 (*****************************************************************************)
 : M-LIB-STRING-subst_cb ( ? ? ? cbs -- ? )
-  (* M1 OK *)
+  (* Permissions inherited *)
   "???x" checkargs
   over not if "Empty string argument (3)" abort then
   dup cbs_check
@@ -1117,7 +1117,7 @@ $LIBDEF M-LIB-STRING-subst_cb
 (*                          M-LIB-STRING-toupper_cb                          *)
 (*****************************************************************************)
 : M-LIB-STRING-toupper_cb ( ? cbs -- i )
-  (* M1 OK *)
+  (* Permissions inherited *)
   "?x" checkargs
   dup cbs_check
   toupper_cb
@@ -1129,7 +1129,7 @@ $LIBDEF M-LIB-STRING-toupper_cb
 (*                          M-LIB-STRING-tolower_cb                          *)
 (*****************************************************************************)
 : M-LIB-STRING-tolower_cb ( ? cbs -- i )
-  (* M1 OK *)
+  (* Permissions inherited *)
   "?x" checkargs
   dup cbs_check
   tolower_cb
@@ -1141,7 +1141,7 @@ $LIBDEF M-LIB-STRING-tolower_cb
 (*                          M-LIB-STRING-wordwrap_cb                         *)
 (*****************************************************************************)
 : M-LIB-STRING-wordwrap_cb[ any:source int:width_wrap dict:opts dict:cbs -- arr:lines ]
-  (* M1 OK *)
+  (* Permissions inherited *)
   width_wrap @ int? not if "Non-integer argument (2)." abort then
   opts @ dictionary? not if "Non-dictionary argument (3)." abort then
   cbs @ dictionary? not if "Non-dictionary argument (4)." abort then
@@ -1155,7 +1155,7 @@ $LIBDEF M-LIB-STRING-wordwrap_cb
 (*                           M-LIB-STRING-wordwrap                           *)
 (*****************************************************************************)
 : M-LIB-STRING-wordwrap[ str:source int:width_wrap dict:opts -- arr:lines ]
-  (* M1 OK *)
+  (* Permissions inherited *)
   source @ string? not if "Non-string argument (1)." abort then
   width_wrap @ int? not if "Non-integer argument (2)." abort then
   opts @ dictionary? not if "Non-dictionary argument (3)." abort then
@@ -1168,7 +1168,7 @@ $LIBDEF M-LIB-STRING-wordwrap
 (*                             M-LIB-STRING-xtoi                             *)
 (*****************************************************************************)
 : M-LIB-STRING-xtoi ( s -- i )
-  (* M1 OK *)
+  (* Permissions inherited *)
   "s" checkargs
   xtoi
 ;
@@ -1179,7 +1179,7 @@ $LIBDEF M-LIB-STRING-xtoi
 (*                           M-LIB-STRING-xtoi_cb                            *)
 (*****************************************************************************)
 : M-LIB-STRING-xtoi_cb ( ? cbs -- i )
-  (* M1 OK *)
+  (* Permissions inherited *)
   "?x" checkargs
   dup cbs_check
   strstrip_cb
@@ -1192,7 +1192,7 @@ $LIBDEF M-LIB-STRING-xtoi_cb
 (*                           M-LIB-STRING-zeropad                            *)
 (*****************************************************************************)
 : M-LIB-STRING-zeropad ( s i -- i )
-  (* M1 OK *)
+  (* Permissions inherited *)
   "si" checkargs
   over strlen - dup 0 > if "0" * swap strcat else pop then
 ;
@@ -1203,7 +1203,7 @@ $LIBDEF M-LIB-STRING-zeropad
 (*                          M-LIB-STRING-zeropad_cb                          *)
 (*****************************************************************************)
 : M-LIB-STRING-zeropad_cb ( ? i a -- i )
-  (* M1 OK *)
+  (* Permissions inherited *)
   "?ix" checkargs
   dup cbs_check
   var! cbs
@@ -1263,7 +1263,7 @@ c
 q
 !@register m-lib-string.muf=m/lib/string
 !@set $m/lib/string=M2
-!@set $m/lib/string=L
-!@set $m/lib/string=S
 !@set $m/lib/string=H
+!@set $m/lib/string=S
+!@set $m/lib/string=L
 

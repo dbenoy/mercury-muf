@@ -99,7 +99,7 @@ $PUBDEF :
 (*                       M-LIB-PENNIES-endow_cost_get                        *)
 (*****************************************************************************)
 : M-LIB-PENNIES-endow_cost_get ( i -- i )
-  (* M1 OK *)
+  M-LIB-PROGRAM-needs_mlev1
 
   COST_FORMULA
 ;
@@ -110,7 +110,7 @@ $LIBDEF M-LIB-PENNIES-endow_cost_get
 (*                          M-LIB-PENNIES-endow_get                          *)
 (*****************************************************************************)
 : M-LIB-PENNIES-endow_get ( i -- i )
-  (* M1 OK *)
+  M-LIB-PROGRAM-needs_mlev1
 
   ENDOWMENT_FORMULA
 ;
@@ -121,7 +121,7 @@ $LIBDEF M-LIB-PENNIES-endow_get
 (*                        M-LIB-PENNIES-endow_str_get                        *)
 (*****************************************************************************)
 : M-LIB-PENNIES-endow_str_get ( -- s )
-  (* M1 OK *)
+  M-LIB-PROGRAM-needs_mlev1
 
   ENDOWMENT_FORMULA_STRING
 ;
@@ -172,7 +172,7 @@ $LIBDEF M-LIB-PENNIES-payfor
 (*                           M-LIB-PENNIES-pennies                           *)
 (*****************************************************************************)
 : M-LIB-PENNIES-pennies ( ? -- s )
-  (* M1 OK *)
+  M-LIB-PROGRAM-needs_mlev1
 
   dup string? if
     atoi
@@ -194,7 +194,7 @@ $LIBDEF M-LIB-PENNIES-pennies
 c
 q
 !@register m-lib-pennies.muf=m/lib/pennies
-!@set $m/lib/pennies=L
 !@set $m/lib/pennies=M3
 !@set $m/lib/pennies=W
+!@set $m/lib/pennies=L
 

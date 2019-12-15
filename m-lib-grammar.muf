@@ -808,7 +808,7 @@ $ENDIF
 (*                        M-LIB-GRAMMAR-sex_category                         *)
 (*****************************************************************************)
 : M-LIB-GRAMMAR-sex_category[ str:sex -- str:category ]
-  (* M1 OK *)
+  (* Permissions inherited *)
   sex @ string? not if "Non-string argument (1)." abort then
   sex @ sex_category
   dup if exit else pop then
@@ -821,7 +821,7 @@ $LIBDEF M-LIB-GRAMMAR-sex_category
 (*                         M-LIB-GRAMMAR-oxford_join                         *)
 (*****************************************************************************)
 : M-LIB-GRAMMAR-oxford_join ( a s -- s )
-  (* M1 OK *)
+  (* Permissions inherited *)
   "ys" checkargs
   swap dup array_count 1 > if
     dup array_count 2 - array_cut
@@ -846,7 +846,7 @@ $LIBDEF M-LIB-GRAMMAR-oxford_join
 (*                             M-LIB-GRAMMAR-sub                             *)
 (*****************************************************************************)
 : M-LIB-GRAMMAR-sub[ str:template arr:objects dict:opts -- str:name ]
-  (* M1 OK *)
+  (* Permissions inherited *)
   template @ string? not if "Non-string argument (1)." abort then
   objects @ array? not if "Non-array argument (2)." abort then
   objects @ array_count not if "Empty array (2)." abort then

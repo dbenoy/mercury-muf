@@ -83,6 +83,8 @@ $def PROP_COMMAND_HELP "_help/help"
 $def FUNC_COMMAND_DESC "M-HELP-desc"
 $def FUNC_COMMAND_HELP "M-HELP-help"
 
+$include $m/lib/program
+
 $PUBDEF :
 
 (* ------------------------------------------------------------------------ *)
@@ -170,7 +172,7 @@ $PUBDEF :
 (*                        M-LIB-HELP-command_get_desc                        *)
 (*****************************************************************************)
 : M-LIB-HELP-command_get_desc[ ref:action -- str:result ]
-  (* M1 OK *)
+  M-LIB-PROGRAM-needs_mlev1
   action @ dbref? not if "Non-dbref argument (1)." abort then
   action @ command_get_desc
   50 strcut pop
@@ -182,7 +184,7 @@ $LIBDEF M-LIB-HELP-command_get_desc
 (*                        M-LIB-HELP-command_get_help                        *)
 (*****************************************************************************)
 : M-LIB-HELP-command_get_help[ ref:action -- str:result ]
-  (* M1 OK *)
+  M-LIB-PROGRAM-needs_mlev1
   action @ dbref? not if "Non-dbref argument (1)." abort then
   action @ command_get_help
 ;
@@ -193,6 +195,7 @@ $LIBDEF M-LIB-HELP-command_get_help
 (*                        M-LIB-HELP-command_get_name                        *)
 (*****************************************************************************)
 : M-LIB-HELP-command_get_name[ ref:action -- str:result ]
+  M-LIB-PROGRAM-needs_mlev1
   action @ PROP_COMMAND_NAME getpropstr
   dup not if
     pop
