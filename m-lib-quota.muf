@@ -10,15 +10,15 @@ $PRAGMA comment_recurse
 (*   GitHub: https://github.com/dbenoy/mercury-muf (See for install info)    *)
 (*                                                                           *)
 (* PUBLIC ROUTINES:                                                          *)
-(*   M-LIB-QUOTA-GetQuota[ ref:player str:type -- int:quota ]                *)
+(*   M-LIB-QUOTA-getquota[ d:player s:type -- i:quota ]                      *)
 (*     Gets the quota of total objects of a given type, for a given player.  *)
 (*     M3 required. (Object types: "room" "exit" "thing")                    *)
 (*                                                                           *)
-(*   M-LIB-QUOTA-GetUsage[ ref:player str:type -- int:usage ]                *)
+(*   M-LIB-QUOTA-getusage[ d:player s:type -- i:usage ]                      *)
 (*     Gets the current total objects owned of a given type, for a given     *)
 (*     player. M3 required. (Object types: "room" "exit" "thing")            *)
 (*                                                                           *)
-(*   M-LIB-QUOTA-QuotaCheck[ str:type bool:noisy -- bool:hasanyroom? ]       *)
+(*   M-LIB-QUOTA-quotacheck[ s:type i:noisy -- i:hasanyroom? ]               *)
 (*     Checks if the current player has any available space to create        *)
 (*     objects of a given type. Optionally, if room is unavailable, it will  *)
 (*     be noisy and display a notification to the player about it. Unquelled *)
@@ -84,9 +84,9 @@ $INCLUDE $m/lib/program
 $PUBDEF :
 
 (*****************************************************************************)
-(*                           M-LIB-QUOTA-GetQuota                            *)
+(*                           M-LIB-QUOTA-getquota                            *)
 (*****************************************************************************)
-: M-LIB-QUOTA-GetQuota[ ref:player str:type -- int:quota ]
+: M-LIB-QUOTA-getquota[ d:player s:type -- i:quota ]
   M-LIB-PROGRAM-needs_mlev3
 
   player @ dbref? not if "Non-dbref argument (1)." abort then
@@ -108,13 +108,13 @@ $PUBDEF :
 
   DEFAULT_QUOTA type @ []
 ;
-PUBLIC M-LIB-QUOTA-GetQuota
-$LIBDEF M-LIB-QUOTA-GetQuota
+PUBLIC M-LIB-QUOTA-getquota
+$LIBDEF M-LIB-QUOTA-getquota
 
 (*****************************************************************************)
-(*                           M-LIB-QUOTA-GetUsage                            *)
+(*                           M-LIB-QUOTA-getusage                            *)
 (*****************************************************************************)
-: M-LIB-QUOTA-GetUsage[ ref:player str:type -- int:usage ]
+: M-LIB-QUOTA-getusage[ d:player s:type -- i:usage ]
   M-LIB-PROGRAM-needs_mlev3
 
   player @ dbref? not if "Non-dbref argument (1)." abort then
@@ -141,13 +141,13 @@ $LIBDEF M-LIB-QUOTA-GetQuota
 
   { player @ stats }array statsPos @ []
 ;
-PUBLIC M-LIB-QUOTA-GetUsage
-$LIBDEF M-LIB-QUOTA-GetUsage
+PUBLIC M-LIB-QUOTA-getusage
+$LIBDEF M-LIB-QUOTA-getusage
 
 (*****************************************************************************)
-(*                          M-LIB-QUOTA-QuotaCheck                           *)
+(*                          M-LIB-QUOTA-quotacheck                           *)
 (*****************************************************************************)
-: M-LIB-QUOTA-QuotaCheck[ str:type bool:noisy -- bool:hasanyroom? ]
+: M-LIB-QUOTA-quotacheck[ s:type i:noisy -- i:hasanyroom? ]
   M-LIB-PROGRAM-needs_mlev1
 
   type @ string? not if "Non-string argument (1)." abort then
@@ -167,8 +167,8 @@ $LIBDEF M-LIB-QUOTA-GetUsage
   then
   1
 ;
-PUBLIC M-LIB-QUOTA-QuotaCheck
-$LIBDEF M-LIB-QUOTA-QuotaCheck
+PUBLIC M-LIB-QUOTA-quotacheck
+$LIBDEF M-LIB-QUOTA-quotacheck
 
 : main
   "Library called as command." abort

@@ -56,7 +56,7 @@ $DEF .chars-per-row 79
 ;
 WIZCALL M-HELP-desc
 
-: M-HELP-help ( d -- a )
+: M-HELP-help ( d -- Y )
   name ";" split pop toupper var! action_name
   {
     { action_name @ " <object>" }cat
@@ -144,7 +144,7 @@ lvar g_table_program
 (                          gets and sets for tables                           )
 (*****************************************************************************)
 (***** Change menus *****)
-: set_menu[ var:newmenu --  ]
+: set_menu[ v:newmenu --  ]
   newmenu @ @ g_table !
 ;
 
@@ -173,7 +173,7 @@ lvar g_table_program
 ;
 
 (***** get/set Flag *****)
-: get_flag[ str:flag str:valueTrue str:valueFalse -- str:value ]
+: get_flag[ s:flag s:valueTrue s:valueFalse -- s:value ]
   g_object @ flag @ flag? if
     valueTrue @
   else
@@ -181,7 +181,7 @@ lvar g_table_program
   then
 ;
 
-: set_flag[ str:flag --  ]
+: set_flag[ s:flag --  ]
   read
 
   dup "{y|ye|yes}" smatch if
@@ -199,7 +199,7 @@ lvar g_table_program
 ;
 
 (***** get/set String Property *****)
-: get_str[ str:property str:unsetValue -- str:value ]
+: get_str[ s:property s:unsetValue -- s:value ]
   g_object @ property @ getpropstr
 
   dup not if
@@ -212,7 +212,7 @@ lvar g_table_program
   then
 ;
 
-: set_str[ str:property --  ]
+: set_str[ s:property --  ]
   "(Enter a space, to clear.)" .tell
 
   read
@@ -225,7 +225,7 @@ lvar g_table_program
 ;
 
 (***** set String Property From a List of Selections *****)
-: set_str_pick[ str:property list:options --  ]
+: set_str_pick[ s:property y:options --  ]
 
   "Options:" .tell
   options @ "\r" array_join M-LIB-COLOR-escape .tell
@@ -251,7 +251,7 @@ lvar g_table_program
 ;
 
 (***** get/set String Boolean Property *****)
-: get_str_bool[ str:property str:valueTrue str:valueFalse -- str:value ]
+: get_str_bool[ s:property s:valueTrue s:valueFalse -- s:value ]
   g_object @ property @ getpropstr
 
   "yes" stringcmp not if
@@ -261,7 +261,7 @@ lvar g_table_program
   then
 ;
 
-: get_str_bool2[ str:property str:valueTrue str:valueFalse -- str:value ] (* this one is for defaulting to yes *)
+: get_str_bool2[ s:property s:valueTrue s:valueFalse -- s:value ] (* this one is for defaulting to yes *)
   g_object @ property @ getpropstr
 
   "no" stringcmp not if
@@ -271,7 +271,7 @@ lvar g_table_program
   then
 ;
 
-: set_str_bool[ str:property --  ]
+: set_str_bool[ s:property --  ]
   read
 
   dup "{y|ye|yes}" smatch if
@@ -288,7 +288,7 @@ lvar g_table_program
   pop
 ;
 
-: set_str_bool2[ str:property --  ] (* This one is for clearing a prop, instead of setting no *)
+: set_str_bool2[ s:property --  ] (* This one is for clearing a prop, instead of setting no *)
   read
 
   dup "{y|ye|yes}" smatch if
@@ -306,7 +306,7 @@ lvar g_table_program
 ;
 
 (***** get/set Integer Boolean Property *****)
-: get_bool[ str:property str:valueTrue str:valueFalse -- str:value ]
+: get_bool[ s:property s:valueTrue s:valueFalse -- s:value ]
   g_object @ property @ getpropval if
     valueTrue @
   else
@@ -314,7 +314,7 @@ lvar g_table_program
   then
 ;
 
-: set_bool[ str:property --  ]
+: set_bool[ s:property --  ]
   read
 
   dup "{y|ye|yes}" smatch if
@@ -332,7 +332,7 @@ lvar g_table_program
 ;
 
 (***** get an MPI parsed value *****)
-: get_mpi[ str:property str:unsetValue -- str:value ]
+: get_mpi[ s:property s:unsetValue -- s:value ]
   g_object @ property @ prog name 0 parseprop
 
   dup not if
@@ -346,7 +346,7 @@ lvar g_table_program
 ;
 
 (***** get/set name *****)
-: get_obj_name[  -- str:value ]
+: get_obj_name[  -- s:value ]
   g_object @ M-LIB-THEME-name
 ;
 
@@ -356,7 +356,7 @@ lvar g_table_program
 ;
 
 (***** set a string to {eval:{list:<property list>}}, and edit the corresponding list *****)
-: set_mpi_list[ str:property str:listprop --  ]
+: set_mpi_list[ s:property s:listprop --  ]
   (* Use existing property if available *)
   g_object @ property @ getpropstr
   dup "{eval:{list:" stringpfx if
@@ -378,7 +378,7 @@ lvar g_table_program
 ;
 
 (***** get/set Obvious Exits Output *****)
-: get_obv_exits[ str:valueYes str:valueNo str:valueMaybe -- str:value ]
+: get_obv_exits[ s:valueYes s:valueNo s:valueMaybe -- s:value ]
   g_object @ "/_/sc" getpropstr
 
   dup not if
@@ -410,7 +410,7 @@ lvar g_table_program
 ;
 
 (***** Get/set the current morph *****)
-: get_morph[  -- str:value ]
+: get_morph[  -- s:value ]
   g_object @ "/_morph" getpropstr
 
   dup "\r" instr if
@@ -424,7 +424,7 @@ lvar g_table_program
 ;
 
 (***** Get source or destinations for exits *****)
-: get_source[  -- str:value ]
+: get_source[  -- s:value ]
   g_object @ exit? if
     g_object @ location
 
@@ -445,7 +445,7 @@ lvar g_table_program
   { "#" g_object @ intostr }cat swap M-LIB-AT_ATTACH-attach
 ;
 
-: get_link[ str:valueUnlinked -- str:value ]
+: get_link[ s:valueUnlinked -- s:value ]
   g_object @ getlink
 
   dup not if
@@ -561,7 +561,7 @@ lvar g_table_program
   set_menu_default
 ;
 
-: get_parent[ str:valueRoom str:valuePlayer str:valueOtherwise -- str:value ]
+: get_parent[ s:valueRoom s:valuePlayer s:valueOtherwise -- s:value ]
   g_object @ location
 
   dup room? if
@@ -576,7 +576,7 @@ lvar g_table_program
 ;
 
 (***** Get the type of this object *****)
-: get_object_type[ str:valueRoom str:valuePlayer str:valueOtherwise -- str:value ]
+: get_object_type[ s:valueRoom s:valuePlayer s:valueOtherwise -- s:value ]
 
   g_object @ room? if
     valueRoom @ exit
@@ -590,7 +590,7 @@ lvar g_table_program
 ;
 
 (***** force user to execute command *****)
-: set_external[ ref:program str:newCommand --  ]
+: set_external[ d:program s:newCommand --  ]
   command @ var! oldCommand
 
   newCommand @ command !
@@ -602,14 +602,14 @@ lvar g_table_program
 : set_null[  --  ]
 ;
 
-: get_null[  -- str:value ]
+: get_null[  -- s:value ]
   ""
 ;
 
 (#############################################################################)
 (############################## PLAYER TABLES ################################)
 (#############################################################################)
-: table_mgc (  -- a )
+: table_mgc (  -- Y )
   {
     "" (* Blank line after header *)
 
@@ -781,7 +781,7 @@ lvar g_table_program
   }list
 ;
 
-: table_player_flags (  -- a )
+: table_player_flags (  -- Y )
   {
     "" "Flags" 1
 
@@ -867,7 +867,7 @@ lvar g_table_program
   }list
 ;
 
-: table_player (  -- a )
+: table_player (  -- Y )
   {
     2
     "" (* Blank line after header *)
@@ -1019,7 +1019,7 @@ lvar g_table_program
 (#############################################################################)
 (################################ ROOM TABLE #################################)
 (#############################################################################)
-: table_room_flags (  -- a )
+: table_room_flags (  -- Y )
   {
     "" "Flags" 1
 
@@ -1135,7 +1135,7 @@ lvar g_table_program
   }list
 ;
 
-: table_room (  -- a )
+: table_room (  -- Y )
   {
     "" (* Blank line after header *)
     1
@@ -1401,7 +1401,7 @@ lvar g_table_program
 (#############################################################################)
 (################################ EXIT TABLE #################################)
 (#############################################################################)
-: table_exit (  -- a )
+: table_exit (  -- Y )
   {
     "" (* Blank line after header *)
     1
@@ -1683,7 +1683,7 @@ lvar g_table_program
 (#############################################################################)
 (############################### THING TABLE #################################)
 (#############################################################################)
-: table_thing_flags (  -- a )
+: table_thing_flags (  -- Y )
   {
     "" "Flags" 1
 
@@ -1759,7 +1759,7 @@ lvar g_table_program
   }list
 ;
 
-: table_thing (  -- a )
+: table_thing (  -- Y )
   {
     "" (* Blank line after header *)
     2
@@ -1994,7 +1994,7 @@ lvar g_table_program
 (#############################################################################)
 (############################## PROGRAM TABLE ################################)
 (#############################################################################)
-: table_program (  -- a )
+: table_program (  -- Y )
   {
   }list
 ;
@@ -2033,7 +2033,7 @@ lvar g_table_program
   then
 ;
 
-: draw_item ( a -- s )
+: draw_item ( Y -- s )
   (* Get 'get' string. *)
   dup 1 [] over 2 [] rot 3 []
 
@@ -2130,7 +2130,7 @@ lvar g_table_program
   do_menu_footer
 ;
 
-: do_set ( a --  )
+: do_set ( Y --  )
   dup 5 [] over 6 [] rot 4 []
 
   (* Display help string *)

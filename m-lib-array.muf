@@ -9,19 +9,19 @@ $PRAGMA comment_recurse
 (*   GitHub: https://github.com/dbenoy/mercury-muf (See for install info)    *)
 (*                                                                           *)
 (* PUBLIC FUNCTIONS:                                                         *)
-(*   M-LIB-ARRAY-hasval ( ? a -- i )                                         *)
+(*   M-LIB-ARRAY-hasval ( ? y -- i )                                         *)
 (*     Returns true if the array has a given value element.                  *)
 (*                                                                           *)
-(*   M-LIB-ARRAY-haskey ( ? a -- i )                                         *)
+(*   M-LIB-ARRAY-haskey ( ? y -- i )                                         *)
 (*     Returns true if the array has a given key                             *)
 (*                                                                           *)
-(*   M-LIB-ARRAY-max ( a -- ? )                                              *)
+(*   M-LIB-ARRAY-max ( y -- ? )                                              *)
 (*     Given an array of numbers, compares them all and returns the highest. *)
 (*                                                                           *)
-(*   M-LIB-ARRAY-min ( a -- ? )                                              *)
+(*   M-LIB-ARRAY-min ( y -- ? )                                              *)
 (*     Given an array of numbers, compares them all and returns the lowest.  *)
 (*                                                                           *)
-(*   M-LIB-ARRAY-appendarray ( a a -- a )                                    *)
+(*   M-LIB-ARRAY-appendarray ( Y Y -- Y )                                    *)
 (*     Like ARRAY_APPENDITEM but appends every value in the given array.     *)
 (*                                                                           *)
 (*****************************************************************************)
@@ -50,15 +50,15 @@ $PRAGMA comment_recurse
 $VERSION 1.000
 $AUTHOR  Daniel Benoy
 $NOTE    Array manipulation routines.
-$DOCCMD  @list __PROG__=2-30
+$DOCCMD  @list __PROG__=2-46
 
 $PUBDEF :
 
-$PUBDEF M-LIB-ARRAY-hasval ( ? a -- i ) 0 -rot foreach nip over = if swap pop 1 swap break then repeat pop
-$PUBDEF M-LIB-ARRAY-haskey ( ? a -- i ) 0 -rot foreach pop over = if swap pop 1 swap break then repeat pop
-$PUBDEF M-LIB-ARRAY-max ( a -- ? ) dup 0 array_getitem swap foreach nip over over > if pop else nip then repeat
-$PUBDEF M-LIB-ARRAY-min ( a -- ? ) dup 0 array_getitem swap foreach nip over over < if pop else nip then repeat
-$PUBDEF M-LIB-ARRAY-appendarray ( a a -- a ) foreach nip swap array_appenditem repeat
+$PUBDEF M-LIB-ARRAY-hasval ( ? y -- i ) 0 -rot foreach nip over = if swap pop 1 swap break then repeat pop
+$PUBDEF M-LIB-ARRAY-haskey ( ? y -- i ) 0 -rot foreach pop over = if swap pop 1 swap break then repeat pop
+$PUBDEF M-LIB-ARRAY-max ( y -- ? ) dup 0 array_getitem swap foreach nip over over > if pop else nip then repeat
+$PUBDEF M-LIB-ARRAY-min ( y -- ? ) dup 0 array_getitem swap foreach nip over over < if pop else nip then repeat
+$PUBDEF M-LIB-ARRAY-appendarray ( Y Y -- Y ) foreach nip swap array_appenditem repeat
 
 : main
   "Library called as command." abort

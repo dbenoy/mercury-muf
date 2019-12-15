@@ -6,6 +6,8 @@ $PRAGMA comment_recurse
 (* m-cmd-@whereare.muf $m/cmd/at_whereare                                    *)
 (*   A command for displaying the populations of public areas.               *)
 (*                                                                           *)
+(*   GitHub: https://github.com/dbenoy/mercury-muf (See for install info)    *)
+(*                                                                           *)
 (*****************************************************************************)
 (* Revision History:                                                         *)
 (*   Version 1.0 -- Daniel Benoy -- November, 2019                           *)
@@ -32,7 +34,7 @@ $PRAGMA comment_recurse
 $VERSION 1.000
 $AUTHOR  Daniel Benoy
 $NOTE    Shows locations of players
-$DOCCMD  @list __PROG__=2-<last header line>
+$DOCCMD  @list __PROG__=2-30
 
 (* Begin configurable options *)
 
@@ -58,7 +60,7 @@ $DEF .tag_err M-LIB-THEME-tag_err
 ;
 WIZCALL M-HELP-desc
 
-: M-HELP-help ( d -- a )
+: M-HELP-help ( d -- Y )
   name ";" split pop toupper var! action_name
   {
     { action_name @ " [<threshold>]" }cat
@@ -88,7 +90,7 @@ $DEFINE ROOM_INFO_DEFAULT
     "players" { }list
   }dict
 $ENDDEF
-: room_info_get[ int:threshold -- dict:room_info ]
+: room_info_get[ i:threshold -- x:room_info ]
   { }dict var! room_info
   (* Start with an array of all player locations, and a 'players' dict element listing all the players in those locations *)
   online_array foreach
@@ -160,7 +162,7 @@ PUBLIC room_info_get
 $LIBDEF room_info_get
 
 $DEF TRUNCATE_LENGTH 80
-: truncated_join[ arr:join_me -- str:result ]
+: truncated_join[ Y:join_me -- s:result ]
   join_me @ not if "" exit then
   join_me @ 1 array_cut join_me ! 0 []
   var! result
@@ -176,7 +178,7 @@ $DEF TRUNCATE_LENGTH 80
   result @
 ;
 
-: room_info_render[ arr:room_info int:room_id -- arr:lines ]
+: room_info_render[ x:room_info i:room_id -- Y:lines ]
   { }list var! lines
   room_info @ room_id @ [] var! room_info_entry
   room_id @ dbref var! room_dbref

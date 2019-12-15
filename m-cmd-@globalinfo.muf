@@ -36,7 +36,7 @@ $PRAGMA comment_recurse
 $VERSION 1.001
 $AUTHOR  Daniel Benoy
 $NOTE    A help command for users.
-$DOCCMD  @list __PROG__=2-30
+$DOCCMD  @list __PROG__=2-32
 
 (* Begin configurable options *)
 
@@ -55,7 +55,7 @@ $INCLUDE $m/lib/help
 ;
 WIZCALL M-HELP-desc
 
-: M-HELP-help ( d -- a )
+: M-HELP-help ( d -- Y )
   name ";" split pop toupper var! action_name
   {
     { action_name @ " <global>" }cat
@@ -96,7 +96,7 @@ WIZCALL M-HELP-help
 
 (* Searches for dbref d2, in propdir s on object d1, and returns a string of *)
 (* every one found, followed by the number found.                            *)
-: find_dbref ( d1 s d2 -- s1..sn i )
+: find_dbref ( d s d -- {s} )
 
   var! target
 

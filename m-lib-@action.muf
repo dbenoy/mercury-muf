@@ -10,7 +10,7 @@ $PRAGMA comment_recurse
 (*   GitHub: https://github.com/dbenoy/mercury-muf (See for install info)    *)
 (*                                                                           *)
 (* PUBLIC ROUTINES:                                                          *)
-(*   M-LIB-AT_ACTION-action[ str:source str:exitname -- ref:room ]           *)
+(*   M-LIB-AT_ACTION-action[ s:source s:exitname -- d:room ]                 *)
 (*     Attempts to create an action as though the current player ran the     *)
 (*     @action command, including all the same message output, permission    *)
 (*     checks, penny manipulation, etc. M4 required.                         *)
@@ -44,7 +44,7 @@ $PRAGMA comment_recurse
 $VERSION 1.001
 $AUTHOR  Daniel Benoy
 $NOTE    @action command with more features.
-$DOCCMD  @list __PROG__=2-52
+$DOCCMD  @list __PROG__=2-40
 
 (* Begin configurable options *)
 
@@ -70,7 +70,7 @@ $PUBDEF :
 (*****************************************************************************)
 (*                          M-LIB-AT_ACTION-action                           *)
 (*****************************************************************************)
-: M-LIB-AT_ACTION-action[ str:source str:exitname -- ref:room ]
+: M-LIB-AT_ACTION-action[ s:source s:exitname -- d:room ]
   M-LIB-PROGRAM-needs_mlev4
 
   "exit" 1 M-LIB-QUOTA-QuotaCheck not if #-1 exit then

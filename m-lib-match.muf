@@ -10,7 +10,7 @@ $PRAGMA comment_recurse
 (*   GitHub: https://github.com/dbenoy/mercury-muf (See for install info)    *)
 (*                                                                           *)
 (* PUBLIC ROUTINES:                                                          *)
-(*   M-LIB-MATCH-match[ str:name dict:opts -- ref:dbref ]                    *)
+(*   M-LIB-MATCH-match[ s:name x:opts -- d:dbref ]                           *)
 (*     Takes a name string and searches for an object dbref using the MATCH  *)
 (*     primitive. If nothing is found, it returns #-1. If ambiguous, it      *)
 (*     returns #-2. If HOME, it returns #-3. If NIL it returns #-4.          *)
@@ -43,7 +43,7 @@ $PRAGMA comment_recurse
 (*       "match_nil" ("yes"/"no"/"builders"/"wizards")                       *)
 (*         Allow "NIL" matching.                                             *)
 (*                                                                           *)
-(*   M-LIB-MATCH-pmatch[ str:name dict:opts -- ref:dbref ]                   *)
+(*   M-LIB-MATCH-pmatch[ s:name x:opts -- d:dbref ]                          *)
 (*     Searches for a player object by name. If nothing is found, it returns *)
 (*     #-1. If ambiguous, it returns #-2.                                    *)
 (*                                                                           *)
@@ -65,7 +65,7 @@ $PRAGMA comment_recurse
 (*                                                                           *)
 (*         Exact matches never return #-2                                    *)
 (*                                                                           *)
-(*   M-LIB-MATCH-register_object[ ref:object str:regname ]                   *)
+(*   M-LIB-MATCH-register_object[ d:object s:regname ]                       *)
 (*     Registers the specified object on the current player using the given  *)
 (*     name (for $ notation registered name matching).                       *)
 (*                                                                           *)
@@ -98,7 +98,7 @@ $PRAGMA comment_recurse
 $VERSION 1.001
 $AUTHOR  Daniel Benoy
 $NOTE    Find object dbrefs based on names.
-$DOCCMD  @list __PROG__=2-51
+$DOCCMD  @list __PROG__=2-94
 
 (* Begin configurable options *)
 
@@ -122,7 +122,7 @@ $ENDIF
 
 $PUBDEF :
 
-: match_opts_process[ dict:opts_in -- dict:opts_out ]
+: match_opts_process[ x:opts_in -- x:opts_out ]
   var opt
   (* Set defaults *)
   {
@@ -171,7 +171,7 @@ $PUBDEF :
   opts_out @
 ;
 
-: pmatch_opts_process[ dict:opts_in -- dict:opts_out ]
+: pmatch_opts_process[ x:opts_in -- x:opts_out ]
   var opt
   (* Set defaults *)
   {
@@ -216,7 +216,7 @@ $PUBDEF :
 (*****************************************************************************)
 (*                             M-LIB-MATCH-match                             *)
 (*****************************************************************************)
-: M-LIB-MATCH-match[ str:name dict:opts -- ref:dbref ]
+: M-LIB-MATCH-match[ s:name x:opts -- d:dbref ]
   (* Permissions inherited *)
   name @ string? not if "Non-string argument (1)." abort then
   opts @ array? not if "Non-array argument (2)." abort then
@@ -283,7 +283,7 @@ $LIBDEF M-LIB-MATCH-match
 (*****************************************************************************)
 (*                            M-LIB-MATCH-pmatch                             *)
 (*****************************************************************************)
-: M-LIB-MATCH-pmatch[ str:name dict:opts -- ref:dbref ]
+: M-LIB-MATCH-pmatch[ s:name x:opts -- d:dbref ]
   (* Permissions inherited *)
   name @ string? not if "Non-string argument (1)." abort then
   opts @ array? not if "Non-array argument (2)." abort then
@@ -331,7 +331,7 @@ $LIBDEF M-LIB-MATCH-pmatch
 (*****************************************************************************)
 (*                        M-LIB-MATCH-register_object                        *)
 (*****************************************************************************)
-: M-LIB-MATCH-register_object[ ref:object str:regname ]
+: M-LIB-MATCH-register_object[ d:object s:regname ]
   (* Permissions inherited *)
 
   object @ dbref? not if "Non-dbref argument (1)." abort then

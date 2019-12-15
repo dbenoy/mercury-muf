@@ -96,7 +96,7 @@ $PRAGMA comment_recurse
 (*     past tense. (i.e. eaten, gone east)                                   *)
 (*                                                                           *)
 (* PUBLIC ROUTINES:                                                          *)
-(*   M-LIB-GRAMMAR-sex_category[ str:sex -- str:category ]                   *)
+(*   M-LIB-GRAMMAR-sex_category[ s:sex -- s:category ]                       *)
 (*     Take a given sex string, and return the closest matching value from   *)
 (*     the following list:                                                   *)
 (*       "female"                                                            *)
@@ -106,7 +106,7 @@ $PRAGMA comment_recurse
 (*       "nonbinary"                                                         *)
 (*       "unknown"                                                           *)
 (*                                                                           *)
-(*   M-LIB-GRAMMAR-sub[ str:template array:objects dict:opts -- str:name ]   *)
+(*   M-LIB-GRAMMAR-sub[ s:template Y:objects x:opts -- s:name ]              *)
 (*     This works like the PRONOUN_SUB primitive. It takes a string, a list  *)
 (*     of objects, and a dictionary list of options, and replaces "%" codes  *)
 (*     in the string with the object's pronouns or name. These codes can be  *)
@@ -137,7 +137,7 @@ $PRAGMA comment_recurse
 (*         This determines how to handle MCC color codes in the substitution *)
 (*         properties. Valid values are "KEEP", "ESCAPE", and "STRIP".       *)
 (*                                                                           *)
-(*   M-LIB-GRAMMAR-oxford_join ( a s -- s )                                  *)
+(*   M-LIB-GRAMMAR-oxford_join ( Y s -- s )                                  *)
 (*     Similar to ", " array_join, but it inserts a coordinating conjunction *)
 (*     and oxford comma as well, if applicable.                              *)
 (*                                                                           *)
@@ -364,7 +364,10 @@ $ELSE
   $DEF M-LIB-COLOR-escape
   $DEF M-LIB-COLOR-strcut \strcut
   $DEF M-LIB-COLOR-strcat \strcat
+  $DEF M-LIB-COLOR-strcat_hard \strcat
   $DEF M-LIB-COLOR-strip
+  $DEF M-LIB-COLOR-toupper \toupper
+  $DEF M-LIB-COLOR-tolower \tolower
 $ENDIF
 
 $IFDEF M_LIB_THEME
@@ -380,9 +383,9 @@ $PUBDEF :
 : color_cb_strstrip M-LIB-COLOR-strip ;
 : color_cb_toupper M-LIB-COLOR-toupper ;
 : color_cb_tolower M-LIB-COLOR-tolower ;
-: color_cb ( -- a ) { "strcat" 'color_cb_strcat "strcut" 'color_cb_strcut "strstrip" 'color_cb_strstrip "toupper" 'color_cb_toupper "tolower" 'color_cb_tolower }dict ;
+: color_cb ( -- x ) { "strcat" 'color_cb_strcat "strcut" 'color_cb_strcut "strstrip" 'color_cb_strstrip "toupper" 'color_cb_toupper "tolower" 'color_cb_tolower }dict ;
 
-: sex_category[ str:sex -- str:category ]
+: sex_category[ s:sex -- s:category ]
   "" var! category
   var sex_test
   (* Table 1, direct matches *)
@@ -417,7 +420,7 @@ $PUBDEF :
   ""
 ;
 
-: get_sex[ ref:object -- str:result ]
+: get_sex[ d:object -- s:result ]
   object @ "gender_prop" sysparm getpropstr var! sex
   sex @ sex_category
   dup if exit else pop then
@@ -437,7 +440,7 @@ $PUBDEF :
   "unknown_thing" exit
 ;
 
-: base_names ( d -- a )
+: base_names ( d -- Y )
   dup name
   swap exit? if
     ";" explode_array
@@ -489,7 +492,7 @@ $PUBDEF :
   dup thing? over "ZOMBIE" flag? not and swap program? or not
 ;
 
-: default_n[ ref:object -- str:result ]
+: default_n[ d:object -- s:result ]
   object @ name
   object @ exit? if ";" split pop then
   object @ proper_noun not if
@@ -497,7 +500,7 @@ $PUBDEF :
   then
 ;
 
-: default_d[ ref:object -- str:result ]
+: default_d[ d:object -- s:result ]
   object @ name
   object @ exit? if ";" split pop then
   object @ proper_noun not if
@@ -507,7 +510,7 @@ $PUBDEF :
   then
 ;
 
-: default_i[ ref:object -- str:result ]
+: default_i[ d:object -- s:result ]
   object @ name "the[_ ]*" smatch if
     object @ default_d exit
   then
@@ -607,7 +610,7 @@ $PUBDEF :
   then
 ;
 
-: get_substitutions[ ref:object -- dict:result ]
+: get_substitutions[ d:object -- x:result ]
   (* Grab the default values *)
   pronoun_defaults object @ get_sex [] var! substitutions
   (* Now override them with object properties, if present *)
@@ -680,7 +683,7 @@ $PUBDEF :
   substitutions @
 ;
 
-: sub_fix[ arr:substitutions ref:object arr:opts -- arr:substitutitons ]
+: sub_fix[ Y:substitutions d:object x:opts -- Y:substitutitons ]
 $IFDEF M_LIB_COLOR
   opts @ "color" [] dup not if pop "" then "escape" stringcmp not if
     substitutions @ foreach
@@ -697,9 +700,9 @@ $ENDIF
   opts @ "name_match" [] dup not if pop "" then "no" stringcmp if
     object @ name "_" " " subst tolower var! object_name
     object @ base_names { swap foreach nip "_" " " subst tolower repeat }list var! object_base_names
-    substitutions @ "%n" M-LIB-COLOR-strip [] "_" " " subst tolower var! opt_n
-    substitutions @ "%d" M-LIB-COLOR-strip [] "_" " " subst tolower var! opt_d
-    substitutions @ "%i" M-LIB-COLOR-strip [] "_" " " subst tolower var! opt_i
+    substitutions @ "%n" [] M-LIB-COLOR-strip "_" " " subst tolower var! opt_n
+    substitutions @ "%d" [] M-LIB-COLOR-strip "_" " " subst tolower var! opt_d
+    substitutions @ "%i" [] M-LIB-COLOR-strip "_" " " subst tolower var! opt_i
     opt_n @ object_name @ stringcmp if
       object @ default_n substitutions @ "%n" ->[] substitutions !
     then
@@ -757,7 +760,7 @@ $ENDIF
   substitutions @
 ;
 
-: sub_code[ str:codestr arr:substitutions -- str:result ]
+: sub_code[ s:codestr Y:substitutions -- s:result ]
   var code
   var obj_id
   codestr @ M-LIB-COLOR-strip 1 strcut swap pop var! codestr_stripped
@@ -783,7 +786,7 @@ $ENDIF
   then
 ;
 
-: sub[ str:template arr:objects dict:opts -- str:name ]
+: sub[ s:template Y:objects x:opts -- s:name ]
   { }list var! substitutions
   objects @ foreach
     nip
@@ -807,7 +810,7 @@ $ENDIF
 (*****************************************************************************)
 (*                        M-LIB-GRAMMAR-sex_category                         *)
 (*****************************************************************************)
-: M-LIB-GRAMMAR-sex_category[ str:sex -- str:category ]
+: M-LIB-GRAMMAR-sex_category[ s:sex -- s:category ]
   (* Permissions inherited *)
   sex @ string? not if "Non-string argument (1)." abort then
   sex @ sex_category
@@ -820,9 +823,9 @@ $LIBDEF M-LIB-GRAMMAR-sex_category
 (*****************************************************************************)
 (*                         M-LIB-GRAMMAR-oxford_join                         *)
 (*****************************************************************************)
-: M-LIB-GRAMMAR-oxford_join ( a s -- s )
+: M-LIB-GRAMMAR-oxford_join ( Y s -- s )
   (* Permissions inherited *)
-  "ys" checkargs
+  "Ys" checkargs
   swap dup array_count 1 > if
     dup array_count 2 - array_cut
     array_vals pop
@@ -845,10 +848,11 @@ $LIBDEF M-LIB-GRAMMAR-oxford_join
 (*****************************************************************************)
 (*                             M-LIB-GRAMMAR-sub                             *)
 (*****************************************************************************)
-: M-LIB-GRAMMAR-sub[ str:template arr:objects dict:opts -- str:name ]
+: M-LIB-GRAMMAR-sub[ s:template Y:objects x:opts -- s:name ]
   (* Permissions inherited *)
   template @ string? not if "Non-string argument (1)." abort then
   objects @ array? not if "Non-array argument (2)." abort then
+  objects @ dictionary? if "Non-list argument (2)." abort then
   objects @ array_count not if "Empty array (2)." abort then
   objects @ foreach nip dbref? not if "Array of dbrefs expected (2)." abort then repeat
   opts @ dictionary? not if "Non-dictionary argument (3)." abort then

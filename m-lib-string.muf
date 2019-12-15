@@ -47,7 +47,7 @@ $PRAGMA comment_recurse
 (*   counterparts, but you pass in the callback dictionary as the last       *)
 (*   parameter. The following _cb routines are available:                    *)
 (*     M-LIB-STRING-array_interpret_cb                                       *)
-(*     M-LIB-STRING-}cat_cb                                                 *)
+(*     M-LIB-STRING-}cat_cb                                                  *)
 (*     M-LIB-STRING-array_join_cb                                            *)
 (*     M-LIB-STRING-}cat_cb                                                  *)
 (*     M-LIB-STRING-atoi_cb                                                  *)
@@ -89,7 +89,7 @@ $PRAGMA comment_recurse
 (*     M-LIB-STRING-zeropad_cb                                               *)
 (*                                                                           *)
 (* PUBLIC ROUTINES:                                                          *)
-(*   M-LIB-STRING-carve_array ( s s -- a )                                   *)
+(*   M-LIB-STRING-carve_array ( s s -- Y )                                   *)
 (*     Like the EXPLODE_ARRAY primitive, except the separators are kept.     *)
 (*     They remain at the beginning of their string. For example:            *)
 (*       "a b  c-- d" " " M-LIB-STRING-carve_array                           *)
@@ -124,7 +124,7 @@ $PRAGMA comment_recurse
 (*     Convert an integer into a hexadecimal string. This works bit-by-bit   *)
 (*     so negative numbers will appear in their two's compliment form.       *)
 (*                                                                           *)
-(*   M-LIB-STRING-regslice ( s s i -- a )                                    *)
+(*   M-LIB-STRING-regslice ( s s i -- Y )                                    *)
 (*     Like the REGSPLIT primitive, except separators are kept. For example: *)
 (*       "a b  c-- d" " |--" 0 M-LIB-STRING-regslice                         *)
 (*       Result: {"a", " ", "b", " ", "", " ", "c", "--", "", " ", "d"}      *)
@@ -140,7 +140,7 @@ $PRAGMA comment_recurse
 (*     Like M-LIB-STRING-itox but it will return negative hexadecimal        *)
 (*     numbers.                                                              *)
 (*                                                                           *)
-(*   M-LIB-STRING-slice_array ( s s -- a )                                   *)
+(*   M-LIB-STRING-slice_array ( s s -- Y )                                   *)
 (*     Like the EXPLODE_ARRAY primitive, except the separators are kept. For *)
 (*     example:                                                              *)
 (*       "a b  c-- d" " " M-LIB-STRING-slice_array                           *)
@@ -149,8 +149,8 @@ $PRAGMA comment_recurse
 (*     The array will never begin or end with a separator, so it will always *)
 (*     have an odd number of elements.                                       *)
 (*                                                                           *)
-(*   M-LIB-STRING-wordwrap[ str:source int:width_wrap dict:opts --           *)
-(*                          arr:lines ]                                      *)
+(*   M-LIB-STRING-wordwrap[ s:source i:width_wrap x:opts --                  *)
+(*                          y:lines ]                                        *)
 (*     Takes a string and wraps it into multiple lines at the given wrapping *)
 (*     width. If a single word exceeds the wrapping with, then the line will *)
 (*     exceed the wrapping width. 'opts' is reserved for future use and      *)
@@ -206,13 +206,13 @@ $PRAGMA comment_recurse
 $VERSION 1.000
 $AUTHOR  Daniel Benoy
 $NOTE    String manipulation routines.
-$DOCCMD  @list __PROG__=2-212
+$DOCCMD  @list __PROG__=2-202
 
 (* ------------------------------------------------------------------------- *)
 
 $PUBDEF :
 
-: regexp_nozero[ str:text str:pattern int:flags -- list:submatchvals list:submatchidx ]
+: regexp_nozero[ s:text s:pattern i:flags -- Y:submatchvals Y:submatchidx ]
   text @ pattern @ flags @ regexp
   dup not if exit then
   dup 1 array_cut pop array_vals pop array_vals pop 0 = swap 1 = and if
@@ -228,7 +228,7 @@ $PUBDEF :
   then
 ;
 
-: regslice[ str:text str:pattern int:flags -- list:results ]
+: regslice[ s:text s:pattern i:flags -- Y:results ]
   {
     text @ begin
       dup pattern @ flags @ regexp_nozero nip
@@ -240,7 +240,7 @@ $PUBDEF :
   }list
 ;
 
-: carve_array ( s s -- a )
+: carve_array ( s s -- Y )
   dup -rot explode_array
   1 array_cut foreach
     nip
@@ -249,7 +249,7 @@ $PUBDEF :
   nip
 ;
 
-: slice_array ( s s -- a )
+: slice_array ( s s -- Y )
   dup -rot explode_array
   1 array_cut foreach
     nip
@@ -332,7 +332,7 @@ $PUBDEF :
   retval @
 ;
 
-: strstrip_cb ( ? a -- ? )
+: strstrip_cb ( ? x -- ? )
   2 try
     "strstrip" [] execute
     depth 1 = not if "Unexpected number of results from 'strstrip' callback." abort then
@@ -341,7 +341,7 @@ $PUBDEF :
   endcatch
 ;
 
-: strcut_cb ( ? i cbs -- ? ? )
+: strcut_cb ( ? i x -- ? ? )
   3 try
     "strcut" [] execute
     depth 2 = not if "Unexpected number of results from 'strcut' callback." abort then
@@ -350,7 +350,7 @@ $PUBDEF :
   endcatch
 ;
 
-: strcat_cb ( ? ? cbs -- ? )
+: strcat_cb ( ? ? x -- ? )
   3 try
     "strcat" [] execute
     depth 1 = not if "Unexpected number of results from 'strcat' callback." abort then
@@ -359,7 +359,7 @@ $PUBDEF :
   endcatch
 ;
 
-: toupper_cb ( ? cbs -- ? )
+: toupper_cb ( ? x -- ? )
   2 try
     "toupper" [] execute
     depth 1 = not if "Unexpected number of results from 'toupper' callback." abort then
@@ -368,7 +368,7 @@ $PUBDEF :
   endcatch
 ;
 
-: tolower_cb ( ? cbs -- ? )
+: tolower_cb ( ? x -- ? )
   2 try
     "tolower" [] execute
     depth 1 = not if "Unexpected number of results from 'tolower' callback." abort then
@@ -377,105 +377,105 @@ $PUBDEF :
   endcatch
 ;
 
-: strlen_cb ( s a -- i )
+: strlen_cb ( s x -- i )
   strstrip_cb strlen
 ;
 
-: instr_cb ( s s a -- i )
+: instr_cb ( s s x -- i )
   var! cbs
   swap cbs @ strstrip_cb swap
   cbs @ strstrip_cb
   instr
 ;
 
-: rinstr_cb ( s s a -- i )
+: rinstr_cb ( s s x -- i )
   var! cbs
   swap cbs @ strstrip_cb swap
   cbs @ strstrip_cb
   rinstr
 ;
 
-: instring_cb ( s s a -- i )
+: instring_cb ( s s x -- i )
   var! cbs
   swap cbs @ strstrip_cb swap
   cbs @ strstrip_cb
   instring
 ;
 
-: rinstring_cb ( s s a -- i )
+: rinstring_cb ( s s x -- i )
   var! cbs
   swap cbs @ strstrip_cb swap
   cbs @ strstrip_cb
   rinstring
 ;
 
-: einstr_cb ( s s a -- i )
+: einstr_cb ( s s x -- i )
   var! cbs
   swap cbs @ strstrip_cb swap
   cbs @ strstrip_cb
   einstr
 ;
 
-: einstring_cb ( s s a -- i )
+: einstring_cb ( s s x -- i )
   var! cbs
   swap cbs @ strstrip_cb swap
   cbs @ strstrip_cb
   einstring
 ;
 
-: erinstr_cb ( s s a -- i )
+: erinstr_cb ( s s x -- i )
   var! cbs
   swap cbs @ strstrip_cb swap
   cbs @ strstrip_cb
   einstr
 ;
 
-: erinstring_cb ( s s a -- i )
+: erinstring_cb ( s s x -- i )
   var! cbs
   swap cbs @ strstrip_cb swap
   cbs @ strstrip_cb
   einstring
 ;
 
-: striplead_cb ( s a -- s )
+: striplead_cb ( s x -- s )
   var! cbs
   dup cbs @ strlen_cb over cbs @ strstrip_cb striplead strlen -
   cbs @ strcut_cb swap pop
 ;
 
-: striptail_cb ( s a -- s )
+: striptail_cb ( s x -- s )
   var! cbs
   dup cbs @ strstrip_cb striptail strlen
   cbs @ strcut_cb pop
 ;
 
-: strip_cb ( s a -- s )
+: strip_cb ( s x -- s )
   var! cbs
   cbs @ striplead_cb cbs @ striptail_cb
 ;
 
-: regslice_cb[ str:text str:pattern int:flags dict:cbs -- arr:results ]
+: regslice_cb[ s:text s:pattern i:flags x:cbs -- y:results ]
   text @ cbs @ strstrip_cb pattern @ flags @ regslice
   { text @ rot foreach nip strlen cbs @ strcut_cb repeat pop }list
 ;
 
-: carve_array_cb[ str:source str:sep dict:cbs -- arr:result ]
+: carve_array_cb[ s:source s:sep x:cbs -- y:result ]
   source @ cbs @ strstrip_cb sep @ cbs @ strstrip_cb carve_array
   { source @ rot foreach nip strlen cbs @ strcut_cb repeat pop }list
 ;
 
-: slice_array_cb[ str:source str:sep dict:cbs -- arr:result ]
+: slice_array_cb[ s:source s:sep x:cbs -- y:result ]
   source @ cbs @ strstrip_cb sep @ cbs @ strstrip_cb slice_array
   { source @ rot foreach nip strlen cbs @ strcut_cb repeat pop }list
 ;
 
-: explode_array_cb[ str:source str:sep dict:cbs -- arr:result ]
+: explode_array_cb[ s:source s:sep x:cbs -- y:result ]
   source @ cbs @ strstrip_cb sep @ cbs @ strstrip_cb explode_array
   sep @ strlen var! sep_len
   { source @ rot foreach nip strlen cbs @ strcut_cb sep_len @ cbs @ strcut_cb swap pop repeat pop }list
 ;
 
-: subst_cb[ str:source str:to str:from arr:cbs -- str:result ]
+: subst_cb[ s:source s:to s:from y:cbs -- s:result ]
   source @ from @ cbs @ slice_array_cb
   1 array_cut swap array_vals pop var! result
   begin
@@ -487,7 +487,7 @@ $PUBDEF :
   result @
 ;
 
-: wordwrap_cb[ any:source int:width_wrap dict:opts dict:cbs -- arr:lines ]
+: wordwrap_cb[ ?:source i:width_wrap x:opts x:cbs -- y:lines ]
   { }list var! lines
   (* FIXME: Split \r into separate lines. *)
   source @ cbs @ striptail_cb " " cbs @ carve_array_cb
@@ -515,7 +515,7 @@ $PUBDEF :
 : std_cb ( -- a ) { "strcat" 'std_cb_strcat "strcut" 'std_cb_strcut "strstrip" 'std_cb_strstrip "toupper" 'std_cb_toupper "tolower" 'std_cb_tolower }dict ;
 
 (* Take the callback list in user supplied format and clean it up into the format expected by the internal code *)
-: cbs_check[ dict:cbs -- ]
+: cbs_check[ x:cbs -- ]
   var cb
   { "strstrip" "strcut" "strcat" "toupper" "tolower" }list foreach
     nip
@@ -527,7 +527,7 @@ $PUBDEF :
 (*****************************************************************************)
 (*                      M-LIB-STRING-array_interpret_cb                      *)
 (*****************************************************************************)
-: M-LIB-STRING-array_interpret_cb ( a a -- ? )
+: M-LIB-STRING-array_interpret_cb ( y x -- ? )
   (* Permissions inherited *)
   "yx" checkargs
   dup cbs_check
@@ -546,7 +546,7 @@ $LIBDEF M-LIB-STRING-array_interpret_cb
 (*****************************************************************************)
 (*                        M-LIB-STRING-array_join_cb                         *)
 (*****************************************************************************)
-: M-LIB-STRING-array_join_cb ( a ? a -- ? )
+: M-LIB-STRING-array_join_cb ( y ? x -- ? )
   (* Permissions inherited *)
   "y?x" checkargs
   dup cbs_check
@@ -566,7 +566,7 @@ $LIBDEF M-LIB-STRING-array_join_cb
 (*****************************************************************************)
 (*                           M-LIB-STRING-atoi_cb                            *)
 (*****************************************************************************)
-: M-LIB-STRING-atoi_cb ( ? cbs -- i )
+: M-LIB-STRING-atoi_cb ( ? x -- i )
   (* Permissions inherited *)
   "?x" checkargs
   dup cbs_check
@@ -579,7 +579,7 @@ $LIBDEF M-LIB-STRING-atoi_cb
 (*****************************************************************************)
 (*                         M-LIB-STRING-carve_array                          *)
 (*****************************************************************************)
-: M-LIB-STRING-carve_array ( s s -- a )
+: M-LIB-STRING-carve_array ( s s -- Y )
   (* Permissions inherited *)
   "ss" checkargs
   carve_array
@@ -590,7 +590,7 @@ $LIBDEF M-LIB-STRING-carve_array
 (*****************************************************************************)
 (*                        M-LIB-STRING-carve_array_cb                        *)
 (*****************************************************************************)
-: M-LIB-STRING-carve_array_cb ( ? ? cbs -- a )
+: M-LIB-STRING-carve_array_cb ( ? ? x -- Y )
   (* Permissions inherited *)
   "??x" checkargs
   dup cbs_check
@@ -633,7 +633,7 @@ $LIBDEF M-LIB-STRING-einstr
 (*****************************************************************************)
 (*                          M-LIB-STRING-einstr_cb                           *)
 (*****************************************************************************)
-: M-LIB-STRING-einstr_cb ( ? ? a -- i )
+: M-LIB-STRING-einstr_cb ( ? ? x -- i )
   (* Permissions inherited *)
   "??x" checkargs
   dup cbs_check
@@ -656,7 +656,7 @@ $LIBDEF M-LIB-STRING-einstring
 (*****************************************************************************)
 (*                         M-LIB-STRING-einstring_cb                         *)
 (*****************************************************************************)
-: M-LIB-STRING-einstring_cb ( ? ? a -- i )
+: M-LIB-STRING-einstring_cb ( ? ? x -- i )
   (* Permissions inherited *)
   "??x" checkargs
   dup cbs_check
@@ -679,7 +679,7 @@ $LIBDEF M-LIB-STRING-erinstr
 (*****************************************************************************)
 (*                          M-LIB-STRING-erinstr_cb                          *)
 (*****************************************************************************)
-: M-LIB-STRING-erinstr_cb ( ? ? a -- i )
+: M-LIB-STRING-erinstr_cb ( ? ? x -- i )
   (* Permissions inherited *)
   "??x" checkargs
   dup cbs_check
@@ -702,7 +702,7 @@ $LIBDEF M-LIB-STRING-erinstring
 (*****************************************************************************)
 (*                        M-LIB-STRING-erinstring_cb                         *)
 (*****************************************************************************)
-: M-LIB-STRING-erinstring_cb ( ? ? a -- i )
+: M-LIB-STRING-erinstring_cb ( ? ? x -- i )
   (* Permissions inherited *)
   "??x" checkargs
   dup cbs_check
@@ -714,7 +714,7 @@ $LIBDEF M-LIB-STRING-erinstring_cb
 (*****************************************************************************)
 (*                          M-LIB-STRING-explode_cb                          *)
 (*****************************************************************************)
-: M-LIB-STRING-explode_cb ( ? ? cbs -- ... i )
+: M-LIB-STRING-explode_cb ( ? ? x -- ... i )
   (* Permissions inherited *)
   "??x" checkargs
   dup cbs_check
@@ -726,7 +726,7 @@ $LIBDEF M-LIB-STRING-explode_cb
 (*****************************************************************************)
 (*                       M-LIB-STRING-explode_array_cb                       *)
 (*****************************************************************************)
-: M-LIB-STRING-explode_array_cb ( ? ? cbs -- a )
+: M-LIB-STRING-explode_array_cb ( ? ? x -- Y )
   (* Permissions inherited *)
   "??x" checkargs
   dup cbs_check
@@ -749,7 +749,7 @@ $LIBDEF M-LIB-STRING-hex?
 (*****************************************************************************)
 (*                           M-LIB-STRING-hex?_cb                            *)
 (*****************************************************************************)
-: M-LIB-STRING-hex?_cb ( ? cbs -- i )
+: M-LIB-STRING-hex?_cb ( ? x -- i )
   (* Permissions inherited *)
   "?x" checkargs
   dup cbs_check
@@ -761,7 +761,7 @@ $LIBDEF M-LIB-STRING-hex?_cb
 (*****************************************************************************)
 (*                           M-LIB-STRING-instr_cb                           *)
 (*****************************************************************************)
-: M-LIB-STRING-instr_cb ( ? ? cbs -- i )
+: M-LIB-STRING-instr_cb ( ? ? x -- i )
   (* Permissions inherited *)
   "??x" checkargs
   dup cbs_check
@@ -773,7 +773,7 @@ $LIBDEF M-LIB-STRING-instr_cb
 (*****************************************************************************)
 (*                         M-LIB-STRING-instring_cb                          *)
 (*****************************************************************************)
-: M-LIB-STRING-instring_cb ( ? ? cbs -- i )
+: M-LIB-STRING-instring_cb ( ? ? x -- i )
   (* Permissions inherited *)
   "??x" checkargs
   dup cbs_check
@@ -796,7 +796,7 @@ $LIBDEF M-LIB-STRING-itox
 (*****************************************************************************)
 (*                          M-LIB-STRING-midstr_cb                           *)
 (*****************************************************************************)
-: M-LIB-STRING-midstr_cb ( ? i i cbs -- ? )
+: M-LIB-STRING-midstr_cb ( ? i i x -- ? )
   (* Permissions inherited *)
   "?iix" checkargs
   dup cbs_check
@@ -810,7 +810,7 @@ $LIBDEF M-LIB-STRING-midstr_cb
 (*****************************************************************************)
 (*                          M-LIB-STRING-number?_cb                          *)
 (*****************************************************************************)
-: M-LIB-STRING-number?_cb ( ? cbs -- i )
+: M-LIB-STRING-number?_cb ( ? x -- i )
   (* Permissions inherited *)
   "?x" checkargs
   dup cbs_check
@@ -822,7 +822,7 @@ $LIBDEF M-LIB-STRING-number?_cb
 (*****************************************************************************)
 (*                           M-LIB-STRING-regslice                           *)
 (*****************************************************************************)
-: M-LIB-STRING-regslice ( s s i -- a )
+: M-LIB-STRING-regslice ( s s i -- Y )
   (* Permissions inherited *)
   "ssi" checkargs
   regslice
@@ -833,7 +833,7 @@ $LIBDEF M-LIB-STRING-regslice
 (*****************************************************************************)
 (*                         M-LIB-STRING-regslice_cb                          *)
 (*****************************************************************************)
-: M-LIB-STRING-regslice_cb ( ? ? i cbs -- a )
+: M-LIB-STRING-regslice_cb ( ? ? i x -- Y )
   (* Permissions inherited *)
   "??ix" checkargs
   dup cbs_check
@@ -845,7 +845,7 @@ $LIBDEF M-LIB-STRING-regslice_cb
 (*****************************************************************************)
 (*                          M-LIB-STRING-rinstr_cb                           *)
 (*****************************************************************************)
-: M-LIB-STRING-rinstr_cb ( ? ? cbs -- i )
+: M-LIB-STRING-rinstr_cb ( ? ? x -- i )
   (* Permissions inherited *)
   "??x" checkargs
   dup cbs_check
@@ -857,7 +857,7 @@ $LIBDEF M-LIB-STRING-rinstr_cb
 (*****************************************************************************)
 (*                         M-LIB-STRING-rinstring_cb                         *)
 (*****************************************************************************)
-: M-LIB-STRING-rinstring_cb ( ? ? cbs -- i )
+: M-LIB-STRING-rinstring_cb ( ? ? x -- i )
   (* Permissions inherited *)
   "??x" checkargs
   dup cbs_check
@@ -869,7 +869,7 @@ $LIBDEF M-LIB-STRING-rinstring_cb
 (*****************************************************************************)
 (*                          M-LIB-STRING-rsplit_cb                           *)
 (*****************************************************************************)
-: M-LIB-STRING-rsplit_cb[ any:source any:sep arr:cbs -- any:result1 any:result2 ]
+: M-LIB-STRING-rsplit_cb[ ?:source ?:sep x:cbs -- ?:result1 ?:result2 ]
   (* Permissions inherited *)
   cbs @ dictionary? not if "Non-dictionary argument (3)." abort then
   cbs @ cbs_check
@@ -893,7 +893,7 @@ $LIBDEF M-LIB-STRING-single_space
 (*****************************************************************************)
 (*                       M-LIB-STRING-single_space_cb                        *)
 (*****************************************************************************)
-: M-LIB-STRING-single_space_cb ( ? cbs -- ? )
+: M-LIB-STRING-single_space_cb ( ? x -- ? )
   (* Permissions inherited *)
   "?x" checkargs
   dup cbs_check
@@ -923,7 +923,7 @@ $LIBDEF M-LIB-STRING-sitox
 (*****************************************************************************)
 (*                         M-LIB-STRING-slice_array                          *)
 (*****************************************************************************)
-: M-LIB-STRING-slice_array ( s s -- a )
+: M-LIB-STRING-slice_array ( s s -- Y )
   (* Permissions inherited *)
   "ss" checkargs
   slice_array
@@ -934,7 +934,7 @@ $LIBDEF M-LIB-STRING-slice_array
 (*****************************************************************************)
 (*                        M-LIB-STRING-slice_array_cb                        *)
 (*****************************************************************************)
-: M-LIB-STRING-slice_array_cb ( ? ? cbs -- a )
+: M-LIB-STRING-slice_array_cb ( ? ? x -- Y )
   (* Permissions inherited *)
   "??x" checkargs
   dup cbs_check
@@ -946,7 +946,7 @@ $LIBDEF M-LIB-STRING-slice_array_cb
 (*****************************************************************************)
 (*                           M-LIB-STRING-split_cb                           *)
 (*****************************************************************************)
-: M-LIB-STRING-split_cb[ any:source any:sep arr:cbs -- any:result1 any:result2 ]
+: M-LIB-STRING-split_cb[ ?:source ?:sep x:cbs -- ?:result1 ?:result2 ]
   (* Permissions inherited *)
   cbs @ dictionary? not if "Non-dictionary argument (3)." abort then
   cbs @ cbs_check
@@ -959,7 +959,7 @@ $LIBDEF M-LIB-STRING-split_cb
 (*****************************************************************************)
 (*                          M-LIB-STRING-strcat_cb                           *)
 (*****************************************************************************)
-: M-LIB-STRING-strcat_cb ( ? ? cbs -- ? )
+: M-LIB-STRING-strcat_cb ( ? ? x -- ? )
   (* Permissions inherited *)
   "??x" checkargs
   dup cbs_check
@@ -971,7 +971,7 @@ $LIBDEF M-LIB-STRING-strcat_cb
 (*****************************************************************************)
 (*                          M-LIB-STRING-strcmp_cb                           *)
 (*****************************************************************************)
-: M-LIB-STRING-strcmp_cb ( ? ? cbs -- i )
+: M-LIB-STRING-strcmp_cb ( ? ? x -- i )
   (* Permissions inherited *)
   "??x" checkargs
   dup cbs_check
@@ -986,7 +986,7 @@ $LIBDEF M-LIB-STRING-strcmp_cb
 (*****************************************************************************)
 (*                          M-LIB-STRING-strcut_cb                           *)
 (*****************************************************************************)
-: M-LIB-STRING-strcut_cb ( ? i cbs -- ? ? )
+: M-LIB-STRING-strcut_cb ( ? i x -- ? ? )
   (* Permissions inherited *)
   "?ix" checkargs
   dup cbs_check
@@ -998,7 +998,7 @@ $LIBDEF M-LIB-STRING-strcut_cb
 (*****************************************************************************)
 (*                         M-LIB-STRING-stringcmp_cb                         *)
 (*****************************************************************************)
-: M-LIB-STRING-stringcmp_cb ( ? ? cbs -- i )
+: M-LIB-STRING-stringcmp_cb ( ? ? x -- i )
   (* Permissions inherited *)
   "??x" checkargs
   dup cbs_check
@@ -1013,7 +1013,7 @@ $LIBDEF M-LIB-STRING-stringcmp_cb
 (*****************************************************************************)
 (*                         M-LIB-STRING-stringpfx_cb                         *)
 (*****************************************************************************)
-: M-LIB-STRING-stringpfx_cb ( ? ? cbs -- i )
+: M-LIB-STRING-stringpfx_cb ( ? ? x -- i )
   (* Permissions inherited *)
   "??x" checkargs
   dup cbs_check
@@ -1028,7 +1028,7 @@ $LIBDEF M-LIB-STRING-stringpfx_cb
 (*****************************************************************************)
 (*                           M-LIB-STRING-strip_cb                           *)
 (*****************************************************************************)
-: M-LIB-STRING-strip_cb ( ? cbs -- ? )
+: M-LIB-STRING-strip_cb ( ? x -- ? )
   (* Permissions inherited *)
   "?x" checkargs
   dup cbs_check
@@ -1040,7 +1040,7 @@ $LIBDEF M-LIB-STRING-strip_cb
 (*****************************************************************************)
 (*                         M-LIB-STRING-striplead_cb                         *)
 (*****************************************************************************)
-: M-LIB-STRING-striplead_cb ( ? cbs -- ? )
+: M-LIB-STRING-striplead_cb ( ? x -- ? )
   (* Permissions inherited *)
   "?x" checkargs
   dup cbs_check
@@ -1052,7 +1052,7 @@ $LIBDEF M-LIB-STRING-striplead_cb
 (*****************************************************************************)
 (*                         M-LIB-STRING-striptail_cb                         *)
 (*****************************************************************************)
-: M-LIB-STRING-striptail_cb ( ? cbs -- ? )
+: M-LIB-STRING-striptail_cb ( ? x -- ? )
   (* Permissions inherited *)
   "?x" checkargs
   dup cbs_check
@@ -1064,7 +1064,7 @@ $LIBDEF M-LIB-STRING-striptail_cb
 (*****************************************************************************)
 (*                          M-LIB-STRING-strlen_cb                           *)
 (*****************************************************************************)
-: M-LIB-STRING-strlen_cb ( ? cbs -- i )
+: M-LIB-STRING-strlen_cb ( ? x -- i )
   (* Permissions inherited *)
   "?x" checkargs
   dup cbs_check
@@ -1076,7 +1076,7 @@ $LIBDEF M-LIB-STRING-strlen_cb
 (*****************************************************************************)
 (*                          M-LIB-STRING-strncmp_cb                          *)
 (*****************************************************************************)
-: M-LIB-STRING-strncmp_cb ( ? ? i cbs -- i )
+: M-LIB-STRING-strncmp_cb ( ? ? i x -- i )
   (* Permissions inherited *)
   "??ix" checkargs
   dup cbs_check
@@ -1091,7 +1091,7 @@ $LIBDEF M-LIB-STRING-strncmp_cb
 (*****************************************************************************)
 (*                          M-LIB-STRING-strtof_cb                           *)
 (*****************************************************************************)
-: M-LIB-STRING-strtof_cb ( ? cbs -- f )
+: M-LIB-STRING-strtof_cb ( ? x -- f )
   (* Permissions inherited *)
   "?x" checkargs
   dup cbs_check
@@ -1103,7 +1103,7 @@ $LIBDEF M-LIB-STRING-strtof_cb
 (*****************************************************************************)
 (*                           M-LIB-STRING-subst_cb                           *)
 (*****************************************************************************)
-: M-LIB-STRING-subst_cb ( ? ? ? cbs -- ? )
+: M-LIB-STRING-subst_cb ( ? ? ? x -- ? )
   (* Permissions inherited *)
   "???x" checkargs
   over not if "Empty string argument (3)" abort then
@@ -1116,7 +1116,7 @@ $LIBDEF M-LIB-STRING-subst_cb
 (*****************************************************************************)
 (*                          M-LIB-STRING-toupper_cb                          *)
 (*****************************************************************************)
-: M-LIB-STRING-toupper_cb ( ? cbs -- i )
+: M-LIB-STRING-toupper_cb ( ? x -- i )
   (* Permissions inherited *)
   "?x" checkargs
   dup cbs_check
@@ -1128,7 +1128,7 @@ $LIBDEF M-LIB-STRING-toupper_cb
 (*****************************************************************************)
 (*                          M-LIB-STRING-tolower_cb                          *)
 (*****************************************************************************)
-: M-LIB-STRING-tolower_cb ( ? cbs -- i )
+: M-LIB-STRING-tolower_cb ( ? x -- i )
   (* Permissions inherited *)
   "?x" checkargs
   dup cbs_check
@@ -1140,7 +1140,7 @@ $LIBDEF M-LIB-STRING-tolower_cb
 (*****************************************************************************)
 (*                          M-LIB-STRING-wordwrap_cb                         *)
 (*****************************************************************************)
-: M-LIB-STRING-wordwrap_cb[ any:source int:width_wrap dict:opts dict:cbs -- arr:lines ]
+: M-LIB-STRING-wordwrap_cb[ ?:source i:width_wrap x:opts x:cbs -- Y:lines ]
   (* Permissions inherited *)
   width_wrap @ int? not if "Non-integer argument (2)." abort then
   opts @ dictionary? not if "Non-dictionary argument (3)." abort then
@@ -1154,7 +1154,7 @@ $LIBDEF M-LIB-STRING-wordwrap_cb
 (*****************************************************************************)
 (*                           M-LIB-STRING-wordwrap                           *)
 (*****************************************************************************)
-: M-LIB-STRING-wordwrap[ str:source int:width_wrap dict:opts -- arr:lines ]
+: M-LIB-STRING-wordwrap[ s:source i:width_wrap x:opts -- Y:lines ]
   (* Permissions inherited *)
   source @ string? not if "Non-string argument (1)." abort then
   width_wrap @ int? not if "Non-integer argument (2)." abort then
@@ -1178,7 +1178,7 @@ $LIBDEF M-LIB-STRING-xtoi
 (*****************************************************************************)
 (*                           M-LIB-STRING-xtoi_cb                            *)
 (*****************************************************************************)
-: M-LIB-STRING-xtoi_cb ( ? cbs -- i )
+: M-LIB-STRING-xtoi_cb ( ? x -- i )
   (* Permissions inherited *)
   "?x" checkargs
   dup cbs_check
@@ -1202,7 +1202,7 @@ $LIBDEF M-LIB-STRING-zeropad
 (*****************************************************************************)
 (*                          M-LIB-STRING-zeropad_cb                          *)
 (*****************************************************************************)
-: M-LIB-STRING-zeropad_cb ( ? i a -- i )
+: M-LIB-STRING-zeropad_cb ( ? i x -- i )
   (* Permissions inherited *)
   "?ix" checkargs
   dup cbs_check

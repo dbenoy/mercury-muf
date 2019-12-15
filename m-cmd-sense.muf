@@ -150,7 +150,7 @@ $PRAGMA comment_recurse
 $VERSION 1.0
 $AUTHOR  Daniel Benoy
 $NOTE    Customizable smell/taste/feel etc.
-$DOCCMD  @list __PROG__=2-147
+$DOCCMD  @list __PROG__=2-146
 
 (* Begin configurable options *)
 
@@ -211,7 +211,7 @@ $def CAPS tolower 1 strcut swap toupper swap strcat
 ;
 WIZCALL M-HELP-desc
 
-: M-HELP-help ( d -- s )
+: M-HELP-help ( d -- Y )
   var! action
   (* Get the first action name without an @ *)
   "" var! action_name
@@ -285,7 +285,7 @@ WIZCALL M-HELP-help
   pop pop 0
 ;
 
-: line_contents[ ref:object int:is_random -- ]
+: line_contents[ d:object i:is_random -- ]
   0 var! contents_random_skipped
   0 var! contents_total
   { }dict var! contents_datum
@@ -348,7 +348,7 @@ WIZCALL M-HELP-help
   then
 ;
 
-: line_exits[ ref:object -- ]
+: line_exits[ d:object -- ]
   0 var! contents_total
   { }list var! contents_names
   object @ loc @ = object @ me @ = or var! is_here
@@ -375,7 +375,7 @@ WIZCALL M-HELP-help
 (*****************************************************************************)
 (                                 cmd_sense                                   )
 (*****************************************************************************)
-: sense_room[ ref:object ]
+: sense_room[ d:object ]
   (* Notify others *)
   "cast_room" get_conf sub_standard { trig me @ object @ }list { "name_match" "yes" }dict M-LIB-GRAMMAR-sub .cast
   (* Notify me *)
@@ -399,7 +399,7 @@ WIZCALL M-HELP-help
   then
 ;
 
-: sense_non_room[ ref:object ]
+: sense_non_room[ d:object ]
   (* Notify others *)
   "cast_object" get_conf sub_standard { trig me @ object @ }list { "name_match" "yes" }dict M-LIB-GRAMMAR-sub .cast
   (* Notify me *)

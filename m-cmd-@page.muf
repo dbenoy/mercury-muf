@@ -66,7 +66,7 @@ $DEF .tag_err M-LIB-THEME-tag_err
 ;
 WIZCALL M-HELP-desc
 
-: M-HELP-help ( d -- a )
+: M-HELP-help ( d -- Y )
   name ";" split pop var! action_name
   {
     { action_name @ toupper " <player>=[:]<message>" }cat
@@ -78,7 +78,7 @@ WIZCALL M-HELP-help
 
 (* ------------------------------------------------------------------------ *)
 
-: mail_add[ ref:message str:highlight_ooc_style ref:to -- bool:success? ]
+: mail_add[ d:message s:highlight_ooc_style d:to -- i:success? ]
   0 var! mail_total
   MAIL_PROPDIR "/" strcat begin
     to @ swap nextprop

@@ -9,7 +9,7 @@ $PRAGMA comment_recurse
 (*   GitHub: https://github.com/dbenoy/mercury-muf (See for install info)    *)
 (*                                                                           *)
 (* PUBLIC FUNCTIONS:                                                         *)
-(*   M-LIB-NOTIFY-array_notify_color[ arr:strings arr:targets -- ]           *)
+(*   M-LIB-NOTIFY-array_notify_color[ y:strings y:targets -- ]               *)
 (*     Like the ARRAY_NOTIFY primitive, but it can use MCC color codes.      *)
 (*                                                                           *)
 (*   M-LIB-NOTIFY-cast ( s -- )                                              *)
@@ -20,7 +20,7 @@ $PRAGMA comment_recurse
 (*   M-LIB-NOTIFY-cast_color ( s -- )                                        *)
 (*     Like M-LIB-NOTIFY-cast, but supports MCC color codes.                 *)
 (*                                                                           *)
-(*   M-LIB-NOTIFY-cast_targets[ ref:object -- ]                              *)
+(*   M-LIB-NOTIFY-cast_targets[ d:object -- ]                                *)
 (*     Given an object, return all the players and things within that        *)
 (*     object, plus all the players and things within them, and so on        *)
 (*     recursively.                                                          *)
@@ -95,7 +95,7 @@ $IFDEF M_LIB_COLOR
   $INCLUDE $m/lib/color
 $ENDIF
 
-: cast_targets ( d -- a )
+: cast_targets ( d -- Y )
   {
     swap contents_array foreach
       nip
@@ -109,7 +109,7 @@ $ENDIF
 ;
 
 $IFDEF M_LIB_COLOR
-: array_notify_color[ arr:strings arr:targets -- ]
+: array_notify_color[ y:strings y:targets -- ]
   strings @ foreach
     nip
     var! message
@@ -129,7 +129,7 @@ $IFDEF M_LIB_COLOR
   repeat
 ;
 $ELSE
-: array_notify_color ( a1 a2 -- )
+: array_notify_color ( y y -- )
   array_notify
 ;
 $ENDIF
@@ -137,7 +137,7 @@ $ENDIF
 (*****************************************************************************)
 (*                      M-LIB-NOTIFY-array_notify_color                      *)
 (*****************************************************************************)
-: M-LIB-NOTIFY-array_notify_color[ arr:strings arr:targets -- ]
+: M-LIB-NOTIFY-array_notify_color[ y:strings y:targets -- ]
   (* Permissions inherited *)
 
   strings @ array? not if "Non-array argument (1)." abort then
@@ -179,7 +179,7 @@ $LIBDEF M-LIB-NOTIFY-cast_color
 (*****************************************************************************)
 (*                         M-LIB-NOTIFY-cast_targets                         *)
 (*****************************************************************************)
-: M-LIB-NOTIFY-cast_targets[ ref:object -- ]
+: M-LIB-NOTIFY-cast_targets[ d:object -- ]
   (* Permissions inherited *)
 
   object @ dbref? not if "Non-dbref argument (1)." abort then

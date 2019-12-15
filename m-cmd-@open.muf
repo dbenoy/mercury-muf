@@ -38,7 +38,7 @@ $PRAGMA comment_recurse
 $VERSION 1.001
 $AUTHOR  Daniel Benoy
 $NOTE    @open command with more features.
-$DOCCMD  @list __PROG__=2-44
+$DOCCMD  @list __PROG__=2-34
 
 (* Begin configurable options *)
 
@@ -57,7 +57,7 @@ $INCLUDE $m/lib/at_link
 ;
 WIZCALL M-HELP-desc
 
-: M-HELP-help ( d -- a )
+: M-HELP-help ( d -- Y )
   name ";" split pop toupper var! action_name
   {
     { action_name @ " <exit> [=<object> [; <object2>; ... <objectn> ] [=<regname>]]" }cat

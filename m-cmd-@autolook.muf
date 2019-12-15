@@ -67,7 +67,7 @@ $PRAGMA comment_recurse
 $VERSION 1.000
 $AUTHOR  Daniel Benoy
 $NOTE    Auto look for @tune autolook_cmd.
-$DOCCMD  @list __PROG__=2-62
+$DOCCMD  @list __PROG__=2-63
 
 (* Begin configurable options *)
 
@@ -107,8 +107,8 @@ $DEF .notify M-LIB-NOTIFY-notify_color
 ;
 WIZCALL M-HELP-desc
 
-: M-HELP-help ( s -- a )
-  ";" split pop toupper var! action_name
+: M-HELP-help ( d -- Y )
+  name ";" split pop toupper var! action_name
   {
     action_name @
     " "
@@ -119,7 +119,7 @@ WIZCALL M-HELP-help
 
 (* ------------------------------------------------------------------------ *)
 
-: enabled[ str:opt_name -- bool:enabled? ]
+: enabled[ s:opt_name -- i:enabled? ]
   me @ { CONFIG_PROPDIR "/" opt_name @ }cat getpropstr
   dup not if
     pop config_defaults opt_name @ []
@@ -130,7 +130,7 @@ WIZCALL M-HELP-help
   "no" stringcmp
 ;
 
-: notify_objects[ ref:notify_me str:title arr:objects -- ]
+: notify_objects[ d:notify_me s:title Y:objects -- ]
   objects @ not if exit then
   {
     objects @ foreach
@@ -159,7 +159,7 @@ WIZCALL M-HELP-help
   then
 ;
 
-: notify_autolook[ ref:notify_me -- ]
+: notify_autolook[ d:notify_me -- ]
   (* Show room map *)
   "map" enabled if
     loc @ loc @ M-LIB-MAP-display pop

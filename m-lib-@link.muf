@@ -10,12 +10,12 @@ $PRAGMA comment_recurse
 (*   GitHub: https://github.com/dbenoy/mercury-muf (See for install info)    *)
 (*                                                                           *)
 (* PUBLIC ROUTINES:                                                          *)
-(*   M-LIB-AT_LINK-link[ str:thing str:links -- bool:success? ]              *)
+(*   M-LIB-AT_LINK-link[ s:thing s:links -- i:success? ]                     *)
 (*     Attempts to perform a linkas though the current player ran the @link  *)
 (*     command, including all the same message output, permission checks,    *)
 (*     penny manipulation, etc. M4 required.                                 *)
 (*                                                                           *)
-(*   M-LIB-AT_LINK-relink[ str:thing str:links -- bool:success? ]            *)
+(*   M-LIB-AT_LINK-relink[ s:thing s:links -- i:success? ]                   *)
 (*     Same as M-LIB-AT_LINK-link, except it will skip checking if the exit  *)
 (*     is already linked. M4 required.                                       *)
 (*                                                                           *)
@@ -48,7 +48,7 @@ $PRAGMA comment_recurse
 $VERSION 1.001
 $AUTHOR  Daniel Benoy
 $NOTE    @link command with more features.
-$DOCCMD  @list __PROG__=2-49
+$DOCCMD  @list __PROG__=2-44
 
 (* Begin configurable options *)
 
@@ -62,7 +62,7 @@ $PUBDEF :
 
 (* ------------------------------------------------------------------------- *)
 
-: doSetLinksArray ( d1 a -- s )
+: doSetLinksArray ( d y -- s )
   2 try
     setlinks_array "" exit
   catch
@@ -73,7 +73,7 @@ $PUBDEF :
 $DEF LINKABLE dup room? over thing? or dup 3 pick "ABODE" flag? and swap not 3 pick "LINK_OK" flag? and or over #-3 = or swap pop
 $DEF TESTLOCKPROP getprop dup lock? if testlock else pop pop 1 then
 
-: canLinkTo[ ref:who ref:what ref:where -- bool:success? ]
+: canLinkTo[ d:who d:what d:where -- i:success? ]
   (* Can always link to HOME *)
   #-3 where @ = if
     1 exit
@@ -114,7 +114,7 @@ $DEF TESTLOCKPROP getprop dup lock? if testlock else pop pop 1 then
   0
 ;
 
-: exitLoopCheck[ ref:source ref:dest -- bool:success? ]
+: exitLoopCheck[ d:source d:dest -- i:success? ]
   source @ dest @ = if 1 exit then
   dest @ ok? not if 0 exit then
   dest @ exit? if
@@ -129,7 +129,7 @@ $DEF TESTLOCKPROP getprop dup lock? if testlock else pop pop 1 then
   0 exit
 ;
 
-: doLink[ str:thing str:links bool:relink -- bool:success? ]
+: doLink[ s:thing s:links ?:relink -- i:success? ]
   "link_cost" sysparm atoi var! tp_link_cost
   "exit_cost" sysparm atoi var! tp_exit_cost
 
@@ -289,7 +289,7 @@ $DEF TESTLOCKPROP getprop dup lock? if testlock else pop pop 1 then
 (*****************************************************************************)
 (*                            M-LIB-AT_LINK-link                             *)
 (*****************************************************************************)
-: M-LIB-AT_LINK-link[ str:thing str:links -- bool:success? ]
+: M-LIB-AT_LINK-link[ s:thing s:links -- i:success? ]
   M-LIB-PROGRAM-needs_mlev4
 
   thing @ links @ 0 doLink
@@ -300,7 +300,7 @@ $LIBDEF M-LIB-AT_LINK-link
 (*****************************************************************************)
 (*                           M-LIB-AT_LINK-relink                            *)
 (*****************************************************************************)
-: M-LIB-AT_LINK-relink[ str:thing str:links -- bool:success? ]
+: M-LIB-AT_LINK-relink[ s:thing s:links -- i:success? ]
   M-LIB-PROGRAM-needs_mlev4
 
   thing @ links @ 1 doLink

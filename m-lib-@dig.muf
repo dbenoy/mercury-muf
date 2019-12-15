@@ -13,7 +13,7 @@ $PRAGMA comment_recurse
 (*   o Uses $m/lib/quota to enforce player object quotas.                    *)
 (*                                                                           *)
 (* PUBLIC ROUTINES:                                                          *)
-(*   M-LIB-AT_DIG-dig[ str:roomname str:parent -- ref:dbref ]                *)
+(*   M-LIB-AT_DIG-dig[ s:roomname s:parent -- d:dbref ]                      *)
 (*     Attempts to create an room as though the current player ran the @dig  *)
 (*     command, including all the same message output, permission checks,    *)
 (*     penny manipulation, etc. M4 required.                                 *)
@@ -47,7 +47,7 @@ $PRAGMA comment_recurse
 $VERSION 1.001
 $AUTHOR  Daniel Benoy
 $NOTE    @dig command with more features.
-$DOCCMD  @list __PROG__=2-46
+$DOCCMD  @list __PROG__=2-43
 
 (* Begin configurable options *)
 
@@ -74,7 +74,7 @@ $PUBDEF :
 (*                           M-LIB-AT_DIG-dig                                *)
 (*****************************************************************************)
 
-: M-LIB-AT_DIG-dig[ str:roomname str:parent -- ref:dbref ]
+: M-LIB-AT_DIG-dig[ s:roomname s:parent -- d:dbref ]
   M-LIB-PROGRAM-needs_mlev4
 
   "room" 1 M-LIB-QUOTA-QuotaCheck not if #-1 exit then

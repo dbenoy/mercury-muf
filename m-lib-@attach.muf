@@ -10,7 +10,7 @@ $PRAGMA comment_recurse
 (*   GitHub: https://github.com/dbenoy/mercury-muf (See for install info)    *)
 (*                                                                           *)
 (* PUBLIC ROUTINES:                                                          *)
-(*   M-LIB-AT_ATTACH-attach[ str:action str:source -- bool:success? ]        *)
+(*   M-LIB-AT_ATTACH-attach[ s:action s:source -- i:success? ]               *)
 (*     Attempts to attach an exit as though the current player ran the       *)
 (*     @attach command, including all the same message output, permission    *)
 (*     checks, etc. M4 required.                                             *)
@@ -41,7 +41,7 @@ $PRAGMA comment_recurse
 $VERSION 1.001
 $AUTHOR  Daniel Benoy
 $NOTE    @attach command with more features.
-$DOCCMD  @list __PROG__=2-42
+$DOCCMD  @list __PROG__=2-37
 
 (* Begin configurable options *)
 
@@ -64,7 +64,7 @@ $PUBDEF :
 (*****************************************************************************)
 (*                          M-LIB-AT_ATTACH-attach                           *)
 (*****************************************************************************)
-: M-LIB-AT_ATTACH-attach[ str:action str:source -- bool:success? ]
+: M-LIB-AT_ATTACH-attach[ s:action s:source -- i:success? ]
   M-LIB-PROGRAM-needs_mlev4
 
   source @ not action @ not or if

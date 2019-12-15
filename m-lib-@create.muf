@@ -13,7 +13,7 @@ $PRAGMA comment_recurse
 (*   o Uses $m/lib/quota to enforce player object quotas.                    *)
 (*                                                                           *)
 (* PUBLIC ROUTINES:                                                          *)
-(*   M-LIB-AT_CREATE-create[ str:thingname str:payment -- ref:thing ]        *)
+(*   M-LIB-AT_CREATE-create[ s:thingname s:payment -- d:thing ]              *)
 (*     Attempts to create an object as though the current player ran the     *)
 (*     @create command, including all the same message output, permission    *)
 (*     checks, penny manipulation, etc. M4 required.                         *)
@@ -47,7 +47,7 @@ $PRAGMA comment_recurse
 $VERSION 1.001
 $AUTHOR  Daniel Benoy
 $NOTE    @create command with more features.
-$DOCCMD  @list __PROG__=2-45
+$DOCCMD  @list __PROG__=2-43
 
 (* Begin configurable options *)
 
@@ -73,7 +73,7 @@ $PUBDEF :
 (*****************************************************************************)
 (*                          M-LIB-AT_CREATE-create                           *)
 (*****************************************************************************)
-: M-LIB-AT_CREATE-create[ str:thingname str:payment -- ref:thing ]
+: M-LIB-AT_CREATE-create[ s:thingname s:payment -- d:thing ]
   M-LIB-PROGRAM-needs_mlev4
 
   "thing" 1 M-LIB-QUOTA-QuotaCheck not if #-1 exit then

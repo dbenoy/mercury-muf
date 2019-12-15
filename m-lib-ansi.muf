@@ -43,7 +43,7 @@ $PRAGMA comment_recurse
 (*   ansi-otell ( s -- )                                                     *)
 (*     Like .otell, but with ANSI support.                                   *)
 (*                                                                           *)
-(*   ansi-strcut ( s i -- s1 s2 )                                            *)
+(*   ansi-strcut ( s i -- s s )                                              *)
 (*     Like strcut, but ignores ANSI codes.                                  *)
 (*                                                                           *)
 (*   ansi-tell ( s -- )                                                      *)
@@ -186,18 +186,18 @@ Base      Number  Base      Number  Base      Number
 (Protect strings should be 2 chars long since ~& is for ansi_strcut.)
 $DEF PROTECT_STR "\[\["
 
-( s   -- s'  )
+( s   -- s )
 $DEFINE _protect
   PROTECT_STR "\\~&" subst
   PROTECT_STR "~&~&" subst
 $ENDDEF
 
-( s'  -- s'' )
+( s  -- s )
 $DEFINE _end_protect
   "~&" PROTECT_STR subst
 $ENDDEF
 
-( s' -- s  ) ( * almost; \~& will be replaced with ~&~&. )
+( s -- s ) ( * almost; \~& will be replaced with ~&~&. )
 $DEFINE _cut_end_protect
   "~&~&" PROTECT_STR subst
 $ENDDEF
@@ -313,7 +313,7 @@ $LIBDEF ansi?
 (*****************************************************************************)
 (*                                ansi-strip                                 *)
 (*****************************************************************************)
-: ansi-strip ( s -- s' )
+: ansi-strip ( s -- s )
   var data
 
   _protect
@@ -343,7 +343,7 @@ $PUBDEF ansi_strip ansi-strip
 (*****************************************************************************)
 (*                                ansi-strcut                                *)
 (*****************************************************************************)
-: ansi-strcut ( s i -- s1 s2 ; like strcut, but ignores ANSI codes. )
+: ansi-strcut ( s i -- s s ; like strcut, but ignores ANSI codes. )
   var numtocut
   var strcut_s1
   var strcut_s2

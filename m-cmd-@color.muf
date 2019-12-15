@@ -58,7 +58,7 @@ $DEF .tell M-LIB-NOTIFY-tell_color
 ;
 WIZCALL M-HELP-desc
 
-: M-HELP-help ( d -- a )
+: M-HELP-help ( d -- Y )
   name ";" split pop toupper var! action_name
   {
     action_name @
@@ -75,7 +75,7 @@ WIZCALL M-HELP-help
 
 (* ------------------------------------------------------------------------ *)
 
-: text_gradient[ str:color_me int:red int:green int:blue int:step_red int:step_green int:step_blue bool:reverse -- str:result ]
+: text_gradient[ s:color_me i:red i:green i:blue i:step_red i:step_green i:step_blue ?:reverse -- s:result ]
   "" var! retval
   begin
     (* Split off one character *)

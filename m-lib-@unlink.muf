@@ -10,7 +10,7 @@ $PRAGMA comment_recurse
 (*   GitHub: https://github.com/dbenoy/mercury-muf (See for install info)    *)
 (*                                                                           *)
 (* PUBLIC ROUTINES:                                                          *)
-(*   M-LIB-AT_UNLINK-Unlink[ str:thing -- bool:success? ]                    *)
+(*   M-LIB-AT_UNLINK-Unlink[ s:thing -- i:success? ]                         *)
 (*     Attempts to perform an unlink as though the current player ran the    *)
 (*     @unlink command, including all the same message output, permission    *)
 (*     checks, etc. M4 required.                                             *)
@@ -44,7 +44,7 @@ $PRAGMA comment_recurse
 $VERSION 1.001
 $AUTHOR  Daniel Benoy
 $NOTE    @unlink command with more features.
-$DOCCMD  @list __PROG__=2-45
+$DOCCMD  @list __PROG__=2-40
 
 (* Begin configurable options *)
 
@@ -58,7 +58,7 @@ $PUBDEF :
 
 (* ------------------------------------------------------------------------- *)
 
-: controlsLink[ ref:who ref:thing -- bool:success? ]
+: controlsLink[ d:who d:thing -- i:success? ]
   thing @ ok? not if
     0 exit
   then
@@ -81,7 +81,7 @@ $PUBDEF :
 (*****************************************************************************)
 (*                          M-LIB-AT_UNLINK-unlink                           *)
 (*****************************************************************************)
-: M-LIB-AT_UNLINK-unlink[ str:thing -- bool:success? ]
+: M-LIB-AT_UNLINK-unlink[ s:thing -- i:success? ]
   M-LIB-PROGRAM-needs_mlev4
 
   "link_cost" sysparm atoi var! tp_link_cost

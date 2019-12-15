@@ -6,6 +6,8 @@ $PRAGMA comment_recurse
 (* m-cmd-@map.muf - $m/cmd/at_map                                            *)
 (*    A command using $m/lib/map to modify and display maps.                 *)
 (*                                                                           *)
+(*   GitHub: https://github.com/dbenoy/mercury-muf (See for install info)    *)
+(*                                                                           *)
 (*****************************************************************************)
 (* Revision History:                                                         *)
 (*   Version 1.2 -- Daniel Benoy -- October, 2019                            *)
@@ -39,6 +41,7 @@ $PRAGMA comment_recurse
 $VERSION 1.002
 $AUTHOR  Daniel Benoy
 $NOTE    Area map displaying program.
+$DOCCMD  @list __PROG__=2-37
 
 (* ------------------------------------------------------------------------- *)
 
@@ -61,7 +64,7 @@ $DEF .tag_err M-LIB-THEME-tag_err
 ;
 WIZCALL M-HELP-desc
 
-: M-HELP-help ( d -- a )
+: M-HELP-help ( d -- Y )
   name ";" split pop var! action_name
   {
     action_name @ toupper

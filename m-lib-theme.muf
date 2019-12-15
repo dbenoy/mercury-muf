@@ -110,7 +110,7 @@ $PRAGMA comment_recurse
 (*     M-LIB-THEME-err_line. @1 is replaced by the message text.             *)
 (*                                                                           *)
 (* PUBLIC ROUTINES:                                                          *)
-(*   M-LIB-THEME-fancy_exit[ ref:exit -- str:name ]                          *)
+(*   M-LIB-THEME-fancy_exit[ d:exit -- s:name ]                              *)
 (*     Generate a name for an exit that takes the first alias of an exit and *)
 (*     highlights it using information from the remaining aliases. For       *)
 (*     example, Test;t becomes something like (T)est and South East;se       *)
@@ -121,12 +121,12 @@ $PRAGMA comment_recurse
 (*     into the first alias, then the function will treat this as a manual   *)
 (*     override and highlight those characters only, replacing the brackets. *)
 (*                                                                           *)
-(*   M-LIB-THEME-idle?[ ref:object -- bool:idle? ]                           *)
+(*   M-LIB-THEME-idle?[ d:object -- i:idle? ]                                *)
 (*     Returns true if the puppet/player object is asleep, or is idle in     *)
 (*     in excess of the configured theme idle threshold. If the object is    *)
 (*     not a player or puppet, true is always returned.                      *)
 (*                                                                           *)
-(*   M-LIB-THEME-line_err[ str:msg -- str:line ]                             *)
+(*   M-LIB-THEME-line_err[ s:msg -- s:line ]                                 *)
 (*     Creates an error message from the given string using the theme.       *)
 (*     For example:                                                          *)
 (*       Not enough pennies.                                                 *)
@@ -135,7 +135,7 @@ $PRAGMA comment_recurse
 (*       Not enough pennies. See @help for more information.                 *)
 (*       ---~~!! Not enough pennies. !!~~---                                 *)
 (*                                                                           *)
-(*   M-LIB-THEME-line_tag[ str:msg str:tag -- str:line ]                     *)
+(*   M-LIB-THEME-line_tag[ s:msg s:tag -- s:line ]                           *)
 (*     Creates a 'tagged' message from the given strings using the theme.    *)
 (*     For example:                                                          *)
 (*       OOC" "I have to leave                                               *)
@@ -144,7 +144,7 @@ $PRAGMA comment_recurse
 (*       OOC - I have to leave                                               *)
 (*       #OOC ( I have to leave )                                            *)
 (*                                                                           *)
-(*   M-LIB-THEME-name[ ref:object str:namestr bool:unparse -- str:name ]     *)
+(*   M-LIB-THEME-name[ d:object s:namestr ?:unparse -- s:name ]              *)
 (*     Returns a 'themed' object name. The type of the object, its flags,    *)
 (*     and properties determine how the resulting string will look. The      *)
 (*     namestr argument specifies the name itself. If it's "", then the      *)
@@ -194,7 +194,7 @@ $PRAGMA comment_recurse
 $VERSION 1.000
 $AUTHOR  Daniel Benoy
 $NOTE    Color coding and theming.
-$DOCCMD  @list __PROG__=2-196
+$DOCCMD  @list __PROG__=2-190
 
 (* Begin configurable options *)
 
@@ -281,7 +281,7 @@ $ENDDEF
   then
 ;
 
-: arg_sub[ str:source arr:args -- str:result ]
+: arg_sub[ s:source Y:args -- s:result ]
   source @ "@" color_cb M-LIB-STRING-carve_array_cb
   1 array_cut swap array_vals pop var! result
   foreach
@@ -297,7 +297,7 @@ $ENDDEF
 ;
 
 (* Get the aliases of an exit sorted from shortest to longest *)
-: sorted_aliases[ ref:exit -- arr:aliases ]
+: sorted_aliases[ d:exit -- Y:aliases ]
   {
     exit @ name ";" explode_array 1 array_cut swap pop foreach
       nip
@@ -320,7 +320,7 @@ $ENDDEF
 (* Highlight splits: first string represents non-highlighted, then highlighted next, and so on, alternating. *)
 
 (* Given an exit, if its name already has brackets highlighting certain characters, split on those. *)
-: exit_highsplit_existing[ str:exit_name -- arr:splits ]
+: exit_highsplit_existing[ s:exit_name -- Y:splits ]
   (* Find the locations of existing bracket highlights, if any *)
   { }list var! found_highlights
   "" var! bracket_expect
@@ -390,7 +390,7 @@ $ENDDEF
   splits @
 ;
 
-: exit_highsplit_startswith[ str:exit_name str:alias -- arr:splits ]
+: exit_highsplit_startswith[ s:exit_name s:alias -- Y:splits ]
   exit_name @ alias @ stringpfx if
     { "" exit_name @ alias @ strlen strcut }list
   else
@@ -399,7 +399,7 @@ $ENDDEF
 ;
 
 $DEF EINSTRING over swap instring dup not if pop strlen else nip -- then
-: exit_highsplit_startwords[ str:exit_name str:alias bool:fullonly -- arr:splits ]
+: exit_highsplit_startwords[ s:exit_name s:alias ?:fullonly -- Y:splits ]
   { "" }list var! splits
   alias @ begin
     1 strcut swap
@@ -425,7 +425,7 @@ $DEF EINSTRING over swap instring dup not if pop strlen else nip -- then
   splits @
 ;
 
-: exit_highsplit_cardinal_guide[ str:alias -- arr:split_guide ]
+: exit_highsplit_cardinal_guide[ s:alias -- x:split_guide ]
   alias @ "n" stringcmp not if
     {
       "north" { "" "n" "orth" }list
@@ -516,7 +516,7 @@ $DEF EINSTRING over swap instring dup not if pop strlen else nip -- then
   { }dict
 ;
 
-: exit_highsplit_cardinal[ str:exit_name str:alias -- arr:splits ]
+: exit_highsplit_cardinal[ s:exit_name s:alias -- Y:splits ]
   alias @ exit_highsplit_cardinal_guide var! split_guide
   split_guide @ not if
     { }list exit
@@ -560,7 +560,7 @@ $DEF EINSTRING over swap instring dup not if pop strlen else nip -- then
   { }list
 ;
 
-: exit_highsplit[ ref:exitobj -- arr:splits ]
+: exit_highsplit[ d:exitobj -- Y:splits ]
   exitobj @ name ";" split pop var! exit_name
   (* Check for manually placed highlights *)
   exit_name @ exit_highsplit_existing
@@ -594,7 +594,7 @@ $DEF EINSTRING over swap instring dup not if pop strlen else nip -- then
   { exit_name @ }list
 ;
 
-: fmt_fancy_exit[ ref:exitobj -- str:result ]
+: fmt_fancy_exit[ d:exitobj -- s:result ]
   "" var! result
   0 var! highlight_me
   exitobj @ exit_highsplit foreach
@@ -659,7 +659,7 @@ $DEF EINSTRING over swap instring dup not if pop strlen else nip -- then
   pop "obj_thing" exit
 ;
 
-: theme_name[ ref:object bool:unparse -- str:name ]
+: theme_name[ d:object ?:unparse -- s:name ]
   "fmt_" object @ format_obj_type strcat theme_get { object @ name M-LIB-COLOR-escape }list arg_sub
   unparse @ not if
     exit
@@ -672,7 +672,7 @@ $DEF EINSTRING over swap instring dup not if pop strlen else nip -- then
 (*****************************************************************************)
 (*                          M-LIB-THEME-fancy_exit                           *)
 (*****************************************************************************)
-: M-LIB-THEME-fancy_exit[ ref:exitobj -- str:name ]
+: M-LIB-THEME-fancy_exit[ d:exitobj -- s:name ]
   (* Permissions inherited *)
   exitobj @ dbref? not if "Non-dbref argument (1)." abort then
   exitobj @ fmt_fancy_exit
@@ -683,7 +683,7 @@ $LIBDEF M-LIB-THEME-fancy_exit
 (*****************************************************************************)
 (*                             M-LIB-THEME-idle?                             *)
 (*****************************************************************************)
-: M-LIB-THEME-idle?[ ref:object -- bool:idle? ]
+: M-LIB-THEME-idle?[ d:object -- i:idle? ]
   (* Permissions inherited *)
   object @ dbref? not if "Non-dbref argument (1)." abort then
   object @ thing? object @ "ZOMBIE" flag? and not object @ player? not and if
@@ -711,9 +711,10 @@ $LIBDEF M-LIB-THEME-name
 (*****************************************************************************)
 (*                            M-LIB-THEME-format                             *)
 (*****************************************************************************)
-: M-LIB-THEME-format[ arr:args str:format_type -- str:result ]
+: M-LIB-THEME-format[ Y:args s:format_type -- s:result ]
   (* Permissions inherited *)
   args @ array? not if "Non-array argument (1)." abort then
+  args @ dictionary? if "Non-list argument (1)." abort then
   args @ foreach nip string? not if "Array of strings expected (1)." abort then repeat
   format_type @ string? not if "Non-string argument (2)." abort then
   format_type @ VALID_FORMATS M-LIB-ARRAY-hasval not if "Unrecognized format type (2)." abort then
@@ -725,7 +726,7 @@ $LIBDEF M-LIB-THEME-format
 (*****************************************************************************)
 (*                          M-LIB-THEME-format_type                          *)
 (*****************************************************************************)
-: M-LIB-THEME-format_obj_type[ ref:object -- str:format ]
+: M-LIB-THEME-format_obj_type[ d:object -- s:format ]
   (* Permissions inherited *)
   object @ dbref? not if "Non-dbref argument (1)." abort then
   object @ format_obj_type
@@ -736,7 +737,7 @@ $LIBDEF M-LIB-THEME-format_obj_type
 (*****************************************************************************)
 (*                              M-LIB-THEME-err                              *)
 (*****************************************************************************)
-: M-LIB-THEME-err[ str:msg -- str:line ]
+: M-LIB-THEME-err[ s:msg -- s:line ]
   (* Permissions inherited *)
   msg @ string? not if "Non-string argument (1)." abort then
   "fmt_msg_error" theme_get { msg @ }list arg_sub
@@ -747,7 +748,7 @@ $LIBDEF M-LIB-THEME-err
 (*****************************************************************************)
 (*                              M-LIB-THEME-tag                              *)
 (*****************************************************************************)
-: M-LIB-THEME-tag[ str:msg str:tag -- str:line ]
+: M-LIB-THEME-tag[ s:msg s:tag -- s:line ]
   (* Permissions inherited *)
   msg @ string? not if "Non-string argument (1)." abort then
   tag @ string? not if "Non-string argument (2)." abort then

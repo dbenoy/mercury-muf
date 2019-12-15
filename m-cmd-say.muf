@@ -46,7 +46,7 @@ $include $m/lib/emote
 ;
 WIZCALL M-HELP-desc
 
-: M-HELP-help ( d -- a )
+: M-HELP-help ( d -- Y )
   name ";" split pop var! action_name
   {
     { action_name @ toupper " <message>" }cat

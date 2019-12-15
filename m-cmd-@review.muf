@@ -34,7 +34,7 @@ $PRAGMA comment_recurse
 $VERSION 1.000
 $AUTHOR  Daniel Benoy
 $NOTE    Read emote history.
-$DOCCMD  @list __PROG__=2-<last header line>
+$DOCCMD  @list __PROG__=2-30
 
 $INCLUDE $m/lib/emote
 $INCLUDE $m/lib/notify
@@ -47,7 +47,7 @@ $INCLUDE $m/lib/notify
 ;
 WIZCALL M-HELP-desc
 
-: M-HELP-help ( d -- a )
+: M-HELP-help ( d -- Y )
   name ";" split pop toupper var! action_name
   {
     action_name @

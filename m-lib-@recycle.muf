@@ -10,7 +10,7 @@ $PRAGMA comment_recurse
 (*   GitHub: https://github.com/dbenoy/mercury-muf (See for install info)    *)
 (*                                                                           *)
 (* PUBLIC ROUTINES:                                                          *)
-(*   M-LIB-AT_RECYCLE-recycle[ str:thing int:confirmation -- bool:success? ] *)
+(*   M-LIB-AT_RECYCLE-recycle[ s:thing i:confirmation -- i:success? ]        *)
 (*     Attempts to recycle an object as though the current player ran the    *)
 (*     @recycle command, including all the same message output, permission   *)
 (*     checks, penny manipulation, etc. M4 required.                         *)
@@ -44,7 +44,7 @@ $PRAGMA comment_recurse
 $VERSION 1.001
 $AUTHOR  Daniel Benoy
 $NOTE    @recycle command with more features.
-$DOCCMD  @list __PROG__=2-45
+$DOCCMD  @list __PROG__=2-40
 
 (* Begin configurable options *)
 
@@ -68,7 +68,7 @@ $PUBDEF :
 (*****************************************************************************)
 (*                        M-LIB-AT_RECYCLE-recycle                           *)
 (*****************************************************************************)
-: M-LIB-AT_RECYCLE-recycle[ str:thing int:confirmation -- bool:success? ]
+: M-LIB-AT_RECYCLE-recycle[ s:thing i:confirmation -- i:success? ]
   M-LIB-PROGRAM-needs_mlev4
 
   thing @ { "quiet" "no" "match_absolute" "yes" "match_home" "no" "match_nil" "no" }dict M-LIB-MATCH-match thing !

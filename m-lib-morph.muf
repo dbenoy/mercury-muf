@@ -9,22 +9,18 @@ $PRAGMA comment_recurse
 (*   GitHub: https://github.com/dbenoy/mercury-muf (See for install info)    *)
 (*                                                                           *)
 (* PUBLIC ROUTINES:                                                          *)
-(*   M-LIB-MORPH-save[ ref:object str:morph_name bool:quiet                  *)
-(*                           -- bool:success? ]                              *)
-(*   M-LIB-MORPH-load[ ref:object str:morph_name bool:quiet                  *)
-(*                           -- bool:success? ]                              *)
-(*   M-LIB-MORPH-delete[ ref:object str:morph_name bool:quiet                *)
-(*                       -- bool:success? ]                                  *)
+(*   M-LIB-MORPH-save[ d:object s:morph_name ?:quiet -- i:success? ]         *)
+(*   M-LIB-MORPH-load[ d:object s:morph_name ?:quiet -- i:success? ]         *)
+(*   M-LIB-MORPH-delete[ d:object s:morph_name ?:quiet -- i:success? ]       *)
 (*     Save, load, or delete a specified morph. If quiet is true, then only  *)
 (*     error messages will be displayed.                                     *)
 (*                                                                           *)
-(*   M-LIB-MORPH-list[ ref:object --  ]                                      *)
+(*   M-LIB-MORPH-list[ d:object --  ]                                        *)
 (*     Outputs a list of available morphs.                                   *)
 (*                                                                           *)
-(*   M-LIB-MORPH-mesg_get[ ref:object str:morph_name bool:quiet              *)
-(*                         -- str:mesg ]                                     *)
-(*   M-LIB-MORPH-mesg_set[ str:new_mesg ref:object str:morph_name bool:quiet *)
-(*                         -- bool:success? ]                                *)
+(*   M-LIB-MORPH-mesg_get[ d:object s:morph_name ?:quiet -- s:mesg ]         *)
+(*   M-LIB-MORPH-mesg_set[ s:new_mesg d:object s:morph_name ?:quiet          *)
+(*                         -- i:success? ]                                   *)
 (*     Get or set the 'morph message' for a specified morph. This message    *)
 (*     may be spoofed to the room when a morph is loaded. This library       *)
 (*     doesn't do that automatically. It's optional and up to the command    *)
@@ -56,7 +52,7 @@ $PRAGMA comment_recurse
 $VERSION 1.000
 $AUTHOR  Daniel Benoy
 $NOTE    Manage morphs.
-$DOCCMD  @list __PROG__=2-30
+$DOCCMD  @list __PROG__=2-48
 
 (* ====================== BEGIN CONFIGURABLE OPTIONS ======================= *)
 
@@ -92,7 +88,7 @@ $DEF .tag_err M-LIB-THEME-tag_err
 
 (* ------------------------------------------------------------------------- *)
 
-: copy_props[ ref:from str:fromprop ref:to str:toprop -- ]
+: copy_props[ d:from s:fromprop d:to s:toprop -- ]
 
   to @ toprop @ propdir? toprop @ strlen toprop @ "#" instr = and if (* If it's a list type prop and it exists, destroy it before copying contents in *)
     to @ toprop @ remove_prop
@@ -119,7 +115,7 @@ $DEF .tag_err M-LIB-THEME-tag_err
   then
 ;
 
-: fix_morph_name[ str:source -- str:result ]
+: fix_morph_name[ s:source -- s:result ]
   1 var! caps_next
   "" source @
   begin
@@ -141,7 +137,7 @@ $DEF .tag_err M-LIB-THEME-tag_err
   then
 ;
 
-: morph_delete[ ref:object str:morph_name bool:quiet -- bool:success? ]
+: morph_delete[ d:object s:morph_name ?:quiet -- i:success? ]
   morph_name @ fix_morph_name morph_name !
 
   "_morph/morphs/" morph_name @ strcat var! morph_dir
@@ -156,7 +152,7 @@ $DEF .tag_err M-LIB-THEME-tag_err
   1
 ;
 
-: morph_mesg_set[ str:new_mesg ref:object str:morph_name bool:quiet -- bool:success? ]
+: morph_mesg_set[ s:new_mesg d:object s:morph_name ?:quiet -- i:success? ]
   morph_name @ fix_morph_name morph_name !
   object @ "_morph/morphs/" morph_name @ strcat propdir? not if
     quiet @ not if { "Morph '" morph_name @ "' not found." }cat command @ toupper .tag_err .tell then
@@ -172,7 +168,7 @@ $DEF .tag_err M-LIB-THEME-tag_err
   1
 ;
 
-: morph_mesg_get[ ref:object str:morph_name bool:quiet -- str:mesg ]
+: morph_mesg_get[ d:object s:morph_name ?:quiet -- s:mesg ]
   morph_name @ fix_morph_name morph_name !
   object @ "_morph/morphs/" morph_name @ strcat propdir? not if
     quiet @ not if { "Morph '" morph_name @ "' not found." }cat command @ toupper .tag_err .tell then
@@ -184,7 +180,7 @@ $DEF .tag_err M-LIB-THEME-tag_err
   then
 ;
 
-: morph_list[ ref:object --  ]
+: morph_list[ d:object --  ]
   object @ "/_morph/morphs" propdir? if
     "Saved morphs:" command @ toupper .tag .tell
     object @ "/_morph/morphs/" nextprop
@@ -201,7 +197,7 @@ $DEF .tag_err M-LIB-THEME-tag_err
   then
 ;
 
-: morph[ ref:object str:morph_name bool:save bool:quiet -- bool:success? ]
+: morph[ d:object s:morph_name ?:save ?:quiet -- i:success? ]
   morph_name @ fix_morph_name morph_name !
 
   "_morph/morphs/" morph_name @ strcat var! morph_dir
@@ -258,7 +254,7 @@ $DEF .tag_err M-LIB-THEME-tag_err
 (*****************************************************************************)
 (*                             M-LIB-MORPH-load                              *)
 (*****************************************************************************)
-: M-LIB-MORPH-load[ ref:object str:morph_name bool:quiet -- bool:success? ]
+: M-LIB-MORPH-load[ d:object s:morph_name ?:quiet -- i:success? ]
   M-LIB-PROGRAM-needs_mlev3
   object @ dbref? not if "Non-dbref argument (1)." abort then
   morph_name @ string? not if "Non-string argument (2)." abort then
@@ -271,7 +267,7 @@ $LIBDEF M-LIB-MORPH-load
 (*****************************************************************************)
 (*                             M-LIB-MORPH-save                              *)
 (*****************************************************************************)
-: M-LIB-MORPH-save[ ref:object str:morph_name bool:quiet -- bool:success? ]
+: M-LIB-MORPH-save[ d:object s:morph_name ?:quiet -- i:success? ]
   M-LIB-PROGRAM-needs_mlev3
   object @ dbref? not if "Non-dbref argument (1)." abort then
   morph_name @ string? not if "Non-string argument (2)." abort then
@@ -284,7 +280,7 @@ $LIBDEF M-LIB-MORPH-save
 (*****************************************************************************)
 (*                            M-LIB-MORPH-delete                             *)
 (*****************************************************************************)
-: M-LIB-MORPH-delete[ ref:object str:morph_name bool:quiet -- bool:success? ]
+: M-LIB-MORPH-delete[ d:object s:morph_name ?:quiet -- i:success? ]
   M-LIB-PROGRAM-needs_mlev3
   object @ dbref? not if "Non-dbref argument (1)." abort then
   morph_name @ string? not if "Non-string argument (2)." abort then
@@ -297,7 +293,7 @@ $LIBDEF M-LIB-MORPH-delete
 (*****************************************************************************)
 (*                             M-LIB-MORPH-list                              *)
 (*****************************************************************************)
-: M-LIB-MORPH-list[ ref:object --  ]
+: M-LIB-MORPH-list[ d:object --  ]
   M-LIB-PROGRAM-needs_mlev3
   object @ dbref? not if "Non-dbref argument (1)." abort then
   object @ morph_list
@@ -308,7 +304,7 @@ $LIBDEF M-LIB-MORPH-list
 (*****************************************************************************)
 (*                           M-LIB-MORPH-mesg_get                            *)
 (*****************************************************************************)
-: M-LIB-MORPH-mesg_get[ ref:object str:morph_name bool:quiet -- str:mesg ]
+: M-LIB-MORPH-mesg_get[ d:object s:morph_name ?:quiet -- s:mesg ]
   M-LIB-PROGRAM-needs_mlev3
   object @ dbref? not if "Non-dbref argument (1)." abort then
   morph_name @ string? not if "Non-string argument (2)." abort then
@@ -321,7 +317,7 @@ $LIBDEF M-LIB-MORPH-mesg_get
 (*****************************************************************************)
 (*                           M-LIB-MORPH-mesg_set                            *)
 (*****************************************************************************)
-: M-LIB-MORPH-mesg_set[ str:new_mesg ref:object str:morph_name bool:quiet -- bool:success? ]
+: M-LIB-MORPH-mesg_set[ s:new_mesg d:object s:morph_name ?:quiet -- i:success? ]
   M-LIB-PROGRAM-needs_mlev3
   new_mesg @ string? not if "Non-string argument (1)." abort then
   object @ dbref? not if "Non-dbref argument (2)." abort then

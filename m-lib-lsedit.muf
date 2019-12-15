@@ -6,13 +6,15 @@ $PRAGMA comment_recurse
 (* m-lib-lsedit.muf - $m/lib/lsedit                                          *)
 (*    A simple editor for 'list' properties.                                 *)
 (*                                                                           *)
+(*   GitHub: https://github.com/dbenoy/mercury-muf (See for install info)    *)
+(*                                                                           *)
 (* PUBLIC ROUTINES:                                                          *)
-(*   M-LIB-AT_LSEDIT-lsedit[ str:objname str:propname -- bool:modified? ]    *)
+(*   M-LIB-AT_LSEDIT-lsedit[ s:objname s:propname -- i:modified? ]           *)
 (*     Starts the list editor as though the player had executed the usual    *)
 (*     @lsedit command, including object name matching and permissions       *)
 (*     checks. It returns whether the list property was modified.            *)
 (*                                                                           *)
-(*   M-LIB-AT_LSEDIT-listedit[ ref:object str:propname -- bool:modified? ]   *)
+(*   M-LIB-AT_LSEDIT-listedit[ d:object s:propname -- i:modified? ]          *)
 (*     Like M-LIB-AT_LSEDIT-LSEdit, but skips name matching and permissions  *)
 (*     checks.                                                               *)
 (*                                                                           *)
@@ -42,7 +44,7 @@ $PRAGMA comment_recurse
 $VERSION 1.0
 $AUTHOR  Daniel Benoy
 $NOTE    Editor for 'list' properties.
-$DOCCMD  @list __PROG__=2-38
+$DOCCMD  @list __PROG__=2-40
 
 (* Begin configurable options *)
 
@@ -57,7 +59,7 @@ $PUBDEF :
 
 (* ------------------------------------------------------------------------- *)
 
-: listedit[ ref:object str:propname -- bool:modified? ]
+: listedit[ d:object s:propname -- i:modified? ]
   read_wants_blanks
   0 var! modified
   propname @ object @ LMGRgetlist array_make var! linedata
@@ -91,7 +93,7 @@ $PUBDEF :
 (*****************************************************************************)
 (*                           M-LIB-LSEDIT-listedit                           *)
 (*****************************************************************************)
-: M-LIB-LSEDIT-listedit[ ref:object str:propname -- bool:modified? ]
+: M-LIB-LSEDIT-listedit[ d:object s:propname -- i:modified? ]
   (* Permissions inherited *)
   object @ dbref? not if "Non-dbref argument (1)." abort then
   propname @ string? not if "Non-string argument (2)." abort then
@@ -103,7 +105,7 @@ $LIBDEF M-LIB-LSEDIT-listedit
 (*****************************************************************************)
 (*                            M-LIB-LSEDIT-lsedit                            *)
 (*****************************************************************************)
-: M-LIB-LSEDIT-lsedit[ str:objname str:propname -- bool:modified? ]
+: M-LIB-LSEDIT-lsedit[ s:objname s:propname -- i:modified? ]
   (* Permissions inherited *)
   objname @ string? not if "Non-string argument (1)." abort then
   propname @ string? not if "Non-string argument (2)." abort then

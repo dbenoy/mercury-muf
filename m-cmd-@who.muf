@@ -56,7 +56,7 @@ $DEF .err M-LIB-THEME-err
 ;
 WIZCALL M-HELP-desc
 
-: M-HELP-help ( d -- a )
+: M-HELP-help ( d -- Y )
   name ";" split pop toupper var! action_name
   {
     { action_name @ " [#room]" }cat
@@ -68,7 +68,7 @@ WIZCALL M-HELP-help
 
 (* ------------------------------------------------------------------------- *)
 
-: gradient[ str:source int:bright int:dim -- str:result ]
+: gradient[ s:source i:bright i:dim -- s:result ]
   "" var! result
   source @ strlen var! source_length
   begin
@@ -83,7 +83,7 @@ WIZCALL M-HELP-help
 
 $DEF .color_fillfield rot M-LIB-COLOR-strlen - dup 1 < if pop pop "" else * then
 
-: table_column_widths[ arr:data -- arr:widths ]
+: table_column_widths[ Y:data -- Y:widths ]
   { }list var! widths
   data @ foreach
     var! row
@@ -105,7 +105,7 @@ $DEF .color_fillfield rot M-LIB-COLOR-strlen - dup 1 < if pop pop "" else * then
   widths @
 ;
 
-: table_render_header[ arr:row arr:widths -- str:line ]
+: table_render_header[ Y:row Y:widths -- s:line ]
   "" var! line
   row @ foreach
     var! cell
@@ -125,7 +125,7 @@ $DEF .color_fillfield rot M-LIB-COLOR-strlen - dup 1 < if pop pop "" else * then
 
 $DEF FOOTER_BRACKET_OPEN "[#555555]-[#AAAAAA]-[#FFFFFF]-( "
 $DEF FOOTER_BRACKET_CLOSE "[#FFFFFF] )-[#AAAAAA]-[#555555]-"
-: table_render_footer[ dict:opts arr:widths -- str:line ]
+: table_render_footer[ x:opts Y:widths -- s:line ]
   0 var! width
   widths @ foreach nip width @ + width ! repeat
   { FOOTER_BRACKET_OPEN opts @ "footer_left" [] dup not if pop "" then FOOTER_BRACKET_CLOSE }cat var! footer_left
@@ -133,7 +133,7 @@ $DEF FOOTER_BRACKET_CLOSE "[#FFFFFF] )-[#AAAAAA]-[#555555]-"
   { footer_left @ footer_left @ footer_right @ strcat "-" width @ .color_fillfield footer_right @ }cat
 ;
 
-: table_render[ arr:data dict:opts -- arr:lines ]
+: table_render[ Y:data x:opts -- Y:lines ]
   { }list var! lines
   var line
   var cell

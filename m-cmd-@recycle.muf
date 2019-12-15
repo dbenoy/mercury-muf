@@ -43,7 +43,7 @@ $PRAGMA comment_recurse
 $VERSION 1.001
 $AUTHOR  Daniel Benoy
 $NOTE    @recycle command with more features.
-$DOCCMD  @list __PROG__=2-45
+$DOCCMD  @list __PROG__=2-39
 
 : doRecycle ( d -- s )
   1 try
@@ -69,7 +69,7 @@ $PUBDEF :
 ;
 WIZCALL M-HELP-desc
 
-: M-HELP-help ( d -- a )
+: M-HELP-help ( d -- Y )
   name ";" split pop toupper var! action_name
   {
     { action_name @ " <object>" }cat

@@ -37,7 +37,7 @@ $PRAGMA comment_recurse
 $VERSION 1.001
 $AUTHOR  Daniel Benoy
 $NOTE    Make rooms and exits at the same time.
-$DOCCMD  @list __PROG__=2-43
+$DOCCMD  @list __PROG__=2-33
 
 (* Begin configurable options *)
 
@@ -56,7 +56,7 @@ $INCLUDE $m/lib/at_link
 ;
 WIZCALL M-HELP-desc
 
-: M-HELP-help ( d -- a )
+: M-HELP-help ( d -- Y )
   name ";" split pop toupper var! action_name
   {
     { action_name @ " <room>[=<exit to room>[=<backlink from room>]]" }cat

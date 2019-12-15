@@ -43,7 +43,7 @@ $PRAGMA comment_recurse
 $VERSION 1.001
 $AUTHOR  Daniel Benoy
 $NOTE    @unlink command with more features.
-$DOCCMD  @list __PROG__=2-45
+$DOCCMD  @list __PROG__=2-39
 
 (* Begin configurable options *)
 
@@ -62,7 +62,7 @@ $PUBDEF :
 ;
 WIZCALL M-HELP-desc
 
-: M-HELP-help ( d -- a )
+: M-HELP-help ( d -- Y )
   name ";" split pop toupper var! action_name
   {
     { action_name @ " <exit>" }cat

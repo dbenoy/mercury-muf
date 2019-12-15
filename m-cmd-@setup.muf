@@ -56,7 +56,7 @@ $DEF EMOTE_TEST_FROM #1
 ;
 WIZCALL M-HELP-desc
 
-: M-HELP-help ( d -- a )
+: M-HELP-help ( d -- Y )
   name ";" split pop toupper var! action_name
   {
     action_name @
@@ -96,12 +96,12 @@ lvar g_table_autolook
 
 ( ###################### setters and getters for tables ##################### )
 (***** Change menus *****)
-: set_menu[ var:newmenu --  ]
+: set_menu[ v:newmenu --  ]
   newmenu @ @ g_table !
 ;
 
 (***** get/set Flag *****)
-: get_flag[ str:flag str:valueTrue str:valueFalse -- str:value ]
+: get_flag[ s:flag s:valueTrue s:valueFalse -- s:value ]
   "me" match flag @ flag? if
     valueTrue @
   else
@@ -109,7 +109,7 @@ lvar g_table_autolook
   then
 ;
 
-: set_flag[ str:flag --  ]
+: set_flag[ s:flag --  ]
   read
 
   dup "{y|ye|yes}" smatch if
@@ -127,7 +127,7 @@ lvar g_table_autolook
 ;
 
 (***** get/set String Property *****)
-: get_str[ str:property str:unsetValue -- str:value ]
+: get_str[ s:property s:unsetValue -- s:value ]
   "me" match property @ getpropstr
 
   dup not if
@@ -140,7 +140,7 @@ lvar g_table_autolook
   then
 ;
 
-: set_str[ str:property --  ]
+: set_str[ s:property --  ]
   "(Enter a space, to clear.)" .tell
 
   read
@@ -153,7 +153,7 @@ lvar g_table_autolook
 ;
 
 (***** set String Property From a List of Selections *****)
-: set_str_pick[ str:property list:options --  ]
+: set_str_pick[ s:property Y:options --  ]
 
   "Options:" .tell
   options @ "\r" array_join M-LIB-COLOR-escape .tell
@@ -179,7 +179,7 @@ lvar g_table_autolook
 ;
 
 (***** get/set String Boolean Property *****)
-: get_str_bool[ str:property str:valueTrue str:valueFalse -- str:value ]
+: get_str_bool[ s:property s:valueTrue s:valueFalse -- s:value ]
   "me" match property @ getpropstr
 
   "yes" stringcmp not if
@@ -189,7 +189,7 @@ lvar g_table_autolook
   then
 ;
 
-: get_str_bool2[ str:property str:valueTrue str:valueFalse -- str:value ] (* this one is for defaulting to yes *)
+: get_str_bool2[ s:property s:valueTrue s:valueFalse -- s:value ] (* this one is for defaulting to yes *)
   "me" match property @ getpropstr
 
   "no" stringcmp not if
@@ -199,7 +199,7 @@ lvar g_table_autolook
   then
 ;
 
-: get_str_bool3[ str:property str:valueTrue str:valueFalse str:valueUnset -- str:value ] (* this one has a separate value for unset *)
+: get_str_bool3[ s:property s:valueTrue s:valueFalse s:valueUnset -- s:value ] (* this one has a separate value for unset *)
   "me" match property @ getpropstr
 
   dup not if
@@ -214,7 +214,7 @@ lvar g_table_autolook
   then
 ;
 
-: set_str_bool[ str:property --  ]
+: set_str_bool[ s:property --  ]
   read
 
   dup "{y|ye|yes}" smatch if
@@ -231,7 +231,7 @@ lvar g_table_autolook
   pop
 ;
 
-: set_str_bool2[ str:property --  ] (* This one is for clearing a prop, instead of setting no *)
+: set_str_bool2[ s:property --  ] (* This one is for clearing a prop, instead of setting no *)
   read
 
   dup "{y|ye|yes}" smatch if
@@ -249,7 +249,7 @@ lvar g_table_autolook
 ;
 
 (***** get/set Integer Boolean Property *****)
-: get_bool[ str:property str:valueTrue str:valueFalse -- str:value ]
+: get_bool[ s:property s:valueTrue s:valueFalse -- s:value ]
   "me" match property @ getpropval if
     valueTrue @
   else
@@ -257,7 +257,7 @@ lvar g_table_autolook
   then
 ;
 
-: set_bool[ str:property --  ]
+: set_bool[ s:property --  ]
   read
 
   dup "{y|ye|yes}" smatch if
@@ -275,7 +275,7 @@ lvar g_table_autolook
 ;
 
 (***** get an MPI parsed value *****)
-: get_mpi[ str:property str:unsetValue -- str:value ]
+: get_mpi[ s:property s:unsetValue -- s:value ]
   "me" match property @ prog name 0 parseprop
 
   dup not if
@@ -289,7 +289,7 @@ lvar g_table_autolook
 ;
 
 (***** get/set name *****)
-: get_obj_name[  -- str:value ]
+: get_obj_name[  -- s:value ]
   "me" match M-LIB-THEME-name
 ;
 
@@ -299,7 +299,7 @@ lvar g_table_autolook
 ;
 
 (***** set a string to {eval:{list:<property list>}}, and edit the corresponding list *****)
-: set_mpi_list[ str:property str:listprop --  ]
+: set_mpi_list[ s:property s:listprop --  ]
   (* Use existing property if available *)
   "me" match property @ getpropstr
   dup "{eval:{list:" stringpfx if
@@ -321,7 +321,7 @@ lvar g_table_autolook
 ;
 
 (***** Get/set the current morph *****)
-: get_morph[  -- str:value ]
+: get_morph[  -- s:value ]
   "me" match "/_morph" getpropstr
 
   dup "\r" instr if
@@ -335,7 +335,7 @@ lvar g_table_autolook
 ;
 
 (***** get/set Emote setting *****)
-: get_emote_option[ str:option str:prefix_default -- str:value ]
+: get_emote_option[ s:option s:prefix_default -- s:value ]
   "me" match option @ M-LIB-EMOTE-config_get
   M-LIB-COLOR-escape
   "me" match "_config/emote/" option @ strcat getpropstr not if
@@ -343,7 +343,7 @@ lvar g_table_autolook
   then
 ;
 
-: set_emote_option[ str:option --  ]
+: set_emote_option[ s:option --  ]
   "(Enter a space to reset to default)" .tell
 
   read
@@ -360,14 +360,14 @@ lvar g_table_autolook
 ;
 
 (***** Test emote style *****)
-: get_emote_style[ ref:from bool:force_allow_custom str:test_string -- str:value ]
+: get_emote_style[ d:from ?:force_allow_custom s:test_string -- s:value ]
   test_string @ "me" match "highlight_mention_names" M-LIB-EMOTE-config_get ";" split pop "@1" subst
   { from @ }list { "name_match" "yes" "name_theme" "no" "color" "strip" }dict M-LIB-GRAMMAR-sub
   { "from" from @ "to" me @ }dict force_allow_custom @ if "yes" swap "highlight_allow_custom" ->[] then M-LIB-EMOTE-style
 ;
 
 (***** force user to execute command *****)
-: set_external[ ref:program str:newCommand --  ]
+: set_external[ d:program s:newCommand --  ]
   command @ var! oldCommand
 
   newCommand @ command !
@@ -379,12 +379,12 @@ lvar g_table_autolook
 : set_null[  --  ]
 ;
 
-: get_null[  -- str:value ]
+: get_null[  -- s:value ]
   ""
 ;
 
 (* ########################### TABLE DEFINITIONS ########################### *)
-: table_main (  -- a )
+: table_main (  -- Y )
   {
     "" (* Blank line after header *)
 
@@ -557,7 +557,7 @@ lvar g_table_autolook
   }list
 ;
 
-: table_pronoun (  -- a )
+: table_pronoun (  -- Y )
   {
     "" (* Blank line after header *)
 
@@ -620,7 +620,7 @@ lvar g_table_autolook
   }list
 ;
 
-: table_emote (  -- a )
+: table_emote (  -- Y )
   {
     "" 1
 
@@ -721,7 +721,7 @@ lvar g_table_autolook
   }list
 ;
 
-: table_autolook (  -- a )
+: table_autolook (  -- Y )
   {
     "" 1
 
@@ -834,7 +834,7 @@ lvar g_table_autolook
   then
 ;
 
-: draw_item ( a -- s )
+: draw_item ( Y -- s )
   (* Get 'get' string. *)
   dup 1 [] over 2 [] rot 3 []
 
@@ -930,7 +930,7 @@ lvar g_table_autolook
   do_menu_footer
 ;
 
-: do_set ( a --  )
+: do_set ( Y --  )
   dup 5 [] over 6 [] rot 4 []
 
   (* Display help string *)

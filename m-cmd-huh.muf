@@ -34,7 +34,7 @@ $PRAGMA comment_recurse
 $VERSION 1.000
 $AUTHOR  Daniel Benoy
 $NOTE    Generic 'huh?' handler.
-$DOCCMD  @list __PROG__=2-<last header line>
+$DOCCMD  @list __PROG__=2-30
 
 (* Begin configurable options *)
 
@@ -219,14 +219,14 @@ $DEF .err M-LIB-THEME-err
 ;
 WIZCALL M-HELP-desc
 
-: M-HELP-help ( d -- a )
+: M-HELP-help ( d -- Y )
   "The 'huh?' command is executed automatically when you enter an invalid command. You don't need to use it manually."
 ;
 WIZCALL M-HELP-help
 
 (* ------------------------------------------------------------------------- *)
 
-: aliases_add[ dict:alias_dict str:alias_line -- dict:alias_dict ]
+: aliases_add[ x:alias_dict s:alias_line -- x:alias_dict ]
   alias_line @ "=" split
   var! alias_to
   var! aliases_from
@@ -243,7 +243,7 @@ WIZCALL M-HELP-help
   repeat
 ;
 
-: aliases_all[  -- dict:alias_dict ]
+: aliases_all[  -- x:alias_dict ]
   { }dict
   prop_aliases foreach
     var! alias_list
@@ -255,7 +255,7 @@ WIZCALL M-HELP-help
   repeat
 ;
 
-: aliases_active[  -- dict:alias_dict ]
+: aliases_active[  -- x:alias_dict ]
   { }dict
   prop_aliases foreach
     var! alias_list
@@ -278,7 +278,7 @@ WIZCALL M-HELP-help
   }dict
 ;
 
-: alias_match[ str:cmd dict:alias_dict -- str:new_cmd ]
+: alias_match[ s:cmd x:alias_dict -- s:new_cmd ]
   cmd @ " " split
   var! cmd_args
   var! cmd_cmd

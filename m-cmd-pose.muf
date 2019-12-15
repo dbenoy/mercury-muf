@@ -46,8 +46,8 @@ $include $m/lib/emote
 ;
 WIZCALL M-HELP-desc
 
-: M-HELP-help ( s -- a )
-  ";" split pop var! action_name
+: M-HELP-help ( d -- Y )
+  name ";" split pop var! action_name
   {
     { action_name @ toupper " <message>" }cat
     { "  Poses a message to everyone in the room.  This is used for actions.  i.e.: if your name was Igor, and you typed '" action_name @ tolower " falls down.', everyone would see:" }cat

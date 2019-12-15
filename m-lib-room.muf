@@ -9,16 +9,16 @@ $PRAGMA comment_recurse
 (*   GitHub: https://github.com/dbenoy/mercury-muf (See for install info)    *)
 (*                                                                           *)
 (* PUBLIC FUNCTIONS:                                                         *)
-(*   M-LIB-ROOM-directions[ ref:room -- str:directions ]                     *)
+(*   M-LIB-ROOM-directions[ d:room -- s:directions ]                         *)
 (*     Returns a short string describing how to get to the room. Max 40      *)
 (*     characters.                                                           *)
 (*                                                                           *)
-(*   M-LIB-ROOM-public?[ ref:room -- bool:public? ]                          *)
+(*   M-LIB-ROOM-public?[ d:room -- i:public? ]                               *)
 (*     Checks if the room is 'public' meaning it's marked as okay for        *)
 (*     programs to reveal the name of the room and the listing of players    *)
 (*     present when listing rooms.                                           *)
 (*                                                                           *)
-(*   M-LIB-ROOM-short_desc[ ref:room -- str:desc ]                           *)
+(*   M-LIB-ROOM-short_desc[ d:room -- s:desc ]                               *)
 (*     Returns a short string describing the room. Max 80 characters.        *)
 (*                                                                           *)
 (* PROPERTIES:                                                               *)
@@ -65,14 +65,14 @@ $PRAGMA comment_recurse
 $VERSION 1.000
 $AUTHOR  Daniel Benoy
 $NOTE    Fetches information about room objects.
-$DOCCMD  @list __PROG__=2-30
+$DOCCMD  @list __PROG__=2-61
 
 $PUBDEF :
 
 (*****************************************************************************)
 (*                           M-LIB-ROOM-directions                           *)
 (*****************************************************************************)
-: M-LIB-ROOM-directions[ ref:room -- str:directions ]
+: M-LIB-ROOM-directions[ d:room -- s:directions ]
   (* Permissions inherited *)
   room @ dbref? not if "Non-dbref argument (1)." abort then
   room @ room? not if "Non-room argument (1)." abort then
@@ -85,7 +85,7 @@ $LIBDEF M-LIB-ROOM-directions
 (*****************************************************************************)
 (*                            M-LIB-ROOM-public?                             *)
 (*****************************************************************************)
-: M-LIB-ROOM-public?[ ref:room -- bool:public? ]
+: M-LIB-ROOM-public?[ d:room -- i:public? ]
   (* Permissions inherited *)
   room @ dbref? not if "Non-dbref argument (1)." abort then
   room @ room? not if "Non-room argument (1)." abort then
@@ -100,7 +100,7 @@ $LIBDEF M-LIB-ROOM-public?
 (*****************************************************************************)
 (*                           M-LIB-ROOM-short_desc                           *)
 (*****************************************************************************)
-: M-LIB-ROOM-short_desc[ ref:room -- str:desc ]
+: M-LIB-ROOM-short_desc[ d:room -- s:desc ]
   (* Permissions inherited *)
   room @ dbref? not if "Non-dbref argument (1)." abort then
   room @ room? not if "Non-room argument (1)." abort then

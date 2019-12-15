@@ -36,30 +36,30 @@ $PRAGMA comment_recurse
 (*     encoding is retreived from the object's owner instead.                *)
 (*                                                                           *)
 (* PUBLIC ROUTINES:                                                          *)
-(*   M-LIB-COLOR-encoding_default[ -- str:type ]                             *)
+(*   M-LIB-COLOR-encoding_default[ -- s:type ]                               *)
 (*     Returns the default encoding.                                         *)
 (*                                                                           *)
-(*   M-LIB-COLOR-encoding_get[ ref:object -- str:type ]                      *)
+(*   M-LIB-COLOR-encoding_get[ d:object -- s:type ]                          *)
 (*     Get a player's currently set ANSI encoding type. If no encoding is    *)
 (*     set, the default encoding is returned.                                *)
 (*                                                                           *)
-(*   M-LIB-COLOR-encoding_player_valid[ -- list:options ]                    *)
+(*   M-LIB-COLOR-encoding_player_valid[ -- Y:options ]                       *)
 (*     Returns a list of valid encodings that players can set in their       *)
 (*     properties in order of quality from best to worst.                    *)
 (*                                                                           *)
-(*   M-LIB-COLOR-escape[ str:source -- str:result ]                          *)
+(*   M-LIB-COLOR-escape[ s:source -- s:result ]                              *)
 (*     Escapes all MCC color codes in a string.                              *)
 (*                                                                           *)
-(*   M-LIB-COLOR-hsl2rgb[ arr:hsl -- str:rgb ]                               *)
+(*   M-LIB-COLOR-hsl2rgb[ Y:hsl -- s:rgb ]                                   *)
 (*     Takes an HSV value array of three floats and converts it to a 6-digit *)
 (*     hexadecimal RGB string.                                               *)
 (*                                                                           *)
-(*   M-LIB-COLOR-rgb2hsl[ str:rgb -- arr:hsl ]                               *)
+(*   M-LIB-COLOR-rgb2hsl[ s:rgb -- Y:hsl ]                                   *)
 (*     Takes a 6-digit hexadecimal RGB string and converts it to an HSV      *)
 (*     value array of three floats.                                          *)
 (*                                                                           *)
-(*   M-LIB-COLOR-strcat[ str:source1 str:source2 -- str:result ]             *)
-(*   M-LIB-COLOR-strcat_hard[ str:source1 str:source2 -- str:result ]        *)
+(*   M-LIB-COLOR-strcat[ s:source1 s:source2 -- s:result ]                   *)
+(*   M-LIB-COLOR-strcat_hard[ s:source1 s:source2 -- s:result ]              *)
 (*     Works like the STRCAT primitive for MCC strings, but unlike the       *)
 (*     STRCAT primitive it combines them in a such a way that the colors are *)
 (*     preserved and the color codes in one string will not affect the       *)
@@ -76,25 +76,24 @@ $PRAGMA comment_recurse
 (*     ensures that no color information at all from the first string        *)
 (*     perseveres into the second string.                                    *)
 (*                                                                           *)
-(*   M-LIB-COLOR-strcut[ str:source int:split_point str:type                 *)
-(*                      -- str:string1 str:string2 ]                         *)
+(*   M-LIB-COLOR-strcut[ s:source i:split_point s:type                       *)
+(*                      -- s:string1 s:string2 ]                             *)
 (*     Works like the STRCUT primitive, but it works for strings with MCC    *)
 (*     color codes and will operate as if on the colorized string.           *)
 (*                                                                           *)
-(*   M-LIB-COLOR-strlen[ str:source -- int:result ]                          *)
+(*   M-LIB-COLOR-strlen[ s:source -- i:result ]                              *)
 (*     Returns the length of a string, ignoring valid MCC color codes.       *)
 (*                                                                           *)
-(*   M-LIB-COLOR-strip[ str:source -- str:result ]                           *)
+(*   M-LIB-COLOR-strip[ s:source -- s:result ]                               *)
 (*     Removes all MCC color codes from a string, and returns its colorless  *)
 (*     equivalent.                                                           *)
 (*                                                                           *)
-(*   M-LIB-COLOR-testpattern[ str:ansi_type -- arr:strings ]                 *)
+(*   M-LIB-COLOR-testpattern[ s:ansi_type -- Y:strings ]                     *)
 (*     Returns an array of strings formatted for the given ANSI encoding     *)
 (*     type that demonstrate the ANSI mode. This is useful to help players   *)
 (*     determine which ANSI mode they should be using to match their client. *)
 (*                                                                           *)
-(*   M-LIB-COLOR-transcode[ str:source str:from_type str:to_type             *)
-(*                          -- str:result ]                                  *)
+(*   M-LIB-COLOR-transcode[ s:source s:from_type s:to_type -- s:result ]     *)
 (*     Converts from one encoding type to another. If a color can't be       *)
 (*     precicely produced for a given type, it will be approximated by       *)
 (*     trying to pick the closest available color. See ENCODING TYPES for    *)
@@ -531,7 +530,7 @@ $PRAGMA comment_recurse
 $VERSION 1.0
 $AUTHOR  Daniel Benoy
 $NOTE    Text color library.
-$DOCCMD  @list __PROG__=2-527
+$DOCCMD  @list __PROG__=2-526
 
 (* Begin configurable options *)
 
@@ -590,7 +589,7 @@ $DEF SUPPORTED_TYPES SUPPORTED_TYPES_ANSI SUPPORTED_TYPES_CODE array_union
 
 (* 8-BIT ANSI PALLATTE TABLE - RGB *)
 lvar g_ansi_table_8bit_rgb
-: ansi_table_8bit_rgb ( -- a )
+: ansi_table_8bit_rgb ( -- x )
   g_ansi_table_8bit_rgb @ not if
     {
       16 { 0 0 0 }list
@@ -840,7 +839,7 @@ lvar g_ansi_table_8bit_rgb
 
 (* 4-BIT VGA ANSI PALLATTE TABLE - RGB *)
 lvar g_ansi_table_4bit_vga_rgb
-: ansi_table_4bit_vga_rgb ( -- a )
+: ansi_table_4bit_vga_rgb ( -- x )
   g_ansi_table_4bit_vga_rgb @ not if
     {
       30 { 0 0 0 }list
@@ -866,7 +865,7 @@ lvar g_ansi_table_4bit_vga_rgb
 
 (* 4-BIT XTERM ANSI PALLATTE TABLE - RGB *)
 lvar g_ansi_table_4bit_xterm_rgb
-: ansi_table_4bit_xterm_rgb ( -- a )
+: ansi_table_4bit_xterm_rgb ( -- x )
   g_ansi_table_4bit_xterm_rgb @ not if
     {
       30 { 0 0 0 }list
@@ -893,7 +892,7 @@ lvar g_ansi_table_4bit_xterm_rgb
 (* ------------------------------------------------------------------------ *)
 
 (* Convert RGB color space to HSL color space *)
-: rgb2hsl ( a -- a )
+: rgb2hsl ( Y -- Y )
   (* http://axonflux.com/handy-rgb-to-hsl-and-rgb-to-hsv-color-model-c *)
   array_vals
   pop
@@ -934,7 +933,7 @@ lvar g_ansi_table_4bit_xterm_rgb
 ;
 
 (* Convert HSL color space to RGB color space *)
-: hue2rgb[ int:p int:q int: t -- int:result ]
+: hue2rgb[ i:p i:q i: t -- i:result ]
   t @ 0 < if
     t ++
   then
@@ -952,7 +951,7 @@ lvar g_ansi_table_4bit_xterm_rgb
   then
   p @
 ;
-: hsl2rgb ( a -- a )
+: hsl2rgb ( Y -- Y )
   (* http://axonflux.com/handy-rgb-to-hsl-and-rgb-to-hsv-color-model-c *)
   array_vals
   pop
@@ -984,7 +983,7 @@ lvar g_ansi_table_4bit_xterm_rgb
 ;
 
 (* Get a chroma value for a given RGB *)
-: chroma ( a -- f )
+: chroma ( Y -- f )
   array_vals
   pop
   255.0 / var! b
@@ -996,7 +995,7 @@ lvar g_ansi_table_4bit_xterm_rgb
 ;
 
 (* Plot a color position in a biconal color space *)
-: rgb2bicone ( a -- a )
+: rgb2bicone ( Y -- Y )
   (* https://stackoverflow.com/questions/4057475/rounding-colour-values-to-the-nearest-of-a-small-set-of-colours *)
   dup chroma var! c
   rgb2hsl
@@ -1014,7 +1013,7 @@ lvar g_ansi_table_4bit_xterm_rgb
 ;
 
 (* Determine the distance between two points in 3-space *)
-: distance3[ arr:first arr:second -- float:distance ]
+: distance3[ Y:first Y:second -- n:distance ]
   first @
   array_vals
   pop
@@ -1036,7 +1035,7 @@ lvar g_ansi_table_4bit_xterm_rgb
 ;
 
 (* Given a target color, find the closest approximate color in a color palette table *)
-: closest_color[ str:target_rgb dict:color_table_rgb -- int:closest_key ]
+: closest_color[ s:target_rgb x:color_table_rgb -- i:closest_key ]
   (* Convert target_rgb into a list of integer components *)
   target_rgb @
   2 strcut swap M-LIB-STRING-xtoi var! r
@@ -1065,7 +1064,7 @@ lvar g_ansi_table_4bit_xterm_rgb
 ;
 
 (* Wraps closest_color with a cache of color matches *)
-: closest_color_cached[ str:target_rgb dict:color_table_rgb var:match_cache -- int:closest_key ]
+: closest_color_cached[ s:target_rgb x:color_table_rgb v:match_cache -- i:closest_key ]
   match_cache @ @ target_rgb @ array_getitem dup if
     exit
   else
@@ -1077,14 +1076,14 @@ lvar g_ansi_table_4bit_xterm_rgb
 
 (* RGB to ANSI color code conversion routines *)
 lvar ansi8_nearest_cache
-: ansi8_nearest[ str:target_rgb -- int:color8 ]
+: ansi8_nearest[ s:target_rgb -- i:color8 ]
   ansi8_nearest_cache @ not if
     { }dict ansi8_nearest_cache !
   then
   target_rgb @ ansi_table_8bit_rgb ansi8_nearest_cache closest_color_cached
 ;
 
-: ansi4_nearest_vga[ str:target_rgb -- int:color4 ]
+: ansi4_nearest_vga[ s:target_rgb -- i:color4 ]
   target_rgb @
   2 strcut swap M-LIB-STRING-xtoi var! r
   2 strcut swap M-LIB-STRING-xtoi var! g
@@ -1129,7 +1128,7 @@ lvar ansi8_nearest_cache
   37
 ;
 
-: ansi4_nearest_xterm[ str:target_rgb -- int:color4 ]
+: ansi4_nearest_xterm[ s:target_rgb -- i:color4 ]
   target_rgb @
   2 strcut swap M-LIB-STRING-xtoi var! r
   2 strcut swap M-LIB-STRING-xtoi var! g
@@ -1175,7 +1174,7 @@ lvar ansi8_nearest_cache
 ;
 
 lvar ansi_table_3bit_vga_rgb
-: ansi3_nearest_vga[ str:target_rgb -- int:color4 ]
+: ansi3_nearest_vga[ s:target_rgb -- i:color4 ]
   target_rgb @
   2 strcut swap M-LIB-STRING-xtoi var! r
   2 strcut swap M-LIB-STRING-xtoi var! g
@@ -1207,7 +1206,7 @@ lvar ansi_table_3bit_vga_rgb
 ;
 
 lvar ansi_table_3bit_xterm_rgb
-: ansi3_nearest_xterm[ str:target_rgb -- int:color4 ]
+: ansi3_nearest_xterm[ s:target_rgb -- i:color4 ]
   target_rgb @
   2 strcut swap M-LIB-STRING-xtoi var! r
   2 strcut swap M-LIB-STRING-xtoi var! g
@@ -1241,7 +1240,7 @@ lvar ansi_table_3bit_xterm_rgb
 ;
 
 (* Convert an individual MCC code sequence tag to ANSI *)
-: mcc_seq[ str:to_type str:code_type int:code_value -- str:ansi_seq ]
+: mcc_seq[ s:to_type s:code_type i:code_value -- s:ansi_seq ]
   code_type @ CODE_TYPE_BACKGROUND = code_type @ CODE_TYPE_FOREGROUND = or if
     "" var! retval
     to_type @ "ANSI-3BIT-VGA" = if
@@ -1306,7 +1305,7 @@ lvar ansi_table_3bit_xterm_rgb
 ;
 
 (* Take an MCC code sequence tag at the start of a string and parse it. *)
-: mcc_tagparse[ str:check_string -- str:code_type str:code_value str:post_code ]
+: mcc_tagparse[ s:check_string -- s:code_type s:code_value s:post_code ]
   check_string @
   1 strcut swap var! code_openbracket
   1 strcut swap var! code_type
@@ -1321,7 +1320,7 @@ lvar ansi_table_3bit_xterm_rgb
 ;
 
 (* Splits a string, ignoring MCC codes when deciding where to split *)
-: mcc_strcut[ str:source str:split_point bool:keep_color -- str:result ]
+: mcc_strcut[ s:source s:split_point ?:keep_color -- s:result ]
   source @ REGEXP_MCC_CODE 0 regexp pop not if
     source @ split_point @ strcut exit
   then
@@ -1383,7 +1382,7 @@ lvar ansi_table_3bit_xterm_rgb
 ;
 
 (* Convert an entire line of MCC to another encoding *)
-: mcc_convert_line[ str:source str:to_type -- str:result ]
+: mcc_convert_line[ s:source s:to_type -- s:result ]
   source @ REGEXP_MCC_CODE 0 regexp pop not if
     source @ exit
   then
@@ -1407,7 +1406,7 @@ lvar ansi_table_3bit_xterm_rgb
 ;
 
 (* Convert an entire MCC sequence to another encoding *)
-: mcc_convert[ str:source str:to_type -- str:result ]
+: mcc_convert[ s:source s:to_type -- s:result ]
   mode var! old_mode
   preempt (* Workaround for issue #475 https://github.com/fuzzball-muck/fuzzball/issues/475 *)
   source @ "\r" explode_array 1 array_cut swap array_vals pop to_type @ mcc_convert_line var! retval
@@ -1427,7 +1426,7 @@ lvar ansi_table_3bit_xterm_rgb
 ;
 
 (* Preprocess an MCC line for 'modify something elsewhere on the line' codes *)
-: mcc_preprocess_line[ str: source -- str:result ]
+: mcc_preprocess_line[ s: source -- s:result ]
   source @ REGEXP_MCC_CODE_PREPROCESS 0 regexp pop not if
     source @ exit
   then
@@ -1519,7 +1518,7 @@ lvar ansi_table_3bit_xterm_rgb
 ;
 
 (* Convert an entire MCC sequence to another encoding *)
-: mcc_preprocess[ str:source -- str:result ]
+: mcc_preprocess[ s:source -- s:result ]
   mode var! old_mode
   preempt (* Workaround for issue #475 https://github.com/fuzzball-muck/fuzzball/issues/475 *)
   source @ "\r" explode_array 1 array_cut swap array_vals pop mcc_preprocess_line var! retval
@@ -1565,7 +1564,7 @@ lvar ansi_table_3bit_xterm_rgb
   retval @
 ;
 
-: encoding_get[ ref:object -- str:type ]
+: encoding_get[ d:object -- s:type ]
   object @ player? not if
     object @ owner encoding_get exit
   then
@@ -1589,7 +1588,7 @@ lvar ansi_table_3bit_xterm_rgb
   then
 ;
 
-: transcode[ str:source str:from_type str:to_type -- str:result ]
+: transcode[ s:source s:from_type s:to_type -- s:result ]
   to_type @ "AUTO" = if
     "me" match encoding_get to_type !
   then
@@ -1622,7 +1621,7 @@ lvar ansi_table_3bit_xterm_rgb
 (*****************************************************************************)
 (*                        M-LIB-COLOR-encoding_default                       *)
 (*****************************************************************************)
-: M-LIB-COLOR-encoding_default[ -- str:type ]
+: M-LIB-COLOR-encoding_default[ -- s:type ]
   ENCODING_DEFAULT
 ;
 PUBLIC M-LIB-COLOR-encoding_default
@@ -1631,7 +1630,7 @@ $LIBDEF M-LIB-COLOR-encoding_default
 (*****************************************************************************)
 (*                          M-LIB-COLOR-encoding_get                         *)
 (*****************************************************************************)
-: M-LIB-COLOR-encoding_get[ ref:object -- str:type ]
+: M-LIB-COLOR-encoding_get[ d:object -- s:type ]
   M-LIB-PROGRAM-needs_mlev1
 
   object @ dbref? not if "Non-dbref argument (1)." abort then
@@ -1644,7 +1643,7 @@ $LIBDEF M-LIB-COLOR-encoding_get
 (*****************************************************************************)
 (*                     M-LIB-COLOR-encoding_player_valid                     *)
 (*****************************************************************************)
-: M-LIB-COLOR-encoding_player_valid[ -- list:options ]
+: M-LIB-COLOR-encoding_player_valid[ -- Y:options ]
   M-LIB-PROGRAM-needs_mlev1
 
   SUPPORTED_TYPES_ANSI
@@ -1655,7 +1654,7 @@ $LIBDEF M-LIB-COLOR-encoding_player_valid
 (*****************************************************************************)
 (*                            M-LIB-COLOR-escape                             *)
 (*****************************************************************************)
-: M-LIB-COLOR-escape[ str:source -- str:result ]
+: M-LIB-COLOR-escape[ s:source -- s:result ]
   M-LIB-PROGRAM-needs_mlev1
 
   source @ string? not if "Non-string argument (1)." abort then
@@ -1668,7 +1667,7 @@ $LIBDEF M-LIB-COLOR-escape
 (*****************************************************************************)
 (*                            M-LIB-COLOR-hsl2rgb                            *)
 (*****************************************************************************)
-: M-LIB-COLOR-hsl2rgb[ arr:hsl -- str:rgb ]
+: M-LIB-COLOR-hsl2rgb[ Y:hsl -- s:rgb ]
   M-LIB-PROGRAM-needs_mlev1
   hsl @ array? hsl @ dictionary? not and not if "Non-array-list argument (1)." abort then
   hsl @ array_count 3 != if "Invalid HSL values." abort then
@@ -1686,7 +1685,7 @@ $LIBDEF M-LIB-COLOR-hsl2rgb
 (*****************************************************************************)
 (*                            M-LIB-COLOR-rgb2hsl                            *)
 (*****************************************************************************)
-: M-LIB-COLOR-rgb2hsl[ str:rgb -- arr:hsl ]
+: M-LIB-COLOR-rgb2hsl[ s:rgb -- Y:hsl ]
   M-LIB-PROGRAM-needs_mlev1
   rgb @ string? not if "Non-string argument (1)." abort then
   rgb @ strlen 6 = rgb @ M-LIB-STRING-hex? and not if "Invalid RGB string" abort then
@@ -1705,7 +1704,7 @@ $LIBDEF M-LIB-COLOR-rgb2hsl
 (*****************************************************************************)
 (*                          M-LIB-COLOR-strcat_hard                          *)
 (*****************************************************************************)
-: M-LIB-COLOR-strcat_hard[ str:source1 str:source2 -- str:result ]
+: M-LIB-COLOR-strcat_hard[ s:source1 s:source2 -- s:result ]
   M-LIB-PROGRAM-needs_mlev1
 
   source1 @ string? not if "Non-string argument (1)." abort then
@@ -1731,7 +1730,7 @@ $LIBDEF M-LIB-COLOR-strcat_hard
 (*****************************************************************************)
 (*                            M-LIB-COLOR-strcat                             *)
 (*****************************************************************************)
-: M-LIB-COLOR-strcat[ str:source1 str:source2 -- str:result ]
+: M-LIB-COLOR-strcat[ s:source1 s:source2 -- s:result ]
   M-LIB-PROGRAM-needs_mlev1
 
   source1 @ string? not if "Non-string argument (1)." abort then
@@ -1757,7 +1756,7 @@ $LIBDEF M-LIB-COLOR-strcat
 (*****************************************************************************)
 (*                            M-LIB-COLOR-strcut                             *)
 (*****************************************************************************)
-: M-LIB-COLOR-strcut[ str:source int:split_point -- str:string1 str:string2 ]
+: M-LIB-COLOR-strcut[ s:source i:split_point -- s:string1 s:string2 ]
   M-LIB-PROGRAM-needs_mlev1
 
   source @ string? not if "Non-string argument (1)." abort then
@@ -1772,7 +1771,7 @@ $LIBDEF M-LIB-COLOR-strcut
 (*****************************************************************************)
 (*                            M-LIB-COLOR-strlen                             *)
 (*****************************************************************************)
-: M-LIB-COLOR-strlen[ str:source -- int:result ]
+: M-LIB-COLOR-strlen[ s:source -- i:result ]
   M-LIB-PROGRAM-needs_mlev1
 
   source @ string? not if "Non-string argument (1)." abort then
@@ -1785,7 +1784,7 @@ $LIBDEF M-LIB-COLOR-strlen
 (*****************************************************************************)
 (*                             M-LIB-COLOR-strip                             *)
 (*****************************************************************************)
-: M-LIB-COLOR-strip[ str:source -- str:result ]
+: M-LIB-COLOR-strip[ s:source -- s:result ]
   M-LIB-PROGRAM-needs_mlev1
 
   source @ string? not if "Non-string argument (1)." abort then
@@ -1798,7 +1797,7 @@ $LIBDEF M-LIB-COLOR-strip
 (*****************************************************************************)
 (*                            M-LIB-COLOR-toupper                            *)
 (*****************************************************************************)
-: M-LIB-COLOR-toupper[ str:source -- str:result ]
+: M-LIB-COLOR-toupper[ s:source -- s:result ]
   M-LIB-PROGRAM-needs_mlev1
   source @ string? not if "Non-string argument (1)." abort then
   source @ mcc_toupper
@@ -1809,7 +1808,7 @@ $LIBDEF M-LIB-COLOR-toupper
 (*****************************************************************************)
 (*                            M-LIB-COLOR-tolower                            *)
 (*****************************************************************************)
-: M-LIB-COLOR-tolower[ str:source -- str:result ]
+: M-LIB-COLOR-tolower[ s:source -- s:result ]
   M-LIB-PROGRAM-needs_mlev1
   source @ string? not if "Non-string argument (1)." abort then
   source @ mcc_tolower
@@ -1820,7 +1819,7 @@ $LIBDEF M-LIB-COLOR-tolower
 (*****************************************************************************)
 (*                          M-LIB-COLOR-testpattern                          *)
 (*****************************************************************************)
-: M-LIB-COLOR-testpattern[ str:ansi_type -- arr:strings ]
+: M-LIB-COLOR-testpattern[ s:ansi_type -- Y:strings ]
   M-LIB-PROGRAM-needs_mlev1
 
   ansi_type @ "ANSI-24BIT" = if
@@ -2077,7 +2076,7 @@ $LIBDEF M-LIB-COLOR-testpattern
 (*****************************************************************************)
 (*                           M-LIB-COLOR-transcode                           *)
 (*****************************************************************************)
-: M-LIB-COLOR-transcode[ str:source str:from_type str:to_type -- str:result ]
+: M-LIB-COLOR-transcode[ s:source s:from_type s:to_type -- s:result ]
   M-LIB-PROGRAM-needs_mlev1
 
   from_type @ string? not if "Non-string argument (1)." abort then

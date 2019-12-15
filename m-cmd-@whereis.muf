@@ -6,6 +6,8 @@ $PRAGMA comment_recurse
 (* m-cmd-@whereis.muf $m/cmd/at_whereis                                      *)
 (*   Outputs the location of another player.                                 *)
 (*                                                                           *)
+(*   GitHub: https://github.com/dbenoy/mercury-muf (See for install info)    *)
+(*                                                                           *)
 (*****************************************************************************)
 (* Revision History:                                                         *)
 (*   Version 1.0 -- Daniel Benoy -- November, 2019                           *)
@@ -32,7 +34,7 @@ $PRAGMA comment_recurse
 $VERSION 1.000
 $AUTHOR  Daniel Benoy
 $NOTE    Shows the location of another player.
-$DOCCMD  @list __PROG__=2-28
+$DOCCMD  @list __PROG__=2-30
 
 (* Begin configurable options *)
 
@@ -59,7 +61,7 @@ $DEF .err M-LIB-THEME-err
 ;
 WIZCALL M-HELP-desc
 
-: M-HELP-help ( d -- a )
+: M-HELP-help ( d -- Y )
   name ";" split pop toupper var! action_name
   {
     { action_name @ " [#nomap ]<player>[=<mapname>]" }cat
@@ -71,7 +73,7 @@ WIZCALL M-HELP-help
 
 (* ------------------------------------------------------------------------ *)
 
-: location_text[ ref:player -- str:result ]
+: location_text[ d:player -- s:result ]
   "" var! result
   {
     player @ begin

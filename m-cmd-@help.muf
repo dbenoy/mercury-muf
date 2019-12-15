@@ -88,7 +88,7 @@ $DEF .tag M-LIB-THEME-tag
 ;
 WIZCALL M-HELP-desc
 
-: M-HELP-help ( d -- a )
+: M-HELP-help ( d -- Y )
   name ";" split pop toupper var! action_name
   {
     { action_name @ " [<topic>]" }cat
@@ -108,7 +108,7 @@ WIZCALL M-HELP-help
 : color_cb_tolower M-LIB-COLOR-tolower ;
 : color_cb ( -- a ) { "strcat" 'color_cb_strcat "strcut" 'color_cb_strcut "strstrip" 'color_cb_strstrip "toupper" 'color_cb_toupper "tolower" 'color_cb_tolower }dict ;
 
-: help_page_main[ list:topics -- list:lines ]
+: help_page_main[ x:topics -- Y:lines ]
   {
     { "Welcome to " "muckname" sysparm "! To get help, try the following commands:" }cat
     { "  " command @ " alpha .... Get an alphabetical listing of all help topics." }cat
@@ -116,7 +116,7 @@ WIZCALL M-HELP-help
   }list
 ;
 
-: globals_get[  -- arr:globals ]
+: globals_get[  -- Y:globals ]
   {
     #0 exits_array foreach
       nip
@@ -141,7 +141,7 @@ WIZCALL M-HELP-help
 ;
 
 $DEF .color_fillfield rot M-LIB-COLOR-strlen - dup 1 < if pop pop "" else * then
-: help_page_globals[ arr:topics -- arr:lines ]
+: help_page_globals[ x:topics -- Y:lines ]
   { }list var! lines
   { }list var! entries
   globals_get foreach
@@ -164,11 +164,11 @@ $DEF .color_fillfield rot M-LIB-COLOR-strlen - dup 1 < if pop pop "" else * then
   }list
 ;
 
-: help_page_command[ arr:topics ref:command_exit -- arr:lines ]
+: help_page_command[ x:topics d:command_exit -- Y:lines ]
   command_exit @ M-LIB-HELP-command_get_help
 ;
 
-: help_page_listing[ list:topics -- arr:lines ]
+: help_page_listing[ x:topics -- Y:lines ]
   { }list var! lines
   "" var! line
   "" var! prev_letter
@@ -212,12 +212,12 @@ $DEF .color_fillfield rot M-LIB-COLOR-strlen - dup 1 < if pop pop "" else * then
   lines @
 ;
 
-: help_page_custom[ list:topics str:custom_topic_name ]
+: help_page_custom[ x:topics s:custom_topic_name ]
   prog { "_at_help/entries/" custom_topic_name @ "/help" }cat array_get_proplist
 ;
 
 (* Like array_setitem but if there's already an entry with that key it will add it under a different key. *)
-: array_setitem_redundant ( ? a @ -- a )
+: array_setitem_redundant ( ? x @ -- x )
   begin
     over over [] if
       (* Strip off any number that may be on the end *)
@@ -240,14 +240,14 @@ $DEF .color_fillfield rot M-LIB-COLOR-strlen - dup 1 < if pop pop "" else * then
 ;
 
 (* Like array_setitem but won't override something that exists with that key *)
-: array_setitem_unless_exists ( ? a @ -- a )
+: array_setitem_unless_exists ( ? x @ -- x )
   over over [] if
     pop swap pop exit
   then
   array_setitem
 ;
 
-: topics_get[  -- list:topic_list ]
+: topics_get[  -- x:topic_list ]
   { }dict var! topic_list
   globals_get var! global_exits
   (* 'alpha' *)
@@ -298,7 +298,7 @@ $DEF .color_fillfield rot M-LIB-COLOR-strlen - dup 1 < if pop pop "" else * then
   topic_list @
 ;
 
-: array_getitem_partial ( a @ -- ? )
+: array_getitem_partial ( x @ -- ? )
   over over array_getitem dup if
     exit
   else

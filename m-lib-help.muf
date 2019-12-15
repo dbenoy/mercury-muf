@@ -35,15 +35,15 @@ $PRAGMA comment_recurse
 (*     in the dbref of the action and expecting a list array of strings.     *)
 (*                                                                           *)
 (* PUBLIC ROUTINES:                                                          *)
-(*   M-LIB-HELP-command_get_name[ ref:action -- str:result ]                 *)
+(*   M-LIB-HELP-command_get_name[ d:action -- s:result ]                     *)
 (*     Get a friendly name string for the command. This can be used to       *)
 (*     differentiate it from other help articles, or to describe multi-alias *)
 (*     commands.                                                             *)
 (*                                                                           *)
-(*   M-LIB-HELP-command_get_desc[ ref:action -- str:result ]                 *)
+(*   M-LIB-HELP-command_get_desc[ d:action -- s:result ]                     *)
 (*     Get a short description, 50 characters or less, of the command.       *)
 (*                                                                           *)
-(*   M-LIB-HELP-command_get_help[ ref:action -- arr:result ]                 *)
+(*   M-LIB-HELP-command_get_help[ d:action -- Y:result ]                     *)
 (*     Get a long help and usage description of the command as an array of   *)
 (*     strings.                                                              *)
 (*                                                                           *)
@@ -73,7 +73,7 @@ $PRAGMA comment_recurse
 $VERSION 1.000
 $AUTHOR  Daniel Benoy
 $NOTE    Gets help text.
-$DOCCMD  @list __PROG__=2-30
+$DOCCMD  @list __PROG__=2-69
 
 (* ------------------------------------------------------------------------ *)
 
@@ -100,7 +100,7 @@ $PUBDEF :
   #-1
 ;
 
-: command_get_desc[ ref:action -- str:result ]
+: command_get_desc[ d:action -- s:result ]
   action @ ok? not if "ERROR: Bad action." exit then
   (* Try to grab the property off the action directly. *)
   action @ PROP_COMMAND_DESC getpropstr
@@ -127,7 +127,7 @@ $PUBDEF :
   { "The " action @ name ";" split pop " command." }cat
 ;
 
-: command_get_help[ ref:action -- str:result ]
+: command_get_help[ d:action -- s:result ]
   action @ ok? not if { "ERROR: Bad action." }list exit then
   (* Try to grab the property off the action directly. *)
   action @ PROP_COMMAND_HELP array_get_proplist
@@ -171,7 +171,7 @@ $PUBDEF :
 (*****************************************************************************)
 (*                        M-LIB-HELP-command_get_desc                        *)
 (*****************************************************************************)
-: M-LIB-HELP-command_get_desc[ ref:action -- str:result ]
+: M-LIB-HELP-command_get_desc[ d:action -- s:result ]
   M-LIB-PROGRAM-needs_mlev1
   action @ dbref? not if "Non-dbref argument (1)." abort then
   action @ command_get_desc
@@ -183,7 +183,7 @@ $LIBDEF M-LIB-HELP-command_get_desc
 (*****************************************************************************)
 (*                        M-LIB-HELP-command_get_help                        *)
 (*****************************************************************************)
-: M-LIB-HELP-command_get_help[ ref:action -- str:result ]
+: M-LIB-HELP-command_get_help[ d:action -- s:result ]
   M-LIB-PROGRAM-needs_mlev1
   action @ dbref? not if "Non-dbref argument (1)." abort then
   action @ command_get_help
@@ -194,7 +194,7 @@ $LIBDEF M-LIB-HELP-command_get_help
 (*****************************************************************************)
 (*                        M-LIB-HELP-command_get_name                        *)
 (*****************************************************************************)
-: M-LIB-HELP-command_get_name[ ref:action -- str:result ]
+: M-LIB-HELP-command_get_name[ d:action -- s:result ]
   M-LIB-PROGRAM-needs_mlev1
   action @ PROP_COMMAND_NAME getpropstr
   dup not if

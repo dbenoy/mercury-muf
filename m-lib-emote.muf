@@ -73,7 +73,7 @@ $PRAGMA comment_recurse
 (*     will be used for everything in the emote inside of quotes.            *)
 (*                                                                           *)
 (* PUBLIC ROUTINES:                                                          *)
-(*   M-LIB-EMOTE-emote[ str:message dict:opts -- ]                           *)
+(*   M-LIB-EMOTE-emote[ s:message x:opts -- ]                                *)
 (*     Send an emote from the "from" object in opts. The emote is sent to    *)
 (*     every zombie and player object in the same room, no matter where the  *)
 (*     sender and the recipient are located in the room's object tree. The   *)
@@ -82,10 +82,10 @@ $PRAGMA comment_recurse
 (*                                                                           *)
 (*     See M-LIB-EMOTE-style below for information on opts.                  *)
 (*                                                                           *)
-(*   M-LIB-EMOTE-history_clean[ ref:room -- ]                                *)
+(*   M-LIB-EMOTE-history_clean[ d:room -- ]                                  *)
 (*     Clears out old or invalid emote history entries on a given room.      *)
 (*                                                                           *)
-(*   M-LIB-EMOTE-history_get[ ref:room -- arr:history ]                      *)
+(*   M-LIB-EMOTE-history_get[ d:room -- Y:history ]                          *)
 (*     Get the emote history stored in a room's properties. It is returned   *)
 (*     in this format, with an entry for each line:                          *)
 (*                                                                           *)
@@ -113,18 +113,17 @@ $PRAGMA comment_recurse
 (*     be strings, except for the timestamp, which will always be an         *)
 (*     integer.                                                              *)
 (*                                                                           *)
-(*   M-LIB-EMOTE-config_get[ ref:object str:option -- str:value ]            *)
+(*   M-LIB-EMOTE-config_get[ d:object s:option -- s:value ]                  *)
 (*     Specify a configuration option to get an emote setting from an        *)
 (*     object. At present, option names are the names from PROPERTIES above, *)
 (*     without the propdir component.                                        *)
 (*                                                                           *)
-(*   M-LIB-EMOTE-config_valid[ str:value ref:object str:option               *)
-(*                             -- bool:valid? ]                              *)
+(*   M-LIB-EMOTE-config_valid[ s:value d:object s:option -- i:valid? ]       *)
 (*     Specify a configuration option to check the validity of an emote      *)
 (*     setting on an object. At present, option names are the names from     *)
 (*     PROPERTIES above, without the propdir component.                      *)
 (*                                                                           *)
-(*   M-LIB-EMOTE-style[ str:message dict:opts -- str:result ]                *)
+(*   M-LIB-EMOTE-style[ s:message x:opts -- s:result ]                       *)
 (*     Colors and highlights an emote as if it were sent from and to the     *)
 (*     given objects and returns the resulting string.                       *)
 (*                                                                           *)
@@ -185,7 +184,7 @@ $PRAGMA comment_recurse
 $VERSION 1.000
 $AUTHOR  Daniel Benoy
 $NOTE    Handle sending emotive messages.
-$DOCCMD  @list __PROG__=2-156
+$DOCCMD  @list __PROG__=2-180
 
 (* Begin configurable options *)
 
@@ -223,7 +222,7 @@ $DEF OPTIONS_VALID_HIGHLIGHT_ALLOW_CUSTOM { "YES" "NO" "PLAIN" "NOCOLOR" }list
 
 (* ------------------------------------------------------------------------ *)
 
-: color_srand[ -- str:colorhex ]
+: color_srand[ -- s:colorhex ]
   srand abs
   dup 256 % var! r
   256 /
@@ -244,7 +243,7 @@ $DEF OPTIONS_VALID_HIGHLIGHT_ALLOW_CUSTOM { "YES" "NO" "PLAIN" "NOCOLOR" }list
   pop HISTORY_DEFAULT_MAX_AGE
 ;
 
-: config_valid[ str:value ref:object str:option -- bool:valid? ]
+: config_valid[ s:value d:object s:option -- i:valid? ]
   value @ not if 0 exit then
   option @ tolower option !
   option @ "highlight_allow_custom" = if
@@ -273,7 +272,7 @@ $DEF OPTIONS_VALID_HIGHLIGHT_ALLOW_CUSTOM { "YES" "NO" "PLAIN" "NOCOLOR" }list
   then
 ;
 
-: config_default[ ref:object str:option -- str:default ]
+: config_default[ d:object s:option -- s:default ]
   option @ tolower option !
   option @ "color_name" = option @ "color_quoted" = or option @ "color_unquoted" = or if
     object @ not if "" exit then
@@ -318,7 +317,7 @@ $DEF OPTIONS_VALID_HIGHLIGHT_ALLOW_CUSTOM { "YES" "NO" "PLAIN" "NOCOLOR" }list
   then
 ;
 
-: config_get[ ref:object str:option dict:overrides -- str:value ]
+: config_get[ d:object s:option x:overrides -- s:value ]
   (* Check for an override *)
   overrides @ option @ [] dup if
     exit
@@ -338,7 +337,7 @@ $DEF OPTIONS_VALID_HIGHLIGHT_ALLOW_CUSTOM { "YES" "NO" "PLAIN" "NOCOLOR" }list
   then
 ;
 
-: history_clean[ ref:room int:max_count -- ]
+: history_clean[ d:room i:max_count -- ]
   mode var! old_mode
   preempt
   systime var! now
@@ -431,7 +430,7 @@ $ENDIF
   old_mode @ setmode
 ;
 
-: history_add[ ref:message dict:opts ref:room -- ]
+: history_add[ d:message x:opts d:room -- ]
   mode var! old_mode
   preempt
   opts @ "from" [] var! from
@@ -463,7 +462,7 @@ $ENDIF
   old_mode @ setmode
 ;
 
-: highlight_quotelevel_get[ ref:to ref:from int:level dict:opts -- str:result ]
+: highlight_quotelevel_get[ d:to d:from i:level x:opts -- s:result ]
   to @ "highlight_allow_custom" opts @ config_get "NOCOLOR" = if "" exit then
   var color_unquoted
   var color_quoted
@@ -489,7 +488,7 @@ $ENDIF
   then
 ;
 
-: highlight_name[ ref:to ref:from dict:opts -- str:result ]
+: highlight_name[ d:to d:from x:opts -- s:result ]
   to @ if
     to @ "highlight_allow_custom" opts @ config_get "NOCOLOR" = if
       from @ "color_name" opts @ config_get M-LIB-COLOR-strip exit
@@ -504,7 +503,7 @@ $ENDIF
   from @ "color_name" opts @ config_get
 ;
 
-: highlight_mention_format_get[ ref:to dict:opts -- str:result ]
+: highlight_mention_format_get[ d:to x:opts -- s:result ]
   to @ "highlight_mention_format" opts @ config_get
   to @ "highlight_allow_custom" opts @ config_get "NOCOLOR" = if
     M-LIB-COLOR-strip
@@ -512,7 +511,7 @@ $ENDIF
 ;
 
 $DEF EINSTRING over swap instring dup not if pop strlen else nip -- then
-: style[ str:message dict:opts -- str:result ]
+: style[ s:message x:opts -- s:result ]
   "" var! result
   (* Emotes are not colored by the message text itself *)
   message @ M-LIB-COLOR-escape message !
@@ -628,7 +627,7 @@ $DEF EINSTRING over swap instring dup not if pop strlen else nip -- then
   result @
 ;
 
-: emote_cast[ str:message dict:opts ref:parent -- ]
+: emote_cast[ s:message x:opts d:parent -- ]
   parent @ M-LIB-NOTIFY-cast_targets foreach
     nip
     var! to
@@ -642,7 +641,7 @@ $DEF EINSTRING over swap instring dup not if pop strlen else nip -- then
 ;
 
 (* Take style options in user supplied format and clean them up into the format expected by the internal code *)
-: style_opts_process[ dict:opts_in -- dict:opts_out ]
+: style_opts_process[ x:opts_in -- x:opts_out ]
   var opt
   (* Set defaults *)
   {
@@ -712,7 +711,7 @@ $DEF EINSTRING over swap instring dup not if pop strlen else nip -- then
 (*****************************************************************************)
 (*                             M-LIB-EMOTE-emote                             *)
 (*****************************************************************************)
-: M-LIB-EMOTE-emote[ str:message dict:opts -- ]
+: M-LIB-EMOTE-emote[ s:message x:opts -- ]
   message @ string? not if "Non-string argument (1)." abort then
   opts @ array? not if "Non-array argument (2)." abort then
   opts @ style_opts_process opts !
@@ -740,7 +739,7 @@ $LIBDEF M-LIB-EMOTE-emote
 (*****************************************************************************)
 (*                         M-LIB-EMOTE-history_clean                         *)
 (*****************************************************************************)
-: M-LIB-EMOTE-history_clean[ ref:room -- ]
+: M-LIB-EMOTE-history_clean[ d:room -- ]
   M-LIB-PROGRAM-needs_mlev3
   room @ dbref? not if "Non-dbref argument (1)." abort then
   room @ room @ history_max_count history_clean
@@ -751,7 +750,7 @@ $LIBDEF M-LIB-EMOTE-history_clean
 (*****************************************************************************)
 (*                          M-LIB-EMOTE-history_get                          *)
 (*****************************************************************************)
-: M-LIB-EMOTE-history_get[ ref:room -- arr:history ]
+: M-LIB-EMOTE-history_get[ d:room -- Y:history ]
   M-LIB-PROGRAM-needs_mlev3
   mode var! old_mode
   preempt
@@ -771,7 +770,7 @@ $LIBDEF M-LIB-EMOTE-history_get
 (*****************************************************************************)
 (*                          M-LIB-EMOTE-config_get                           *)
 (*****************************************************************************)
-: M-LIB-EMOTE-config_get[ ref:object str:option -- str:value ]
+: M-LIB-EMOTE-config_get[ d:object s:option -- s:value ]
   M-LIB-PROGRAM-needs_mlev1
 
   option @ string? not if "Non-string argument (1)." abort then
@@ -785,7 +784,7 @@ $LIBDEF M-LIB-EMOTE-config_get
 (*****************************************************************************)
 (*                         M-LIB-EMOTE-config_valid                          *)
 (*****************************************************************************)
-: M-LIB-EMOTE-config_valid[ str:value ref:object str:option -- bool:valid? ]
+: M-LIB-EMOTE-config_valid[ s:value d:object s:option -- i:valid? ]
   M-LIB-PROGRAM-needs_mlev1
 
   option @ string? not if "Non-string argument (1)." abort then
@@ -799,7 +798,7 @@ $LIBDEF M-LIB-EMOTE-config_valid
 (*****************************************************************************)
 (*                             M-LIB-EMOTE-style                             *)
 (*****************************************************************************)
-: M-LIB-EMOTE-style[ str:message dict:opts -- str:result ]
+: M-LIB-EMOTE-style[ s:message x:opts -- s:result ]
   M-LIB-PROGRAM-needs_mlev1
   message @ string? not if "Non-string argument (1)." abort then
   opts @ array? not if "Non-array argument (2)." abort then

@@ -6,6 +6,8 @@ $PRAGMA comment_recurse
 (* m-cmd-@lsedit.muf - $m/cmd/at_lsedit                                      *)
 (*    A simple editor for 'list' properties.                                 *)
 (*                                                                           *)
+(*   GitHub: https://github.com/dbenoy/mercury-muf (See for install info)    *)
+(*                                                                           *)
 (*****************************************************************************)
 (* Revision History:                                                         *)
 (*   Version 1.0 -- Daniel Benoy -- September, 2019                          *)
@@ -32,7 +34,7 @@ $PRAGMA comment_recurse
 $VERSION 1.0
 $AUTHOR  Daniel Benoy
 $NOTE    Editor for 'list' properties.
-$DOCCMD  @list __PROG__=2-38
+$DOCCMD  @list __PROG__=2-30
 
 (* Begin configurable options *)
 
@@ -50,7 +52,7 @@ $PUBDEF :
 ;
 WIZCALL M-HELP-desc
 
-: M-HELP-help ( d -- a )
+: M-HELP-help ( d -- Y )
   name ";" split pop toupper var! action_name
   {
     { action_name @ " <object>=<prop>" }cat

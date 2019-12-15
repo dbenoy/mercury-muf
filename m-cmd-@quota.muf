@@ -54,7 +54,7 @@ $INCLUDE $m/lib/quota
 ;
 WIZCALL M-HELP-desc
 
-: M-HELP-help ( d -- a )
+: M-HELP-help ( d -- Y )
   name ";" split pop toupper var! action_name
   {
     { action_name @ " [<player>]" }cat
