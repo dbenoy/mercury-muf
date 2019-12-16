@@ -200,7 +200,7 @@ WIZCALL M-HELP-help
     dup
   then
 
-  M-LIB-MAP-display pop
+  M-LIB-MAP-render { me @ }list M-LIB-NOTIFY-array_notify_color
 ;
 
 : cmd_list ( s --  )
@@ -240,7 +240,7 @@ WIZCALL M-HELP-help
 
   M-LIB-MAP-env_get
 
-  dup #-1 M-LIB-MAP-display pop
+  dup #-1 M-LIB-MAP-render { me @ }list M-LIB-NOTIFY-array_notify_color
 
   "Are you certian you want to remove this map? (y/n)" command @ toupper .tag .tell
   read_yes_no if

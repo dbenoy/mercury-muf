@@ -162,7 +162,7 @@ WIZCALL M-HELP-help
 : notify_autolook[ d:notify_me -- ]
   (* Show room map *)
   "map" enabled if
-    loc @ loc @ M-LIB-MAP-display pop
+    loc @ loc @ M-LIB-MAP-render { me @ }list M-LIB-NOTIFY-array_notify_color
   then
   (* Show room name *)
   "location_name" enabled if

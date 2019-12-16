@@ -21,7 +21,7 @@ $PRAGMA comment_recurse
 (*   o Maps can be made in color, using MCC color codes.                     *)
 (*                                                                           *)
 (* PUBLIC ROUTINES:                                                          *)
-(*   M-LIB-MAP-display[ d:map_room d:mark_room -- i:success? ]               *)
+(*   M-LIB-MAP-render[ d:map_room d:mark_room -- Y:lines ]                   *)
 (*     Shows the map of map_room (Its closest environment map). mark_room is *)
 (*     which room will receieve the X marker on that map. Use #-1 to not     *)
 (*     show a marker.                                                        *)
@@ -210,56 +210,51 @@ $DEF .tag_err M-LIB-THEME-tag_err
 (* ------------------------------------------------------------------------- *)
 
 (*****************************************************************************)
-(*                             M-LIB-MAP-display                             *)
+(*                             M-LIB-MAP-render                              *)
 (*****************************************************************************)
-: M-LIB-MAP-display[ d:map_room d:mark_room -- i:success? ]
+: M-LIB-MAP-render[ d:map_room d:mark_room -- Y:lines ]
   M-LIB-PROGRAM-needs_mlev1
   map_room @ dbref? not if "Non-dbref argument (1)." abort then
   mark_room @ dbref? not if "Non-dbref argument (2)." abort then
-
-  var my_x
-  var my_y
-  0 var! my_is_marked
-
+  { }list var! lines
   (* Change map_room into the room that actually contains the map *)
   map_room @ map_env_get map_room !
-
   map_room @ not if
     (* D'oh!  No map! *)
-    0 exit
-  then
-
-  mark_room @ if
-    (* Get the location of map_room on the map *)
-    mark_room @ "_mapx/" map_room @ intostr strcat envpropstr atoi my_x ! pop
-    mark_room @ "_mapy/" map_room @ intostr strcat envpropstr atoi my_y ! pop
-    my_x @ my_y @ and if
-      1 my_is_marked !
-    then
-  then
-
-  map_room @ "_map#" getpropstr atoi
-  1 begin
-    over over >= while
-    "_map#/" over intostr strcat map_room @ swap getpropstr
-
-    my_is_marked @ if (* Show marker if applicable *)
-      over my_y @ = if
-        my_x @ M-LIB-COLOR-strcut
-        swap dup M-LIB-COLOR-strlen -- M-LIB-COLOR-strcut pop marker_get M-LIB-COLOR-strcat swap
-        M-LIB-COLOR-strcat
+    { }list lines !
+  else
+    var my_x
+    var my_y
+    0 var! my_is_marked
+    mark_room @ if
+      (* Get the location of map_room on the map *)
+      mark_room @ "_mapx/" map_room @ intostr strcat envpropstr atoi my_x ! pop
+      mark_room @ "_mapy/" map_room @ intostr strcat envpropstr atoi my_y ! pop
+      my_x @ my_y @ and if
+        1 my_is_marked !
       then
     then
-
-    .tell
-    ++
-  repeat
-  pop pop
-
-  1
+    map_room @ "_map#" getpropstr atoi
+    1 begin
+      over over >= while
+      "_map#/" over intostr strcat map_room @ swap getpropstr
+      my_is_marked @ if (* Show marker if applicable *)
+        over my_y @ = if
+          my_x @ M-LIB-COLOR-strcut
+          swap dup M-LIB-COLOR-strlen -- M-LIB-COLOR-strcut pop marker_get M-LIB-COLOR-strcat swap
+          M-LIB-COLOR-strcat
+        then
+      then
+      lines @ []<- lines !
+      ++
+    repeat
+    pop pop
+  then
+  lines @
+  dup not if pop { "[ NO MAP ]" }list then
 ;
-PUBLIC M-LIB-MAP-display
-$LIBDEF M-LIB-MAP-display
+PUBLIC M-LIB-MAP-render
+$LIBDEF M-LIB-MAP-render
 
 (*****************************************************************************)
 (*                              M-LIB-MAP-edit                               *)

@@ -97,27 +97,25 @@ WIZCALL M-HELP-help
     (* Otherwise, show the position of the object on its own map. *)
     dup
   then
-  M-LIB-MAP-display
-  if
-    M-LIB-MAP-reg_get var! other_maps
-    {
-      me @ begin
-        dup location
-        over map_room @ = if
-          swap pop
-        then
-        dup while
-      repeat
-      pop
-    }list var! other_env
-    {
-      other_maps @ foreach
-        swap stod other_env @ M-LIB-ARRAY-hasval not if pop then
-      repeat
-    }list other_maps !
-    other_maps @ if
-      { "The " other_maps @ "and" M-LIB-GRAMMAR-oxford_join M-LIB-COLOR-escape " map" other_maps @ array_count 1 > if "s are " else " is " then "available here, too." }cat .tell
-    then
+  M-LIB-MAP-render { me @ }list M-LIB-NOTIFY-array_notify_color
+  M-LIB-MAP-reg_get var! other_maps
+  {
+    me @ begin
+      dup location
+      over map_room @ = if
+        swap pop
+      then
+      dup while
+    repeat
+    pop
+  }list var! other_env
+  {
+    other_maps @ foreach
+      swap stod other_env @ M-LIB-ARRAY-hasval not if pop then
+    repeat
+  }list other_maps !
+  other_maps @ if
+    { "The " other_maps @ "and" M-LIB-GRAMMAR-oxford_join M-LIB-COLOR-escape " map" other_maps @ array_count 1 > if "s are " else " is " then "available here, too." }cat .tell
   then
 ;
 .

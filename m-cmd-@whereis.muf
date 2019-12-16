@@ -117,7 +117,7 @@ WIZCALL M-HELP-help
   then
   map_room !
   show_map @ if
-    player @ map_room @ M-LIB-MAP-display
+    player @ map_room @ loc @ loc @ M-LIB-MAP-render { me @ }list M-LIB-NOTIFY-array_notify_color
   then
   { player @ name " is " player @ location_text "." }cat M-LIB-COLOR-escape .tell
 ;
