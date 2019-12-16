@@ -63,6 +63,7 @@ $PRAGMA comment_recurse
 (*     M-LIB-STRING-instring_cb                                              *)
 (*     M-LIB-STRING-midstr_cb                                                *)
 (*     M-LIB-STRING-number?_cb                                               *)
+(*     M-LIB-STRING-regcarve_cb                                              *)
 (*     M-LIB-STRING-regslice_cb                                              *)
 (*     M-LIB-STRING-rinstr_cb                                                *)
 (*     M-LIB-STRING-rinstring_cb                                             *)
@@ -123,6 +124,17 @@ $PRAGMA comment_recurse
 (*   M-LIB-STRING-itox ( i -- s )                                            *)
 (*     Convert an integer into a hexadecimal string. This works bit-by-bit   *)
 (*     so negative numbers will appear in their two's compliment form.       *)
+(*                                                                           *)
+(*   M-LIB-STRING-regcarve ( s s i -- Y )                                    *)
+(*     Like the REGSPLIT primitive, except separators are kept. They remain  *)
+(*     at the beginning of their string. For example:                        *)
+(*       "a b  c-- d" " |--" 0 M-LIB-STRING-regcarve                         *)
+(*       Result: {"a", " b", " ", " c", "--", " d"}                          *)
+(*                                                                           *)
+(*     Each element starts with a separator except for the first. If the     *)
+(*     source string starts with a separator then the first element will be  *)
+(*     an empty string, so the number of elements will always be the number  *)
+(*     of separators found, plus one.                                        *)
 (*                                                                           *)
 (*   M-LIB-STRING-regslice ( s s i -- Y )                                    *)
 (*     Like the REGSPLIT primitive, except separators are kept. For example: *)
@@ -206,7 +218,7 @@ $PRAGMA comment_recurse
 $VERSION 1.000
 $AUTHOR  Daniel Benoy
 $NOTE    String manipulation routines.
-$DOCCMD  @list __PROG__=2-202
+$DOCCMD  @list __PROG__=2-214
 
 (* ------------------------------------------------------------------------- *)
 
@@ -238,6 +250,14 @@ $PUBDEF :
       rot strcut
     repeat
   }list
+;
+
+: regcarve ( s s i - Y )
+  regslice
+  1 array_cut begin
+    dup not if pop break then
+    2 array_cut swap array_vals pop strcat rot []<- swap
+  repeat
 ;
 
 : carve_array ( s s -- Y )
@@ -459,6 +479,11 @@ $PUBDEF :
   { text @ rot foreach nip strlen cbs @ strcut_cb repeat pop }list
 ;
 
+: regcarve_cb[ s:text s:pattern i:flags x:cbs -- y:results ]
+  text @ cbs @ strstrip_cb pattern @ flags @ regcarve
+  { text @ rot foreach nip strlen cbs @ strcut_cb repeat pop }list
+;
+
 : carve_array_cb[ s:source s:sep x:cbs -- y:result ]
   source @ cbs @ strstrip_cb sep @ cbs @ strstrip_cb carve_array
   { source @ rot foreach nip strlen cbs @ strcut_cb repeat pop }list
@@ -489,21 +514,24 @@ $PUBDEF :
 
 : wordwrap_cb[ ?:source i:width_wrap x:opts x:cbs -- y:lines ]
   { }list var! lines
-  (* FIXME: Split \r into separate lines. *)
-  source @ cbs @ striptail_cb " " cbs @ carve_array_cb
-  1 array_cut swap array_vals pop var! line
-  foreach
+  source @ "\r" explode_array var! source_lines
+  source_lines @ foreach
     nip
-    dup cbs @ strlen_cb line @ cbs @ strlen_cb + width_wrap @ > if
+    cbs @ striptail_cb " +" 0 cbs @ regcarve_cb
+    1 array_cut swap array_vals pop var! line
+    foreach
+      nip
+      dup cbs @ strlen_cb line @ cbs @ strlen_cb + width_wrap @ > if
+        line @ lines @ []<- lines !
+        "" line !
+        cbs @ striplead_cb
+      then
+      line @ swap cbs @ strcat_cb line !
+    repeat
+    line @ if
       line @ lines @ []<- lines !
-      "" line !
-      cbs @ striplead_cb
     then
-    line @ swap cbs @ strcat_cb line !
   repeat
-  line @ if
-    line @ lines @ []<- lines !
-  then
   lines @
 ;
 
@@ -841,6 +869,29 @@ $LIBDEF M-LIB-STRING-regslice
 ;
 PUBLIC M-LIB-STRING-regslice_cb
 $LIBDEF M-LIB-STRING-regslice_cb
+
+(*****************************************************************************)
+(*                           M-LIB-STRING-regcarve                           *)
+(*****************************************************************************)
+: M-LIB-STRING-regcarve ( s s i -- Y )
+  (* Permissions inherited *)
+  "ssi" checkargs
+  regcarve
+;
+PUBLIC M-LIB-STRING-regcarve
+$LIBDEF M-LIB-STRING-regcarve
+
+(*****************************************************************************)
+(*                         M-LIB-STRING-regcarve_cb                          *)
+(*****************************************************************************)
+: M-LIB-STRING-regcarve_cb ( ? ? i x -- Y )
+  (* Permissions inherited *)
+  "??ix" checkargs
+  dup cbs_check
+  regcarve_cb
+;
+PUBLIC M-LIB-STRING-regcarve_cb
+$LIBDEF M-LIB-STRING-regcarve_cb
 
 (*****************************************************************************)
 (*                          M-LIB-STRING-rinstr_cb                           *)
