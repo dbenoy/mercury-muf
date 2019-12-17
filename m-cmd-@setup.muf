@@ -129,14 +129,14 @@ lvar g_table_autolook
 (***** get/set String Property *****)
 : get_str[ s:property s:unsetValue -- s:value ]
   "me" match property @ getpropstr
-
-  dup not if
-    pop unsetValue @ { "me" match }list { "name_match" "no" "name_theme" "no" "color" "keep" }dict M-LIB-GRAMMAR-sub exit
-  then
-
-  dup "\r" instr if
-    "\r" split pop
-    "[!FFFFFF]..." strcat
+  dup if
+    dup "\r" instr if
+      "\r" split pop
+      "[!FFFFFF]..." strcat
+    then
+    M-LIB-COLOR-escape
+  else
+    pop unsetValue @ { "me" match }list { "name_match" "no" "name_theme" "no" }dict M-LIB-GRAMMAR-sub exit
   then
 ;
 
@@ -290,7 +290,7 @@ lvar g_table_autolook
 
 (***** get/set name *****)
 : get_obj_name[  -- s:value ]
-  "me" match M-LIB-THEME-name
+  "me" match M-LIB-THEME-name M-LIB-COLOR-escape
 ;
 
 : set_obj_name[  --  ]
@@ -317,20 +317,6 @@ lvar g_table_autolook
 
   "me" match listprop @ M-LIB-LSEDIT-listedit if
     "me" match property @ "{eval:{list:" listprop @ strcat "}}" strcat setprop
-  then
-;
-
-(***** Get/set the current morph *****)
-: get_morph[  -- s:value ]
-  "me" match "/_morph" getpropstr
-
-  dup "\r" instr if
-    pop "UNKNOWN" exit
-  then
-
-  dup not if
-    "me" match "/_morph" "Default" setprop
-    pop "Default" exit
   then
 ;
 
@@ -362,7 +348,7 @@ lvar g_table_autolook
 (***** Test emote style *****)
 : get_emote_style[ d:from ?:force_allow_custom s:test_string -- s:value ]
   test_string @ "me" match "highlight_mention_names" M-LIB-EMOTE-config_get ";" split pop "@1" subst
-  { from @ }list { "name_match" "yes" "name_theme" "no" "color" "strip" }dict M-LIB-GRAMMAR-sub
+  { from @ }list { "name_match" "yes" "name_theme" "no" "color" "no" }dict M-LIB-GRAMMAR-sub
   { "from" from @ "to" me @ }dict force_allow_custom @ if "yes" swap "highlight_allow_custom" ->[] then M-LIB-EMOTE-style
 ;
 

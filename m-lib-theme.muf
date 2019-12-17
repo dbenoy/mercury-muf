@@ -263,12 +263,12 @@ $DEFINE VALID_FORMATS
   }list
 $ENDDEF
 
-: color_cb_strcat M-LIB-COLOR-strcat ;
-: color_cb_strcut M-LIB-COLOR-strcut ;
-: color_cb_strstrip M-LIB-COLOR-strip ;
-: color_cb_toupper M-LIB-COLOR-toupper ;
-: color_cb_tolower M-LIB-COLOR-tolower ;
-: color_cb ( -- a ) { "strcat" 'color_cb_strcat "strcut" 'color_cb_strcut "strstrip" 'color_cb_strstrip "toupper" 'color_cb_toupper "tolower" 'color_cb_tolower }dict ;
+: cb_color_strcat M-LIB-COLOR-strcat ;
+: cb_color_strcut M-LIB-COLOR-strcut ;
+: cb_color_strplain M-LIB-COLOR-strip ;
+: cb_color_toupper M-LIB-COLOR-toupper ;
+: cb_color_tolower M-LIB-COLOR-tolower ;
+: cb_color ( -- a ) { "strcat" 'cb_color_strcat "strcut" 'cb_color_strcut "strplain" 'cb_color_strplain "toupper" 'cb_color_toupper "tolower" 'cb_color_tolower }dict ;
 
 : theme_get ( s -- s )
   prog "_theme/" 3 pick strcat getpropstr
@@ -282,7 +282,7 @@ $ENDDEF
 ;
 
 : arg_sub[ s:source Y:args -- s:result ]
-  source @ "@" color_cb M-LIB-STRING-carve_array_cb
+  source @ "@" cb_color M-LIB-STRING-carve_array_cb
   1 array_cut swap array_vals pop var! result
   foreach
     nip

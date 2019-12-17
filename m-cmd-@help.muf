@@ -101,12 +101,12 @@ WIZCALL M-HELP-help
 
 (* ------------------------------------------------------------------------ *)
 
-: color_cb_strcat M-LIB-COLOR-strcat ;
-: color_cb_strcut M-LIB-COLOR-strcut ;
-: color_cb_strstrip M-LIB-COLOR-strip ;
-: color_cb_toupper M-LIB-COLOR-toupper ;
-: color_cb_tolower M-LIB-COLOR-tolower ;
-: color_cb ( -- a ) { "strcat" 'color_cb_strcat "strcut" 'color_cb_strcut "strstrip" 'color_cb_strstrip "toupper" 'color_cb_toupper "tolower" 'color_cb_tolower }dict ;
+: cb_color_strcat M-LIB-COLOR-strcat ;
+: cb_color_strcut M-LIB-COLOR-strcut ;
+: cb_color_strplain M-LIB-COLOR-strip ;
+: cb_color_toupper M-LIB-COLOR-toupper ;
+: cb_color_tolower M-LIB-COLOR-tolower ;
+: cb_color ( -- a ) { "strcat" 'cb_color_strcat "strcut" 'cb_color_strcut "strplain" 'cb_color_strplain "toupper" 'cb_color_toupper "tolower" 'cb_color_tolower }dict ;
 
 : help_page_main[ x:topics -- Y:lines ]
   {
@@ -354,7 +354,7 @@ $DEF .color_fillfield rot M-LIB-COLOR-strlen - dup 1 < if pop pop "" else * then
   {
     over foreach
       nip
-      OUTPUT_WRAP { }dict color_cb M-LIB-STRING-wordwrap_cb array_vals pop
+      OUTPUT_WRAP { }dict cb_color M-LIB-STRING-wordwrap_cb array_vals pop
     repeat
   }list
   (* Determine the maximum width in order to draw decorations *)

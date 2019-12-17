@@ -498,11 +498,10 @@ $PRAGMA comment_recurse
 (*       'color_find_rgb' in this file:                                      *)
 (*         https://github.com/tmux/tmux/blob/master/colour.c                 *)
 (*     * Due to the small fixed buffer sizes for strings in fuzzball, the    *)
-(*       mcc_strcat and mcc_preprocessing routines should remove redundant   *)
-(*       codes during processing. If the foreground or background is being   *)
-(*       changed to a color that it already has set, then that redundant     *)
-(*       code should be stripped away to keep strings as short as possible   *)
-(*       at all times.                                                       *)
+(*       strcat and preprocessing routines should remove redundant codes     *)
+(*       during processing. If the foreground or background is being changed *)
+(*       to a color that it already has set, then that redundant code should *)
+(*       be stripped away to keep strings as short as possible at all times. *)
 (*                                                                           *)
 (*****************************************************************************)
 (* Revision History:                                                         *)
@@ -530,7 +529,7 @@ $PRAGMA comment_recurse
 $VERSION 1.0
 $AUTHOR  Daniel Benoy
 $NOTE    Text color library.
-$DOCCMD  @list __PROG__=2-526
+$DOCCMD  @list __PROG__=2-525
 
 (* Begin configurable options *)
 

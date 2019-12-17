@@ -15,7 +15,7 @@ $PRAGMA comment_recurse
 (*   of metadata in strings as well. To do so, you define a dictionary       *)
 (*   object, and provide the following callback function pointers:           *)
 (*                                                                           *)
-(*     "strstrip" ( ? -- s )                                                 *)
+(*     "strplain" ( ? -- s )                                                 *)
 (*       This callback takes the custom string type variable, strips away    *)
 (*       all metadata and turns it into a plain string. If the string has    *)
 (*       special escapes that produce literals (Such as \~& for FB5 color    *)
@@ -25,7 +25,7 @@ $PRAGMA comment_recurse
 (*     "strcut" ( ? i -- ? ? )                                               *)
 (*       This callback works like the STRCUT primitive, cutting your custom  *)
 (*       string type at the given character, splitting it into two custom    *)
-(*       string types. Like strstrip above, it should resolve any special    *)
+(*       string types. Like strplain above, it should resolve any special    *)
 (*       escape sequences that produce literals, and count those characters  *)
 (*       when deciding where to cut. Any metadata can be preserved as you    *)
 (*       see fit.                                                            *)
@@ -81,6 +81,7 @@ $PRAGMA comment_recurse
 (*     M-LIB-STRING-striptail_cb                                             *)
 (*     M-LIB-STRING-strlen_cb                                                *)
 (*     M-LIB-STRING-strncmp_cb                                               *)
+(*     M-LIB-STRING-strplain_cb                                              *)
 (*     M-LIB-STRING-strtof_cb                                                *)
 (*     M-LIB-STRING-subst_cb                                                 *)
 (*     M-LIB-STRING-toupper_cb                                               *)
@@ -352,10 +353,10 @@ $PUBDEF :
   retval @
 ;
 
-: strstrip_cb ( ? x -- ? )
+: strplain_cb ( ? x -- ? )
   2 try
-    "strstrip" [] execute
-    depth 1 = not if "Unexpected number of results from 'strstrip' callback." abort then
+    "strplain" [] execute
+    depth 1 = not if "Unexpected number of results from 'strplain' callback." abort then
   catch
     abort
   endcatch
@@ -398,74 +399,74 @@ $PUBDEF :
 ;
 
 : strlen_cb ( s x -- i )
-  strstrip_cb strlen
+  strplain_cb strlen
 ;
 
 : instr_cb ( s s x -- i )
   var! cbs
-  swap cbs @ strstrip_cb swap
-  cbs @ strstrip_cb
+  swap cbs @ strplain_cb swap
+  cbs @ strplain_cb
   instr
 ;
 
 : rinstr_cb ( s s x -- i )
   var! cbs
-  swap cbs @ strstrip_cb swap
-  cbs @ strstrip_cb
+  swap cbs @ strplain_cb swap
+  cbs @ strplain_cb
   rinstr
 ;
 
 : instring_cb ( s s x -- i )
   var! cbs
-  swap cbs @ strstrip_cb swap
-  cbs @ strstrip_cb
+  swap cbs @ strplain_cb swap
+  cbs @ strplain_cb
   instring
 ;
 
 : rinstring_cb ( s s x -- i )
   var! cbs
-  swap cbs @ strstrip_cb swap
-  cbs @ strstrip_cb
+  swap cbs @ strplain_cb swap
+  cbs @ strplain_cb
   rinstring
 ;
 
 : einstr_cb ( s s x -- i )
   var! cbs
-  swap cbs @ strstrip_cb swap
-  cbs @ strstrip_cb
+  swap cbs @ strplain_cb swap
+  cbs @ strplain_cb
   einstr
 ;
 
 : einstring_cb ( s s x -- i )
   var! cbs
-  swap cbs @ strstrip_cb swap
-  cbs @ strstrip_cb
+  swap cbs @ strplain_cb swap
+  cbs @ strplain_cb
   einstring
 ;
 
 : erinstr_cb ( s s x -- i )
   var! cbs
-  swap cbs @ strstrip_cb swap
-  cbs @ strstrip_cb
+  swap cbs @ strplain_cb swap
+  cbs @ strplain_cb
   einstr
 ;
 
 : erinstring_cb ( s s x -- i )
   var! cbs
-  swap cbs @ strstrip_cb swap
-  cbs @ strstrip_cb
+  swap cbs @ strplain_cb swap
+  cbs @ strplain_cb
   einstring
 ;
 
 : striplead_cb ( s x -- s )
   var! cbs
-  dup cbs @ strlen_cb over cbs @ strstrip_cb striplead strlen -
+  dup cbs @ strlen_cb over cbs @ strplain_cb striplead strlen -
   cbs @ strcut_cb swap pop
 ;
 
 : striptail_cb ( s x -- s )
   var! cbs
-  dup cbs @ strstrip_cb striptail strlen
+  dup cbs @ strplain_cb striptail strlen
   cbs @ strcut_cb pop
 ;
 
@@ -475,27 +476,27 @@ $PUBDEF :
 ;
 
 : regslice_cb[ s:text s:pattern i:flags x:cbs -- y:results ]
-  text @ cbs @ strstrip_cb pattern @ flags @ regslice
+  text @ cbs @ strplain_cb pattern @ flags @ regslice
   { text @ rot foreach nip strlen cbs @ strcut_cb repeat pop }list
 ;
 
 : regcarve_cb[ s:text s:pattern i:flags x:cbs -- y:results ]
-  text @ cbs @ strstrip_cb pattern @ flags @ regcarve
+  text @ cbs @ strplain_cb pattern @ flags @ regcarve
   { text @ rot foreach nip strlen cbs @ strcut_cb repeat pop }list
 ;
 
 : carve_array_cb[ s:source s:sep x:cbs -- y:result ]
-  source @ cbs @ strstrip_cb sep @ cbs @ strstrip_cb carve_array
+  source @ cbs @ strplain_cb sep @ cbs @ strplain_cb carve_array
   { source @ rot foreach nip strlen cbs @ strcut_cb repeat pop }list
 ;
 
 : slice_array_cb[ s:source s:sep x:cbs -- y:result ]
-  source @ cbs @ strstrip_cb sep @ cbs @ strstrip_cb slice_array
+  source @ cbs @ strplain_cb sep @ cbs @ strplain_cb slice_array
   { source @ rot foreach nip strlen cbs @ strcut_cb repeat pop }list
 ;
 
 : explode_array_cb[ s:source s:sep x:cbs -- y:result ]
-  source @ cbs @ strstrip_cb sep @ cbs @ strstrip_cb explode_array
+  source @ cbs @ strplain_cb sep @ cbs @ strplain_cb explode_array
   sep @ strlen var! sep_len
   { source @ rot foreach nip strlen cbs @ strcut_cb sep_len @ cbs @ strcut_cb swap pop repeat pop }list
 ;
@@ -535,17 +536,17 @@ $PUBDEF :
   lines @
 ;
 
-: std_cb_strstrip ( s -- s ) ;
+: std_cb_strplain ( s -- s ) ;
 : std_cb_strcut ( s i -- s1 s2 ) strcut ;
 : std_cb_strcat ( s1 s2 -- s ) strcat ;
 : std_cb_toupper ( s -- s ) toupper ;
 : std_cb_tolower ( s -- s ) tolower ;
-: std_cb ( -- a ) { "strcat" 'std_cb_strcat "strcut" 'std_cb_strcut "strstrip" 'std_cb_strstrip "toupper" 'std_cb_toupper "tolower" 'std_cb_tolower }dict ;
+: std_cb ( -- a ) { "strcat" 'std_cb_strcat "strcut" 'std_cb_strcut "strplain" 'std_cb_strplain "toupper" 'std_cb_toupper "tolower" 'std_cb_tolower }dict ;
 
 (* Take the callback list in user supplied format and clean it up into the format expected by the internal code *)
 : cbs_check[ x:cbs -- ]
   var cb
-  { "strstrip" "strcut" "strcat" "toupper" "tolower" }list foreach
+  { "strplain" "strcut" "strcat" "toupper" "tolower" }list foreach
     nip
     var! cb
     cbs @ cb @ [] address? not if { "String callback " cb @ " not found." }cat abort then
@@ -598,7 +599,7 @@ $LIBDEF M-LIB-STRING-array_join_cb
   (* Permissions inherited *)
   "?x" checkargs
   dup cbs_check
-  strstrip_cb
+  strplain_cb
   atoi
 ;
 PUBLIC M-LIB-STRING-atoi_cb
@@ -781,7 +782,7 @@ $LIBDEF M-LIB-STRING-hex?
   (* Permissions inherited *)
   "?x" checkargs
   dup cbs_check
-  strstrip_cb hex?
+  strplain_cb hex?
 ;
 PUBLIC M-LIB-STRING-hex?_cb
 $LIBDEF M-LIB-STRING-hex?_cb
@@ -842,7 +843,7 @@ $LIBDEF M-LIB-STRING-midstr_cb
   (* Permissions inherited *)
   "?x" checkargs
   dup cbs_check
-  strstrip_cb number?
+  strplain_cb number?
 ;
 PUBLIC M-LIB-STRING-number?_cb
 $LIBDEF M-LIB-STRING-number?_cb
@@ -1027,8 +1028,8 @@ $LIBDEF M-LIB-STRING-strcat_cb
   "??x" checkargs
   dup cbs_check
   var! cbs
-  swap cbs @ strstrip_cb swap
-  cbs @ strstrip_cb
+  swap cbs @ strplain_cb swap
+  cbs @ strplain_cb
   strcmp
 ;
 PUBLIC M-LIB-STRING-strcmp_cb
@@ -1054,8 +1055,8 @@ $LIBDEF M-LIB-STRING-strcut_cb
   "??x" checkargs
   dup cbs_check
   var! cbs
-  swap cbs @ strstrip_cb swap
-  cbs @ strstrip_cb
+  swap cbs @ strplain_cb swap
+  cbs @ strplain_cb
   stringcmp
 ;
 PUBLIC M-LIB-STRING-stringcmp_cb
@@ -1069,8 +1070,8 @@ $LIBDEF M-LIB-STRING-stringcmp_cb
   "??x" checkargs
   dup cbs_check
   var! cbs
-  swap cbs @ strstrip_cb swap
-  cbs @ strstrip_cb
+  swap cbs @ strplain_cb swap
+  cbs @ strplain_cb
   stringpfx
 ;
 PUBLIC M-LIB-STRING-stringpfx_cb
@@ -1132,12 +1133,24 @@ $LIBDEF M-LIB-STRING-strlen_cb
   "??ix" checkargs
   dup cbs_check
   var! cbs
-  swap cbs @ strstrip_cb swap
-  cbs @ strstrip_cb
+  swap cbs @ strplain_cb swap
+  cbs @ strplain_cb
   strncmp
 ;
 PUBLIC M-LIB-STRING-strncmp_cb
 $LIBDEF M-LIB-STRING-strncmp_cb
+
+(*****************************************************************************)
+(*                         M-LIB-STRING-strplain_cb                          *)
+(*****************************************************************************)
+: M-LIB-STRING-strplain_cb ( ? x -- s )
+  (* Permissions inherited *)
+  "?x" checkargs
+  dup cbs_check
+  strplain_cb
+;
+PUBLIC M-LIB-STRING-strplain_cb
+$LIBDEF M-LIB-STRING-strplain_cb
 
 (*****************************************************************************)
 (*                          M-LIB-STRING-strtof_cb                           *)
@@ -1146,7 +1159,7 @@ $LIBDEF M-LIB-STRING-strncmp_cb
   (* Permissions inherited *)
   "?x" checkargs
   dup cbs_check
-  strstrip_cb strtof
+  strplain_cb strtof
 ;
 PUBLIC M-LIB-STRING-strtof_cb
 $LIBDEF M-LIB-STRING-strtof_cb
@@ -1233,7 +1246,7 @@ $LIBDEF M-LIB-STRING-xtoi
   (* Permissions inherited *)
   "?x" checkargs
   dup cbs_check
-  strstrip_cb
+  strplain_cb
   xtoi
 ;
 PUBLIC M-LIB-STRING-xtoi_cb

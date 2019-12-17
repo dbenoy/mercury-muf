@@ -316,7 +316,7 @@ WIZCALL M-HELP-help
       contents_random_skipped ++
       next continue
     then
-    { "name" "%i" { room_object @ }list { "name_match" LISTING_OBJECTS_FORCE_NAME "name_theme" "yes" }dict M-LIB-GRAMMAR-sub }dict contents_datum !
+    { "name" "%i" { room_object @ }list { "name_match" LISTING_OBJECTS_FORCE_NAME "name_theme" "yes" }dict M-LIB-GRAMMAR-sub "[!FFFFFF]" strcat }dict contents_datum !
     room_object @ player? if
       "A-" room_object @ name strcat contents_datum @ "index" array_setitem contents_datum !
     else room_object @ thing? room_object @ "ZOMBIE" flag? and if
@@ -361,7 +361,7 @@ WIZCALL M-HELP-help
     then
     (* This is a detectable exit, increment the total, and add it to the list to print later. *)
     contents_total ++
-    "%i" { room_object @ }list { "name_match" LISTING_EXITS_FORCE_NAME "name_theme" "yes" }dict M-LIB-GRAMMAR-sub contents_names @ []<- contents_names !
+    "%i" { room_object @ }list { "name_match" LISTING_EXITS_FORCE_NAME "name_theme" "yes" }dict M-LIB-GRAMMAR-sub "[!FFFFFF]" strcat contents_names @ []<- contents_names !
     next
   repeat
   contents_total @ if

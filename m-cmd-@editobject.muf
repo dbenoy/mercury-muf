@@ -203,13 +203,15 @@ lvar g_table_program
   g_object @ property @ getpropstr
 
   dup not if
-    pop unsetValue @ { g_object @ }list { "name_match" "no" "name_theme" "no" "color" "keep" }dict M-LIB-GRAMMAR-sub exit
+    pop unsetValue @ { g_object @ }list { "name_match" "no" "name_theme" "no" }dict M-LIB-GRAMMAR-sub exit
   then
 
   dup "\r" instr if
     "\r" split pop
     "[!FFFFFF]..." strcat
   then
+
+  M-LIB-COLOR-escape
 ;
 
 : set_str[ s:property --  ]
@@ -347,7 +349,7 @@ lvar g_table_program
 
 (***** get/set name *****)
 : get_obj_name[  -- s:value ]
-  g_object @ M-LIB-THEME-name
+  g_object @ M-LIB-THEME-name M-LIB-COLOR-escape
 ;
 
 : set_obj_name[  --  ]
@@ -407,20 +409,6 @@ lvar g_table_program
 
   "Cancelled." .tell
   pop
-;
-
-(***** Get/set the current morph *****)
-: get_morph[  -- s:value ]
-  g_object @ "/_morph" getpropstr
-
-  dup "\r" instr if
-    pop "UNKNOWN" exit
-  then
-
-  dup not if
-    g_object @ "/_morph" "Default" setprop
-    pop "Default" exit
-  then
 ;
 
 (***** Get source or destinations for exits *****)

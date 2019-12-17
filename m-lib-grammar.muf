@@ -133,9 +133,12 @@ $PRAGMA comment_recurse
 (*         will use $m/lib/theme modifications, and may be returned with     *)
 (*         additional characters and color codes.                            *)
 (*                                                                           *)
-(*       "color" ( Default "STRIP" )                                         *)
-(*         This determines how to handle MCC color codes in the substitution *)
-(*         properties. Valid values are "KEEP", "ESCAPE", and "STRIP".       *)
+(*       "color" ( Default "YES" )                                           *)
+(*         Determines whether MCC color safe operations should be used. If   *)
+(*         enabled, color codes in in the template string will apply, and    *)
+(*         any MCC color codes found in the substitutions will be escaped.   *)
+(*         If any color codes are added by "name_theme", they will not be    *)
+(*         escaped.                                                          *)
 (*                                                                           *)
 (*   M-LIB-GRAMMAR-oxford_join ( Y s -- s )                                  *)
 (*     Similar to ", " array_join, but it inserts a coordinating conjunction *)
@@ -360,14 +363,6 @@ $INCLUDE $m/lib/string
 
 $IFDEF M_LIB_COLOR
   $INCLUDE $m/lib/color
-$ELSE
-  $DEF M-LIB-COLOR-escape
-  $DEF M-LIB-COLOR-strcut \strcut
-  $DEF M-LIB-COLOR-strcat \strcat
-  $DEF M-LIB-COLOR-strcat_hard \strcat
-  $DEF M-LIB-COLOR-strip
-  $DEF M-LIB-COLOR-toupper \toupper
-  $DEF M-LIB-COLOR-tolower \tolower
 $ENDIF
 
 $IFDEF M_LIB_THEME
@@ -378,12 +373,26 @@ $PUBDEF :
 
 (* ------------------------------------------------------------------------- *)
 
-: color_cb_strcat M-LIB-COLOR-strcat ;
-: color_cb_strcut M-LIB-COLOR-strcut ;
-: color_cb_strstrip M-LIB-COLOR-strip ;
-: color_cb_toupper M-LIB-COLOR-toupper ;
-: color_cb_tolower M-LIB-COLOR-tolower ;
-: color_cb ( -- x ) { "strcat" 'color_cb_strcat "strcut" 'color_cb_strcut "strstrip" 'color_cb_strstrip "toupper" 'color_cb_toupper "tolower" 'color_cb_tolower }dict ;
+: cb_plain_strplain ;
+: cb_plain_strcut \strcut ;
+: cb_plain_strcat \strcat ;
+: cb_plain_toupper \toupper ;
+: cb_plain_tolower \tolower ;
+: cb_plain ( -- a ) { "strcat" 'cb_plain_strcat "strcut" 'cb_plain_strcut "strplain" 'cb_plain_strplain "toupper" 'cb_plain_toupper "tolower" 'cb_plain_tolower }dict ;
+
+$IFDEF M_LIB_COLOR
+  : cb_color_strcat M-LIB-COLOR-strcat ;
+  : cb_color_strcut M-LIB-COLOR-strcut ;
+  : cb_color_strplain M-LIB-COLOR-strip ;
+  : cb_color_toupper M-LIB-COLOR-toupper ;
+  : cb_color_tolower M-LIB-COLOR-tolower ;
+  : cb_color_hardcat_strcat M-LIB-COLOR-strcat_hard ;
+  : cb_color ( -- x ) { "strcat" 'cb_color_strcat "strcut" 'cb_color_strcut "strplain" 'cb_color_strplain "toupper" 'cb_color_toupper "tolower" 'cb_color_tolower }dict ;
+  : cb_color_hardcat ( -- x ) { "strcat" 'cb_color_hardcat_strcat "strcut" 'cb_color_strcut "strplain" 'cb_color_strplain "toupper" 'cb_color_toupper "tolower" 'cb_color_tolower }dict ;
+$ELSE
+  $DEF cb_color cb_plain
+  $DEF cb_color_hardcat cb_plain
+$ENDIF
 
 : sex_category[ s:sex -- s:category ]
   "" var! category
@@ -684,25 +693,12 @@ $PUBDEF :
 ;
 
 : sub_fix[ Y:substitutions d:object x:opts -- Y:substitutitons ]
-$IFDEF M_LIB_COLOR
-  opts @ "color" [] dup not if pop "" then "escape" stringcmp not if
-    substitutions @ foreach
-      M-LIB-COLOR-escape
-      substitutions @ rot ->[] substitutions !
-    repeat
-  else opts @ "color" [] dup not if pop "" then "keep" stringcmp if
-    substitutions @ foreach
-      M-LIB-COLOR-strip
-      substitutions @ rot ->[] substitutions !
-    repeat
-  then then
-$ENDIF
   opts @ "name_match" [] dup not if pop "" then "no" stringcmp if
     object @ name "_" " " subst tolower var! object_name
     object @ base_names { swap foreach nip "_" " " subst tolower repeat }list var! object_base_names
-    substitutions @ "%n" [] M-LIB-COLOR-strip "_" " " subst tolower var! opt_n
-    substitutions @ "%d" [] M-LIB-COLOR-strip "_" " " subst tolower var! opt_d
-    substitutions @ "%i" [] M-LIB-COLOR-strip "_" " " subst tolower var! opt_i
+    substitutions @ "%n" [] "_" " " subst tolower var! opt_n
+    substitutions @ "%d" [] "_" " " subst tolower var! opt_d
+    substitutions @ "%i" [] "_" " " subst tolower var! opt_i
     opt_n @ object_name @ stringcmp if
       object @ default_n substitutions @ "%n" ->[] substitutions !
     then
@@ -719,17 +715,23 @@ $ENDIF
       object @ default_i substitutions @ "%i" ->[] substitutions !
     then
   then
+$IFDEF M_LIB_COLOR
+  opts @ "color" [] dup not if pop "" then "no" stringcmp if
+    substitutions @ foreach
+      M-LIB-COLOR-escape
+      substitutions @ rot ->[] substitutions !
+    repeat
+  then
+$ENDIF
 $IFDEF M_LIB_THEME
   opts @ "name_theme" [] dup not if pop "" then "yes" stringcmp not if
     substitutions @ "%n" [] if
       substitutions @ "%n" []
-      M-LIB-COLOR-strip
       1 array_make object @ M-LIB-THEME-format_obj_type M-LIB-THEME-format
       substitutions @ "%n" ->[] substitutions !
     then
     substitutions @ "%d" [] if
       substitutions @ "%d" []
-      M-LIB-COLOR-strip
       dup "the[_ ]*" smatch if
         4 strcut
       else
@@ -741,7 +743,6 @@ $IFDEF M_LIB_THEME
     then
     substitutions @ "%i" [] if
       substitutions @ "%i" []
-      M-LIB-COLOR-strip
       dup "the[_ ]*" smatch if
         4 strcut
       else dup "an[_ ]*" smatch if
@@ -760,19 +761,13 @@ $ENDIF
   substitutions @
 ;
 
-: sub_code[ s:codestr Y:substitutions -- s:result ]
-  var code
-  var obj_id
-  codestr @ M-LIB-COLOR-strip 1 strcut swap pop var! codestr_stripped
-  codestr_stripped @ "[1-9][adinoprstvwxyz]" smatch if
-    codestr_stripped @
-    1 strcut swap atoi obj_id ! code !
-  else codestr_stripped @ "[adinoprstvwxyz]" smatch if
-    1 obj_id !
-    codestr_stripped @ code !
+: sub_code[ s:codestr Y:substitutions x:cb -- s:result ]
+  codestr @ cb @ M-LIB-STRING-strplain_cb "%([0-9]?)([adinoprstvwxyz])" REG_ICASE regexp pop array_vals pop rot pop var! code var! obj_id
+  obj_id @ if
+    obj_id @ atoi obj_id !
   else
-    codestr @ exit
-  then then
+    1 obj_id !
+  then
   obj_id @ substitutions @ array_count > if
     codestr @ exit
   then
@@ -782,29 +777,33 @@ $ENDIF
     codestr @ exit
   then
   code @ code @ toupper = if
-     1 M-LIB-COLOR-strcut swap toupper swap strcat
+     1 cb @ M-LIB-STRING-strcut_cb swap toupper swap strcat
   then
 ;
 
 : sub[ s:template Y:objects x:opts -- s:name ]
+  var cb
+  opts @ "color" [] dup not if pop "" then "yes" stringcmp not if
+    cb_color_hardcat cb !
+  else
+    cb_plain cb !
+  then
   { }list var! substitutions
   objects @ foreach
     nip
     var! object
     object @ get_substitutions object @ opts @ sub_fix substitutions @ []<- substitutions !
   repeat
-  template @ "%" color_cb M-LIB-STRING-carve_array_cb
-  1 array_cut swap array_vals pop var! result
-  foreach
-    nip
-    dup 1 M-LIB-COLOR-strcut swap pop 1 M-LIB-COLOR-strcut pop M-LIB-COLOR-strip number? if
-      3 M-LIB-COLOR-strcut swap substitutions @ sub_code swap M-LIB-COLOR-strcat_hard
-    else
-      2 M-LIB-COLOR-strcut swap substitutions @ sub_code swap M-LIB-COLOR-strcat_hard
-    then
-    result @ swap M-LIB-COLOR-strcat result !
+  template @ "%[0-9]?[adinoprstvwxyz]" REG_ICASE cb @ M-LIB-STRING-regslice_cb
+  1 array_cut begin
+    dup not if pop break then
+    2 array_cut swap array_vals pop
+    (code, plain)
+    swap cb @ M-LIB-STRING-strplain_cb substitutions @ cb @ sub_code
+    4 rotate []<- []<-
+    swap
   repeat
-  result @
+  cb @ M-LIB-STRING-array_interpret_cb
 ;
 
 (*****************************************************************************)

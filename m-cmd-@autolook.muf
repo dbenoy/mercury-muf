@@ -149,7 +149,7 @@ WIZCALL M-HELP-help
     objects_total_length @ swap M-LIB-COLOR-strlen + objects_total_length !
   repeat
   objects_total_length @ 150 < if
-    notify_me @ { "[ [#FFFFFF]" title @ ":" " " 8 title @ strlen - * }cat objects @ "and" M-LIB-GRAMMAR-oxford_join M-LIB-COLOR-strcat "[!FFFFFF] ]" M-LIB-COLOR-strcat .notify
+    notify_me @ { "[ [#FFFFFF]" title @ ":" " " 8 title @ strlen - * }cat objects @ ", " "and" M-LIB-GRAMMAR-oxford_join M-LIB-COLOR-strcat "[!FFFFFF] ]" M-LIB-COLOR-strcat .notify
   else
     notify_me @ { "[#FFFFFF]" title @ ":" }cat .notify
     objects @ foreach
