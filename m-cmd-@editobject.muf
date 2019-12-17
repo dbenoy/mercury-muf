@@ -874,12 +874,10 @@ lvar g_table_program
     }list
 
     { "2"
-      "[#00AAAA][[#55FFFF]2[#00AAAA]] Gender: [#5555FF]@1"
+      "[#00AAAA][[#55FFFF]2[#00AAAA]] Sex: [#5555FF]@1"
       'get_str     { "gender_prop" sysparm "[#FF5555][Unset][!FFFFFF]" }list
 
       {
-        "The system recognizes the values 'Male', 'Female', 'Herm', 'Hermaphrodite', and 'Neuter'.  However, you're free to enter whatever you want."
-        ""
         "Enter the gender of this character:"
       }list "\r" array_join
       'set_str     { "gender_prop" sysparm }list
