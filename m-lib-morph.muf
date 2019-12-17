@@ -60,6 +60,8 @@ lvar g_morph_props
 : morph_props
   g_morph_props @ if g_morph_props @ exit then
   {
+    "Species"             { "_/species" }list
+    "Sex"                 { "gender_prop" sysparm }list
     "Appearance"          { "_/de" "_/dl/appearance#" }list
     "Scent"               { "_/scent" "_/dl/scent#" }list
     "Texture"             { "_/texture" "_/dl/texture#" }list
@@ -67,10 +69,7 @@ lvar g_morph_props
     "Aura"                { "_/aura" "_/dl/aura#" }list
     "Sound"               { "_/sound" "_/dl/sound#" }list
     "Writing"             { "_/writing" "_/dl/writing#" }list
-    "Image URL"           { "_/image" }list
-    "Pronouns/Names"      { "%a" "%d" "%i" "%n" "%o" "%p" "%r" "%s" "%w" "%x" "%y" "%z" }list 
-    "Species"             { "_/species" }list
-    "Sex"                 { "gender_prop" sysparm }list
+    "Pronouns/Names"      { "%a" "%s" "%o" "%p" "%r" }list
     "Emote Configuration" { "_config/emote" }list
   }dict dup g_morph_props !
 ;
