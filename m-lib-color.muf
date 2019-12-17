@@ -1710,14 +1710,7 @@ $LIBDEF M-LIB-COLOR-rgb2hsl
   source2 @ string? not if "Non-string argument (2)." abort then
 
   (* Use ordinary strcat if there are no color codes in either string. *)
-  source1 @ source2 @ strcat begin
-    dup mcc_tagparse pop and if
-      break
-    then
-    1 strcut swap pop
-    dup not
-  until
-  if
+  source1 @ source2 @ strcat REGEXP_MCC_CODE 0 regexp pop if
     { source1 @ mcc_preprocess "[" CODE_TYPE_SPECIAL CODE_VALUE_SPECIAL_RESET "]" source2 @ mcc_preprocess }cat
   else
     source1 @ source2 @ strcat
@@ -1736,15 +1729,8 @@ $LIBDEF M-LIB-COLOR-strcat_hard
   source2 @ string? not if "Non-string argument (2)." abort then
 
   (* Use ordinary strcat if there are no color codes in either string. *)
-  source1 @ source2 @ strcat begin
-    dup mcc_tagparse pop and if
-      break
-    then
-    1 strcut swap pop
-    dup not
-  until
-  if
-    source1 @ mcc_preprocess source2 @ mcc_preprocess strcat
+  source1 @ source2 @ strcat REGEXP_MCC_CODE 0 regexp pop if
+    { source1 @ mcc_preprocess "[" CODE_TYPE_SPECIAL CODE_VALUE_SPECIAL_NOOP "]" source2 @ mcc_preprocess }cat
   else
     source1 @ source2 @ strcat
   then
