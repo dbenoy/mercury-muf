@@ -37,7 +37,7 @@ $NOTE    Map viewer.
 $DOCCMD  @list __PROG__=2-30
 
 $INCLUDE $m/lib/array
-$INCLUDE $m/lib/grammar
+$INCLUDE $m/lib/string
 $INCLUDE $m/lib/theme
 $INCLUDE $m/lib/color
 $INCLUDE $m/lib/notify
@@ -115,7 +115,7 @@ WIZCALL M-HELP-help
     repeat
   }list other_maps !
   other_maps @ if
-    { "The " other_maps @ "and" M-LIB-GRAMMAR-oxford_join M-LIB-COLOR-escape " map" other_maps @ array_count 1 > if "s are " else " is " then "available here, too." }cat .tell
+    { "The " other_maps @ "and" M-LIB-STRING-oxford_join M-LIB-COLOR-escape " map" other_maps @ array_count 1 > if "s are " else " is " then "available here, too." }cat .tell
   then
 ;
 .

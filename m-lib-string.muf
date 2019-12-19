@@ -62,11 +62,13 @@ $PRAGMA comment_recurse
 (*     M-LIB-STRING-erinstring_cb                                            *)
 (*     M-LIB-STRING-explode_array_cb                                         *)
 (*     M-LIB-STRING-explode_cb                                               *)
+(*     M-LIB-STRING-fromstring_cb                                            *)
 (*     M-LIB-STRING-hex?_cb                                                  *)
 (*     M-LIB-STRING-instr_cb                                                 *)
 (*     M-LIB-STRING-instring_cb                                              *)
 (*     M-LIB-STRING-midstr_cb                                                *)
 (*     M-LIB-STRING-number?_cb                                               *)
+(*     M-LIB-STRING-oxford_join_cb                                           *)
 (*     M-LIB-STRING-regcarve_cb                                              *)
 (*     M-LIB-STRING-regslice_cb                                              *)
 (*     M-LIB-STRING-rinstr_cb                                                *)
@@ -85,11 +87,11 @@ $PRAGMA comment_recurse
 (*     M-LIB-STRING-striptail_cb                                             *)
 (*     M-LIB-STRING-strlen_cb                                                *)
 (*     M-LIB-STRING-strncmp_cb                                               *)
-(*     M-LIB-STRING-tostring_cb                                              *)
 (*     M-LIB-STRING-strtof_cb                                                *)
 (*     M-LIB-STRING-subst_cb                                                 *)
-(*     M-LIB-STRING-toupper_cb                                               *)
 (*     M-LIB-STRING-tolower_cb                                               *)
+(*     M-LIB-STRING-tostring_cb                                              *)
+(*     M-LIB-STRING-toupper_cb                                               *)
 (*     M-LIB-STRING-wordwrap_cb                                              *)
 (*     M-LIB-STRING-xtoi_cb                                                  *)
 (*     M-LIB-STRING-zeropad_cb                                               *)
@@ -129,6 +131,14 @@ $PRAGMA comment_recurse
 (*   M-LIB-STRING-itox ( i -- s )                                            *)
 (*     Convert an integer into a hexadecimal string. This works bit-by-bit   *)
 (*     so negative numbers will appear in their two's compliment form.       *)
+(*                                                                           *)
+(*   M-LIB-STRING-oxford_join ( Y s -- s )                                   *)
+(*     Similar to ", " array_join, but it inserts a coordinating conjunction *)
+(*     and oxford comma as well, if applicable.                              *)
+(*                                                                           *)
+(*       { "a" } "nor" -> "a"                                                *)
+(*       { "a" "b" } "and" -> "a and b"                                      *)
+(*       { "a" "b" "c" } "or" -> "a, b, or c"                                *)
 (*                                                                           *)
 (*   M-LIB-STRING-regcarve ( s s i -- Y )                                    *)
 (*     Like the REGSPLIT primitive, except separators are kept. They remain  *)
@@ -223,7 +233,7 @@ $PRAGMA comment_recurse
 $VERSION 1.000
 $AUTHOR  Daniel Benoy
 $NOTE    String manipulation routines.
-$DOCCMD  @list __PROG__=2-214
+$DOCCMD  @list __PROG__=2-229
 
 (* ------------------------------------------------------------------------- *)
 
@@ -357,10 +367,19 @@ $PUBDEF :
   retval @
 ;
 
-: tostring_cb ( ? x -- ? )
+: tostring_cb ( ? x -- s )
   2 try
     "tostring" [] execute
     depth 1 = not if "Unexpected number of results from 'tostring' callback." abort then
+  catch
+    abort
+  endcatch
+;
+
+: fromstring_cb ( s x -- ? )
+  2 try
+    "fromstring" [] execute
+    depth 1 = not if "Unexpected number of results from 'fromstring' callback." abort then
   catch
     abort
   endcatch
@@ -517,6 +536,29 @@ $PUBDEF :
   result @
 ;
 
+: array_join_cb ( y ? x -- ? )
+  var! cbs
+  swap 1 array_cut foreach nip 3 pick rot []<- []<- repeat swap pop
+  "" swap foreach
+    nip
+    dup int? over dbref? or over float? or over lock? or if
+      1 array_make "" array_join
+    then
+    cbs @ strcat_cb
+  repeat
+;
+
+: array_interpret_cb ( y x -- ? )
+  var! cbs
+  "" swap foreach
+    nip
+    dup int? over dbref? or over float? or over lock? or if
+      1 array_make array_interpret
+    then
+    cbs @ strcat_cb
+  repeat
+;
+
 : wordwrap_cb[ ?:source i:width_wrap x:opts x:cbs -- y:lines ]
   { }list var! lines
   source @ "\r" explode_array var! source_lines
@@ -538,6 +580,27 @@ $PUBDEF :
     then
   repeat
   lines @
+;
+
+: oxford_join_cb ( Y ? x -- ? )
+  var! cbs
+  " " cbs @ tostring_cb var! space
+  ", " cbs @ tostring_cb var! comma
+  swap dup array_count 1 > if
+    dup array_count 2 - array_cut
+    array_vals pop
+    4 rotate space @ cbs @ strcat_cb
+    4 pick if
+      comma @ swap cbs @ strcat_cb
+    else
+      space @ swap cbs @ strcat_cb
+    then
+    swap cbs @ strcat_cb cbs @ strcat_cb
+    swap array_appenditem
+  else
+    swap pop
+  then
+  comma @ cbs @ array_join_cb
 ;
 
 : std_cb_tostring ( s -- s ) ;
@@ -565,14 +628,7 @@ $PUBDEF :
   (* Permissions inherited *)
   "yx" checkargs
   dup cbs_check
-  var! cbs
-  "" swap foreach
-    nip
-    dup int? over dbref? or over float? or over lock? or if
-      1 array_make array_interpret
-    then
-    cbs @ strcat_cb
-  repeat
+  array_interpret_cb
 ;
 PUBLIC M-LIB-STRING-array_interpret_cb
 $LIBDEF M-LIB-STRING-array_interpret_cb
@@ -584,15 +640,7 @@ $LIBDEF M-LIB-STRING-array_interpret_cb
   (* Permissions inherited *)
   "y?x" checkargs
   dup cbs_check
-  var! cbs
-  swap 1 array_cut foreach nip 3 pick rot []<- []<- repeat swap pop
-  "" swap foreach
-    nip
-    dup int? over dbref? or over float? or over lock? or if
-      1 array_make "" array_join
-    then
-    cbs @ strcat_cb
-  repeat
+  array_join_cb
 ;
 PUBLIC M-LIB-STRING-array_join_cb
 $LIBDEF M-LIB-STRING-array_join_cb
@@ -770,6 +818,18 @@ PUBLIC M-LIB-STRING-explode_array_cb
 $LIBDEF M-LIB-STRING-explode_array_cb
 
 (*****************************************************************************)
+(*                        M-LIB-STRING-fromstring_cb                         *)
+(*****************************************************************************)
+: M-LIB-STRING-fromstring_cb ( s x -- ? )
+  (* Permissions inherited *)
+  "sx" checkargs
+  dup cbs_check
+  fromstring_cb
+;
+PUBLIC M-LIB-STRING-fromstring_cb
+$LIBDEF M-LIB-STRING-fromstring_cb
+
+(*****************************************************************************)
 (*                             M-LIB-STRING-hex?                             *)
 (*****************************************************************************)
 : M-LIB-STRING-hex? ( s -- i )
@@ -852,6 +912,29 @@ $LIBDEF M-LIB-STRING-midstr_cb
 ;
 PUBLIC M-LIB-STRING-number?_cb
 $LIBDEF M-LIB-STRING-number?_cb
+
+(*****************************************************************************)
+(*                         M-LIB-STRING-oxford_join                          *)
+(*****************************************************************************)
+: M-LIB-STRING-oxford_join ( Y s -- s )
+  (* Permissions inherited *)
+  "Ys" checkargs
+  std_cb oxford_join_cb
+;
+PUBLIC M-LIB-STRING-oxford_join
+$LIBDEF M-LIB-STRING-oxford_join
+
+(*****************************************************************************)
+(*                        M-LIB-STRING-oxford_join_cb                        *)
+(*****************************************************************************)
+: M-LIB-STRING-oxford_join_cb ( Y s x -- s )
+  (* Permissions inherited *)
+  "Ysx" checkargs
+  dup cbs_check
+  oxford_join_cb
+;
+PUBLIC M-LIB-STRING-oxford_join_cb
+$LIBDEF M-LIB-STRING-oxford_join_cb
 
 (*****************************************************************************)
 (*                           M-LIB-STRING-regslice                           *)
@@ -1146,18 +1229,6 @@ PUBLIC M-LIB-STRING-strncmp_cb
 $LIBDEF M-LIB-STRING-strncmp_cb
 
 (*****************************************************************************)
-(*                         M-LIB-STRING-tostring_cb                          *)
-(*****************************************************************************)
-: M-LIB-STRING-tostring_cb ( ? x -- s )
-  (* Permissions inherited *)
-  "?x" checkargs
-  dup cbs_check
-  tostring_cb
-;
-PUBLIC M-LIB-STRING-tostring_cb
-$LIBDEF M-LIB-STRING-tostring_cb
-
-(*****************************************************************************)
 (*                          M-LIB-STRING-strtof_cb                           *)
 (*****************************************************************************)
 : M-LIB-STRING-strtof_cb ( ? x -- f )
@@ -1183,18 +1254,6 @@ PUBLIC M-LIB-STRING-subst_cb
 $LIBDEF M-LIB-STRING-subst_cb
 
 (*****************************************************************************)
-(*                          M-LIB-STRING-toupper_cb                          *)
-(*****************************************************************************)
-: M-LIB-STRING-toupper_cb ( ? x -- i )
-  (* Permissions inherited *)
-  "?x" checkargs
-  dup cbs_check
-  toupper_cb
-;
-PUBLIC M-LIB-STRING-toupper_cb
-$LIBDEF M-LIB-STRING-toupper_cb
-
-(*****************************************************************************)
 (*                          M-LIB-STRING-tolower_cb                          *)
 (*****************************************************************************)
 : M-LIB-STRING-tolower_cb ( ? x -- i )
@@ -1205,6 +1264,30 @@ $LIBDEF M-LIB-STRING-toupper_cb
 ;
 PUBLIC M-LIB-STRING-tolower_cb
 $LIBDEF M-LIB-STRING-tolower_cb
+
+(*****************************************************************************)
+(*                         M-LIB-STRING-tostring_cb                          *)
+(*****************************************************************************)
+: M-LIB-STRING-tostring_cb ( ? x -- s )
+  (* Permissions inherited *)
+  "?x" checkargs
+  dup cbs_check
+  tostring_cb
+;
+PUBLIC M-LIB-STRING-tostring_cb
+$LIBDEF M-LIB-STRING-tostring_cb
+
+(*****************************************************************************)
+(*                          M-LIB-STRING-toupper_cb                          *)
+(*****************************************************************************)
+: M-LIB-STRING-toupper_cb ( ? x -- i )
+  (* Permissions inherited *)
+  "?x" checkargs
+  dup cbs_check
+  toupper_cb
+;
+PUBLIC M-LIB-STRING-toupper_cb
+$LIBDEF M-LIB-STRING-toupper_cb
 
 (*****************************************************************************)
 (*                          M-LIB-STRING-wordwrap_cb                         *)

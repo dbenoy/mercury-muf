@@ -94,7 +94,7 @@ lvar g_config_defaults
 $INCLUDE $m/lib/theme
 $INCLUDE $m/lib/color
 $INCLUDE $m/lib/notify
-$INCLUDE $m/lib/grammar
+$INCLUDE $m/lib/string
 $INCLUDE $m/lib/map
 
 $DEF .notify M-LIB-NOTIFY-notify_color
@@ -149,7 +149,7 @@ WIZCALL M-HELP-help
     objects_total_length @ swap M-LIB-COLOR-strlen + objects_total_length !
   repeat
   objects_total_length @ 150 < if
-    notify_me @ { "[ [#FFFFFF]" title @ ":" " " 8 title @ strlen - * }cat objects @ ", " "and" M-LIB-GRAMMAR-oxford_join M-LIB-COLOR-strcat "[!FFFFFF] ]" M-LIB-COLOR-strcat .notify
+    notify_me @ { "[ [#FFFFFF]" title @ ":" " " 8 title @ strlen - * }cat objects @ "and" M-LIB-STRING-oxford_join M-LIB-COLOR-strcat "[!FFFFFF] ]" M-LIB-COLOR-strcat .notify
   else
     notify_me @ { "[#FFFFFF]" title @ ":" }cat .notify
     objects @ foreach

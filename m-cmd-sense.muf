@@ -179,6 +179,7 @@ $ENDDEF
 (* End configurable options *)
 
 $INCLUDE $m/lib/grammar
+$INCLUDE $m/lib/string
 $INCLUDE $m/lib/theme
 $INCLUDE $m/lib/color
 $INCLUDE $m/lib/notify
@@ -335,7 +336,7 @@ WIZCALL M-HELP-help
       repeat
     }list var! contents_names
     contents_names @ if
-      { "You can %v " { trig }list { }dict M-LIB-GRAMMAR-sub contents_names @ "and" M-LIB-GRAMMAR-oxford_join }cat
+      { "You can %v " { trig }list { }dict M-LIB-GRAMMAR-sub contents_names @ "and" M-LIB-STRING-oxford_join }cat
       contents_random_skipped @ if
         ", among other " "aspect" get_conf "s" strcat strcat strcat
       then
@@ -366,7 +367,7 @@ WIZCALL M-HELP-help
   repeat
   contents_total @ if
     contents_names @ SORTTYPE_CASE_ASCEND array_sort contents_names !
-    { "There is also " contents_names @ "and" M-LIB-GRAMMAR-oxford_join " " is_here @ if "here" else "there" then "." }cat
+    { "There is also " contents_names @ "and" M-LIB-STRING-oxford_join " " is_here @ if "here" else "there" then "." }cat
   else
     ""
   then

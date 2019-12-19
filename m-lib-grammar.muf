@@ -15,11 +15,6 @@ $PRAGMA comment_recurse
 (*   { me @ vehicle @ }list { }dict M-LIB-GRAMMAR-sub                        *)
 (*   > "Mercury gets out of a time machine and locks it behind him."         *)
 (*                                                                           *)
-(*   { "Lions" "tigers" "bears" }list                                        *)
-(*   "and" M-LIB-GRAMMAR-oxford_join                                         *)
-(*   "! Oh my!" strcat M-LIB-GRAMMAR-oxford_join                             *)
-(*   > "Lions, tigers, and bears! Oh my!"                                    *)
-(*                                                                           *)
 (* PROPERTIES:                                                               *)
 (*   Note: You're free to set anything you'd like for the substitution       *)
 (*   properties for some very creative results. For example, you could take  *)
@@ -140,14 +135,6 @@ $PRAGMA comment_recurse
 (*         If any color codes are added by "name_theme", they will not be    *)
 (*         escaped.                                                          *)
 (*                                                                           *)
-(*   M-LIB-GRAMMAR-oxford_join ( Y s -- s )                                  *)
-(*     Similar to ", " array_join, but it inserts a coordinating conjunction *)
-(*     and oxford comma as well, if applicable.                              *)
-(*                                                                           *)
-(*       { "a" } "nor" -> "a"                                                *)
-(*       { "a" "b" } "and" -> "a and b"                                      *)
-(*       { "a" "b" "c" } "or" -> "a, b, or c"                                *)
-(*                                                                           *)
 (*****************************************************************************)
 (* Revision History:                                                         *)
 (*   Version 1.0 -- Daniel Benoy -- October, 2019                            *)
@@ -174,7 +161,7 @@ $PRAGMA comment_recurse
 $VERSION 1.000
 $AUTHOR  Daniel Benoy
 $NOTE    Natural language strings.
-$DOCCMD  @list __PROG__=2-167
+$DOCCMD  @list __PROG__=2-157
 
 (* ====================== BEGIN CONFIGURABLE OPTIONS ====================== *)
 
@@ -817,31 +804,6 @@ $ENDIF
 ;
 PUBLIC M-LIB-GRAMMAR-sex_category
 $LIBDEF M-LIB-GRAMMAR-sex_category
-
-(*****************************************************************************)
-(*                         M-LIB-GRAMMAR-oxford_join                         *)
-(*****************************************************************************)
-: M-LIB-GRAMMAR-oxford_join ( Y s -- s )
-  (* Permissions inherited *)
-  "Ys" checkargs
-  swap dup array_count 1 > if
-    dup array_count 2 - array_cut
-    array_vals pop
-    4 rotate " " strcat
-    4 pick if
-      ", " swap strcat
-    else
-      " " swap strcat
-    then
-    swap strcat strcat
-    swap array_appenditem
-  else
-    swap pop
-  then
-  ", " array_join
-;
-PUBLIC M-LIB-GRAMMAR-oxford_join
-$LIBDEF M-LIB-GRAMMAR-oxford_join
 
 (*****************************************************************************)
 (*                             M-LIB-GRAMMAR-sub                             *)
