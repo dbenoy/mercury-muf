@@ -373,25 +373,24 @@ $PUBDEF :
 
 (* ------------------------------------------------------------------------- *)
 
-: cb_plain_strplain ;
+: cb_plain_tostring ;
+: cb_plain_fromstring ;
 : cb_plain_strcut \strcut ;
 : cb_plain_strcat \strcat ;
 : cb_plain_toupper \toupper ;
 : cb_plain_tolower \tolower ;
-: cb_plain ( -- a ) { "strcat" 'cb_plain_strcat "strcut" 'cb_plain_strcut "strplain" 'cb_plain_strplain "toupper" 'cb_plain_toupper "tolower" 'cb_plain_tolower }dict ;
+: cb_plain ( -- a ) { "tostring" 'cb_plain_tostring "fromstring" 'cb_plain_fromstring "strcat" 'cb_plain_strcat "strcut" 'cb_plain_strcut "toupper" 'cb_plain_toupper "tolower" 'cb_plain_tolower }dict ;
 
 $IFDEF M_LIB_COLOR
-  : cb_color_strcat M-LIB-COLOR-strcat ;
+  : cb_color_tostring M-LIB-COLOR-strip ;
+  : cb_color_fromstring M-LIB-COLOR-escape ;
+  : cb_color_strcat M-LIB-COLOR-strcat_hard ;
   : cb_color_strcut M-LIB-COLOR-strcut ;
-  : cb_color_strplain M-LIB-COLOR-strip ;
   : cb_color_toupper M-LIB-COLOR-toupper ;
   : cb_color_tolower M-LIB-COLOR-tolower ;
-  : cb_color_hardcat_strcat M-LIB-COLOR-strcat_hard ;
-  : cb_color ( -- x ) { "strcat" 'cb_color_strcat "strcut" 'cb_color_strcut "strplain" 'cb_color_strplain "toupper" 'cb_color_toupper "tolower" 'cb_color_tolower }dict ;
-  : cb_color_hardcat ( -- x ) { "strcat" 'cb_color_hardcat_strcat "strcut" 'cb_color_strcut "strplain" 'cb_color_strplain "toupper" 'cb_color_toupper "tolower" 'cb_color_tolower }dict ;
+  : cb_color ( -- x ) { "tostring" 'cb_color_tostring "fromstring" 'cb_color_fromstring "strcat" 'cb_color_strcat "strcut" 'cb_color_strcut "toupper" 'cb_color_toupper "tolower" 'cb_color_tolower }dict ;
 $ELSE
   $DEF cb_color cb_plain
-  $DEF cb_color_hardcat cb_plain
 $ENDIF
 
 : sex_category[ s:sex -- s:category ]
@@ -762,7 +761,7 @@ $ENDIF
 ;
 
 : sub_code[ s:codestr Y:substitutions x:cb -- s:result ]
-  codestr @ cb @ M-LIB-STRING-strplain_cb "%([0-9]?)([adinoprstvwxyz])" REG_ICASE regexp pop array_vals pop rot pop var! code var! obj_id
+  codestr @ cb @ M-LIB-STRING-tostring_cb "%([0-9]?)([adinoprstvwxyz])" REG_ICASE regexp pop array_vals pop rot pop var! code var! obj_id
   obj_id @ if
     obj_id @ atoi obj_id !
   else
@@ -784,7 +783,7 @@ $ENDIF
 : sub[ s:template Y:objects x:opts -- s:name ]
   var cb
   opts @ "color" [] dup not if pop "" then "yes" stringcmp not if
-    cb_color_hardcat cb !
+    cb_color cb !
   else
     cb_plain cb !
   then
@@ -799,7 +798,7 @@ $ENDIF
     dup not if pop break then
     2 array_cut swap array_vals pop
     (code, plain)
-    swap cb @ M-LIB-STRING-strplain_cb substitutions @ cb @ sub_code
+    swap cb @ M-LIB-STRING-tostring_cb substitutions @ cb @ sub_code
     4 rotate []<- []<-
     swap
   repeat

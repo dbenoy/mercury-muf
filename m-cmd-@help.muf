@@ -101,12 +101,13 @@ WIZCALL M-HELP-help
 
 (* ------------------------------------------------------------------------ *)
 
+: cb_color_tostring M-LIB-COLOR-strip ;
+: cb_color_fromstring M-LIB-COLOR-escape ;
 : cb_color_strcat M-LIB-COLOR-strcat ;
 : cb_color_strcut M-LIB-COLOR-strcut ;
-: cb_color_strplain M-LIB-COLOR-strip ;
 : cb_color_toupper M-LIB-COLOR-toupper ;
 : cb_color_tolower M-LIB-COLOR-tolower ;
-: cb_color ( -- a ) { "strcat" 'cb_color_strcat "strcut" 'cb_color_strcut "strplain" 'cb_color_strplain "toupper" 'cb_color_toupper "tolower" 'cb_color_tolower }dict ;
+: cb_color ( -- a ) { "tostring" 'cb_color_tostring "fromstring" 'cb_color_fromstring "strcat" 'cb_color_strcat "strcut" 'cb_color_strcut "toupper" 'cb_color_toupper "tolower" 'cb_color_tolower }dict ;
 
 : help_page_main[ x:topics -- Y:lines ]
   {
