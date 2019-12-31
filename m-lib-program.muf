@@ -46,7 +46,7 @@ $PUBDEF M-LIB-PROGRAM-mlev1 trig caller = caller mlevel 1 >= or
 $PUBDEF M-LIB-PROGRAM-mlev2 trig caller = caller mlevel 2 >= or
 $PUBDEF M-LIB-PROGRAM-mlev3 trig caller = caller mlevel 3 >= or
 $PUBDEF M-LIB-PROGRAM-mlev4 trig caller = caller "WIZARD" flag? or
-$PUBDEF M-LIB-PROGRAM-needs_mlev2 M-LIB-PROGRAM-mlev1 not if "Requires MUCKER level 1 or above." abort then
+$PUBDEF M-LIB-PROGRAM-needs_mlev1 M-LIB-PROGRAM-mlev1 not if "Requires MUCKER level 1 or above." abort then
 $PUBDEF M-LIB-PROGRAM-needs_mlev2 M-LIB-PROGRAM-mlev2 not if "Requires MUCKER level 2 or above." abort then
 $PUBDEF M-LIB-PROGRAM-needs_mlev3 M-LIB-PROGRAM-mlev3 not if "Requires MUCKER level 3 or above." abort then
 $PUBDEF M-LIB-PROGRAM-needs_mlev4 M-LIB-PROGRAM-mlev4 not if "Requires MUCKER level 4 or above." abort then
