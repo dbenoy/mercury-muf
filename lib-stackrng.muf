@@ -151,31 +151,32 @@ public filterrange
 public insertrange
 public swapranges
  
-$pubdef :
+$pubdef sr-catrng       __PROG__ "catranges" call
+$pubdef sr-copyrng      __PROG__ "copyrange" call
+$pubdef sr-deleterng    __PROG__ "deleterange" call
+$pubdef sr-extractrng   __PROG__ "extractrange" call
+$pubdef sr-filterrng    __PROG__ "filterrange" call
+$pubdef sr-insertrng    __PROG__ "insertrange" call
+$pubdef sr-poprng       popn
+$pubdef sr-swaprng      __PROG__ "swapranges" call
  
-$pubdef sr-catrng __PROG__ "catranges" call
-$pubdef sr-copyrng __PROG__ "copyrange" call
-$pubdef sr-deleterng __PROG__ "deleterange" call
-$pubdef sr-extractrng __PROG__ "extractrange" call
-$pubdef sr-filterrng __PROG__ "filterrange" call
-$pubdef sr-insertrng __PROG__ "insertrange" call
-$pubdef sr-poprng popn
-$pubdef sr-swaprng __PROG__ "swapranges" call
- 
-$pubdef SRNGcat __PROG__ "catranges" call
-$pubdef SRNGcopy __PROG__ "copyrange" call
-$pubdef SRNGdelete __PROG__ "deleterange" call
-$pubdef SRNGextract __PROG__ "extractrange" call
-$pubdef SRNGfilter __PROG__ "filterrange" call
-$pubdef SRNGinsert __PROG__ "insertrange" call
-$pubdef SRNGpop popn
-$pubdef SRNGswap __PROG__ "swapranges" call
+$pubdef SRNGcat         __PROG__ "catranges" call
+$pubdef SRNGcopy        __PROG__ "copyrange" call
+$pubdef SRNGdelete      __PROG__ "deleterange" call
+$pubdef SRNGextract     __PROG__ "extractrange" call
+$pubdef SRNGfilter      __PROG__ "filterrange" call
+$pubdef SRNGinsert      __PROG__ "insertrange" call
+$pubdef SRNGpop         popn
+$pubdef SRNGswap        __PROG__ "swapranges" call
 .
 c
 q 
 !@register lib-stackrng.muf=lib/stackrng
-!@set $lib/stackrng=M3
-!@set $lib/stackrng=H
-!@set $lib/stackrng=L
-!@set $lib/stackrng=S
+!@register #me lib-stackrng=tmp/prog1
+!@set $tmp/prog1=3
+!@set $tmp/prog1=H
+!@set $tmp/prog1=L
+!@set $tmp/prog1=S
+!@set $tmp/prog1=V
+!@register #me =tmp
 
