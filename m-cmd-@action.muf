@@ -78,7 +78,7 @@ WIZCALL M-HELP-help
 
 : main ( s --  )
   "me" match "BUILDER" flag? "me" match "WIZARD" flag? or not if
-    "Only builders are allowed to @action." .tell
+    "Only builders are allowed to @action." tell
     pop exit
   then
 
@@ -95,7 +95,7 @@ WIZCALL M-HELP-help
 
   (* Perform link *)
   destination @ if
-    "Trying to link..." .tell
+    "Trying to link..." tell
     "#" newAction @ intostr strcat destination @ M-LIB-AT_LINK-link not if exit then
   then
 

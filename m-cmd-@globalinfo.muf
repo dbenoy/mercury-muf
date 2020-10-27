@@ -138,47 +138,47 @@ WIZCALL M-HELP-help
 
 : main ( s --  )
   dup not if
-    "Please specify a global." .color-msg-error textattr .tell exit
+    "Please specify a global." .color-msg-error textattr tell exit
   then
 
   (* Find the specified global *)
   get_global
 
   dup not if
-    "No global by that name was found." .color-msg-error textattr .tell exit
+    "No global by that name was found." .color-msg-error textattr tell exit
   then
 
   me @ over controls not over "D" flag? and if
-    "Permission denied.  This global is set DARK." .color-msg-error textattr .tell exit
+    "Permission denied.  This global is set DARK." .color-msg-error textattr tell exit
   then
 
-  "-------------------------------------------------------------------------------" .tell
+  "-------------------------------------------------------------------------------" tell
 
   dup "$nothing" match = not if (* If it's linked to $nothing, then it's probably MPI *)
     me @ over locked? if
-      "Note: You don't have access to run this action!\r" .color-msg-error textattr .tell
+      "Note: You don't have access to run this action!\r" .color-msg-error textattr tell
     then
   then
 
   (* Action Name *)
-  dup M-LIB-HELP-command_get_name "Global Name:         " .color-category textattr swap strcat .tell
+  dup M-LIB-HELP-command_get_name "Global Name:         " .color-category textattr swap strcat tell
 
   (* Action Description *)
   dup M-LIB-HELP-command_get_desc dup if
-    "Global Description:  " .color-category textattr swap strcat .tell
+    "Global Description:  " .color-category textattr swap strcat tell
   else
     pop
   then
 
-  " " .tell
+  " " tell
 
   (* Action Owner *)
-  "Action Owner:        " .color-category textattr over owner name strcat .tell
+  "Action Owner:        " .color-category textattr over owner name strcat tell
 
   (* Action Aliases *)
   dup name dup ";" instr if
     ", " ";" subst
-    "Action Aliases:      " .color-category textattr swap tolower strcat .tell
+    "Action Aliases:      " .color-category textattr swap tolower strcat tell
   else
     pop
   then
@@ -188,30 +188,30 @@ WIZCALL M-HELP-help
 
   dup if
     (* Program Name *)
-    "Program Name:        " .color-category textattr over name strcat .tell
+    "Program Name:        " .color-category textattr over name strcat tell
 
     (* Program Owner *)
     dup owner #1 = not if
-      "Program Owner:       " .color-category textattr over owner name strcat .tell
+      "Program Owner:       " .color-category textattr over owner name strcat tell
     then
 
     (* Program Author *)
     dup "_author" getpropstr dup if
-      "Program Author:      " .color-category textattr swap strcat .tell
+      "Program Author:      " .color-category textattr swap strcat tell
     else
       pop
     then
 
     (* Program Version *)
     dup "_version" getpropstr dup if
-      "Program Version:     " .color-category textattr swap strcat .tell
+      "Program Version:     " .color-category textattr swap strcat tell
     else
       pop
     then
 
     (* Program Note *)
     dup "_note" getpropstr dup if
-      "Program Note:        " .color-category textattr swap strcat .tell
+      "Program Note:        " .color-category textattr swap strcat tell
     else
       pop
     then
@@ -226,7 +226,7 @@ WIZCALL M-HELP-help
 
       over intostr strcat
 
-      "Program Docs:        " .color-category textattr swap strcat .tell
+      "Program Docs:        " .color-category textattr swap strcat tell
     then
 
     (* Program Registrations *)
@@ -236,7 +236,7 @@ WIZCALL M-HELP-help
       array_make
       "Program Reg:         " .color-category textattr
       swap "\r                     " array_join "$" "_reg/" subst
-      strcat .tell
+      strcat tell
     else
       pop
     then
@@ -244,7 +244,7 @@ WIZCALL M-HELP-help
     pop
   then
 
-  "-------------------------------------------------------------------------------" .tell
+  "-------------------------------------------------------------------------------" tell
 ;
 .
 c

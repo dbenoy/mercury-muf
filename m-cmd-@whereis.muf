@@ -50,7 +50,7 @@ $INCLUDE $m/lib/notify
 $INCLUDE $m/lib/color
 $INCLUDE $m/lib/map
 
-$DEF .tell M-LIB-NOTIFY-tell_color
+$DEF tell M-LIB-NOTIFY-tell_color
 $DEF .err M-LIB-THEME-err
 
 (* ------------------------------------------------------------------------- *)
@@ -92,24 +92,24 @@ WIZCALL M-HELP-help
   var! map_room
   var! player
   player @ not if
-    "Please specify a player." .err .tell
+    "Please specify a player." .err tell
     exit
   then
   player @ { "quiet" "no" "match_start" "online" }dict M-LIB-MATCH-pmatch player !
   player @ 0 < if exit then
   player @ begin dup room? if break then location repeat var! player_room
   player_room @ M-LIB-ROOM-public? not if
-    { player @ name " is in a private location." }cat .err .tell
+    { player @ name " is in a private location." }cat .err tell
     exit
   then
   map_room @ if
     map_room @ M-LIB-MAP-match
     dup #-2 = if
-      pop "I don't know which one you mean!" .err .tell
+      pop "I don't know which one you mean!" .err tell
       exit
     then
     dup ok? not if
-      pop "I can't find that map." .err .tell
+      pop "I can't find that map." .err tell
       exit
     then
   else
@@ -119,7 +119,7 @@ WIZCALL M-HELP-help
   show_map @ if
     player @ map_room @ loc @ loc @ M-LIB-MAP-render { me @ }list M-LIB-NOTIFY-array_notify_color
   then
-  { player @ name " is " player @ location_text "." }cat M-LIB-COLOR-escape .tell
+  { player @ name " is " player @ location_text "." }cat M-LIB-COLOR-escape tell
 ;
 .
 c

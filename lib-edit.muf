@@ -358,7 +358,7 @@ public EDITsplit        $libdef EDITsplit
 c
 q
 !@register lib-edit.muf=lib/edit
-!@register #me lib-edit=tmp/prog1
+!@register #me lib-edit.muf=tmp/prog1
 !@set $tmp/prog1=3
 !@set $tmp/prog1=L
 !@set $tmp/prog1=V

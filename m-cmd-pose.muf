@@ -61,7 +61,7 @@ WIZCALL M-HELP-help
 : main ( s --  )
   dup not if
     pop
-    "What do you want to do?" .tell
+    "What do you want to do?" tell
     exit
   then
   me @ name

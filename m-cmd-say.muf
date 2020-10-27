@@ -61,7 +61,7 @@ WIZCALL M-HELP-help
 : main ( s --  )
   dup not if
     pop
-    "Say what?" .tell
+    "Say what?" tell
     exit
   then
   { me @ name " says, \""}cat swap "\"" strcat strcat

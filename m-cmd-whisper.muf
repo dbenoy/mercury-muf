@@ -75,7 +75,7 @@ WIZCALL M-HELP-help
   "=" split
   over not over not or if
     pop
-    "What do you want to whisper?" .tell
+    "What do you want to whisper?" tell
     exit
   then
   1 var! highlight_quote_level_min
@@ -103,7 +103,7 @@ WIZCALL M-HELP-help
   var! to
   (* Check if the target is online *)
   to @ player? to @ thing? to @ "ZOMBIE" flag? and or not to @ owner awake? not or if
-    "%N is not connected." { to @ }list { "name_match" "yes" }dict M-LIB-GRAMMAR-sub .tell
+    "%N is not connected." { to @ }list { "name_match" "yes" }dict M-LIB-GRAMMAR-sub tell
     exit
   then
   (* Notify the target *)

@@ -77,13 +77,13 @@ $PUBDEF :
     cmd @ "save" stringcmp not cmd @ "end" stringcmp not or if
       propname @ object @ LMGRdeletelist
       linedata @ array_vals 1 propname @ object @ LMGRputrange
-      "< Saved. >" .tell
+      "< Saved. >" tell
       1 modified !
       cmd @ "end" stringcmp not if break then
       continue
     then
     cmd @ "abort" stringcmp not if
-      "< Aborting without saving. >" .tell
+      "< Aborting without saving. >" tell
       break
     then
   repeat
@@ -112,18 +112,18 @@ $LIBDEF M-LIB-LSEDIT-listedit
   objname @ { "quiet" "no" "match_absolute" "yes" "match_home" "no" "match_nil" "no" }dict M-LIB-MATCH-match var! object
   object @ not if 0 exit then
   "me" match object @ controls not if
-    "Permission denied. (You don't control what was matched.)" .tell
+    "Permission denied. (You don't control what was matched.)" tell
     0 exit
   then
   "me" match "WIZARD" flag? not if
     propname @ "~" instr 1 = propname @ "/~" instr or propname @ "@" instr 1 = or propname @ "/@" instr or if
-      "Permission denied. (The property is restricted.)" .tell
+      "Permission denied. (The property is restricted.)" tell
       0 exit
     then
   then
-  "<    Welcome to the line editor.  You can get help by entering '.h'     >" .tell
-  "<     '.end' will exit and save.  '.abort' will abort any changes.      >" .tell
-  "<           To save changes and continue editing, use '.save'           >" .tell
+  "<    Welcome to the line editor.  You can get help by entering '.h'     >" tell
+  "<     '.end' will exit and save.  '.abort' will abort any changes.      >" tell
+  "<           To save changes and continue editing, use '.save'           >" tell
   object @ propname @ listedit
 ;
 PUBLIC M-LIB-LSEDIT-lsedit

@@ -80,19 +80,19 @@ $PUBDEF :
   "room" 1 M-LIB-QUOTA-QuotaCheck not if #-1 exit then
 
   roomname @ not if
-    "You must specify a name for the room." .tell
+    "You must specify a name for the room." tell
     #-1 exit
   then
 
   roomname @ name-ok? not if
-    "That's a silly name for a room!" .tell
+    "That's a silly name for a room!" tell
     #-1 exit
   then
 
   "room_cost" sysparm atoi var! cost
 
   cost @ M-LIB-PENNIES-payfor_chk not if
-    { "Sorry, you don't have enough " "pennies" sysparm " to dig a room." }cat .tell
+    { "Sorry, you don't have enough " "pennies" sysparm " to dig a room." }cat tell
     #-1 exit
   then
 
@@ -112,26 +112,26 @@ $PUBDEF :
   then
 
   roomname @ doNewRoom
-  dup if .tell pop #-1 exit else pop then
+  dup if tell pop #-1 exit else pop then
   var! newroom
 
-  "Room " newroom @ name strcat " (#" strcat newroom @ intostr strcat ") created." strcat .tell
+  "Room " newroom @ name strcat " (#" strcat newroom @ intostr strcat ") created." strcat tell
 
   cost @ M-LIB-PENNIES-payfor
 
   parent @ if
-    "Trying to set parent..." .tell
+    "Trying to set parent..." tell
 
     parent @ { "quiet" "no" "match_absolute" "yes" "match_home" "no" "match_nil" "no" }dict M-LIB-MATCH-match parent !
 
     parent @ ok? parent @ #-3 = or not if
-      "Parent set to default." .tell
+      "Parent set to default." tell
     else
       "me" match parent @ controls not parent @ "ABODE" flag? not and parent @ newroom @ = not and if
-        "Permission denied. Parent set to default" .tell
+        "Permission denied. Parent set to default" tell
       else
         newroom @ parent @ moveto
-        "Parent set to " parent @ unparseobj strcat "." strcat .tell
+        "Parent set to " parent @ unparseobj strcat "." strcat tell
       then
     then
   then

@@ -74,27 +74,27 @@ $DEF QUOTA_STRING dup -1 = if pop "---" else intostr then
   then
 
   dup if
-    .pmatch
+    pmatch
   else
     pop me @
   then
 
   dup #-1 = if
-    "No such player." .tell
+    "No such player." tell
     pop exit
   then
 
   var! target
 
   me @ "WIZARD" flag? not target @ me @ != and if
-    "Permission denied." .tell
+    "Permission denied." tell
     exit
   then
 
-  "Owned"                                 "Quota"                                              ""         "%12s%12s%12s" fmtstring .tell
-  target @ "thing" M-LIB-QUOTA-GetUsage   target @ "thing" M-LIB-QUOTA-GetQuota   QUOTA_STRING "Things"   "%12s%12s%12i" fmtstring .tell
-  target @ "exit" M-LIB-QUOTA-GetUsage    target @ "exit" M-LIB-QUOTA-GetQuota    QUOTA_STRING "Exits"    "%12s%12s%12i" fmtstring .tell
-  target @ "room" M-LIB-QUOTA-GetUsage    target @ "room" M-LIB-QUOTA-GetQuota    QUOTA_STRING "Rooms"    "%12s%12s%12i" fmtstring .tell
+  "Owned"                                 "Quota"                                              ""         "%12s%12s%12s" fmtstring tell
+  target @ "thing" M-LIB-QUOTA-GetUsage   target @ "thing" M-LIB-QUOTA-GetQuota   QUOTA_STRING "Things"   "%12s%12s%12i" fmtstring tell
+  target @ "exit" M-LIB-QUOTA-GetUsage    target @ "exit" M-LIB-QUOTA-GetQuota    QUOTA_STRING "Exits"    "%12s%12s%12i" fmtstring tell
+  target @ "room" M-LIB-QUOTA-GetUsage    target @ "room" M-LIB-QUOTA-GetQuota    QUOTA_STRING "Rooms"    "%12s%12s%12i" fmtstring tell
 ;
 
 .

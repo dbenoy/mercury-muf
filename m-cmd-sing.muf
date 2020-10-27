@@ -61,7 +61,7 @@ WIZCALL M-HELP-help
 : main ( s --  )
   dup not if
     pop
-    "Sing what?" .tell
+    "Sing what?" tell
     exit
   then
   { me @ name " sings, o/` " }cat swap " o/`" strcat strcat

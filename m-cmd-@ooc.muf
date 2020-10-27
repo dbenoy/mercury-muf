@@ -67,7 +67,7 @@ WIZCALL M-HELP-help
 : main ( s --  )
   dup not if
     pop
-    "Please specify a message." .tell
+    "Please specify a message." tell
     exit
   then
   var highlight_ooc_style

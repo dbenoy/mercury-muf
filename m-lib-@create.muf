@@ -82,18 +82,18 @@ $PUBDEF :
   "object_cost" sysparm atoi var! tp_object_cost
 
   thingname @ not if
-    "Please specify a valid name for this thing." .tell
+    "Please specify a valid name for this thing." tell
     #-1 exit
   then
 
   thingname @ name-ok? not if
-    "Please specify a valid name for this thing." .tell
+    "Please specify a valid name for this thing." tell
     #-1 exit
   then
 
   payment @ atoi payment !
   payment @ 0 < if
-    "You can't create an object for less than nothing!" .tell
+    "You can't create an object for less than nothing!" tell
     #-1 exit
   then
 
@@ -102,15 +102,15 @@ $PUBDEF :
   then
 
   payment @ M-LIB-PENNIES-payfor_chk not if
-    { "Sorry, you don't have enough " "pennies" sysparm "." }cat .tell
+    { "Sorry, you don't have enough " "pennies" sysparm "." }cat tell
     #-1 exit
   then
 
   (* Create the object *)
   "me" match thingname @ doNewObject
-  dup if .tell pop #-1 exit else pop then
+  dup if tell pop #-1 exit else pop then
 
-  "Object " over name strcat " (#" strcat over intostr strcat ") created." strcat .tell
+  "Object " over name strcat " (#" strcat over intostr strcat ") created." strcat tell
 
   (* Endow the object *)
   payment @ M-LIB-PENNIES-payfor

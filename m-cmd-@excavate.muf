@@ -70,7 +70,7 @@ WIZCALL M-HELP-help
 
 : main ( s --  )
   "me" match "BUILDER" flag? "me" match "WIZARD" flag? or not if
-    "Only builders are allowed to @excavate." .tell
+    "Only builders are allowed to @excavate." tell
     pop exit
   then
 
@@ -82,16 +82,16 @@ WIZCALL M-HELP-help
   roomname @ "" M-LIB-AT_DIG-dig dup not if pop exit then var! newroom
 
   foreexit @ if
-    "Creating " foreexit @ strcat "..." strcat .tell
+    "Creating " foreexit @ strcat "..." strcat tell
     { "#" loc @ intostr }cat foreexit @ M-LIB-AT_ACTION-action dup not if pop exit then var! newforeexit
-    "Trying to link..." .tell
+    "Trying to link..." tell
     { "#" newforeexit @ intostr }cat { "#" newroom @ intostr }cat M-LIB-AT_LINK-link not if exit then
   then
 
   backexit @ if
-    "Creating " backexit @ strcat "..." strcat .tell
+    "Creating " backexit @ strcat "..." strcat tell
     { "#" newroom @ intostr }cat backexit @ M-LIB-AT_ACTION-action dup not if pop exit then var! newbackexit
-    "Trying to link..." .tell
+    "Trying to link..." tell
     { "#" newbackexit @ intostr }cat { "#" loc @ intostr }cat M-LIB-AT_LINK-link not if exit then
   then
 ;

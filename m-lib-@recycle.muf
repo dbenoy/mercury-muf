@@ -79,35 +79,35 @@ $PUBDEF :
 
   "me" match thing @ owner = not if
     "me" match "WIZARD" flag? thing @ ok? not if
-      "That's already garbage!" .tell
+      "That's already garbage!" tell
     else
-      "Permission denied." .tell
+      "Permission denied." tell
     then
     0 exit
   then
 
   thing @ player? if
-    "You can't recycle a player!" .tell 0 exit
+    "You can't recycle a player!" tell 0 exit
   then
 
   thing @ ok? not if
-    "That's already garbage!" .tell 0 exit
+    "That's already garbage!" tell 0 exit
   then
 
   thing @ owner "me" match owner = not if
-    "Permission denied." .tell 0 exit
+    "Permission denied." tell 0 exit
   then
 
   thing @ room? if
     thing @ "player_start" sysparm stod = thing @ #0 = or if
-      "This room may not be recycled (is either player start or the global environment)." .tell 0 exit
+      "This room may not be recycled (is either player start or the global environment)." tell 0 exit
     then
   then
 
   confirmation @ if
-    "Are you certian you want to permanently recycle " thing @ unparseobj strcat "? (Type 'YES' in full to recycle, anything else to abort.)" strcat .tell
+    "Are you certian you want to permanently recycle " thing @ unparseobj strcat "? (Type 'YES' in full to recycle, anything else to abort.)" strcat tell
     read "yes" stringcmp if
-      "Aborted!" .tell 0 exit
+      "Aborted!" tell 0 exit
     then
   then
 
@@ -115,7 +115,7 @@ $PUBDEF :
     (* DB: This actually is the behavior of the built-in @recycle command.  I didn't make it up. *)
     thing @ "me" match = if
       thing @ name "'s owner commands it to kill itself.  It blinks a few times in shock, and says, \"But.. but.. WHY?\"  It suddenly clutches it's heart, grimacing with pain..  Staggers a few steps before falling to it's knees, then plops down on it's face.  *thud*  It kicks it's legs a few times, with weakening force, as it suffers a seizure.  It's color slowly starts changing to purple, before it explodes with a fatal *POOF*!" strcat
-      dup .otell
+      dup otell
 
       thing @ owner location thing @ location = not if
         thing @ owner swap notify
@@ -133,10 +133,10 @@ $PUBDEF :
   *)
   thing @ unparseobj var! unparsedName
   thing @ doRecycle dup if
-    .tell
+    tell
     0
   else
-    pop { "Thank you for recycling " unparsedName @ "." }cat .tell
+    pop { "Thank you for recycling " unparsedName @ "." }cat tell
     1
   then
 ;

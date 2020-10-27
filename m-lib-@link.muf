@@ -145,7 +145,7 @@ $DEF TESTLOCKPROP getprop dup lock? if testlock else pop pop 1 then
 
   thing @ exit? not if
     links @ array_count 1 > if
-      "Only actions and exits can be linked to multiple destinations." .tell
+      "Only actions and exits can be linked to multiple destinations." tell
       0 exit
     then
   then
@@ -156,11 +156,11 @@ $DEF TESTLOCKPROP getprop dup lock? if testlock else pop pop 1 then
       (* No existing link means anyone can link it, which is a little silly, but that's how it works in the built-in commands *)
       alreadyLinked @ if
         "me" match thing @ controls not if
-          "Permission denied. (you don't control the exit to relink)" .tell
+          "Permission denied. (you don't control the exit to relink)" tell
           0 exit
         then
         relink @ not thing @ getlink #-4 = not and if
-          "That exit is already linked." .tell
+          "That exit is already linked." tell
           0 exit
         then
       then
@@ -168,17 +168,17 @@ $DEF TESTLOCKPROP getprop dup lock? if testlock else pop pop 1 then
       thing @ owner "me" match owner = if
         alreadyLinked not if
           tp_link_cost @ M-LIB-PENNIES-payfor_chk not if
-            { "It costs " tp_link_cost @ " " "pennies" sysparm " to link this exit."  }cat .tell
+            { "It costs " tp_link_cost @ " " "pennies" sysparm " to link this exit."  }cat tell
             0 exit
           then
         then
       else
         "me" match "BUILDER" flag? "me" match "WIZARD" flag? or not if
-          "Only authorized builders may seize exits." .tell
+          "Only authorized builders may seize exits." tell
            0 exit
         then
         tp_link_cost @ tp_exit_cost @ + M-LIB-PENNIES-payfor_chk not if
-          { "It costs " tp_link_cost @ tp_exit_cost @ + " " "pennies" sysparm " to link this exit."  }cat .tell
+          { "It costs " tp_link_cost @ tp_exit_cost @ + " " "pennies" sysparm " to link this exit."  }cat tell
           0 exit
         then
       then
@@ -194,18 +194,18 @@ $DEF TESTLOCKPROP getprop dup lock? if testlock else pop pop 1 then
         then
 
         thisLinkRef @ player? "teleport_to_player" sysparm "no" = and if
-          { "You can't link to players. Destination " thisLinkRef @ unparseobj " ignored." }cat .tell
+          { "You can't link to players. Destination " thisLinkRef @ unparseobj " ignored." }cat tell
           continue
         then
 
         "me" match thing @ thisLinkRef @ canLinkTo not if
-          { "You can't link to " thisLinkRef @ unparseobj "." }cat .tell
+          { "You can't link to " thisLinkRef @ unparseobj "." }cat tell
           continue
         then
 
         thisLinkRef @ player? thisLinkRef @ room? or thisLinkRef @ program? or if
           alreadySeenPR @ if
-            { "Only one player, room, or program destination allowed. Destination " thisLinkRef @ unparseobj " ignored." }cat .tell
+            { "Only one player, room, or program destination allowed. Destination " thisLinkRef @ unparseobj " ignored." }cat tell
             continue
           then
           1 alreadySeenPR !
@@ -213,28 +213,28 @@ $DEF TESTLOCKPROP getprop dup lock? if testlock else pop pop 1 then
 
         thisLinkRef @ exit? if
           thing @ thisLinkRef @ exitLoopCheck if
-            { "Destination " thisLinkRef @ unparseobj " would create a loop, ignored." }cat .tell
+            { "Destination " thisLinkRef @ unparseobj " would create a loop, ignored." }cat tell
           then
         then
 
         thisLinkRef @ linkRefs @ array_appenditem linkRefs !
         linkRefs @ array_count 50 >= if
-          "Too many destinations, rest ignored." .tell
+          "Too many destinations, rest ignored." tell
           break
         then
       repeat
 
       linkRefs @ array_count not if
-        "No destinations linked." .tell
+        "No destinations linked." tell
         0 exit
       then
 
       thing @ linkRefs @ doSetLinksArray
-      dup if .tell 0 exit else pop then
+      dup if tell 0 exit else pop then
 
       linkRefs @ foreach
         swap pop
-        "Linked to " swap unparseobj strcat "." strcat .tell
+        "Linked to " swap unparseobj strcat "." strcat tell
       repeat
       (* Charge pennies and change ownership if appropriate *)
       thing @ owner "me" match owner = if
@@ -252,14 +252,14 @@ $DEF TESTLOCKPROP getprop dup lock? if testlock else pop pop 1 then
       newHome @ not if 0 exit then
 
       "me" match newHome @ controls not "me" match thing @ newHome @ canLinkTo not and if
-        "Permission denied. (you don't control the thing, or you can't link to dest)" .tell
+        "Permission denied. (you don't control the thing, or you can't link to dest)" tell
         0 exit
       then
 
       thing @ { newHome @ }array doSetLinksArray
-      dup if .tell 0 exit else pop then
+      dup if tell 0 exit else pop then
 
-      "Home set." .tell
+      "Home set." tell
     end
     room? when (*** Rooms ***)
       links @ 0 [] { "quiet" "no" "match_absolute" "yes" "match_home" "yes" "match_nil" "no" }dict M-LIB-MATCH-match var! newDropto
@@ -267,18 +267,18 @@ $DEF TESTLOCKPROP getprop dup lock? if testlock else pop pop 1 then
 
       #-3 newDropto @ = not if
         "me" match newDropto @ controls not "me" match thing @ newDropto @ canLinkTo not and thing @ newDropto @ = or if
-          "Permission denied. (you don't control the thing, or you can't link to the dropto)" .tell
+          "Permission denied. (you don't control the thing, or you can't link to the dropto)" tell
           0 exit
         then
       then
 
       thing @ { newDropto @ }array doSetLinksArray
-      dup if .tell 0 exit else pop then
+      dup if tell 0 exit else pop then
 
-      "Dropto set." .tell
+      "Dropto set." tell
     end
     program? when (*** Programs ***)
-      "You can't link programs to things!" .tell
+      "You can't link programs to things!" tell
       0 exit
     end
   endcase

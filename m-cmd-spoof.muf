@@ -62,7 +62,7 @@ WIZCALL M-HELP-help
 : main ( s --  )
   dup not if
     pop
-    "What do you want to happen?" .tell
+    "What do you want to happen?" tell
     exit
   then
   { "from" me @ }dict M-LIB-EMOTE-emote

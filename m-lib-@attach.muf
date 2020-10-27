@@ -68,7 +68,7 @@ $PUBDEF :
   M-LIB-PROGRAM-needs_mlev4
 
   source @ not action @ not or if
-    "You must specify an action name and a source object." .tell
+    "You must specify an action name and a source object." tell
     0 exit
   then
 
@@ -78,12 +78,12 @@ $PUBDEF :
   then
 
   action @ exit? not if
-    "That's not an action!" .tell
+    "That's not an action!" tell
     0 exit
   then
 
   "me" match action @ controls not if
-    "Permission denied. (you don't control the action you're trying to reattach)" .tell
+    "Permission denied. (you don't control the action you're trying to reattach)" tell
     0 exit
   then
 
@@ -93,28 +93,28 @@ $PUBDEF :
   then
 
   "me" match source @ controls not if
-    "Permission denied. (you don't control the attachment point)" .tell
+    "Permission denied. (you don't control the attachment point)" tell
     0 exit
   then
 
   source @ exit? if
-    "You can't attach an action to an action." .tell
+    "You can't attach an action to an action." tell
     0 exit
   then
 
   source @ program? if
-    "You can't attach an action to a program." .tell
+    "You can't attach an action to a program." tell
     0 exit
   then
 
   action @ source @ doReattach
-  dup if .tell pop #-1 exit else pop then
+  dup if tell pop #-1 exit else pop then
 
-  "Action re-attached." .tell
+  "Action re-attached." tell
 
   action @ mlevel if
     action @ "!M" set
-    "Action priority Level reset to zero." .tell
+    "Action priority Level reset to zero." tell
   then
 
   1

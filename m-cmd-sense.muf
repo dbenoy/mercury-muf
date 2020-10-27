@@ -184,7 +184,7 @@ $INCLUDE $m/lib/theme
 $INCLUDE $m/lib/color
 $INCLUDE $m/lib/notify
 
-$DEF .tell M-LIB-NOTIFY-tell_color
+$DEF tell M-LIB-NOTIFY-tell_color
 $DEF .cast M-LIB-NOTIFY-cast_color
 $DEF .err M-LIB-THEME-err
 
@@ -380,7 +380,7 @@ WIZCALL M-HELP-help
   (* Notify others *)
   "cast_room" get_conf sub_standard { trig me @ object @ }list { "name_match" "yes" }dict M-LIB-GRAMMAR-sub .cast
   (* Notify me *)
-  "tell_room" get_conf sub_standard { trig me @ object @ }list { "name_match" "yes" }dict M-LIB-GRAMMAR-sub .tell
+  "tell_room" get_conf sub_standard { trig me @ object @ }list { "name_match" "yes" }dict M-LIB-GRAMMAR-sub tell
   (* Output room desc *)
   object @ get_sense_prop getpropstr if
     
@@ -388,15 +388,15 @@ WIZCALL M-HELP-help
   else
     "default_desc_room" get_conf sub_standard { trig me @ object @ }list { "name_match" "yes" }dict M-LIB-GRAMMAR-sub
   then
-  .tell
+  tell
   (* Output contents *)
   "contents_room" get_conf dup "random" stringcmp not if pop 2 else "yes" stringcmp not then var! conf_contents_room
   conf_contents_room @ if
-    object @ conf_contents_room @ 2 = line_contents .tell
+    object @ conf_contents_room @ 2 = line_contents tell
   then
   (* Output exits *)
   "exits_room" get_conf "yes" stringcmp not if
-    object @ line_exits .tell
+    object @ line_exits tell
   then
 ;
 
@@ -404,24 +404,24 @@ WIZCALL M-HELP-help
   (* Notify others *)
   "cast_object" get_conf sub_standard { trig me @ object @ }list { "name_match" "yes" }dict M-LIB-GRAMMAR-sub .cast
   (* Notify me *)
-  "tell_object" get_conf sub_standard { trig me @ object @ }list { "name_match" "yes" }dict M-LIB-GRAMMAR-sub .tell
+  "tell_object" get_conf sub_standard { trig me @ object @ }list { "name_match" "yes" }dict M-LIB-GRAMMAR-sub tell
   (* Output desc *)
   object @ get_sense_prop getpropstr if
     object @ get_sense_prop get_sense_prop_mpi_how 1 parseprop
   else
     "default_desc_object" get_conf sub_standard { trig me @ object @ }list { "name_match" "yes" }dict M-LIB-GRAMMAR-sub
   then
-  .tell
+  tell
   (* Output contents *)
   "contents_object" get_conf dup "random" stringcmp not if pop 2 else "yes" stringcmp not then var! conf_contents_object
   conf_contents_object @ if
-    object @ conf_contents_object @ 2 = line_contents .tell
+    object @ conf_contents_object @ 2 = line_contents tell
   then
   (* Output exits *)
   (* You can more-or-less only trigger actions on 'thing' type, and 'room' type objects, so only show exits for those *)
   object @ thing? if
     "exits_object" get_conf "yes" stringcmp not if
-      object @ line_exits .tell
+      object @ line_exits tell
     then
   then
 ;
@@ -431,22 +431,22 @@ WIZCALL M-HELP-help
 
   match
   dup #-2 = if
-    "I don't know which one you mean!" .err .tell
+    "I don't know which one you mean!" .err tell
     pop exit
   then
 
   dup ok? not if
-    "I don't see that here." .err .tell
+    "I don't see that here." .err tell
     pop exit
   then
 
   dup location loc @ = not over loc @ = not and over location me @ = not and me @ "WIZARD" flag? not and if
-    "I don't see that here." .err .tell
+    "I don't see that here." .err tell
     pop exit
   then
 
   dup room? me @ "WIZARD" flag? not and if (* Only allow wizards to sniff into a room *)
-    "You can't see that clearly." .err .tell exit
+    "You can't see that clearly." .err tell exit
   then
 
   dup exit? if
@@ -458,18 +458,18 @@ WIZCALL M-HELP-help
   then
 
   dup exit? if
-    "You can't %1v through that exit." sub_standard { trig }list { "name_match" "yes" }dict M-LIB-GRAMMAR-sub .err .tell exit
+    "You can't %1v through that exit." sub_standard { trig }list { "name_match" "yes" }dict M-LIB-GRAMMAR-sub .err tell exit
   then
 
   swap
   rmatch
   dup #-2 = if
-    "I don't know which one you mean!" .err .tell
+    "I don't know which one you mean!" .err tell
     pop exit
   then
 
   dup ok? not if
-    "I don't see that there." .err .tell
+    "I don't see that there." .err tell
     pop exit
   then
 
@@ -505,17 +505,17 @@ WIZCALL M-HELP-help
 
   match
   dup #-2 = if
-    "I don't know which one you mean!" .err .tell
+    "I don't know which one you mean!" .err tell
     pop exit
   then
 
   dup ok? not if
-    "I don't see that here." .err .tell
+    "I don't see that here." .err tell
     pop exit
   then
 
   dup location loc @ = not over loc @ = not and over location me @ = not and me @ "WIZARD" flag? not and if
-    "I don't see that here." .err .tell
+    "I don't see that here." .err tell
     pop exit
   then
 
@@ -531,36 +531,36 @@ WIZCALL M-HELP-help
 (*****************************************************************************)
 : cmd_set ( s --  )
   me @ GUEST_CHECK if
-    "Guests can't set their @1" sub_standard .err .tell exit
+    "Guests can't set their @1" sub_standard .err tell exit
   then
 
   strip
   "=" split swap
 
   dup not if
-    "You must use the format <object>=<player>" .err .tell exit
+    "You must use the format <object>=<player>" .err tell exit
   then
 
   "aspect" get_conf "@" 1 strncmp not "aspect" get_conf "~" 1 strncmp not or if
     me @ "WIZARD" flag? not prog mlevel 4 >= not or if
-      "Permission denied." .err .tell
+      "Permission denied." .err tell
       pop pop exit
     then
   then
 
   match
   dup #-2 = if
-    "I don't know which one you mean." .err .tell
+    "I don't know which one you mean." .err tell
     pop pop exit
   then
 
   dup ok? not if
-    "I don't see that here." .err .tell
+    "I don't see that here." .err tell
     pop pop exit
   then
 
   me @ over controls not if
-    "Permission denied." .err .tell
+    "Permission denied." .err tell
     pop pop exit
   then
 
@@ -568,10 +568,10 @@ WIZCALL M-HELP-help
 
   dup if
     get_sense_prop swap setprop
-    "aspect" get_conf 1 strcut swap toupper swap strcat " set." strcat .err .tell
+    "aspect" get_conf 1 strcut swap toupper swap strcat " set." strcat .err tell
   else
     pop get_sense_prop remove_prop
-    "aspect" get_conf 1 strcut swap toupper swap strcat " cleared." strcat .err .tell
+    "aspect" get_conf 1 strcut swap toupper swap strcat " cleared." strcat .err tell
   then
 ;
 

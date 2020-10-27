@@ -82,7 +82,7 @@ $PUBDEF :
   "object_cost" sysparm atoi var! tp_object_cost
 
   thingname @ not if
-    "Clone what?" .tell
+    "Clone what?" tell
     0 exit
   then
 
@@ -93,12 +93,12 @@ $PUBDEF :
   then
 
   thing @ thing? not if
-    "That is not a cloneable object." .tell
+    "That is not a cloneable object." tell
     0 exit
   then
 
   thing @ name "thing" ext-name-ok? not if
-    "You cannot clone an object with this name." .tell
+    "You cannot clone an object with this name." tell
     0 exit
   then
 
@@ -114,16 +114,16 @@ $PUBDEF :
   then
 
   cost @ M-LIB-PENNIES-payfor_chk not if
-    { "Sorry, you don't have enough " "pennies" sysparm "." }cat .tell
+    { "Sorry, you don't have enough " "pennies" sysparm "." }cat tell
     #-1 exit
   then
 
   thing @ doCopyObj
-  dup if .tell pop #-1 exit else pop then
+  dup if tell pop #-1 exit else pop then
 
   var! newThing
 
-  { "Object " thing @ unparseobj " cloned as " newThing @ unparseobj "." }cat .tell
+  { "Object " thing @ unparseobj " cloned as " newThing @ unparseobj "." }cat tell
 
   (* Endow the object *)
   cost @ M-LIB-PENNIES-payfor

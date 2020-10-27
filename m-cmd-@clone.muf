@@ -76,7 +76,7 @@ WIZCALL M-HELP-help
 
 : main ( s --  )
   "me" match "BUILDER" flag? "me" match "WIZARD" flag? or not if
-    "Only builders are allowed to @clone." .tell
+    "Only builders are allowed to @clone." tell
     pop exit
   then
 

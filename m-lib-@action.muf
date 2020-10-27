@@ -78,17 +78,17 @@ $PUBDEF :
   "exit_cost" sysparm atoi var! cost
 
   exitname @ not if
-    "You must specify a direction or action name to open." .tell
+    "You must specify a direction or action name to open." tell
     #-1 exit
   then
 
   exitname @ name-ok? not if
-    "That's a strange name for an exit!" .tell
+    "That's a strange name for an exit!" tell
     #-1 exit
   then
 
   source @ not if
-    "You must specify a source object." .tell
+    "You must specify a source object." tell
     #-1 exit
   then
 
@@ -99,31 +99,31 @@ $PUBDEF :
   then
 
   "me" match source @ controls not if
-    "Permission denied. (you don't control the attachment point)" .tell
+    "Permission denied. (you don't control the attachment point)" tell
     #-1 exit
   then
 
   source @ exit? if
-    "You can't attach an action to an action." .tell
+    "You can't attach an action to an action." tell
     #-1 exit
   then
 
   source @ program? if
-    "You can't attach an action to a program." .tell
+    "You can't attach an action to a program." tell
     #-1 exit
   then
 
   cost @ M-LIB-PENNIES-payfor_chk not if
-    { "Sorry, you don't have enough " "pennies" sysparm " to create an action/exit." }cat .tell
+    { "Sorry, you don't have enough " "pennies" sysparm " to create an action/exit." }cat tell
     #-1 exit
   then
 
   source @ exitname @ doNewExit
-  dup if .tell pop #-1 exit else pop then
+  dup if tell pop #-1 exit else pop then
 
   cost @ M-LIB-PENNIES-payfor
 
-  "Action " over name strcat " (#" strcat over intostr strcat ") created." strcat .tell
+  "Action " over name strcat " (#" strcat over intostr strcat ") created." strcat tell
 ;
 PUBLIC M-LIB-AT_ACTION-action
 $LIBDEF M-LIB-AT_ACTION-action

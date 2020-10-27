@@ -94,7 +94,7 @@ $PUBDEF :
   then
 
   "me" match thing @ controls "me" match thing @ controlsLink or not if
-    "Permission denied. (You don't control the exit or its link)" .tell
+    "Permission denied. (You don't control the exit or its link)" tell
     0 exit
   then
 
@@ -102,29 +102,29 @@ $PUBDEF :
     exit? when
       thing @ getlink var! doRefund
       thing @ #-1 setlink
-      "Unlinked." .tell
+      "Unlinked." tell
       doRefund @ if
         thing @ owner tp_link_cost @ addpennies
       then
       thing @ mlevel if
         thing @ "!mucker" set
-        "Action priority Level reset to 0." .tell
+        "Action priority Level reset to 0." tell
       then
     end
     room? when
       thing @ #-1 setlink
-      "Dropto removed." .tell
+      "Dropto removed." tell
     end
     thing? when
       thing @ thing @ owner setlink
-      "Thing's home reset to owner." .tell
+      "Thing's home reset to owner." tell
     end
     player? when
       thing @ tp_player_start setlink
-      "Player's home reset to default player start room." .tell
+      "Player's home reset to default player start room." tell
     end
     default
-      "You can't unlink that!" .tell
+      "You can't unlink that!" tell
     end
   endcase
   1
